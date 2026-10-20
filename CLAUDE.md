@@ -88,6 +88,12 @@ Prima di lavorare leggi:
    - interrogare lo stato: es. `hs -c "hs.inspect(Tabby.bf)"`
 4. Esegui `test/run_all.sh` per controllare che tutto sia verde.
 
+**Stato (20/10/2026, Mac di casa, 1440×900 senza notch):** fatto. La cartella è
+`~/Desktop/Tabby 2`; `init.lua` la carica (vecchio in `~/.hammerspoon/init.lua.backup-2026-10-20`).
+Il comando `hs` è in `~/.local/bin` (in `PATH` da `~/.zshrc`); se non si trova, usa
+`/Applications/Hammerspoon.app/Contents/Frameworks/hs/hs`. A volte la prima chiamata
+dà "receive timeout": ripeterla. Sul MacBook col notch la messa in funzione va rifatta.
+
 ## Versione attuale
 
 **v9.3** (vedi storia in testa a `tabby.lua`). Prossimo obiettivo: **Tabby v1**
