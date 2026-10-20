@@ -9,7 +9,18 @@ Nomi decisi:
 
 ---
 
-## A. Più schede per qualsiasi app
+## A. Più schede per qualsiasi app — ✅ fatta (v9.5)
+
+Come è stata fatta: ogni finestra standard di ogni app è una scheda (anche con
+una sola finestra la scheda è legata a quella finestra); con 2+ finestre il nome è
+il titolo (senza il nome dell'app in fondo; doppioni → "(2)"); vale anche per le
+finestre normali dei browser (via le lettere A/B/C). Interruttore per app in
+⚙︎ → Finestre separate (spento = tutte le finestre in una scheda, come prima).
+Chiavi: la finestra più vecchia ha il bundle ID dell'app, le altre `win:<id>`; le
+viste divise seguono la finestra (`g.winOf`). Restano da fare per B: chiavi che
+sopravvivano al riavvio dell'app (oggi `win:<id>` si perde).
+
+Specifica originale:
 
 Oggi solo i browser hanno una scheda per finestra. Estendere a tutte le app
 (Finder, Word, Excel, Anteprima…).

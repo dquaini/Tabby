@@ -100,7 +100,7 @@ hs = {
     focusedWindow = function() return FRONT and (FRONT._focused or FRONT._wins[1]) end,
     filter = {
       windowCreated = "created", windowDestroyed = "destroyed",
-      windowFullscreened = "fs", windowUnfullscreened = "unfs", windowFocused = "focused",
+      windowFullscreened = "fs", windowUnfullscreened = "unfs", windowFocused = "focused", windowTitleChanged = "title",
       new = function()
         local f = {subs = {}}
         function f:setDefaultFilter() return self end
@@ -132,6 +132,7 @@ hs = {
   application = {
     runningApplications = function() local o = {} for _, a in ipairs(APPS) do o[#o+1] = a end return o end,
     get = function(h) if h == "com.apple.dock" then return {} end return findApp(h) end,
+    applicationsForBundleID = function(b) if b == "com.apple.dock" then return {{}} end local a = findApp(b); return (a and a._bid == b and a._running ~= false) and {a} or {} end,
     frontmostApplication = function() return FRONT end,
     launchOrFocusByBundleID = function(b) local a = findApp(b); if a then a:activate(); log("focus", b) end end,
     nameForBundleID = function(b) return b end,

@@ -2,11 +2,18 @@
 
 ## Mission
 
-**Rendere semplice ed efficiente lavorare con un solo schermo.**
-Per nomadi digitali e per chiunque lavori su un portatile: niente finestre
-sovrapposte, niente caccia all'app giusta. Una barra a schede, come nel browser,
-ma per tutte le app: ne vedi una alla volta, a tutto schermo, e passi all'altra
-con un clic o una scorciatoia.
+**Il nuovo spazio di lavoro d'avanguardia per l'era dell'AI e degli agenti.**
+Tabby non è "una barra di schede": è il posto dove persone e agenti lavorano
+insieme sullo stesso schermo. Per le persone: semplice ed efficiente con un solo
+schermo (nomadi digitali, portatile): niente finestre sovrapposte, niente caccia
+all'app giusta, una cosa alla volta a tutto spazio. Per gli agenti: ogni finestra,
+sito, vista divisa e cartella è un oggetto con un **nome e una chiave stabile**,
+che un agente può riconoscere e comandare ("metti il contratto a sinistra e Gmail
+a destra", "prepara lo spazio per la call").
+
+Conseguenza pratica: ogni funzione nuova va pensata **due volte**, per chi usa
+Tabby con mouse e tastiera e per un agente che la userà come strumento (nomi
+chiari, stato leggibile, azioni ripetibili).
 
 Principi:
 - **Una cosa alla volta**, a tutto spazio. Due o più solo quando lo scegli (vista divisa).
@@ -18,7 +25,9 @@ Principi:
 ## Cosa fa oggi (v9.3)
 
 ### Schede
-- Una scheda per ogni app con finestre aperte; ne vedi una alla volta (le altre si nascondono).
+- Una scheda per ogni **finestra** (Finder, TextEdit, Word…): con più finestre ognuna prende
+  il titolo (nome del documento o della cartella). ⚙︎ → Finestre separate: per app, si può
+  tornare a una scheda sola. Ne vedi una alla volta (le altre app si nascondono).
 - Le finestre si adattano allo spazio libero accanto a Tabby.
 - Riordino trascinando; le **preferite** vanno in cima quando le apri.
 - Tante app: schede che si stringono → solo icone (l'attiva resta larga) → menu **"+N"**.
@@ -28,7 +37,7 @@ Principi:
 ### Browser (Chrome, Brave, Edge, Safari, DuckDuckGo)
 - **Ogni finestra è una scheda.**
 - Finestra con **un solo sito** → **webapp** con nome e logo (Gmail, Notion, Proton Mail…).
-- Altre finestre → "Chrome", o "Chrome A / B / C" se più d'una (lettere da sinistra a destra).
+- Altre finestre → "Chrome", o il titolo della finestra se più d'una.
 - Chrome & co.: via AppleScript (la prima volta macOS chiede il permesso "Automazione").
 - DuckDuckGo: senza AppleScript, letto via Accessibilità; webapp solo se la finestra ha
   **una sola scheda**; ricorda i siti anche quando è nascosto.
@@ -80,10 +89,8 @@ Funzionano anche in app che catturano la tastiera (Claude, Windows App), con dop
 - Pallino verde: piccolo "rimbalzo" (macOS entra ed esce dallo schermo intero).
 - Esc nella Calcolatrice non azzera più il conto (si usa il tasto C).
 - La fascia del notch resta vuota se Tabby non è in alto (limite di macOS per le finestre).
-- Lettere Chrome A/B/C possono cambiare quando si chiude una finestra.
 
 **Funzioni**
-- Più schede per una stessa app: solo browser (→ roadmap v1 per tutte le app).
 - DuckDuckGo: webapp solo con finestra a scheda singola; non si possono aprire siti in
   finestre nuove via script (documentare: "funzione completa con Chrome/Safari").
 - Viste divise con finestre di browser (`win:`) si perdono al riavvio delle app.

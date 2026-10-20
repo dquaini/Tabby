@@ -32,7 +32,8 @@ local w2 = newWindow(DDG, "Wikipedia"); w2._page = "https://it.wikipedia.org/wik
 DDG._wins = {w1, w2}
 ADDAPP("com.tinyspeck.slackmacgap", "Slack"); FRONT = APPS[1]
 FAVICON_FAIL = "ip3/mail.proton.me"
-print = function() end
+PRINTS = {}
+print = function(...) local t = {} for i = 1, select("#", ...) do t[#t+1] = tostring(select(i, ...)) end PRINTS[#PRINTS+1] = table.concat(t, " ") end
 ''')
 L.execute(SRC); L.execute('FLUSH()')
 names = lambda: L.execute('local o = {} for _, t in ipairs(Tabby.tabs) do o[#o+1] = t.name end return table.concat(o, "|")')
@@ -48,6 +49,11 @@ check("DuckDuckGo: finestra con 3 schede = 'DuckDuckGo'", "DuckDuckGo" in names(
 check("logo preso dalla fonte di riserva (proton.me)", "proton.me" in L.execute('local i = Tabby.favicons["mail.proton.me"]; return i and i._url or ""'))
 L.execute('DDG._hidden = true; FRONT = APPS[3]; Tabby.rebuildTimer:start(); FLUSH()')
 check("DuckDuckGo nascosto: ricorda ancora il sito", "Proton Mail" in names())
+leak = L.execute('''local out = table.concat(PRINTS, "\\n")
+for _, c in pairs(Tabby.axCache or {}) do out = out .. "\\n" .. tostring(c.url) end
+return out''')
+check("privacy: in console e in memoria solo il sito, non l'indirizzo completo",
+      "/u/0/inbox" not in leak and "wiki/Gatto" not in leak and "https://mail.proton.me/" in leak)
 
 a = SRC.index("local function siteName(title, dom)"); b = SRC.index("\nend", a) + 4
 N = l.LuaRuntime(); N.execute(SRC[a:b] + "\nSN = siteName")

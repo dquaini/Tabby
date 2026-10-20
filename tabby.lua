@@ -1,5 +1,5 @@
 -- =====================================================================
---  TABBY  ·  v9.4
+--  TABBY  ·  v9.5
 --  Una barra con una scheda per ogni app: ne vedi una alla volta,
 --  clicchi (o premi Ctrl+Option+1…9) per passare all'altra.
 --
@@ -23,6 +23,10 @@
 --  v9.4: revisione: le viste divise seguono le finestre dei browser (non si
 --      sciolgono se una webapp cambia sito); stesso sito in due browser = due
 --      schede; loghi ritentati senza internet; spia "Tabby · lento" in console.
+--  v9.5 (v1 · A): una scheda per ogni finestra di qualsiasi app, col titolo
+--      della finestra (niente più "Chrome A / B"); ⚙︎ → Finestre separate per
+--      app; app cercate per bundle ID (via un blocco di ~200 ms ogni 3 s);
+--      privacy: di DuckDuckGo si tiene e si scrive solo il sito, non l'indirizzo.
 -- =====================================================================
 
 
@@ -44,6 +48,7 @@ local DEFAULTS = {
   order           = {},      -- ordine delle schede (si aggiorna trascinandole)
   groups          = {},      -- gruppi di app con lo schermo diviso
   groupSeq        = 0,
+  joinWins        = {},      -- app con tutte le finestre in una sola scheda
 }
 
 -- App da non mostrare mai come scheda
@@ -153,6 +158,20 @@ for _, q in ipairs(QUICK) do if q.bid then FLOATER[q.bid] = true end end
 local function isPinned(bid)
   for _, p in ipairs(S.pinned) do if p == bid then return true end end
   return false
+end
+
+-- Ogni finestra dell'app è una scheda? Sì, salvo le app scelte in
+-- ⚙︎ → Finestre separate (i browser sono sempre a finestre separate)
+local function perWindow(bid)
+  return not S.joinWins[bid] and not FLOATER[bid]
+end
+
+-- L'app aperta con questo bundle ID (nil se non è aperta). Molto più veloce
+-- di hs.application.get, che per un'app chiusa la cerca anche per nome
+-- (30-50 ms ogni volta: misurato sul Mac vero).
+local function appFor(bid)
+  if not bid then return nil end
+  return hs.application.applicationsForBundleID(bid)[1]
 end
 
 local function screen() return hs.screen.primaryScreen() end
@@ -459,6 +478,12 @@ local function axScan(win)
     if res.pageUrl then res.url = res.pageUrl end
   end)
   if res.url and not res.url:match("^%a+://") then res.url = "https://" .. res.url end
+  -- privacy: dell'indirizzo teniamo solo il sito (https://dominio/). Il resto
+  -- può contenere dati personali o "gettoni" di accesso (es. dopo un login).
+  if res.url then
+    local origin = res.url:match("^(%a+://[^/%?#]+)")
+    res.url = origin and (origin .. "/") or nil
+  end
   return res
 end
 
@@ -501,7 +526,7 @@ end
 local function refreshBrowsers()
   local new, sig = {}, {}
   for bid, B in pairs(BROWSERS) do
-    local app = hs.application.get(bid)
+    local app = appFor(bid)
     if app and app:isRunning() and B.kind == "ax" then
       local wins, s = axBrowserInfo(app, B.short)
       new[bid] = wins
@@ -634,12 +659,47 @@ local function keySmallIcon(key)
   return img and img:setSize({w = 16, h = 16}) or nil
 end
 
--- Le schede di un browser: una per finestra
+-- Nome di una finestra-scheda: il suo titolo (nome del documento, della
+-- cartella del Finder, della pagina…), senza il nome dell'app in fondo
+-- ("Relazione — TextEdit" → "Relazione").
+local function windowName(title, appTitle)
+  local t = (title or ""):match("^%s*(.-)%s*$")
+  if appTitle and appTitle ~= "" then
+    for _, sep in ipairs({" — ", " – ", " - ", " | "}) do
+      local tail = sep .. appTitle
+      if #t > #tail and t:sub(-#tail) == tail then t = t:sub(1, -#tail - 1) end
+    end
+  end
+  if t == "" or t == appTitle then return nil end
+  return t
+end
+
+-- Le finestre "normali" di un'app diventano schede. Con una sola finestra la
+-- scheda si chiama come l'app; con due o più ognuna prende il titolo della sua
+-- finestra (titoli uguali: "Download", "Download (2)"). La prima finestra (la
+-- più vecchia) ha come chiave il bundle ID dell'app, così resta al posto
+-- dell'app (preferite, notifiche del Dock); le altre "win:<numero>".
+local function windowTabs(app, b, wins, add, appTitle)
+  local seen = {}
+  for n, w in ipairs(wins) do
+    local name = appTitle
+    if #wins > 1 then
+      local base = windowName(w:title(), appTitle) or appTitle
+      seen[base] = (seen[base] or 0) + 1
+      name = seen[base] > 1 and (base .. " (" .. seen[base] .. ")") or base
+    end
+    add({key = (n == 1) and b or ("win:" .. w:id()), bid = b, app = app,
+         win = w, name = name, primary = (n == 1)})
+  end
+end
+
+-- Le schede di un browser: una per finestra; una finestra con un solo
+-- sito è una "webapp" (nome e logo del sito)
 local function browserTabs(app, b, B, wins, add)
   table.sort(wins, function(x, y) return x:id() < y:id() end)
   local info = T.binfo[b]
   local used = {}
-  local entries = {}
+  local plain = {}
   for _, w in ipairs(wins) do
     local title = w:title() or ""
     local found
@@ -648,28 +708,18 @@ local function browserTabs(app, b, B, wins, add)
         if not used[k] and e.name == title then used[k] = true; found = e; break end
       end
     end
-    table.insert(entries, {w = w, title = title, site = found and siteOf(found.urls)})
-  end
-
-  local nPlain = 0
-  for _, x in ipairs(entries) do if not x.site then nPlain = nPlain + 1 end end
-
-  local letter = 0
-  for _, x in ipairs(entries) do
-    if x.site then
+    local site = found and siteOf(found.urls)
+    if site then
       -- stesso sito già preso (da un'altra finestra, anche di un altro browser):
       -- questa finestra diventa una scheda a sé
-      local e = {key = "site:" .. x.site, bid = b, app = app, win = x.w, site = x.site,
-                 name = siteName(x.title, x.site), titleBadge = titleBadge(x.title)}
-      if not add(e) then e.key = "win:" .. x.w:id(); add(e) end
+      local e = {key = "site:" .. site, bid = b, app = app, win = w, site = site,
+                 name = siteName(title, site), titleBadge = titleBadge(title)}
+      if not add(e) then e.key = "win:" .. w:id(); add(e) end
     else
-      letter = letter + 1
-      local name = B.short
-      if nPlain > 1 then name = name .. " " .. string.char(64 + math.min(letter, 26)) end
-      add({key = (letter == 1) and b or ("win:" .. x.w:id()), bid = b, app = app,
-           win = x.w, name = name, primary = (letter == 1)})
+      table.insert(plain, w)
     end
   end
+  windowTabs(app, b, plain, add, B.short)
 end
 
 
@@ -680,7 +730,7 @@ end
 local function readDockBadges()
   local out = {}
   pcall(function()
-    local dock = hs.application.get("com.apple.dock")
+    local dock = appFor("com.apple.dock")
     if not dock then return end
     local ax = hs.axuielement.applicationElement(dock)
     for _, list in ipairs(ax:attributeValue("AXChildren") or {}) do
@@ -824,9 +874,12 @@ local function rebuildTabs()
     local b = app:bundleID()
     if not FLOATER[b] then
       local B = BROWSERS[b]
-      local wins = B and standardWindows(app)
+      local wins = (B or perWindow(b)) and standardWindows(app) or {}
       if B and #wins > 0 then
         browserTabs(app, b, B, wins, add)
+      elseif #wins > 0 then
+        table.sort(wins, function(x, y) return x:id() < y:id() end)
+        windowTabs(app, b, wins, add, appName(b, app))
       elseif S.showWindowless or withWin[b] then
         add({key = b, bid = b, app = app, name = appName(b, app), primary = true})
       end
@@ -932,21 +985,6 @@ local function rebuildTabs()
     if shown[k] then table.insert(T.tabs, shown[k]) end
   end
 
-  -- lettere delle finestre normali dei browser: A, B, C… da sinistra a destra
-  local plain = {}
-  for _, t in ipairs(T.tabs) do
-    if t.win and not t.site then
-      plain[t.bid] = plain[t.bid] or {}
-      table.insert(plain[t.bid], t)
-    end
-  end
-  for b, list in pairs(plain) do
-    local short = BROWSERS[b] and BROWSERS[b].short or appName(b)
-    for n, t in ipairs(list) do
-      t.name = (#list > 1) and (short .. " " .. string.char(64 + math.min(n, 26))) or short
-    end
-  end
-
   if changed then saveGroups() end
 end
 
@@ -969,11 +1007,11 @@ local function frontBid()
   return f and f:bundleID()
 end
 
--- La scheda di quello che stai guardando: per un browser dipende
--- dalla finestra in primo piano, per le altre app è l'app stessa
+-- La scheda di quello che stai guardando: la finestra in primo piano, se è
+-- una scheda a sé; altrimenti l'app (app con le finestre in una scheda sola)
 local function currentKey()
   local bid = frontBid()
-  if bid and BROWSERS[bid] then
+  if bid then
     local w = hs.window.focusedWindow()
     local k = w and T.winKey[w:id()]
     if k then return k end
@@ -1024,7 +1062,7 @@ layoutGroup = function(g)
   for k, key in ipairs(g.members) do
     local bid = T.keyBid[key] or key
     keep[bid] = true
-    local app = hs.application.get(bid)
+    local app = appFor(bid)
     if app and LAYOUTS[g.layout].zones[k] then
       if app:isHidden() then app:unhide() end
       local r = zoneRect(g.layout, k)
@@ -1215,7 +1253,7 @@ end
 local function toggleLastApp()
   local k = T.prevKey
   if not k then return end
-  if T.cand[k] or hs.application.get(T.keyBid[k] or k) then focusKey(k) end
+  if T.cand[k] or appFor(T.keyBid[k] or k) then focusKey(k) end
 end
 
 
@@ -1255,7 +1293,7 @@ local function memoRect()
 end
 
 local function backToPrev()
-  local prev = T.memoPrev and hs.application.get(T.memoPrev)
+  local prev = T.memoPrev and appFor(T.memoPrev)
   if prev then prev:activate() end
 end
 
@@ -1340,7 +1378,7 @@ end
 local function toggleQuick(q)
   if q.memo then toggleMemo(); return end
   local bid = q.bid
-  local app = hs.application.get(bid)
+  local app = appFor(bid)
   if app and frontBid() == bid then
     app:hide()   -- torni all'app di prima
     return
@@ -1348,7 +1386,7 @@ local function toggleQuick(q)
   hs.application.launchOrFocusByBundleID(bid)
   -- l'app può metterci un po' ad aprire le finestre: riprova più volte
   for _, delay in ipairs({0.3, 0.8, 1.6}) do
-    hs.timer.doAfter(delay, function() placeFloater(hs.application.get(bid)) end)
+    hs.timer.doAfter(delay, function() placeFloater(appFor(bid)) end)
   end
 end
 
@@ -1370,7 +1408,7 @@ local function toggleDesktop()
   end
   -- Il Finder resta in primo piano (è lui la scrivania): NON lo nascondiamo,
   -- altrimenti macOS riattiva un'altra app. Riduciamo nel Dock le sue finestre.
-  local f = hs.application.get(FINDER)
+  local f = appFor(FINDER)
   if f then
     f:activate()
     hs.timer.doAfter(0.2, function()
@@ -1502,7 +1540,7 @@ drawSplit = function()
           frame = {x = cx - 32, y = cy - 52, w = 64, h = 64}})
       end
       local e = T.cand[bid]
-      table.insert(els, {type = "text", text = e and e.name or appName(bid, hs.application.get(bid)),
+      table.insert(els, {type = "text", text = e and e.name or appName(bid, appFor(bid)),
         textSize = 16, textColor = COL.text, textAlignment = "center",
         frame = {x = r.x, y = cy + 18, w = r.w, h = 22}})
       table.insert(els, {type = "text", text = "clic per svuotare",
@@ -1877,6 +1915,37 @@ local function favoritesMenu()
   return items
 end
 
+-- ⚙︎ → Finestre separate: per ogni app aperta, una scheda per finestra
+-- (spuntata, normale) oppure tutte le finestre in una scheda sola
+local function windowsMenu()
+  local items = {{title = "Una scheda per ogni finestra:", disabled = true}}
+  local map, list = runningApps()
+  local rows = {}
+  for _, a in ipairs(list) do
+    local b = a:bundleID()
+    if not BROWSERS[b] and not FLOATER[b] then
+      table.insert(rows, {b = b, name = appName(b, map[b])})
+    end
+  end
+  table.sort(rows, function(x, y) return x.name:lower() < y.name:lower() end)
+  for _, r in ipairs(rows) do
+    table.insert(items, {
+      title   = r.name,
+      image   = smallIcon(r.b),
+      checked = perWindow(r.b),
+      fn      = function()
+        S.joinWins[r.b] = perWindow(r.b) or nil
+        save("joinWins")
+        rebuildTabs()
+        draw()
+      end,
+    })
+  end
+  table.insert(items, {title = "-"})
+  table.insert(items, {title = "I browser hanno sempre una scheda per finestra", disabled = true})
+  return items
+end
+
 local function toggle(key, after)
   return function()
     S[key] = not S[key]
@@ -1957,6 +2026,7 @@ local function openSettings()
   popup({
     {title = "Posizione di Tabby", menu = positionMenu()},
     {title = "App preferite", menu = favoritesMenu()},
+    {title = "Finestre separate", menu = windowsMenu()},
     {title = "Comportamento", menu = behaviourMenu()},
     {title = "-"},
     {title = "Chiudi tutte le app…", fn = closeAllApps},
@@ -2546,7 +2616,7 @@ T.appWatcher = W.new(function(_, event, app)
   elseif event == W.terminated then
     local still = {}
     for b in pairs(T.fsApps) do
-      if hs.application.get(b) then still[b] = true end
+      if appFor(b) then still[b] = true end
     end
     T.fsApps = still
     scheduleRebuild()
@@ -2561,8 +2631,9 @@ T.allWins = WF.new(false):setDefaultFilter({})
 T.allWins:subscribe(WF.windowCreated, function(w)
   local a = w and w:application()
   local b = a and a:bundleID()
-  -- (per i browser ogni finestra nuova è una scheda nuova, non entra nel gruppo)
-  local g = b and not BROWSERS[b] and T.memberOf[b]
+  -- (con le finestre separate ogni finestra nuova è una scheda nuova:
+  -- non entra nel gruppo)
+  local g = b and not BROWSERS[b] and not perWindow(b) and T.memberOf[b]
   if b and FLOATER[b] then
     placeFloater(a)
   elseif g then
@@ -2578,13 +2649,21 @@ end)
 
 T.allWins:subscribe(WF.windowDestroyed, function() scheduleRebuild() end)
 
--- Cambio di finestra dentro la stessa app (es. da Chrome A a Chrome B,
+-- Cambio di finestra dentro la stessa app (es. da un documento all'altro,
 -- o da una webapp all'altra con ⌘`): aggiorna la scheda attiva
 T.focusTimer = hs.timer.delayed.new(0.15, function()
   local f = hs.application.frontmostApplication()
-  if f and BROWSERS[f:bundleID()] then handleActive(f) else draw() end
+  local b = f and f:bundleID()
+  if b and (BROWSERS[b] or (perWindow(b) and currentKey() ~= T.lastKey)) then
+    handleActive(f)
+  else
+    draw()
+  end
 end)
 T.allWins:subscribe(WF.windowFocused, function() T.focusTimer:start() end)
+
+-- Il nome di una finestra-scheda è il suo titolo: se cambia, ridisegna
+T.allWins:subscribe(WF.windowTitleChanged, function() scheduleRebuild() end)
 
 -- Browser: titoli e siti cambiano mentre navighi → ricontrolla ogni 3 secondi
 T.browserTimer = hs.timer.doEvery(3, timed("controllo browser", function()
@@ -2775,4 +2854,4 @@ T.badgeSig = badgeSig(T.badges)
 rebuildTabs()
 draw()
 handleActive(hs.application.frontmostApplication())
-hs.alert.show("Tabby v9.4 attiva")
+hs.alert.show("Tabby v9.5 attiva")
