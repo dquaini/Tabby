@@ -67,7 +67,7 @@ Prima di lavorare leggi:
    finestre, permessi, app che "rimbalzano") si vedono solo lì.
 3. Codice e commenti **in italiano**, chiari per un non sviluppatore che li legge.
 4. Le righe di diagnosi in console iniziano con `Tabby ·` (es. notch, DuckDuckGo,
-   app veloci): usale per capire problemi reali invece di tirare a indovinare.
+   app veloci, `Tabby · lento:` per i lavori sopra i 150 ms): usale per capire problemi reali invece di tirare a indovinare.
 5. Non cambiare scorciatoie o comportamenti a cui l'utente è abituato senza dirlo.
 6. Usa git: un commit per ogni versione funzionante, messaggio in italiano.
 
@@ -96,5 +96,5 @@ dà "receive timeout": ripeterla. Sul MacBook col notch la messa in funzione va 
 
 ## Versione attuale
 
-**v9.3** (vedi storia in testa a `tabby.lua`). Prossimo obiettivo: **Tabby v1**
+**v9.4** (vedi storia in testa a `tabby.lua`). Prossimo obiettivo: **Tabby v1**
 (`docs/ROADMAP-v1.md`).

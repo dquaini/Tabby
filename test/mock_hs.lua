@@ -147,6 +147,7 @@ hs = {
     doEvery = function(_, fn) return {fn = fn} end,
     delayed = {new = function(_, fn) return {start = function() table.insert(timers, fn) end} end},
     secondsSinceEpoch = function() return CLOCK or 1000 end,
+    absoluteTime = function() return 0 end,
   },
   canvas = {
     new = newCanvas,

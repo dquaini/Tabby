@@ -1,5 +1,5 @@
 -- =====================================================================
---  TABBY  ·  v9.3
+--  TABBY  ·  v9.4
 --  Una barra con una scheda per ogni app: ne vedi una alla volta,
 --  clicchi (o premi Ctrl+Option+1…9) per passare all'altra.
 --
@@ -20,6 +20,9 @@
 --      e logo del sito, Chrome A / B / C; correzioni varie.
 --  v9.1-9.3: DuckDuckGo (via Accessibilità, ricorda i siti anche da nascosto),
 --      loghi da più fonti, Memo salvato in ~/Documents/Tabby Memo.txt.
+--  v9.4: revisione: le viste divise seguono le finestre dei browser (non si
+--      sciolgono se una webapp cambia sito); stesso sito in due browser = due
+--      schede; loghi ritentati senza internet; spia "Tabby · lento" in console.
 -- =====================================================================
 
 
@@ -155,6 +158,26 @@ end
 local function screen() return hs.screen.primaryScreen() end
 
 local function later(fn) hs.timer.doAfter(0, fn) end
+
+-- Spia di lentezza: Tabby fa tutto su un solo "filo", quindi un lavoro lento
+-- fa scattare anche la tastiera. Se un lavoro supera SLOW_MS lo scrive in
+-- console ("Tabby · lento: …"), al massimo una volta al minuto per lavoro.
+local SLOW_MS = 150
+local function timed(name, fn)
+  return function(...)
+    local t0 = hs.timer.absoluteTime()
+    fn(...)
+    local ms = (hs.timer.absoluteTime() - t0) / 1e6
+    if ms > SLOW_MS then
+      T.slowAt = T.slowAt or {}
+      local now = hs.timer.secondsSinceEpoch()
+      if not T.slowAt[name] or now - T.slowAt[name] > 60 then
+        T.slowAt[name] = now
+        print(string.format("Tabby · lento: %s %.0f ms", name, ms))
+      end
+    end
+  end
+end
 
 -- Altezza della barra dei menu di macOS
 local function menuBarH()
@@ -441,16 +464,19 @@ end
 
 local function axBrowserInfo(app, short)
   local wins, sigParts = {}, {}
-  T.axCache = T.axCache or {}
+  -- memoria per finestra: si tengono solo le finestre ancora aperte
+  local oldCache, oldDiag = T.axCache or {}, T.axDiag or {}
+  T.axCache, T.axDiag = {}, {}
   for _, w in ipairs(app:allWindows()) do
     if w:isStandard() then
       -- quando il browser è nascosto macOS non lascia guardare dentro le
       -- finestre: si usa l'ultima cosa vista (ricordata per ogni finestra)
       local r = (not app:isHidden()) and axScan(w) or {roles = {}}
-      local cached = T.axCache[w:id()]
+      local cached = oldCache[w:id()]
       if r.url and r.tabs then
         T.axCache[w:id()] = {url = r.url, tabs = r.tabs}
       elseif cached then
+        T.axCache[w:id()] = cached
         r.url, r.tabs = cached.url, cached.tabs
       end
       -- webapp solo se sappiamo che c'è una sola scheda; altrimenti finestra normale
@@ -463,8 +489,8 @@ local function axBrowserInfo(app, short)
       table.sort(roles)
       local diag = string.format("Tabby · %s «%s»: indirizzo=%s · schede=%s · [%s]",
         short, tostring(w:title()), tostring(r.url), tostring(r.tabs), table.concat(roles, " "))
-      T.axDiag = T.axDiag or {}
-      if T.axDiag[w:id()] ~= diag then T.axDiag[w:id()] = diag; print(diag) end
+      if oldDiag[w:id()] ~= diag then print(diag) end
+      T.axDiag[w:id()] = diag
     end
   end
   return wins, table.concat(sigParts, ";")
@@ -559,16 +585,24 @@ end
 
 -- Logo del sito (scaricato una volta e ricordato). Prova più fonti:
 -- servizio loghi di DuckDuckGo (dominio, poi dominio principale), poi Google.
+-- Se falliscono tutte (es. Wi-Fi non ancora connesso) si riprova dopo un minuto.
+local FAVICON_RETRY = 60
 local function favicon(domain)
   local c = T.favicons[domain]
-  if c ~= nil then return c or nil end
+  if c then return c end
+  T.faviconFail = T.faviconFail or {}
+  if c == false then
+    local at = T.faviconFail[domain]   -- nil = download in corso
+    if not at or hs.timer.secondsSinceEpoch() - at < FAVICON_RETRY then return nil end
+  end
   T.favicons[domain] = false
+  T.faviconFail[domain] = nil
   local parent = domain:match("^[^%.]+%.(.+%..+)$")   -- mail.proton.me → proton.me
   local sources = {"https://icons.duckduckgo.com/ip3/" .. domain .. ".ico"}
   if parent then table.insert(sources, "https://icons.duckduckgo.com/ip3/" .. parent .. ".ico") end
   table.insert(sources, "https://www.google.com/s2/favicons?sz=64&domain=" .. domain)
   local function try(n)
-    if not sources[n] then return end
+    if not sources[n] then T.faviconFail[domain] = hs.timer.secondsSinceEpoch(); return end
     pcall(function()
       hs.image.imageFromURL(sources[n], function(img)
         local ok = img and img:size() and img:size().w >= 8
@@ -620,14 +654,14 @@ local function browserTabs(app, b, B, wins, add)
   local nPlain = 0
   for _, x in ipairs(entries) do if not x.site then nPlain = nPlain + 1 end end
 
-  local letter, usedKeys = 0, {}
+  local letter = 0
   for _, x in ipairs(entries) do
     if x.site then
-      local key = "site:" .. x.site
-      if usedKeys[key] then key = "win:" .. x.w:id() end
-      usedKeys[key] = true
-      add({key = key, bid = b, app = app, win = x.w, site = x.site,
-           name = siteName(x.title, x.site), titleBadge = titleBadge(x.title)})
+      -- stesso sito già preso (da un'altra finestra, anche di un altro browser):
+      -- questa finestra diventa una scheda a sé
+      local e = {key = "site:" .. x.site, bid = b, app = app, win = x.w, site = x.site,
+                 name = siteName(x.title, x.site), titleBadge = titleBadge(x.title)}
+      if not add(e) then e.key = "win:" .. x.w:id(); add(e) end
     else
       letter = letter + 1
       local name = B.short
@@ -779,11 +813,12 @@ local function rebuildTabs()
   -- 1. tutte le schede possibili, con la loro chiave
   local cand, keyWin, winKey, keyBid, candOrder = {}, {}, {}, {}, {}
   local function add(e)
-    if cand[e.key] then return end
+    if cand[e.key] then return false end   -- chiave già presa
     cand[e.key] = e
     keyBid[e.key] = e.bid
     table.insert(candOrder, e.key)
     if e.win then keyWin[e.key] = e.win; winKey[e.win:id()] = e.key end
+    return true
   end
   for _, app in ipairs(list) do
     local b = app:bundleID()
@@ -797,18 +832,46 @@ local function rebuildTabs()
       end
     end
   end
+  local oldWinKey = T.winKey or {}
   T.cand, T.keyWin, T.winKey, T.keyBid = cand, keyWin, winKey, keyBid
 
   -- 2. gruppi: togli le schede che non esistono più
-  --    (un gruppo con meno di 2 schede si scioglie)
-  local snapshot = {}
+  --    (un gruppo con meno di 2 schede si scioglie).
+  --    Una finestra di browser nel gruppo è seguita per numero di finestra
+  --    (g.winOf): se cambia chiave (es. Gmail apre un link di un altro sito e
+  --    non è più una webapp) resta nel gruppo con la chiave nuova.
+  local snapshot, taken = {}, {}
   for _, g in ipairs(S.groups) do table.insert(snapshot, g) end
   for _, g in ipairs(snapshot) do
-    local keep = {}
-    for _, k in ipairs(g.members) do if cand[k] then table.insert(keep, k) end end
-    if #keep ~= #g.members then
+    local winOf, keep, newWinOf, focus = g.winOf or {}, {}, {}, nil
+    for _, k in ipairs(g.members) do
+      local wid, nk = winOf[k], nil
+      if wid and winKey[wid] then
+        nk = winKey[wid]   -- la finestra c'è ancora: la seguiamo
+      elseif cand[k] and not (wid and keyWin[k] and oldWinKey[keyWin[k]:id()]) then
+        -- app intera, oppure finestra appena aperta con la stessa chiave
+        -- (es. dopo il riavvio del browser); non una finestra che c'era già
+        nk = k
+      end
+      if nk and not taken[nk] then
+        taken[nk] = true
+        table.insert(keep, nk)
+        if keyWin[nk] then newWinOf[nk] = keyWin[nk]:id() end
+        if g.focus == k then focus = nk end
+      end
+    end
+    local before = table.concat(g.members, ",")
+    local function sig(m)
+      local p = {}
+      for k, v in pairs(m) do table.insert(p, k .. "=" .. tostring(v)) end
+      table.sort(p)
+      return table.concat(p, ",")
+    end
+    if sig(newWinOf) ~= sig(winOf) then changed = true end
+    g.winOf = newWinOf
+    if table.concat(keep, ",") ~= before then
       g.members = keep
-      if not g.focus or not cand[g.focus] then g.focus = keep[1] end
+      g.focus = focus or keep[1]
       normalizeGroup(g)
       changed = true
     end
@@ -980,11 +1043,11 @@ end
 
 
 -- Ricostruzione "ritardata": se arrivano tanti eventi insieme, la fa una volta sola
-T.rebuildTimer = hs.timer.delayed.new(0.3, function()
+T.rebuildTimer = hs.timer.delayed.new(0.3, timed("ricostruzione schede", function()
   refreshBrowsers()
   rebuildTabs()
   draw()
-end)
+end))
 local function scheduleRebuild() T.rebuildTimer:start() end
 
 local function isTabApp(app)
@@ -1033,7 +1096,7 @@ end
 -- ---------------------------------------------------------------------
 
 -- Quando un'app passa in primo piano (o cambia finestra in primo piano)
-local function handleActive(app)
+local handleActive = timed("cambio di scheda", function(app)
   local bid = app and app:bundleID()
   if bid and FLOATER[bid] then
     -- app veloce: non nasconde niente, si mette in alto a destra
@@ -1073,7 +1136,7 @@ local function handleActive(app)
     end
   end
   draw()
-end
+end)
 
 local function afterFocus()
   hs.timer.doAfter(0.2, function()
@@ -2524,10 +2587,10 @@ end)
 T.allWins:subscribe(WF.windowFocused, function() T.focusTimer:start() end)
 
 -- Browser: titoli e siti cambiano mentre navighi → ricontrolla ogni 3 secondi
-T.browserTimer = hs.timer.doEvery(3, function()
+T.browserTimer = hs.timer.doEvery(3, timed("controllo browser", function()
   if T.press or T.split then return end
   if refreshBrowsers() then rebuildTabs(); draw() end
-end)
+end))
 
 -- Notifiche: ricontrolla i numerini del Dock ogni 3 secondi
 local function badgeSig(b)
@@ -2536,14 +2599,14 @@ local function badgeSig(b)
   table.sort(parts)
   return table.concat(parts, ",")
 end
-T.badgeTimer = hs.timer.doEvery(3, function()
+T.badgeTimer = hs.timer.doEvery(3, timed("notifiche del Dock", function()
   local b = readDockBadges()
   local sig = badgeSig(b)
   if sig ~= T.badgeSig then
     T.badges, T.badgeSig = b, sig
     if T.bar then draw() end
   end
-end)
+end))
 
 T.allWins:subscribe(WF.windowFullscreened, function(w)
   if S.tabbyFullscreen and w then
@@ -2712,4 +2775,4 @@ T.badgeSig = badgeSig(T.badges)
 rebuildTabs()
 draw()
 handleActive(hs.application.frontmostApplication())
-hs.alert.show("Tabby v9.3 attiva")
+hs.alert.show("Tabby v9.4 attiva")
