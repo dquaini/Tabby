@@ -102,5 +102,5 @@ dà "receive timeout": ripeterla. Sul MacBook col notch la messa in funzione va 
 
 ## Versione attuale
 
-**v9.8** (vedi storia in testa a `tabby.lua`). Prossimo obiettivo: **Tabby v1** (A fatta; B Cartelle: base fatta in v9.8, restano "Apri all'avvio" e rifiniture)
+**v9.9** (vedi storia in testa a `tabby.lua`). Prossimo obiettivo: **Tabby v1** (A fatta; B Cartelle: base fatta in v9.8, restano "Apri all'avvio" e rifiniture)
 (`docs/ROADMAP-v1.md`).

@@ -30,6 +30,7 @@ function newWindow(app, title, urls)
   function w:raise() end
   function w:unminimize() self._min = false end
   function w:isStandard() return true end
+  function w:subrole() return "AXStandardWindow" end
   function w:isVisible() return true end
   function w:isFullScreen() return self._fs end
   function w:isMinimized() return self._min end

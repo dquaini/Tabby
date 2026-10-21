@@ -1,5 +1,5 @@
 -- =====================================================================
---  TABBY  ·  v9.8
+--  TABBY  ·  v9.9
 --  Una barra con una scheda per ogni app: ne vedi una alla volta,
 --  clicchi (o premi Ctrl+Option+1…9) per passare all'altra.
 --
@@ -36,6 +36,9 @@
 --  v9.8 (v1 · B): CARTELLE, spazi di lavoro salvati (app e webapp). Si creano
 --      e attivano dal menu ⚡︎ (o ⌃⌥⇧ + numero); attivata = una scheda sola con
 --      le icone; cliccata = vista cartella (solo le sue schede, ← per tornare).
+--  v9.9: Chrome: le webapp non "lampeggiano" più (memoria per finestra mentre
+--      la risposta del browser è in arrivo); diagnosi delle finestre nuove dei
+--      browser; diagnosi DuckDuckGo solo quando cambia sito o schede.
 -- =====================================================================
 
 
@@ -548,8 +551,10 @@ local function axBrowserInfo(app, short)
       table.sort(roles)
       local diag = string.format("Tabby · %s «%s»: indirizzo=%s · schede=%s · [%s]",
         short, tostring(w:title()), tostring(r.url), tostring(r.tabs), table.concat(roles, " "))
-      if oldDiag[w:id()] ~= diag then print(diag) end
-      T.axDiag[w:id()] = diag
+      -- si scrive solo se cambiano sito o schede (non a ogni cambio della pagina)
+      local result = tostring(r.url) .. "|" .. tostring(r.tabs)
+      if oldDiag[w:id()] ~= result then print(diag) end
+      T.axDiag[w:id()] = result
     end
   end
   return wins, table.concat(sigParts, ";")
@@ -830,31 +835,45 @@ local function browserTabs(app, b, B, wins, add)
   local info = T.binfo[b]
   local matched, how = matchBrowserWindows(wins, info)
   local plain, names = {}, {}
+  -- Memoria per finestra: l'ultima descrizione riconosciuta. La risposta del
+  -- browser arriva in parallelo e può essere vecchia di qualche secondo: se nel
+  -- frattempo titolo e posizione sono cambiati (Meet e Gmail cambiano titolo di
+  -- continuo) la finestra non va "persa" (icona del sito che va e viene).
+  T.bwKnown = T.bwKnown or {}
+  local oldKnown, known = T.bwKnown[b] or {}, {}
   T.bwDiag = T.bwDiag or {}
   for i, w in ipairs(wins) do
     local found = matched[i]
+    if not found and oldKnown[w:id()] then found, how[i] = oldKnown[w:id()], "memoria" end
+    if found then known[w:id()] = found end
     -- il titolo come lo dà il browser (senza il nome del profilo)
     local title = found and found.name or w:title() or ""
     names[w:id()] = title
     local site = found and siteOf(found.urls)
-    -- diagnosi (solo se il browser risponde ad AppleScript, e solo se cambia)
+    -- diagnosi (solo se il browser risponde ad AppleScript, e solo se il
+    -- risultato cambia)
     if info and B.kind ~= "ax" then
-      local diag = string.format("Tabby · %s «%s»: abbinata per %s · schede=%s · siti=%s → %s",
-        B.short, tostring(w:title()), how[i] or "NIENTE",
-        found and #found.urls or "?", found and domainsOf(found.urls) or "?",
-        site and ("webapp " .. site) or "finestra normale")
-      if T.bwDiag[w:id()] ~= diag then T.bwDiag[w:id()] = diag; print(diag) end
+      local result = (site and ("webapp " .. site) or "finestra normale") ..
+                     " · schede=" .. tostring(found and #found.urls or "?")
+      if T.bwDiag[w:id()] ~= result then
+        T.bwDiag[w:id()] = result
+        print(string.format("Tabby · %s «%s»: abbinata per %s · siti=%s → %s",
+          B.short, tostring(w:title()), how[i] or "NIENTE",
+          found and domainsOf(found.urls) or "?", result))
+      end
     end
     if site then
       -- stesso sito già preso (da un'altra finestra, anche di un altro browser):
-      -- questa finestra diventa una scheda a sé
+      -- questa finestra diventa una scheda a sé. Le notifiche si leggono dal
+      -- titolo attuale della finestra (quello del browser può essere vecchio).
       local e = {key = "site:" .. site, bid = b, app = app, win = w, site = site,
-                 name = siteName(title, site), titleBadge = titleBadge(title)}
+                 name = siteName(title, site), titleBadge = titleBadge(w:title()) or titleBadge(title)}
       if not add(e) then e.key = "win:" .. w:id(); add(e) end
     else
       table.insert(plain, w)
     end
   end
+  T.bwKnown[b] = known   -- solo le finestre ancora aperte
   windowTabs(app, b, plain, add, B.short, names)
 end
 
@@ -3410,6 +3429,12 @@ T.allWins = WF.new(false):setDefaultFilter({})
 T.allWins:subscribe(WF.windowCreated, function(w)
   local a = w and w:application()
   local b = a and a:bundleID()
+  -- diagnosi: che finestra ha aperto un browser (es. le finestrelle di Meet)
+  if b and BROWSERS[b] then
+    local f = w:frame()
+    print(string.format("Tabby · finestra nuova di %s «%s»: tipo=%s · normale=%s · %.0fx%.0f",
+      BROWSERS[b].short, tostring(w:title()), tostring(w:subrole()), tostring(w:isStandard()), f.w, f.h))
+  end
   -- (con le finestre separate ogni finestra nuova è una scheda nuova:
   -- non entra nel gruppo)
   local g = b and not BROWSERS[b] and not perWindow(b) and T.memberOf[b]
@@ -3647,4 +3672,4 @@ T.badgeSig = badgeSig(T.badges)
 rebuildTabs()
 draw()
 handleActive(hs.application.frontmostApplication())
-hs.alert.show("Tabby v9.8 attiva")
+hs.alert.show("Tabby v9.9 attiva")
