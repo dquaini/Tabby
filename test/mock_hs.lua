@@ -102,7 +102,8 @@ hs = {
     filter = {
       windowCreated = "created", windowDestroyed = "destroyed",
       windowFullscreened = "fs", windowUnfullscreened = "unfs", windowFocused = "focused", windowTitleChanged = "title",
-      new = function()
+      windowVisible = "visible", windowNotVisible = "notvisible",
+      new = function(which)
         local f = {subs = {}}
         function f:setDefaultFilter() return self end
         function f:subscribe(ev, fn)
@@ -114,7 +115,8 @@ hs = {
           for _, a in ipairs(APPS) do for _, w in ipairs(a._wins) do table.insert(out, w) end end
           return out
         end
-        WINFILTER = f
+        -- il filtro di Spotlight è a parte (SPOTFILTER), quello di tutte le finestre è WINFILTER
+        if which == "Spotlight" then SPOTFILTER = f else WINFILTER = f end
         return f
       end,
     },

@@ -109,6 +109,19 @@ Interfaccia:
    scheda fino a 595 ms; diagnosi DuckDuckGo troppo chiacchierona) + GitHub privato per
    tenere uguali i due Mac.
 
+## Icone della barra dei menu dentro Tabby (richiesta del 22/10/2026)
+Le icone in alto a destra di macOS (Notion, Claude, VPN, riproduzione, Bluetooth, Wi-Fi,
+batteria, Centro di Controllo…) dentro il menu ⚡︎, ognuna con una scorciatoia; e possibilmente
+nascoste dalla barra dei menu di Apple, visibili solo in Tabby.
+- **Leggerle e aprirle**: con l'Accessibilità ogni app espone le sue icone (AXExtrasMenuBar);
+  Tabby può elencarle e "premerle" per aprire il loro menu. Da provare sul Mac vero con la
+  barra dei menu nascosta: il menu potrebbe comparire in alto, sotto la barra che scende.
+- **Scorciatoie**: proposta ⌃⌥ + lettera scelta per ogni icona (o ⌃⌥⇧ + lettera).
+- **Nasconderle da Apple**: macOS 26 ha Impostazioni → Barra dei menu → "Consenti nella barra
+  dei menu" per ogni app. Rischio da verificare: un'icona spenta lì potrebbe sparire anche per
+  Tabby (non più "premibile"). Con la barra dei menu già nascosta (come la usa Daniele) il
+  problema pesa meno. Si decide dopo la prova.
+
 ## Cartelle, seconda parte (dopo C)
 - **Finestra di browser con più siti** dentro una cartella: ricordare l'elenco dei siti e
   riaprirli come schede di una finestra (Chrome/Safari). Da decidere: siti o pagine esatte.

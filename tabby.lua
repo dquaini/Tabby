@@ -1,5 +1,5 @@
 -- =====================================================================
---  TABBY  ·  v9.11
+--  TABBY  ·  v9.12
 --  Una barra con una scheda per ogni app: ne vedi una alla volta,
 --  clicchi (o premi Ctrl+Option+1…9) per passare all'altra.
 --
@@ -46,6 +46,7 @@
 --      Scambia nella vista divisa (⇄ e ⌃⌥S); il gatto di Tabby sul tasto
 --      scrivania; clic sulla cartella = scegli l'app; niente ridimensionamenti
 --      inutili; la spia di lentezza dice quale app è lenta.
+--  v9.12: con Spotlight aperto lo sfondo si oscura (⚙︎ → Comportamento).
 -- =====================================================================
 
 
@@ -72,6 +73,7 @@ local DEFAULTS = {
   folderSeq       = 0,
   activeFolders   = {},      -- cartelle attivate (sulla barra come scheda unica)
   folderView      = true,    -- ⚙︎ → Comportamento → Vista cartelle
+  spotlightDim    = true,    -- con Spotlight aperto lo sfondo si oscura
 }
 
 -- App da non mostrare mai come scheda
@@ -2742,6 +2744,8 @@ local function behaviourMenu()
      fn = toggle("autohide", function() T.revealed = false; refit() end)},
     {title = "Mostra anche app aperte senza finestre", checked = S.showWindowless,
      fn = toggle("showWindowless", rebuildTabs)},
+    {title = "Oscura lo sfondo quando apri Spotlight", checked = S.spotlightDim,
+     fn = toggle("spotlightDim", function() T.spotlightDim(false) end)},
     {title = "Vista cartelle (una cartella attiva = una scheda sola)", checked = S.folderView,
      fn = toggle("folderView", function() T.viewFolder = nil; rebuildTabs() end)},
   }
@@ -3705,6 +3709,31 @@ end)
 T.batWatcher = hs.battery.watcher.new(function() if T.bar then draw() end end)
 T.batWatcher:start()
 
+-- Spotlight: quando si apre, lo sfondo (app e Tabby) si oscura con un velo blu
+-- scuro; quando si chiude, il velo sparisce. Il velo non prende i clic: un clic
+-- fuori da Spotlight lo chiude come sempre.
+function T.spotlightDim(on)
+  if on and S.spotlightDim then
+    if not T.dim then
+      T.dim = hs.canvas.new(screen():fullFrame())
+      T.dim:level(hs.canvas.windowLevels.floating)
+      T.dim:behavior({"canJoinAllSpaces", "stationary", "fullScreenAuxiliary"})
+      T.dim:replaceElements({{type = "rectangle", action = "fill",
+        fillColor = {hex = "#0B0D12", alpha = 0.55}}})
+    end
+    T.dim:frame(screen():fullFrame())
+    T.dim:show(0.12)
+    if T.bar then T.dim:orderAbove(T.bar) end
+    T.dimOn = true
+  elseif T.dim and T.dimOn then
+    T.dim:hide(0.12)
+    T.dimOn = false
+  end
+end
+T.spotFilter = WF.new("Spotlight")
+T.spotFilter:subscribe({WF.windowCreated, WF.windowVisible}, function() T.spotlightDim(true) end)
+T.spotFilter:subscribe({WF.windowDestroyed, WF.windowNotVisible}, function() T.spotlightDim(false) end)
+
 
 -- ---------------------------------------------------------------------
 --  SCORCIATOIE  (tutte con ⌃⌥ = Ctrl + Option, vedi MODS in cima)
@@ -3834,4 +3863,4 @@ T.badgeSig = badgeSig(T.badges)
 rebuildTabs()
 draw()
 handleActive(hs.application.frontmostApplication())
-hs.alert.show("Tabby v9.11 attiva")
+hs.alert.show("Tabby v9.12 attiva")
