@@ -130,7 +130,11 @@ solo quello che non si può portare in Tabby.
 - "Apri all'avvio" e altre automazioni.
 
 ## Dopo la v1 (aggiunte)
-- **Colori di Tabby a scelta** (temi): i colori sono già tutti nella tabella `COL`.
+- **Design di Tabby e colori a scelta** (un unico filone, richiesta del 22/10/2026):
+  rivedere l'aspetto di Tabby nel suo insieme (schede, icone, tasti, menu, riquadri delle
+  cartelle e della vista divisa, velo di Spotlight) con un'identità coerente partendo dal
+  gatto; poi temi/colori a scelta. I colori sono già tutti nella tabella `COL`. Prima un
+  prototipo cliccabile, come per le cartelle.
 
 ## C. Avvio e schermata di partenza
 
