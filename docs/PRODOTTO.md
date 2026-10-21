@@ -81,6 +81,8 @@ Principi:
 | ⌃⌥0 | scrivania (ripremi per tornare) |
 | ⌃⌥← / → (↑ / ↓ se laterale) | scheda precedente / successiva |
 | ⌃⌥Tab | scheda usata prima |
+| ⌃⌥S | Scambia: ruota le app della vista divisa |
+| ⌃⌥⇧1…9 | attiva la cartella 1…9 |
 | ⌃⌥M · ⌃⌥C | Memo · Calcolatrice |
 | Esc | chiude Memo / Calcolatrice; annulla la divisione |
 | ⌘⌃⌥R | ricarica Tabby |

@@ -1,5 +1,5 @@
 -- =====================================================================
---  TABBY  ·  v9.10
+--  TABBY  ·  v9.11
 --  Una barra con una scheda per ogni app: ne vedi una alla volta,
 --  clicchi (o premi Ctrl+Option+1…9) per passare all'altra.
 --
@@ -42,6 +42,10 @@
 --  v9.10: Google Meet: il video in miniatura (finestrella del browser) non è
 --      una scheda, non si ridimensiona e resta visibile; abbinamento prima per
 --      posizione; webapp "Meet"; console: permesso negato ≠ browser occupato.
+--  v9.11: giro di rifiniture: scheda + (Spotlight, che esce dal menu ⚡︎);
+--      Scambia nella vista divisa (⇄ e ⌃⌥S); il gatto di Tabby sul tasto
+--      scrivania; clic sulla cartella = scegli l'app; niente ridimensionamenti
+--      inutili; la spia di lentezza dice quale app è lenta.
 -- =====================================================================
 
 
@@ -164,6 +168,14 @@ local T = Tabby
 
 hs.window.animationDuration = 0
 
+-- La cartella di Tabby (per le immagini in assets/) e l'icona del gatto del
+-- tasto scrivania: grigia a riposo, chiara quando la scrivania è attiva
+T.dir = (debug.getinfo(1, "S").source or ""):match("^@(.*)/[^/]*$")
+if T.dir and hs.image.imageFromPath then
+  T.catOff = hs.image.imageFromPath(T.dir .. "/assets/gatto-spento.png")
+  T.catOn  = hs.image.imageFromPath(T.dir .. "/assets/gatto-acceso.png")
+end
+
 -- Impostazioni salvate (restano anche dopo riavvio)
 local S = {}
 for k, v in pairs(DEFAULTS) do
@@ -204,6 +216,7 @@ local function later(fn) hs.timer.doAfter(0, fn) end
 local SLOW_MS = 150
 local function timed(name, fn)
   return function(...)
+    T.appMs = {}   -- tempo speso a chiedere le finestre a ogni app (vedi standardWindows)
     local t0 = hs.timer.absoluteTime()
     fn(...)
     local ms = (hs.timer.absoluteTime() - t0) / 1e6
@@ -212,7 +225,11 @@ local function timed(name, fn)
       local now = hs.timer.secondsSinceEpoch()
       if not T.slowAt[name] or now - T.slowAt[name] > 60 then
         T.slowAt[name] = now
-        print(string.format("Tabby · lento: %s %.0f ms", name, ms))
+        -- l'app più lenta a rispondere, se ha pesato
+        local worst, wms = nil, 0
+        for b, v in pairs(T.appMs) do if v > wms then worst, wms = b, v end end
+        local who = (worst and wms > 40) and string.format(" (più lenta a rispondere: %s %.0f ms)", worst, wms) or ""
+        print(string.format("Tabby · lento: %s %.0f ms%s", name, ms, who))
       end
     end
   end
@@ -416,9 +433,14 @@ end
 local draw  -- definita più sotto
 
 local function standardWindows(app)
+  local t0 = hs.timer.absoluteTime()
   local out = {}
   for _, w in ipairs(app:allWindows()) do
     if w:isStandard() then table.insert(out, w) end
+  end
+  if T.appMs then
+    local b = app:bundleID() or "?"
+    T.appMs[b] = (T.appMs[b] or 0) + (hs.timer.absoluteTime() - t0) / 1e6
   end
   return out
 end
@@ -1342,7 +1364,12 @@ local function fitWindow(w, force)
   if b and (FLOATER[b] or IGNORE[b]) then return end
   local s = w:screen()
   if not s or s:id() ~= screen():id() then return end
-  w:setFrame(appArea())
+  -- già della misura giusta? Allora niente: ogni ridimensionamento è una
+  -- richiesta a macOS, lenta se l'app è impegnata (Chrome durante Meet)
+  local f, A = w:frame(), appArea()
+  if math.abs(f.x - A.x) < 1 and math.abs(f.y - A.y) < 1
+     and math.abs(f.w - A.w) < 1 and math.abs(f.h - A.h) < 1 then return end
+  w:setFrame(A)
 end
 
 local function fitApp(app)
@@ -1779,6 +1806,23 @@ local function createGroup(layoutId, zones, nz)
   saveGroups()
   rebuildTabs()
   showGroup(g)
+end
+
+-- "Scambia" (tasto ⇄ e ⌃⌥S): le app della vista divisa ruotano di una zona
+-- (con due app si scambiano); ripremendo continuano a ruotare
+local function rotateGroup(g)
+  if not g or #g.members < 2 then return end
+  table.insert(g.members, 1, table.remove(g.members))
+  saveGroups()
+  rebuildTabs()
+  layoutGroup(g)
+  draw()
+end
+
+-- La vista divisa che stai guardando (nil se nessuna)
+local function currentGroup()
+  local key = currentKey()
+  return key and T.memberOf[key] or nil
 end
 
 -- "Scomponi": le schede tornano singole, ognuna a tutto spazio
@@ -2776,7 +2820,6 @@ local function openQuick()
       fn    = function() toggleQuick(q) end,
     })
   end
-  table.insert(items, {title = "Spotlight   ⌘Spazio", fn = openSpotlight})
   -- cartelle: clic = attiva; si creano e si modificano da qui
   table.insert(items, {title = "-"})
   table.insert(items, {title = "Cartelle", disabled = true})
@@ -2810,6 +2853,36 @@ local function openQuick()
   popup(items, popPos(T.L.quick))
 end
 
+-- Clic sulla scheda-cartella: le sue app; scelta una, la cartella si apre lì
+-- (con la scorciatoia ⌃⌥ + numero si entra subito nell'ultima usata)
+function FD.openFolderChooser(f, pos)
+  local items = {}
+  for _, t in ipairs(T.allTabs) do
+    if T.tabFolder[t.key] == f then
+      local key = t.key
+      table.insert(items, {
+        title   = t.name,
+        image   = keySmallIcon(t.group and t.group.members[1] or t.key),
+        checked = (T.folderLast[f.id] == key) or nil,
+        fn      = function()
+          T.viewFolder = f.id
+          rebuildTabs()
+          for i, x in ipairs(T.tabs) do if x.key == key then switchTo(i) end end
+          draw()
+        end,
+      })
+    end
+  end
+  table.insert(items, {title = "-"})
+  table.insert(items, {title = "Altre azioni", menu = {
+    {title = "Esci dalla cartella (le schede tornano libere)", fn = function() FD.releaseFolder(f) end},
+    {title = "Chiudi cartella…", fn = function() FD.closeFolder(f) end},
+    {title = "Modifica le schede…", fn = function() FD.openFolderEditor(f) end},
+    {title = "Rinomina…", fn = function() FD.renameFolder(f) end},
+  }})
+  popup(items, pos)
+end
+
 -- Menu ⋯ di una scheda-cartella (o del nome, nella vista cartella)
 function FD.openFolderMenu(f, pos)
   local n = 0
@@ -2840,6 +2913,7 @@ local function openSplitMenu()
   local t = ai and T.tabs[ai]
   if t and t.group then
     table.insert(items, {title = "-"})
+    table.insert(items, {title = "Scambia le app   ⌃⌥S", fn = function() rotateGroup(t.group) end})
     table.insert(items, {title = "Scomponi il gruppo attuale", fn = function() ungroup(t.group) end})
   end
   popup(items, popPos(T.L.split))
@@ -2883,6 +2957,7 @@ local function onMouse(_, msg, id)
   if id == "split" then openSplitMenu(); return end
   if id == "more" then openOverflow(); return end
   if id == "desktop" then toggleDesktop(); return end
+  if id == "plus" then openSpotlight(); return end
   if id == "fback" then FD.leaveFolderView(); return end
   if id == "fhead" then
     local f = FD.folderById(T.viewFolder)
@@ -2897,6 +2972,12 @@ local function onMouse(_, msg, id)
   end
   local c = tonumber(id:match("^close(%d+)$"))
   if c then openCloseMenu(c); return end
+  local ro = tonumber(id:match("^rotate(%d+)$"))
+  if ro then
+    local t = T.tabs[ro]
+    if t and t.group then rotateGroup(t.group) end
+    return
+  end
   local u = tonumber(id:match("^ungroup(%d+)$"))
   if u then
     local t = T.tabs[u]
@@ -2906,6 +2987,11 @@ local function onMouse(_, msg, id)
   if ti then
     if T.split then assignFirstEmpty(ti)
     elseif T.fedit then FD.feditAdd(T.tabs[ti])
+    elseif T.tabs[ti] and T.tabs[ti].folder then
+      -- clic sulla scheda-cartella: scegli su quale app aprirla
+      local r
+      for _, tv in ipairs(T.L.tabs) do if tv.i == ti then r = tv.r end end
+      FD.openFolderChooser(T.tabs[ti].folder, r and popPos(r) or nil)
     else switchTo(ti) end
   end
 end
@@ -2977,7 +3063,9 @@ local function layout(bf, activeIdx)
       table.insert(L.dividers, {x = 8, y = BTN_W + 60, w = w - 16, h = 1})
       start = BTN_W + 66
     end
-    local availH = bottomY - batH - 6 - start
+    -- in fondo alle schede, la scheda "+" (apre Spotlight)
+    local availH = bottomY - batH - 6 - start - MIN_ROW_H
+    L.plus = {x = 0, y = start, w = w, h = MIN_ROW_H}
     if n > 0 then
       local rowH = math.floor(math.min(ROW_H, availH / n))
       local vis, over
@@ -2991,10 +3079,13 @@ local function layout(bf, activeIdx)
       for k, i in ipairs(vis) do
         table.insert(L.tabs, {i = i, r = {x = 0, y = start + (k - 1) * rowH, w = w, h = rowH}})
       end
+      local y = start + #vis * rowH
       if #over > 0 then
-        L.more = {x = 0, y = start + #vis * rowH, w = w, h = MIN_ROW_H}
+        L.more = {x = 0, y = y, w = w, h = MIN_ROW_H}
         L.overflow = over
+        y = y + MIN_ROW_H
       end
+      L.plus = {x = 0, y = y, w = w, h = MIN_ROW_H}
     end
   else
     -- a sinistra la scrivania; a destra batteria, ⊞ ⚡︎ ⚙︎; in mezzo le schede
@@ -3012,7 +3103,8 @@ local function layout(bf, activeIdx)
     table.insert(L.dividers, {x = w - BTN_W, y = 8, w = 1, h = h - 16})
 
     local start = BTN_W + 6
-    local avail = w - BTN_W - rightW - 12
+    local PLUS_W = 36   -- la scheda "+" in fondo alle schede
+    local avail = w - BTN_W - rightW - 12 - PLUS_W
     -- vista cartella: a sinistra "←" e il nome della cartella
     local vf = T.viewFolder and FD.folderById(T.viewFolder)
     if vf then
@@ -3033,13 +3125,14 @@ local function layout(bf, activeIdx)
     L.notch = nz
 
     -- quante schede larghe "tw" ci stanno davvero (a sinistra e a destra del notch)
-    local endX = w - rightW - 6
+    local endX = w - rightW - 6 - PLUS_W
     local function fits(tw)
       if not nz then return math.floor((endX - start) / tw) end
       return math.max(0, math.floor((nz.x1 - start) / tw))
            + math.max(0, math.floor((endX - nz.x2) / tw))
     end
 
+    L.plus = {x = place(start, PLUS_W), y = 0, w = PLUS_W, h = h}
     if n > 0 then
       local tabW = math.floor(math.min(TAB_MAX_W, avail / n))
       while tabW >= COMPACT_BELOW and fits(tabW) < n do tabW = tabW - 2 end
@@ -3050,6 +3143,7 @@ local function layout(bf, activeIdx)
           table.insert(L.tabs, {i = i, r = {x = x, y = 0, w = tabW, h = h}})
           x = x + tabW
         end
+        L.plus = {x = place(x, PLUS_W), y = 0, w = PLUS_W, h = h}
       else
         -- modalità compatta: solo icone, l'attiva resta larga col nome
         local big = activeIdx and ACTIVE_W or 0
@@ -3074,7 +3168,9 @@ local function layout(bf, activeIdx)
         if #over > 0 then
           L.more = {x = place(x, ICON_W), y = 0, w = ICON_W, h = h}
           L.overflow = over
+          x = L.more.x + ICON_W
         end
+        L.plus = {x = place(x, PLUS_W), y = 0, w = PLUS_W, h = h}
       end
     end
   end
@@ -3176,7 +3272,7 @@ draw = function()
   }
   for _, d in ipairs(L.dividers) do table.insert(els, divider(d)) end
 
-  -- tasto scrivania (icona di uno schermo)
+  -- tasto scrivania: il gatto di Tabby (se manca l'immagine, uno schermo)
   local r = L.desk
   local cx, cy = r.x + r.w / 2, r.y + r.h / 2
   if T.desktopMode then
@@ -3184,12 +3280,19 @@ draw = function()
       roundedRectRadii = {xRadius = 7, yRadius = 7},
       frame = {x = r.x + 4, y = r.y + 4, w = r.w - 8, h = r.h - 8}})
   end
-  local deskCol = T.desktopMode and COL.text or COL.textDim
-  table.insert(els, {type = "rectangle", action = "stroke", strokeColor = deskCol,
-    strokeWidth = 1.5, roundedRectRadii = {xRadius = 2, yRadius = 2},
-    frame = {x = cx - 9, y = cy - 8, w = 18, h = 12}})
-  table.insert(els, {type = "rectangle", action = "fill", fillColor = deskCol,
-    frame = {x = cx - 5, y = cy + 6, w = 10, h = 1.5}})
+  local cat = T.desktopMode and T.catOn or T.catOff
+  if cat then
+    local sz = vertical and 26 or 24
+    table.insert(els, {type = "image", image = cat, imageScaling = "scaleProportionally",
+      frame = {x = cx - sz / 2, y = cy - sz / 2, w = sz, h = sz}})
+  else
+    local deskCol = T.desktopMode and COL.text or COL.textDim
+    table.insert(els, {type = "rectangle", action = "stroke", strokeColor = deskCol,
+      strokeWidth = 1.5, roundedRectRadii = {xRadius = 2, yRadius = 2},
+      frame = {x = cx - 9, y = cy - 8, w = 18, h = 12}})
+    table.insert(els, {type = "rectangle", action = "fill", fillColor = deskCol,
+      frame = {x = cx - 5, y = cy + 6, w = 10, h = 1.5}})
+  end
   table.insert(els, hitArea("desktop", r))
 
   -- vista cartella: "← Tutte le schede" e il nome della cartella
@@ -3312,7 +3415,7 @@ draw = function()
       table.insert(els, {type = "text", text = t.name,
         textSize = 13, textLineBreak = "truncateTail",
         textColor = active and COL.text or COL.textMid,
-        frame = {x = textX, y = my - 9, w = closeX - badgeW - textX - 2, h = 18}})
+        frame = {x = textX, y = my - 9, w = closeX - badgeW - textX - 2 - (g and 26 or 0), h = 18}})
 
       local btnR = {x = closeX - 2, y = my - 11, w = closeW + 4, h = 22}
       if t.folder then
@@ -3331,8 +3434,13 @@ draw = function()
         table.insert(els, {type = "rectangle", action = "stroke", strokeColor = COL.textMid,
           strokeWidth = 1.2, roundedRectRadii = {xRadius = 1.5, yRadius = 1.5},
           frame = {x = closeX + 13, y = my - 6, w = 6, h = 12}})
+        -- tasto "Scambia" ⇄, a sinistra di Scomponi
+        local rotR = {x = closeX - 26, y = my - 11, w = 24, h = 22}
+        table.insert(els, {type = "text", text = "⇄", textSize = 12, textColor = COL.textMid,
+          textAlignment = "center", frame = {x = rotR.x, y = my - 8, w = rotR.w, h = 16}})
         table.insert(els, hitArea("tab" .. i, tr, true))
         table.insert(els, hitArea("ungroup" .. i, btnR))
+        table.insert(els, hitArea("rotate" .. i, rotR))
       else
         -- ✕ per chiudere
         table.insert(els, {type = "text", text = "✕", textSize = 10,
@@ -3360,6 +3468,12 @@ draw = function()
       textAlignment = "center",
       frame = {x = L.more.x, y = L.more.y + L.more.h / 2 - 8, w = L.more.w, h = 16}})
     table.insert(els, hitArea("more", L.more))
+  end
+
+  -- scheda "+": apre Spotlight per aprire un'altra app
+  if L.plus then
+    table.insert(els, centeredGlyph("+", 18, L.plus, COL.textDim))
+    table.insert(els, hitArea("plus", L.plus))
   end
 
   -- batteria
@@ -3624,6 +3738,7 @@ shortcut("right", "next", function() switchRelative(1) end)
 shortcut("up",    "prev", function() switchRelative(-1) end, isVertical)
 shortcut("down",  "next", function() switchRelative(1) end, isVertical)
 shortcut("tab",   "last", toggleLastApp)
+shortcut("s",     "rotate", function() rotateGroup(currentGroup()) end)
 for _, q in ipairs(QUICK) do
   shortcut(q.key, "quick-" .. q.key, function() toggleQuick(q) end)
 end
@@ -3719,4 +3834,4 @@ T.badgeSig = badgeSig(T.badges)
 rebuildTabs()
 draw()
 handleActive(hs.application.frontmostApplication())
-hs.alert.show("Tabby v9.10 attiva")
+hs.alert.show("Tabby v9.11 attiva")

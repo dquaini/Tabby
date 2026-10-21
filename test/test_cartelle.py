@@ -112,8 +112,13 @@ check("la scheda-cartella ha il tasto ⋯", ev('(function() for _, e in ipairs(B
 check("console: riga di diagnosi", "Tabby · cartella «Lavoro» attivata: 4 voci, 2 da aprire" in ev('table.concat(PRINTS, "\\n")'))
 
 # ---------------------------------------------------------------- vista cartella
-print("\n== 3. Clic sulla scheda «Lavoro» → vista cartella")
+print("\n== 3. Clic sulla scheda «Lavoro» → scegli l'app → vista cartella su quell'app")
 run(f'CLICK("tab{idx("Lavoro")}")')
+check("il clic mostra le app della cartella", ev('Tabby.viewFolder') is None and
+      sorted(ev('(function() local o = {} for _, it in ipairs(MENU) do if it.fn and it.title ~= "-" then o[#o+1] = it.title end end return table.concat(o, "|") end)()').split("|"))
+      == sorted(["Slack", "Salesforce", "Windows App", "Notion"]))
+run('for _, it in ipairs(MENU) do if it.title == "Notion" then it.fn() end end')
+check("scelta Notion: la cartella si apre su Notion", ev('FRONT._name') == "Notion")
 print("  ", tabs())
 check("vista cartella", ev('Tabby.viewFolder') == ev('hs.settings.get("tabbar.folders")[1].id'))
 check("solo le sue schede", sorted(names()) == sorted(["Slack", "Salesforce", "Windows App", "Notion"]))
