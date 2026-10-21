@@ -47,7 +47,8 @@
 --      scrivania; clic sulla cartella = scegli l'app; niente ridimensionamenti
 --      inutili; la spia di lentezza dice quale app è lenta.
 --  v9.12: con Spotlight aperto lo sfondo si oscura (⚙︎ → Comportamento).
---      (v9.12.1: il velo restava trasparente per due dissolvenze ravvicinate)
+--      (v9.12.1: il velo restava trasparente per due dissolvenze ravvicinate;
+--      v9.12.2: velo all'85%, il testo dietro non si legge più)
 -- =====================================================================
 
 
@@ -3720,7 +3721,7 @@ function T.spotlightDim(on)
       T.dim:level(hs.canvas.windowLevels.floating)
       T.dim:behavior({"canJoinAllSpaces", "stationary", "fullScreenAuxiliary"})
       T.dim:replaceElements({{type = "rectangle", action = "fill",
-        fillColor = {hex = "#0B0D12", alpha = 0.55}}})
+        fillColor = {hex = "#0B0D12", alpha = 0.85}}})   -- abbastanza da non leggere il testo dietro
     end
     if T.dimOn then return end   -- Spotlight manda due segnali ("creata", "visibile")
     -- niente dissolvenza: due dissolvenze ravvicinate lasciavano il velo
