@@ -48,7 +48,8 @@
 --      inutili; la spia di lentezza dice quale app è lenta.
 --  v9.12: con Spotlight aperto lo sfondo si oscura (⚙︎ → Comportamento).
 --      (v9.12.1: il velo restava trasparente per due dissolvenze ravvicinate;
---      v9.12.2: velo all'85%, il testo dietro non si legge più)
+--      v9.12.2: velo all'85%, il testo dietro non si legge più;
+--      v9.12.3: il velo sparisce subito quando Spotlight si chiude)
 -- =====================================================================
 
 
@@ -3731,10 +3732,32 @@ function T.spotlightDim(on)
     T.dim:show()
     if T.bar then T.dim:orderAbove(T.bar) end
     T.dimOn = true
+    -- macOS avvisa della chiusura di Spotlight con ~1 secondo di ritardo: finché
+    -- il velo è acceso, Tabby controlla da sé 20 volte al secondo se Spotlight
+    -- c'è ancora (costa 0,06 ms, misurato sul Mac vero)
+    T.dimSince = hs.timer.secondsSinceEpoch()
+    if T.dimPoll then T.dimPoll:stop() end
+    T.dimPoll = hs.timer.doEvery(0.05, function()
+      if hs.timer.secondsSinceEpoch() - T.dimSince < 0.15 then return end
+      if not T.spotlightOpen() then T.spotlightDim(false) end
+    end)
   elseif T.dim and T.dimOn then
     T.dim:hide()
     T.dimOn = false
+    if T.dimPoll then T.dimPoll:stop(); T.dimPoll = nil end
   end
+end
+
+-- Spotlight è aperto? Lo si capisce dalla finestra attiva: mentre è aperto è
+-- la sua; appena si chiude torna subito a quella della tua app. (Contare le sue
+-- finestre non basta: da chiuso ne tiene una ancora per circa un secondo.)
+function T.spotlightOpen()
+  local ok, open = pcall(function()
+    local w = hs.window.focusedWindow()
+    local a = w and w:application()
+    return a ~= nil and a:bundleID() == "com.apple.Spotlight"
+  end)
+  return ok and open
 end
 T.spotFilter = WF.new("Spotlight")
 T.spotFilter:subscribe({WF.windowCreated, WF.windowVisible}, function() T.spotlightDim(true) end)

@@ -83,8 +83,16 @@ run('SPOTFILTER.subs["created"]()')   # Spotlight manda anche "creata": nessun p
 check("Spotlight aperto → velo visibile e non trasparente", ev('Tabby.dimOn') is True and ev('Tabby.dim._shown') is True
       and ev('Tabby.dim:alpha()') == 1)
 check("il velo non prende i clic (nessun mouseCallback)", ev('Tabby.dim._cb') is None)
+L.execute('''
+SAVED_FW = hs.window.focusedWindow
+SPOTAPP = {bundleID = function() return "com.apple.Spotlight" end}
+hs.window.focusedWindow = function() return {application = function() return SPOTAPP end} end
+CLOCK = 2000; Tabby.dimPoll.fn()''')
+check("Spotlight ancora aperto: il controllo lascia il velo", ev('Tabby.dim._shown') is True)
+L.execute('hs.window.focusedWindow = SAVED_FW; Tabby.dimPoll.fn()')
+check("Spotlight chiuso: il controllo toglie il velo subito (senza aspettare macOS)", ev('Tabby.dim._shown') is False)
 run('SPOTFILTER.subs["notvisible"]()')
-check("Spotlight chiuso → velo sparito", ev('Tabby.dim._shown') is False)
+check("e il segnale di macOS che arriva dopo non fa danni", ev('Tabby.dim._shown') is False)
 run('CLICK("settings"); for _, m in ipairs(MENU) do if m.title == "Comportamento" then for _, it in ipairs(m.menu) do if it.title:find("^Oscura") then it.fn() end end end end')
 run('SPOTFILTER.subs["visible"]()')
 check("interruttore spento → niente velo", ev('Tabby.dim._shown') is False)

@@ -136,7 +136,7 @@ hs = {
   application = {
     runningApplications = function() local o = {} for _, a in ipairs(APPS) do o[#o+1] = a end return o end,
     get = function(h) if h == "com.apple.dock" then return {} end return findApp(h) end,
-    applicationsForBundleID = function(b) if b == "com.apple.dock" then return {{}} end local a = findApp(b); return (a and a._bid == b and a._running ~= false) and {a} or {} end,
+    applicationsForBundleID = function(b) if b == "com.apple.dock" or b == "com.apple.Spotlight" then return {{}} end local a = findApp(b); return (a and a._bid == b and a._running ~= false) and {a} or {} end,
     frontmostApplication = function() return FRONT end,
     launchOrFocusByBundleID = function(b) local a = findApp(b); if a then a:activate(); log("focus", b) end end,
     nameForBundleID = function(b) return b end,
@@ -149,7 +149,7 @@ hs = {
   },
   timer = {
     doAfter = function(_, fn) table.insert(timers, fn); return {} end,
-    doEvery = function(_, fn) return {fn = fn} end,
+    doEvery = function(_, fn) return {fn = fn, stop = function() end} end,
     delayed = {new = function(_, fn) return {start = function() table.insert(timers, fn) end} end},
     secondsSinceEpoch = function() return CLOCK or 1000 end,
     absoluteTime = function() return 0 end,
@@ -251,7 +251,10 @@ hs = {
       end})
     end
     local list = {attributeValue = function(_, k) if k == "AXChildren" then return items end end}
-    return {attributeValue = function(_, k) if k == "AXChildren" then return {list} end end}
+    return {attributeValue = function(_, k)
+      if k == "AXChildren" then return {list} end
+      if k == "AXWindows" then return SPOT_WINDOWS or {} end   -- finestre di Spotlight
+    end}
   end},
   webview = {
     new = function(r)
