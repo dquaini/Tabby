@@ -1,5 +1,5 @@
 -- =====================================================================
---  TABBY  ·  v9.9
+--  TABBY  ·  v9.10
 --  Una barra con una scheda per ogni app: ne vedi una alla volta,
 --  clicchi (o premi Ctrl+Option+1…9) per passare all'altra.
 --
@@ -39,6 +39,9 @@
 --  v9.9: Chrome: le webapp non "lampeggiano" più (memoria per finestra mentre
 --      la risposta del browser è in arrivo); diagnosi delle finestre nuove dei
 --      browser; diagnosi DuckDuckGo solo quando cambia sito o schede.
+--  v9.10: Google Meet: il video in miniatura (finestrella del browser) non è
+--      una scheda, non si ridimensiona e resta visibile; abbinamento prima per
+--      posizione; webapp "Meet"; console: permesso negato ≠ browser occupato.
 -- =====================================================================
 
 
@@ -574,13 +577,14 @@ local function askBrowser(bid, B)
     pcall(function() job.task:terminate() end)
   end
   local task
-  task = hs.task.new("/usr/bin/osascript", function(code, out)
+  task = hs.task.new("/usr/bin/osascript", function(code, out, err)
     if T.asJobs[bid] and T.asJobs[bid].task ~= task then return end   -- risposta vecchia
     T.asJobs[bid] = nil
     local prev = T.asOut[bid]
     -- senza risposta (browser occupato, permesso tolto) si tiene l'ultima buona,
     -- così le webapp non spariscono e ricompaiono
-    local now = {answered = (code == 0), res = (code == 0) and (out or "") or (prev and prev.res)}
+    local now = {answered = (code == 0), res = (code == 0) and (out or "") or (prev and prev.res),
+                 denied = (code ~= 0) and tostring(err or ""):find("%-1743") ~= nil}
     T.asOut[bid] = now
     if not prev or prev.answered ~= now.answered or prev.res ~= now.res then
       onBrowserAnswer()
@@ -635,10 +639,13 @@ local function refreshBrowsers(ask)
       T.asDiag = T.asDiag or {}
       if last and T.asDiag[bid] ~= answered then
         T.asDiag[bid] = answered
-        if not answered then
-          print(string.format("Tabby · %s non risponde ad AppleScript: niente nomi e loghi dei siti. " ..
-            "Controlla Impostazioni di Sistema → Privacy e sicurezza → Automazione → " ..
+        if not answered and last.denied then
+          print(string.format("Tabby · %s: manca il permesso, niente nomi e loghi dei siti. " ..
+            "Impostazioni di Sistema → Privacy e sicurezza → Automazione → " ..
             "Hammerspoon → %s (deve essere acceso)", B.short, B.as))
+        elseif not answered then
+          print(string.format("Tabby · %s non ha risposto in tempo (occupato o in chiusura): " ..
+            "uso l'ultima risposta buona", B.short))
         end
       end
     else
@@ -689,6 +696,12 @@ local function siteName(title, dom)
   -- 1) il pezzo del titolo che contiene il nome del sito ("Notion", "Google Docs", "Proton Mail")
   for i = #parts, 1, -1 do
     if #parts[i] <= 24 and parts[i]:lower():find(main:lower(), 1, true) then return parts[i] end
+  end
+  -- 1b) un pezzo del titolo uguale a un pezzo del dominio ("Meet - abc-defg" su meet.google.com)
+  for i = #parts, 1, -1 do
+    for _, lab in ipairs(labels) do
+      if #lab >= 3 and parts[i]:lower() == lab:lower() then return parts[i] end
+    end
   end
   -- 2) l'ultimo pezzo, se il titolo è fatto a pezzi ("Posta - io@x - Gmail")
   local last = parts[#parts]
@@ -797,14 +810,21 @@ local function windowTabs(app, b, wins, add, appTitle, titles)
 end
 
 -- Abbina le finestre sullo schermo a quelle descritte dal browser, in tre
--- passaggi: 1) stesso titolo; 2) il titolo sullo schermo inizia con quello
--- del browser (Chrome con più profili aggiunge il nome del profilo:
--- "Gmail - Lavoro"); 3) stessa posizione e misura della finestra.
+-- passaggi: 1) stessa posizione e misura (la più sicura, se la risposta è
+-- fresca); 2) stesso titolo; 3) il titolo sullo schermo inizia con quello del
+-- browser (Chrome con più profili aggiunge il nome del profilo: "Gmail - Lavoro").
+-- Una finestra piccola si abbina solo per posizione: il video in miniatura di
+-- Meet ha lo stesso titolo della pagina e "ruberebbe" l'abbinamento.
 local function matchBrowserWindows(wins, info)
   local found, how, used = {}, {}, {}
-  local function pass(label, test)
+  local A = appArea()
+  local function small(w)
+    local f = w:frame()
+    return f.w < A.w * 0.5 and f.h < A.h * 0.6
+  end
+  local function pass(label, test, bigOnly)
     for i, w in ipairs(wins) do
-      if not found[i] then
+      if not found[i] and not (bigOnly and small(w)) then
         for k, e in ipairs(info or {}) do
           if not used[k] and test(w, e) then
             used[k], found[i], how[i] = true, e, label
@@ -814,17 +834,17 @@ local function matchBrowserWindows(wins, info)
       end
     end
   end
-  pass("titolo", function(w, e) return e.name == (w:title() or "") end)
-  pass("inizio del titolo", function(w, e)
-    local t = w:title() or ""
-    return e.name ~= "" and #t > #e.name and t:sub(1, #e.name) == e.name
-       and t:sub(#e.name + 1, #e.name + 1) == " "
-  end)
   pass("posizione", function(w, e)
     local f, r = w:frame(), e.bounds
     return r ~= nil and math.abs(f.x - r.x) < 4 and math.abs(f.y - r.y) < 4
        and math.abs(f.w - r.w) < 4 and math.abs(f.h - r.h) < 4
   end)
+  pass("titolo", function(w, e) return e.name == (w:title() or "") end, true)
+  pass("inizio del titolo", function(w, e)
+    local t = w:title() or ""
+    return e.name ~= "" and #t > #e.name and t:sub(1, #e.name) == e.name
+       and t:sub(#e.name + 1, #e.name + 1) == " "
+  end, true)
   return found, how
 end
 
@@ -842,10 +862,24 @@ local function browserTabs(app, b, B, wins, add)
   T.bwKnown = T.bwKnown or {}
   local oldKnown, known = T.bwKnown[b] or {}, {}
   T.bwDiag = T.bwDiag or {}
+  local minis = {}
   for i, w in ipairs(wins) do
     local found = matched[i]
     if not found and oldKnown[w:id()] then found, how[i] = oldKnown[w:id()], "memoria" end
     if found then known[w:id()] = found end
+    -- Finestrella (video in miniatura di Meet, barra "stai condividendo"):
+    -- piccola e assente dall'elenco del browser. Non è una scheda.
+    local f = w:frame()
+    local A = appArea()
+    local mini = info and B.kind ~= "ax" and not found and f.w < A.w * 0.5 and f.h < A.h * 0.6
+    if mini then
+      minis[w:id()] = w
+      if not (T.minis and T.minis[w:id()]) then
+        print(string.format("Tabby · %s: finestrella «%s» %.0fx%.0f (video in miniatura?): non è una scheda, resta visibile",
+          B.short, tostring(w:title()), f.w, f.h))
+      end
+      goto nextwin
+    end
     -- il titolo come lo dà il browser (senza il nome del profilo)
     local title = found and found.name or w:title() or ""
     names[w:id()] = title
@@ -872,8 +906,13 @@ local function browserTabs(app, b, B, wins, add)
     else
       table.insert(plain, w)
     end
+    ::nextwin::
   end
   T.bwKnown[b] = known   -- solo le finestre ancora aperte
+  T.minisOf = T.minisOf or {}
+  T.minisOf[b] = next(minis) and minis or nil
+  T.minis = {}
+  for _, m in pairs(T.minisOf) do for id, w in pairs(m) do T.minis[id] = w end end
   windowTabs(app, b, plain, add, B.short, names)
 end
 
@@ -1089,6 +1128,7 @@ local function rebuildTabs()
 
   -- 1. tutte le schede possibili, con la loro chiave
   local cand, keyWin, winKey, keyBid, candOrder = {}, {}, {}, {}, {}
+  T.minisOf = {}   -- finestrelle dei browser (le ricalcola browserTabs)
   local function add(e)
     if cand[e.key] then return false end   -- chiave già presa
     cand[e.key] = e
@@ -1295,6 +1335,7 @@ end
 local function fitWindow(w, force)
   if not w or (not S.fit and not force) then return end
   if not w:isStandard() or w:isFullScreen() then return end
+  if T.minis and T.minis[w:id()] then return end   -- finestrella (video in miniatura)
   local a = w:application()
   local b = a and a:bundleID()
   -- mai toccare app veloci e finestre di Hammerspoon (console, memo)
@@ -1321,7 +1362,10 @@ local function hideOthers(keep)
   local _, list = runningApps()
   for _, app in ipairs(list) do
     local b = app:bundleID()
-    if not keep[b] and not app:isHidden() and not hasFullscreen(app) then
+    -- un browser con una finestrella aperta (video in miniatura di Meet) non si
+    -- nasconde, se no sparirebbe anche lei
+    if not keep[b] and not app:isHidden() and not hasFullscreen(app)
+       and not (T.minisOf and T.minisOf[b]) then
       app:hide()
     end
   end
@@ -3446,7 +3490,10 @@ T.allWins:subscribe(WF.windowCreated, function(w)
       if T.memberOf[currentKey()] == g then layoutGroup(g) end
     end)
   elseif a and b == frontBid() then
-    fitWindow(w)
+    -- una finestra piccola di un browser può essere una finestrella (video in
+    -- miniatura): si decide dopo, quando il browser ha risposto
+    local f, A = w:frame(), appArea()
+    if not (BROWSERS[b] and f.w < A.w * 0.5 and f.h < A.h * 0.6) then fitWindow(w) end
   end
   scheduleRebuild()
 end)
@@ -3672,4 +3719,4 @@ T.badgeSig = badgeSig(T.badges)
 rebuildTabs()
 draw()
 handleActive(hs.application.frontmostApplication())
-hs.alert.show("Tabby v9.9 attiva")
+hs.alert.show("Tabby v9.10 attiva")

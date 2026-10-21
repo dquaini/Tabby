@@ -206,7 +206,7 @@ hs = {
           return
         end
         local ok, out = hs.osascript.applescript(args[2])
-        if cb then cb(ok and 0 or 1, ok and out or "", ok and "" or "errore -1743") end
+        if cb then cb(ok and 0 or 1, ok and out or "", ok and "" or (AS_TIMEOUT and "errore -1712" or "errore -1743")) end
       end)
       return self
     end
@@ -226,12 +226,14 @@ hs = {
       local inner = src:match('tell application.-end tell') or ""
       local T9 = inner:find("&%s*tab%f[^%w]") and "tab" or "\t"
       for _, w in ipairs(a._wins) do
+       if not w._noAS then   -- le finestrelle (video in miniatura) non sono nell'elenco del browser
         -- come il vero browser: il nome della finestra (senza profilo) e la posizione
         local f = w._frame
         out = out .. (w._asName or w._title) .. T9
         if not NO_BOUNDS then out = out .. f.x .. "," .. f.y .. "," .. (f.x + f.w) .. "," .. (f.y + f.h) .. T9 end
         for _, u in ipairs(w._urls) do out = out .. u .. T9 end
         out = out .. "\n"
+       end
       end
       return true, out
     end,

@@ -51,7 +51,13 @@ check("la finestra con due siti resta una finestra normale «Chrome»",
       ev('(function() for _, t in ipairs(Tabby.tabs) do if t.name == "Chrome" and not t.site then return true end end return false end)()') is True)
 out = prints()
 check("diagnosi in console: come è stata abbinata ogni finestra",
-      "abbinata per inizio del titolo" in out and "abbinata per posizione" in out)
+      "abbinata per posizione" in out and "abbinata per NIENTE" not in out)
+# senza la posizione (es. Safari vecchio) vale l'inizio del titolo
+L.execute('NO_BOUNDS = true; Tabby.rebuildTimer:start(); FLUSH()')   # arriva la risposta senza posizione
+L.execute('Tabby.bwKnown = {}; Tabby.bwDiag = {}; PRINTS = {}; Tabby.rebuildTimer:start(); FLUSH()')
+check("senza posizione: Gmail riconosciuta per inizio del titolo (profilo)",
+      ev('Tabby.cand["site:mail.google.com"] ~= nil') is True and "abbinata per inizio del titolo" in prints())
+L.execute('NO_BOUNDS = nil; Tabby.rebuildTimer:start(); FLUSH()')
 check("diagnosi senza indirizzi completi (privacy)", "/mail/u/0" not in out and "search?q" not in out)
 
 print("\n== Loghi bloccati dalla rete aziendale")
@@ -67,6 +73,11 @@ print("\n== Permesso Automazione negato")
 L.execute('AS_DENIED = true; PRINTS = {}; Tabby.rebuildTimer:start(); FLUSH()')
 check("la console spiega cosa fare", "Automazione" in prints() and "Google Chrome" in prints())
 L.execute('AS_DENIED = false; Tabby.rebuildTimer:start(); FLUSH()')
+L.execute('AS_DENIED = true; AS_TIMEOUT = true; PRINTS = {}; Tabby.rebuildTimer:start(); FLUSH()')
+check("Chrome occupato (non il permesso): la console non parla di Automazione",
+      "non ha risposto in tempo" in prints() and "Automazione" not in prints())
+check("…e le webapp restano (ultima risposta buona)", ev('Tabby.cand["site:mail.google.com"] ~= nil') is True)
+L.execute('AS_DENIED = false; AS_TIMEOUT = nil; Tabby.rebuildTimer:start(); FLUSH()')
 check("permesso dato: tornano le webapp", ev('Tabby.cand["site:mail.google.com"] ~= nil') is True)
 
 print("\n== Velocità e script")
