@@ -1,5 +1,5 @@
 -- =====================================================================
---  TABBY  ·  v9.6
+--  TABBY  ·  v9.7
 --  Una barra con una scheda per ogni app: ne vedi una alla volta,
 --  clicchi (o premi Ctrl+Option+1…9) per passare all'altra.
 --
@@ -30,6 +30,9 @@
 --  v9.6: Chrome & co.: webapp riconosciute anche con più profili (titolo con
 --      il profilo in fondo) o titolo diverso (abbinate per posizione); logo
 --      anche dal sito stesso; diagnosi in console (abbinamento, permesso, logo).
+--  v9.7: Chrome/Safari: corretto lo script (dentro il browser "tab" è la
+--      scheda, non la tabulazione: le webapp non venivano mai riconosciute);
+--      la domanda al browser parte in parallelo (via ~200 ms di blocco ogni 3 s).
 -- =====================================================================
 
 
@@ -414,28 +417,32 @@ end
 --  "Chrome A / B", ma senza nome e logo del sito.
 -- ---------------------------------------------------------------------
 
+-- Attenzione: dentro "tell application" la parola tab è la SCHEDA del
+-- browser, non il carattere di tabulazione ("a" & tab & "b" dà "atabb").
+-- Per questo i separatori si preparano prima, fuori dal tell (TB e NL).
 local AS_WINDOWS = [[
+set TB to (ASCII character 9)
+set NL to (ASCII character 10)
 with timeout of 2 seconds
   tell application "%s"
     set out to ""
     repeat with w in windows
       try
-        set row to (name of w) & tab
+        set row to (name of w) & TB
         try
           set b to bounds of w
-          set row to row & ((item 1 of b) as text) & "," & ((item 2 of b) as text) & "," & ¬
-            ((item 3 of b) as text) & "," & ((item 4 of b) as text) & tab
+          set row to row & ((item 1 of b) as text) & "," & ((item 2 of b) as text) & "," & ((item 3 of b) as text) & "," & ((item 4 of b) as text) & TB
         on error
-          set row to row & "-" & tab
+          set row to row & "-" & TB
         end try
         repeat with t in tabs of w
           try
-            set row to row & (URL of t) & tab
+            set row to row & (URL of t) & TB
           on error
-            set row to row & "about:blank" & tab
+            set row to row & "about:blank" & TB
           end try
         end repeat
-        set out to out & row & linefeed
+        set out to out & row & NL
       end try
     end repeat
     return out
@@ -540,9 +547,42 @@ local function axBrowserInfo(app, short)
   return wins, table.concat(sigParts, ";")
 end
 
+-- La domanda ad AppleScript si fa "in parallelo" (con osascript): Tabby non
+-- resta ferma ad aspettare il browser (prima ~200 ms ogni 3 s, misurati sul
+-- Mac di lavoro, e intanto anche la tastiera aspettava). Quando arriva la
+-- risposta, se è cambiato qualcosa, le schede si aggiornano.
+local onBrowserAnswer   -- definita più sotto
+T.asJobs, T.asOut = {}, {}
+local function askBrowser(bid, B)
+  local job = T.asJobs[bid]
+  if job then
+    -- una domanda ancora senza risposta dopo 6 s: la si lascia perdere
+    if hs.timer.secondsSinceEpoch() - job.at < 6 then return end
+    pcall(function() job.task:terminate() end)
+  end
+  local task
+  task = hs.task.new("/usr/bin/osascript", function(code, out)
+    if T.asJobs[bid] and T.asJobs[bid].task ~= task then return end   -- risposta vecchia
+    T.asJobs[bid] = nil
+    local prev = T.asOut[bid]
+    -- senza risposta (browser occupato, permesso tolto) si tiene l'ultima buona,
+    -- così le webapp non spariscono e ricompaiono
+    local now = {answered = (code == 0), res = (code == 0) and (out or "") or (prev and prev.res)}
+    T.asOut[bid] = now
+    if not prev or prev.answered ~= now.answered or prev.res ~= now.res then
+      onBrowserAnswer()
+    end
+  end, {"-e", string.format(AS_WINDOWS, B.as)})
+  if task and task:start() then
+    T.asJobs[bid] = {task = task, at = hs.timer.secondsSinceEpoch()}
+  end
+end
+
 -- Aggiorna T.binfo: per ogni browser aperto, l'elenco delle finestre
 -- con titolo e indirizzi delle schede. Ritorna true se è cambiato qualcosa.
-local function refreshBrowsers()
+-- Per i browser con AppleScript usa l'ultima risposta arrivata e (se ask)
+-- fa partire una domanda nuova.
+local function refreshBrowsers(ask)
   local new, sig = {}, {}
   for bid, B in pairs(BROWSERS) do
     local app = appFor(bid)
@@ -551,11 +591,11 @@ local function refreshBrowsers()
       new[bid] = wins
       table.insert(sig, bid .. "=" .. s)
     elseif app and app:isRunning() then
-      local ok, success, res = pcall(function()
-        return hs.osascript.applescript(string.format(AS_WINDOWS, B.as))
-      end)
-      local answered = ok and success and type(res) == "string"
-      if answered then
+      if ask ~= false then askBrowser(bid, B) end
+      local last = T.asOut[bid]
+      local res = last and last.res
+      local answered = (last == nil) or last.answered   -- nessuna risposta ancora: aspettiamo
+      if res then
         local wins = {}
         for row in res:gmatch("[^\r\n]+") do
           local fields = {}
@@ -580,7 +620,7 @@ local function refreshBrowsers()
       end
       -- diagnosi: AppleScript non risponde (di solito manca il permesso)
       T.asDiag = T.asDiag or {}
-      if T.asDiag[bid] ~= answered then
+      if last and T.asDiag[bid] ~= answered then
         T.asDiag[bid] = answered
         if not answered then
           print(string.format("Tabby · %s non risponde ad AppleScript: niente nomi e loghi dei siti. " ..
@@ -588,6 +628,8 @@ local function refreshBrowsers()
             "Hammerspoon → %s (deve essere acceso)", B.short, B.as))
         end
       end
+    else
+      T.asOut[bid] = nil   -- browser chiuso: si dimentica l'ultima risposta
     end
   end
   table.sort(sig)
@@ -1173,6 +1215,12 @@ T.rebuildTimer = hs.timer.delayed.new(0.3, timed("ricostruzione schede", functio
   draw()
 end))
 local function scheduleRebuild() T.rebuildTimer:start() end
+
+-- È arrivata la risposta di un browser (vedi askBrowser): ricostruisci
+-- senza fare un'altra domanda
+onBrowserAnswer = function()
+  if refreshBrowsers(false) then rebuildTabs(); draw() end
+end
 
 local function isTabApp(app)
   if not app then return false end
@@ -2940,4 +2988,4 @@ T.badgeSig = badgeSig(T.badges)
 rebuildTabs()
 draw()
 handleActive(hs.application.frontmostApplication())
-hs.alert.show("Tabby v9.6 attiva")
+hs.alert.show("Tabby v9.7 attiva")

@@ -181,6 +181,20 @@ hs = {
   hotkey = {bind = function(m, k, fn) HOTKEYS = HOTKEYS or {}; HOTKEYS[k] = fn; return {} end},
   alert = {show = function(m) log("alert", m) end},
   dialog = {blockAlert = function() return "Chiudi tutte" end, chooseFileOrFolder = function() return nil end},
+  -- comandi esterni (usato per osascript): la risposta arriva "dopo", come sul Mac
+  task = {new = function(path, cb, args)
+    local t = {}
+    function t:start()
+      TASKS = (TASKS or 0) + 1
+      table.insert(timers, function()
+        local ok, out = hs.osascript.applescript(args[2])
+        cb(ok and 0 or 1, ok and out or "", ok and "" or "errore -1743")
+      end)
+      return self
+    end
+    function t:terminate() end
+    return t
+  end},
   osascript = {
     javascript = function() return true, "" end,
     applescript = function(src)
@@ -189,12 +203,16 @@ hs = {
       local a = findApp(name == "Google Chrome" and "com.google.Chrome" or name)
       if not a then return false, nil end
       local out = ""
+      -- come il vero macOS: dentro "tell application" la parola tab è la
+      -- scheda del browser, e "x" & tab dà "xtab" (non una tabulazione)
+      local inner = src:match('tell application.-end tell') or ""
+      local T9 = inner:find("&%s*tab%f[^%w]") and "tab" or "\t"
       for _, w in ipairs(a._wins) do
         -- come il vero browser: il nome della finestra (senza profilo) e la posizione
         local f = w._frame
-        out = out .. (w._asName or w._title) .. "\t"
-        if not NO_BOUNDS then out = out .. f.x .. "," .. f.y .. "," .. (f.x + f.w) .. "," .. (f.y + f.h) .. "\t" end
-        for _, u in ipairs(w._urls) do out = out .. u .. "\t" end
+        out = out .. (w._asName or w._title) .. T9
+        if not NO_BOUNDS then out = out .. f.x .. "," .. f.y .. "," .. (f.x + f.w) .. "," .. (f.y + f.h) .. T9 end
+        for _, u in ipairs(w._urls) do out = out .. u .. T9 end
         out = out .. "\n"
       end
       return true, out

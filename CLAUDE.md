@@ -53,7 +53,8 @@ Prima di lavorare leggi:
   e deduplica (`fire`), per app che catturano la tastiera (Windows App).
 - Notch: `detectNotch()` (JXA → NSScreen), `useNotchBand()`, `placeBar()` alza il
   livello della finestra di Tabby se macOS la spinge sotto la fascia del notch.
-- Browser: AppleScript (Chrome/Brave/Edge/Safari) o Accessibilità (DuckDuckGo, che non
+- Browser: AppleScript **in parallelo** con `hs.task` + osascript (Chrome/Brave/Edge/Safari;
+  attenzione: dentro `tell application` la parola `tab` è la scheda, usare `TB`) o Accessibilità (DuckDuckGo, che non
   ha AppleScript) per sapere i siti di ogni finestra; loghi da icons.duckduckgo.com →
   Google; notifiche dal Dock (AXStatusLabel) e dai titoli delle webapp.
 
@@ -96,5 +97,5 @@ dà "receive timeout": ripeterla. Sul MacBook col notch la messa in funzione va 
 
 ## Versione attuale
 
-**v9.6** (vedi storia in testa a `tabby.lua`). Prossimo obiettivo: **Tabby v1** (A fatta, prossima: B Cartelle)
+**v9.7** (vedi storia in testa a `tabby.lua`). Prossimo obiettivo: **Tabby v1** (A fatta, prossima: B Cartelle)
 (`docs/ROADMAP-v1.md`).

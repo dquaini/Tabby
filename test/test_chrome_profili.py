@@ -69,5 +69,14 @@ check("la console spiega cosa fare", "Automazione" in prints() and "Google Chrom
 L.execute('AS_DENIED = false; Tabby.rebuildTimer:start(); FLUSH()')
 check("permesso dato: tornano le webapp", ev('Tabby.cand["site:mail.google.com"] ~= nil') is True)
 
+print("\n== Velocità e script")
+src = open(base + '/tabby.lua').read()
+check("la domanda a Chrome parte in parallelo (Tabby non resta ferma ad aspettare)",
+      "hs.osascript.applescript(" not in src and ev('(TASKS or 0) > 0') is True)
+script = src[src.index("local AS_WINDOWS = [["):]
+script = script[:script.index("]]")]
+check("lo script non usa la parola «tab» come separatore (dentro Chrome è la scheda)",
+      "& TB" in script and "& tab" not in script)
+
 print()
 print("FALLITI: %d" % len(fails) if fails else "TUTTO OK")
