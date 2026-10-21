@@ -76,6 +76,10 @@ Prima di lavorare leggi:
    app veloci, `Tabby · lento:` per i lavori sopra i 150 ms): usale per capire problemi reali invece di tirare a indovinare.
 5. Non cambiare scorciatoie o comportamenti a cui l'utente è abituato senza dirlo.
 6. Usa git: un commit per ogni versione funzionante, messaggio in italiano.
+7. **GitHub** (privato: `git@github.com:dquaini/Tabby.git`, ramo `main`): all'inizio di
+   ogni sessione `git pull` (l'altro Mac può aver aggiunto versioni); dopo ogni commit
+   `git push`, così i due Mac hanno sempre la stessa Tabby. Ogni Mac ha la sua chiave SSH
+   (`~/.ssh/id_ed25519`, aggiunta su github.com/settings/keys).
 
 ## Messa in funzione (prima volta in Claude Code)
 
@@ -98,7 +102,9 @@ Prima di lavorare leggi:
 `~/Desktop/Tabby 2`; `init.lua` la carica (vecchio in `~/.hammerspoon/init.lua.backup-2026-10-20`).
 Il comando `hs` è in `~/.local/bin` (in `PATH` da `~/.zshrc`); se non si trova, usa
 `/Applications/Hammerspoon.app/Contents/Frameworks/hs/hs`. A volte la prima chiamata
-dà "receive timeout": ripeterla. Sul MacBook col notch la messa in funzione va rifatta.
+dà "receive timeout": ripeterla. Collegato a GitHub il 22/10/2026 (chiave "Mac di casa").
+Sul MacBook col notch la messa in funzione va rifatta: chiave SSH nuova da aggiungere su
+GitHub, poi `git clone git@github.com:dquaini/Tabby.git` e `init.lua` che punta lì.
 
 ## Versione attuale
 
