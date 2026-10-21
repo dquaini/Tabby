@@ -95,6 +95,28 @@ Interfaccia:
 - Notifiche: la riga cartella mostra la somma (come le viste divise).
 - Scorciatoie: ⌃⌥numero conta le schede visibili; valutare ⌃⌥ + lettera per cartelle.
 
+## Giro di rifiniture (feedback di Daniele del 21/10/2026, prima di C)
+1. **Google Meet** fa "impazzire" Tabby (difetto, servono dettagli; sospetto: finestrelle
+   di Meet come condivisione schermo / video in miniatura trattate come finestre normali).
+2. **Scheda "+"** in fondo alle schede: apre Spotlight; Spotlight esce dal menu ⚡︎.
+   (Cambia la decisione D "nessun tasto +".) Da decidere: nella vista cartella l'app
+   aperta col + entra nella cartella (proposta).
+3. **Scambia** nella vista divisa: ruota le app tra le zone (2 = scambio). Tasto ⇄ sulla
+   scheda della vista divisa + ⌃⌥S (proposta; Daniele aveva detto "a caso").
+4. **Icona del gatto** al posto dello schermo (tasto scrivania): disegno di Daniele, senza
+   sfondo nero, colori di Tabby.
+5. Lentezze viste in console (DuckDuckGo con pagine complesse fino a 336 ms, cambio di
+   scheda fino a 595 ms; diagnosi DuckDuckGo troppo chiacchierona) + GitHub privato per
+   tenere uguali i due Mac.
+
+## Cartelle, seconda parte (dopo C)
+- **Finestra di browser con più siti** dentro una cartella: ricordare l'elenco dei siti e
+  riaprirli come schede di una finestra (Chrome/Safari). Da decidere: siti o pagine esatte.
+- "Apri all'avvio" e altre automazioni.
+
+## Dopo la v1 (aggiunte)
+- **Colori di Tabby a scelta** (temi): i colori sono già tutti nella tabella `COL`.
+
 ## C. Avvio e schermata di partenza
 
 Problema: con nessuna scheda aperta Tabby è "vuota" e non accoglie.
