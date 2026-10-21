@@ -113,6 +113,8 @@ Interfaccia:
 Le icone in alto a destra di macOS (Notion, Claude, VPN, riproduzione, Bluetooth, Wi-Fi,
 batteria, Centro di Controllo…) dentro il menu ⚡︎, ognuna con una scorciatoia; e possibilmente
 nascoste dalla barra dei menu di Apple, visibili solo in Tabby.
+**Obiettivo di Daniele:** in Tabby tutto ciò che è possibile; nella barra dei menu di Apple
+solo quello che non si può portare in Tabby.
 - **Leggerle e aprirle**: con l'Accessibilità ogni app espone le sue icone (AXExtrasMenuBar);
   Tabby può elencarle e "premerle" per aprire il loro menu. Da provare sul Mac vero con la
   barra dei menu nascosta: il menu potrebbe comparire in alto, sotto la barra che scende.

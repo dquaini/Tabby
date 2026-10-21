@@ -79,7 +79,9 @@ check("vista cartella aperta senza menu", ev('Tabby.viewFolder') is not None and
 
 print("\n== Spotlight: sfondo oscurato")
 run('SPOTFILTER.subs["visible"]()')
-check("Spotlight aperto → velo visibile", ev('Tabby.dimOn') is True and ev('Tabby.dim._shown') is True)
+run('SPOTFILTER.subs["created"]()')   # Spotlight manda anche "creata": nessun problema
+check("Spotlight aperto → velo visibile e non trasparente", ev('Tabby.dimOn') is True and ev('Tabby.dim._shown') is True
+      and ev('Tabby.dim:alpha()') == 1)
 check("il velo non prende i clic (nessun mouseCallback)", ev('Tabby.dim._cb') is None)
 run('SPOTFILTER.subs["notvisible"]()')
 check("Spotlight chiuso → velo sparito", ev('Tabby.dim._shown') is False)

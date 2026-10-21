@@ -87,6 +87,7 @@ local function newCanvas(fr)
   function c:orderAbove() return self end
   function c:topLeft(p) self._frame = {x = p.x, y = p.y, w = (self._frame or {}).w, h = (self._frame or {}).h}; return self end
   function c:delete() end
+  function c:alpha(a) if a then self._alpha = a; return self end return self._alpha or 1 end
   function c:imageFromCanvas() return {setSize = function(s) return s end} end
   table.insert(CANVASES, c)
   return c

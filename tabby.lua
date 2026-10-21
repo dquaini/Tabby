@@ -47,6 +47,7 @@
 --      scrivania; clic sulla cartella = scegli l'app; niente ridimensionamenti
 --      inutili; la spia di lentezza dice quale app è lenta.
 --  v9.12: con Spotlight aperto lo sfondo si oscura (⚙︎ → Comportamento).
+--      (v9.12.1: il velo restava trasparente per due dissolvenze ravvicinate)
 -- =====================================================================
 
 
@@ -3721,12 +3722,16 @@ function T.spotlightDim(on)
       T.dim:replaceElements({{type = "rectangle", action = "fill",
         fillColor = {hex = "#0B0D12", alpha = 0.55}}})
     end
+    if T.dimOn then return end   -- Spotlight manda due segnali ("creata", "visibile")
+    -- niente dissolvenza: due dissolvenze ravvicinate lasciavano il velo
+    -- trasparente (alpha 0, visto sul Mac vero)
     T.dim:frame(screen():fullFrame())
-    T.dim:show(0.12)
+    T.dim:alpha(1)
+    T.dim:show()
     if T.bar then T.dim:orderAbove(T.bar) end
     T.dimOn = true
   elseif T.dim and T.dimOn then
-    T.dim:hide(0.12)
+    T.dim:hide()
     T.dimOn = false
   end
 end
