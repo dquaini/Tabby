@@ -42,10 +42,15 @@ Prima di lavorare leggi:
   prefisso storico `tabbar.`.
 - Ogni scheda ha una **chiave**: bundle ID (app, o prima finestra normale di un
   browser) · `site:<dominio>` (webapp) · `win:<id>` (altre finestre di browser) ·
-  `g:<n>` (gruppo = **vista divisa**). `S.order` = ordine delle chiavi.
+  `g:<n>` (gruppo = **vista divisa**) · `f:<n>` (scheda-cartella). `S.order` = ordine delle chiavi.
   `T.cand` (tutte le schede possibili), `T.keyWin`, `T.winKey`, `T.keyBid`, `T.memberOf`.
 - `rebuildTabs()` ricostruisce le schede; `draw()` ridisegna la barra (un `hs.canvas`);
   `layout()` calcola le posizioni (orizzontale/verticale, compatto, "+N", notch).
+- **Cartelle** (v9.8): funzioni nella tabella `FD` (Lua ha un limite di 200 nomi locali
+  per file: non aggiungere altri `local` in cima, usa tabelle). `S.folders` = ricette
+  (`items` = `{bid}` o `{site, bid}`), `S.activeFolders`, `T.viewFolder` (vista cartella),
+  `T.allTabs` (tutte le schede) vs `T.tabs` (quelle visibili: su queste lavorano
+  scorciatoie e clic), `T.tabFolder[chiave]`.
 - **Nel codice "gruppo" = Vista divisa** (schermo diviso in zone). Il nuovo concetto
   "Cartella" della v1 è un'altra cosa: vedi roadmap. Rinominare `group` → `split` è
   una pulizia consigliata.
@@ -97,5 +102,5 @@ dà "receive timeout": ripeterla. Sul MacBook col notch la messa in funzione va 
 
 ## Versione attuale
 
-**v9.7** (vedi storia in testa a `tabby.lua`). Prossimo obiettivo: **Tabby v1** (A fatta, prossima: B Cartelle)
+**v9.8** (vedi storia in testa a `tabby.lua`). Prossimo obiettivo: **Tabby v1** (A fatta; B Cartelle: base fatta in v9.8, restano "Apri all'avvio" e rifiniture)
 (`docs/ROADMAP-v1.md`).

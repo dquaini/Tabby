@@ -37,6 +37,12 @@ Oggi solo i browser hanno una scheda per finestra. Estendere a tutte le app
 ## B. Cartelle (il cuore della v1)
 
 ### Rivista il 21/10/2026 con Daniele — questa versione prevale su quella sotto
+**Stato: base fatta in v9.8** (test `test/test_cartelle.py`). Correzioni di Daniele applicate:
+attivare non sposta (caso A: sei su una sua app → vista cartella, resti lì; caso B: sei
+altrove → scheda unica, resti lì); almeno 3 icone; un'app aperta fuori cartella si vede solo
+nella vista generale; creazione e attivazione tutte dal menu ⚡︎; ⌃⌥⇧+numero; Chiudi cartella.
+Da fare: "Apri all'avvio", trascinare una scheda sopra la scheda-cartella per aggiungerla.
+
 Una cartella è uno **spazio di lavoro salvato**: una scheda è in una cartella solo se
 ce l'hai messa tu. Prototipo cliccabile: `docs/prototipo-cartelle.html`.
 1. ⚙︎ → Cartelle → Nuova cartella → nome; sotto, un riquadro con già l'icona della

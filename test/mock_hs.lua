@@ -180,15 +180,32 @@ hs = {
   end},
   hotkey = {bind = function(m, k, fn) HOTKEYS = HOTKEYS or {}; HOTKEYS[k] = fn; return {} end},
   alert = {show = function(m) log("alert", m) end},
-  dialog = {blockAlert = function() return "Chiudi tutte" end, chooseFileOrFolder = function() return nil end},
+  dialog = {blockAlert = function(_, _, b1) return BLOCK_ANSWER or b1 end, chooseFileOrFolder = function() return nil end,
+            textPrompt = function(_, _, def, b1, b2) local t = PROMPT_TEXT; PROMPT_TEXT = nil; if t == false then return b2, "" end return b1, t or def end},
   -- comandi esterni (usato per osascript): la risposta arriva "dopo", come sul Mac
   task = {new = function(path, cb, args)
     local t = {}
     function t:start()
       TASKS = (TASKS or 0) + 1
       table.insert(timers, function()
+        if path:find("/open$") then
+          -- "open -g -b <app> [indirizzo]": apre un'app (o un sito) senza portarla davanti
+          OPENS = OPENS or {}
+          table.insert(OPENS, table.concat(args, " "))
+          if OPEN_HOOK then OPEN_HOOK(args) end
+          if cb then cb(0, "", "") end
+          return
+        end
+        if args[2]:find("make new") then
+          -- il browser apre una finestra nuova (con un sito)
+          MAKES = MAKES or {}
+          table.insert(MAKES, args[2])
+          if MAKE_HOOK then MAKE_HOOK(args[2]) end
+          if cb then cb(0, "", "") end
+          return
+        end
         local ok, out = hs.osascript.applescript(args[2])
-        cb(ok and 0 or 1, ok and out or "", ok and "" or "errore -1743")
+        if cb then cb(ok and 0 or 1, ok and out or "", ok and "" or "errore -1743") end
       end)
       return self
     end

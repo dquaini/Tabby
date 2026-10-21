@@ -45,6 +45,20 @@ Principi:
 - DuckDuckGo: senza AppleScript, letto via Accessibilità; webapp solo se la finestra ha
   **una sola scheda**; ricorda i siti anche quando è nascosto.
 
+### Cartelle (dal menu ⚡︎) — spazi di lavoro salvati
+- ⚡︎ → **Nuova cartella…** → nome → riquadro con già la scheda in cui sei; ci trascini (o
+  clicchi) le altre schede; Invio/Fatto. La cartella ricorda **app e webapp** (non i numeri
+  di finestra), quindi vale anche dopo un riavvio.
+- **Attivarla** (menu ⚡︎ o ⌃⌥⇧ + numero): apre quello che manca senza portartelo davanti
+  (webapp di Chrome/Safari in una finestra nuova; DuckDuckGo come scheda); quello già aperto
+  entra. Se sei su una sua app → vista cartella; se sei altrove → la cartella diventa **una
+  scheda sola** (3 icone, somma delle notifiche) e resti dove sei.
+- **Vista cartella**: solo le sue schede, nome in cima (o a sinistra), «←» per tornare.
+  ⌃⌥1…9 contano solo le schede visibili. Un'app aperta fuori cartella si vede nella vista generale.
+- ⋯ sulla scheda-cartella: Apri · Esci dalla cartella · **Chiudi cartella** (chiude le sue app;
+  per i browser solo le sue finestre) · Modifica · Rinomina. ⚙︎ → Comportamento → **Vista
+  cartelle** spenta: attivare = solo aprire le app, schede normali.
+
 ### Vista divisa (tasto ⊞) — nel codice "gruppo"
 - Schemi: 2 (50/50, 70/30), 3 (una sopra, due sotto), 4 (quarti).
 - Si trascinano le schede nelle zone (o clic → prima zona libera); zone piene → nasce

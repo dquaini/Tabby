@@ -1,5 +1,5 @@
 -- =====================================================================
---  TABBY  ·  v9.7
+--  TABBY  ·  v9.8
 --  Una barra con una scheda per ogni app: ne vedi una alla volta,
 --  clicchi (o premi Ctrl+Option+1…9) per passare all'altra.
 --
@@ -33,6 +33,9 @@
 --  v9.7: Chrome/Safari: corretto lo script (dentro il browser "tab" è la
 --      scheda, non la tabulazione: le webapp non venivano mai riconosciute);
 --      la domanda al browser parte in parallelo (via ~200 ms di blocco ogni 3 s).
+--  v9.8 (v1 · B): CARTELLE, spazi di lavoro salvati (app e webapp). Si creano
+--      e attivano dal menu ⚡︎ (o ⌃⌥⇧ + numero); attivata = una scheda sola con
+--      le icone; cliccata = vista cartella (solo le sue schede, ← per tornare).
 -- =====================================================================
 
 
@@ -55,6 +58,10 @@ local DEFAULTS = {
   groups          = {},      -- gruppi di app con lo schermo diviso
   groupSeq        = 0,
   joinWins        = {},      -- app con tutte le finestre in una sola scheda
+  folders         = {},      -- cartelle: {id, name, items = {{bid, site, name}}}
+  folderSeq       = 0,
+  activeFolders   = {},      -- cartelle attivate (sulla barra come scheda unica)
+  folderView      = true,    -- ⚙︎ → Comportamento → Vista cartelle
 }
 
 -- App da non mostrare mai come scheda
@@ -145,7 +152,8 @@ Tabby = { tabs = {}, icons = {}, hotkeys = {}, fsApps = {}, memberOf = {},
           closePos = {}, fullscreen = false, revealed = false,
           visible = nil, desktopMode = false, lastKey = nil,
           cand = {}, keyWin = {}, winKey = {}, keyBid = {},
-          badges = {}, favicons = {}, binfo = {}, lastFire = {} }
+          badges = {}, favicons = {}, binfo = {}, lastFire = {},
+          tabFolder = {}, allTabs = {}, folderStart = {}, folderLast = {} }
 local T = Tabby
 
 hs.window.animationDuration = 0
@@ -900,7 +908,21 @@ local function badgeOfKey(key)
 end
 
 -- Notifica da mostrare su una scheda (per un gruppo: la somma)
-local function badgeFor(t)
+local badgeFor
+badgeFor = function(t)
+  if t.folder then
+    -- scheda-cartella: la somma delle sue schede
+    local sum, dot = 0, false
+    for _, x in ipairs(T.allTabs) do
+      if T.tabFolder[x.key] == t.folder then
+        local b = badgeFor(x)
+        local n = tonumber(b)
+        if n then sum = sum + n elseif b then dot = true end
+      end
+    end
+    if sum > 0 then return tostring(sum) end
+    return dot and "•" or nil
+  end
   if t.group then
     local sum, dot = 0, false
     for _, k in ipairs(t.group.members) do
@@ -977,6 +999,64 @@ local function removeFromGroups(bid)
       end
     end
   end
+end
+
+-- Tutte le funzioni delle cartelle stanno nella tabella FD (Lua accetta al
+-- massimo 200 nomi "locali" per file: così ne usiamo uno solo)
+local FD = {}
+
+-- ---------------------------------------------------------------------
+--  CARTELLE: che cosa contiene una cartella
+--  Una cartella è uno spazio di lavoro salvato (la sua "ricetta"): un
+--  elenco di app (bundle ID) e di webapp (sito). Così si ricorda anche dopo
+--  il riavvio delle app. Una scheda è nella cartella se corrisponde a una
+--  voce della ricetta; una voce sta in una sola cartella.
+-- ---------------------------------------------------------------------
+
+function FD.folderById(id)
+  for _, f in ipairs(S.folders) do if f.id == id then return f end end
+  return nil
+end
+
+function FD.isFolderActive(id)
+  for _, x in ipairs(S.activeFolders) do if x == id then return true end end
+  return false
+end
+
+-- La voce di ricetta di una scheda (app intera, oppure webapp)
+function FD.itemOf(e)
+  if e.site then return {site = e.site, bid = e.bid, name = e.name} end
+  return {bid = e.bid, name = appName(e.bid, e.app)}
+end
+
+function FD.itemKey(it) return it.site and ("site:" .. it.site) or it.bid end
+
+-- La scheda e corrisponde alla voce? (per un browser, la voce "app" sono le
+-- sue finestre normali, non le webapp)
+function FD.itemMatches(it, e)
+  if it.site then return e.site == it.site end
+  return e.bid == it.bid and not e.site
+end
+
+-- La cartella attiva a cui appartiene una scheda (per una vista divisa basta
+-- un suo membro). nil se Vista cartelle è spenta.
+function FD.folderOfEntry(e)
+  if not S.folderView then return nil end
+  local list = {}
+  if e.group then
+    for _, k in ipairs(e.group.members) do if T.cand[k] then table.insert(list, T.cand[k]) end end
+  else
+    list = {e}
+  end
+  for _, id in ipairs(S.activeFolders) do
+    local f = FD.folderById(id)
+    if f then
+      for _, x in ipairs(list) do
+        for _, it in ipairs(f.items) do if FD.itemMatches(it, x) then return f end end
+      end
+    end
+  end
+  return nil
 end
 
 -- Ricostruisce l'elenco delle schede.
@@ -1103,14 +1183,59 @@ local function rebuildTabs()
   for idx = #S.order, 1, -1 do
     local k = S.order[idx]
     local stale = (k:sub(1, 2) == "g:" and not valid[k])
+               or (k:sub(1, 2) == "f:" and not FD.folderById(tonumber(k:sub(3))))
                or (k:sub(1, 4) == "win:" and not cand[k])
                or (#S.order > 300 and not shown[k])
     if stale then table.remove(S.order, idx); changed = true end
   end
 
+  -- 5. cartelle: nella vista normale le schede di una cartella attiva
+  --    diventano una scheda sola; nella vista cartella si vedono solo le sue
+  local all = {}
+  for _, k in ipairs(S.order) do if shown[k] then table.insert(all, shown[k]) end end
+  T.allTabs, T.tabFolder = all, {}
+  local count = {}
+  for _, t in ipairs(all) do
+    local f = FD.folderOfEntry(t)
+    if f then T.tabFolder[t.key] = f; count[f.id] = (count[f.id] or 0) + 1 end
+  end
+  -- una cartella attiva rimasta senza schede (app chiuse) si spegne; non
+  -- subito dopo l'attivazione, perché le app ci mettono un po' ad aprirsi
+  local now = hs.timer.secondsSinceEpoch()
+  for idx = #S.activeFolders, 1, -1 do
+    local id = S.activeFolders[idx]
+    if not FD.folderById(id) or (not count[id] and now - (T.folderStart[id] or 0) > 20) then
+      table.remove(S.activeFolders, idx)
+      save("activeFolders")
+    end
+  end
+  if T.viewFolder and not (S.folderView and FD.isFolderActive(T.viewFolder)) then T.viewFolder = nil end
+
   T.tabs = {}
-  for _, k in ipairs(S.order) do
-    if shown[k] then table.insert(T.tabs, shown[k]) end
+  if T.viewFolder then
+    for _, t in ipairs(all) do
+      local f = T.tabFolder[t.key]
+      if f and f.id == T.viewFolder then table.insert(T.tabs, t) end
+    end
+  else
+    -- la scheda-cartella va dove l'hai messa tu ("f:<numero>" in S.order),
+    -- altrimenti al posto della sua prima scheda
+    local placed = {}
+    local function placeFolder(f)
+      if f and not placed[f.id] and count[f.id] then
+        placed[f.id] = true
+        table.insert(T.tabs, {key = "f:" .. f.id, folder = f, name = f.name})
+      end
+    end
+    for _, k in ipairs(S.order) do
+      if k:sub(1, 2) == "f:" then
+        local f = FD.folderById(tonumber(k:sub(3)))
+        if f and S.folderView and FD.isFolderActive(f.id) then placeFolder(f) end
+      elseif shown[k] then
+        local f = T.tabFolder[k]
+        if f then placeFolder(f) else table.insert(T.tabs, shown[k]) end
+      end
+    end
   end
 
   if changed then saveGroups() end
@@ -1292,6 +1417,10 @@ local handleActive = timed("cambio di scheda", function(app)
       T.prevKey = T.lastKey   -- per ⌃⌥Tab (torna alla scheda di prima)
       T.lastKey = key
     end
+    -- per ogni cartella, l'ultima scheda usata (ci si torna entrando)
+    local gk = T.memberOf[key]
+    local cf = T.tabFolder[key] or (gk and T.tabFolder["g:" .. gk.id])
+    if cf then T.folderLast[cf.id] = key end
     local g = T.memberOf[key]
     if g then
       -- scheda di un gruppo: si mostra tutto il gruppo, diviso come l'avevi messo
@@ -1350,7 +1479,8 @@ end
 local function switchTo(i)
   local t = T.tabs[i]
   if not t then return end
-  if t.group then showGroup(t.group)
+  if t.folder then FD.enterFolder(t.folder)
+  elseif t.group then showGroup(t.group)
   elseif t.win then focusWin(t)
   else focusBid(t.bid) end
 end
@@ -1362,9 +1492,13 @@ local function activeIndex()
   if not key then return nil end
   local g = T.memberOf[key]
   local bid = frontBid()
+  -- nella vista normale, una scheda di una cartella attiva = la scheda-cartella
+  local f = not T.viewFolder and (T.tabFolder[key] or (g and T.tabFolder["g:" .. g.id]))
   local fallback
   for i, t in ipairs(T.tabs) do
-    if g then
+    if f then
+      if t.folder == f then return i end
+    elseif g then
       if t.group == g then return i end
     elseif t.key == key then
       return i
@@ -1787,6 +1921,395 @@ end
 
 
 -- ---------------------------------------------------------------------
+--  CARTELLE: ATTIVARE, VISTA CARTELLA, CHIUDERE
+--  Attivare una cartella (menu ⚡︎ o ⌃⌥⇧ + numero) apre quello che manca e
+--  non ti sposta: se sei su una sua scheda entri nella vista cartella (solo
+--  le sue schede, nome a sinistra / in alto); se sei altrove la cartella
+--  compare come una scheda sola e tu resti dove sei.
+-- ---------------------------------------------------------------------
+
+-- Comandi per aprire una finestra nuova di un browser (sito o finestra vuota)
+FD.OPEN_SITE = {
+  chrome = 'tell application "%s"\nset w to make new window\nset URL of active tab of w to "%s"\nend tell',
+  safari = 'tell application "%s"\nmake new document with properties {URL:"%s"}\nend tell',
+}
+FD.OPEN_WIN = {
+  chrome = 'tell application "%s" to make new window',
+  safari = 'tell application "%s" to make new document',
+}
+
+function FD.runTask(path, args)
+  local t = hs.task.new(path, nil, args)
+  if t then t:start() end
+end
+
+-- Apre una voce della ricetta che non è aperta, senza portarla davanti
+function FD.openItem(it)
+  local B = it.bid and BROWSERS[it.bid]
+  if it.site then
+    if not it.site:match("^[%w%.%-]+$") then return end
+    local url = "https://" .. it.site .. "/"
+    if B and FD.OPEN_SITE[B.kind] then
+      FD.runTask("/usr/bin/osascript", {"-e", string.format(FD.OPEN_SITE[B.kind], B.as, url)})
+    else
+      -- DuckDuckGo non accetta comandi: il sito si apre come scheda del browser
+      FD.runTask("/usr/bin/open", {"-g", "-b", it.bid or "com.apple.Safari", url})
+    end
+  elseif B and FD.OPEN_WIN[B.kind] and appFor(it.bid) then
+    FD.runTask("/usr/bin/osascript", {"-e", string.format(FD.OPEN_WIN[B.kind], B.as)})
+  elseif it.bid then
+    FD.runTask("/usr/bin/open", {"-g", "-b", it.bid})
+  end
+end
+
+-- La scheda in cui sei appartiene alla cartella f?
+function FD.currentInFolder(f)
+  local key = currentKey()
+  if not key then return false end
+  local g = T.memberOf[key]
+  local cf = T.tabFolder[key] or (g and T.tabFolder["g:" .. g.id])
+  return cf ~= nil and cf.id == f.id
+end
+
+-- Vista cartella: si vedono solo le schede della cartella
+FD.enterFolder = function(f)
+  if not f or not S.folderView then return end
+  T.viewFolder = f.id
+  rebuildTabs()
+  if not FD.currentInFolder(f) then
+    -- torna all'ultima scheda usata della cartella (o alla prima)
+    local idx = 1
+    for i, t in ipairs(T.tabs) do if t.key == T.folderLast[f.id] then idx = i end end
+    if T.tabs[idx] then switchTo(idx) end
+  end
+  draw()
+end
+
+function FD.leaveFolderView()
+  T.viewFolder = nil
+  rebuildTabs()
+  draw()
+end
+
+function FD.activateFolder(f)
+  if not f then return end
+  T.folderStart[f.id] = hs.timer.secondsSinceEpoch()
+  local before = hs.window.focusedWindow()
+  -- 1. apri quello che manca (le altre voci, già aperte, entrano da sole)
+  local opened = 0
+  for _, it in ipairs(f.items) do
+    local present = false
+    for _, e in pairs(T.cand) do if FD.itemMatches(it, e) then present = true; break end end
+    if not present then FD.openItem(it); opened = opened + 1 end
+  end
+  print(string.format("Tabby · cartella «%s» attivata: %d voci, %d da aprire", f.name, #f.items, opened))
+  -- le app appena aperte non devono portarti via da dove sei
+  if opened > 0 and before then
+    for _, d in ipairs({1.2, 2.5}) do
+      hs.timer.doAfter(d, function()
+        local now = hs.window.focusedWindow()
+        if now and before:id() and now:id() ~= before:id() and before:application() then
+          local nb = now:application() and now:application():bundleID()
+          for _, it in ipairs(f.items) do
+            if it.bid == nb then before:focus(); break end
+          end
+        end
+      end)
+    end
+  end
+  if not S.folderView then return end   -- Vista cartelle spenta: solo aprire
+  if not FD.isFolderActive(f.id) then
+    table.insert(S.activeFolders, f.id)
+    save("activeFolders")
+  end
+  rebuildTabs()
+  -- 2. sei su una sua scheda? entri nella vista cartella, restando lì
+  if FD.currentInFolder(f) then T.viewFolder = f.id; rebuildTabs() end
+  draw()
+end
+
+-- ⌃⌥⇧ + numero: attiva la cartella; se la stai già guardando, torni a tutte
+function FD.folderShortcut(n)
+  local f = S.folders[n]
+  if not f then return end
+  if T.viewFolder == f.id then FD.leaveFolderView() else FD.activateFolder(f) end
+end
+
+-- "Esci dalla cartella": le sue schede tornano libere
+function FD.releaseFolder(f)
+  for i = #S.activeFolders, 1, -1 do
+    if S.activeFolders[i] == f.id then table.remove(S.activeFolders, i) end
+  end
+  save("activeFolders")
+  if T.viewFolder == f.id then T.viewFolder = nil end
+  rebuildTabs()
+  draw()
+end
+
+-- "Chiudi cartella": chiude le sue app (per le webapp e le finestre di un
+-- browser, solo quelle finestre: il browser resta aperto per il resto)
+function FD.closeFolder(f)
+  local btn = FD.ask(function()
+    return hs.dialog.blockAlert("Chiudere la cartella «" .. f.name .. "»?",
+      "Si chiudono le sue app e le sue finestre. Le app con documenti non salvati ti chiederanno cosa fare.",
+      "Chiudi", "Annulla")
+  end)
+  if btn ~= "Chiudi" then return end
+  local killed = {}
+  for _, t in ipairs(T.allTabs) do
+    if T.tabFolder[t.key] == f then
+      local list = t.group and t.group.members or {t.key}
+      for _, k in ipairs(list) do
+        local e = T.cand[k]
+        if e and (BROWSERS[e.bid] or e.bid == FINDER) then
+          if e.win then e.win:close() end
+        elseif e and e.app and not killed[e.bid] then
+          killed[e.bid] = true
+          e.app:kill()
+        end
+      end
+    end
+  end
+  FD.releaseFolder(f)
+  scheduleRebuild()
+end
+
+function FD.deleteFolder(f)
+  FD.releaseFolder(f)
+  for i = #S.folders, 1, -1 do if S.folders[i] == f then table.remove(S.folders, i) end end
+  save("folders")
+  rebuildTabs()
+  draw()
+end
+
+-- Fa una domanda con una finestra di Tabby (Hammerspoon), poi ti riporta
+-- alla finestra in cui eri
+function FD.ask(fn)
+  local prev = hs.window.focusedWindow()
+  hs.focus()
+  local a, b = fn()
+  if prev and prev:application() then prev:focus() end
+  return a, b
+end
+
+function FD.renameFolder(f)
+  local btn, txt = FD.ask(function()
+    return hs.dialog.textPrompt("Rinomina la cartella", "Nuovo nome:", f.name, "Rinomina", "Annulla")
+  end)
+  txt = txt and txt:match("^%s*(.-)%s*$")
+  if btn ~= "Rinomina" or not txt or txt == "" then return end
+  f.name = txt
+  save("folders")
+  rebuildTabs()
+  draw()
+end
+
+-- Icona di una voce della ricetta (logo del sito o icona dell'app)
+function FD.itemIcon(it)
+  return (it.site and favicon(it.site)) or icon(it.bid)
+end
+
+-- Piccola immagine con le prime tre icone della cartella, per i menu
+function FD.folderImage(f)
+  local ok, img = pcall(function()
+    local n = math.min(#f.items, 3)
+    if n == 0 then return nil end
+    local W, H = 16 + (n - 1) * 10, 16
+    local c = hs.canvas.new({x = 0, y = 0, w = W, h = H})
+    local els = {}
+    for k = n, 1, -1 do
+      local im = FD.itemIcon(f.items[k])
+      if im then table.insert(els, {type = "image", image = im, frame = {x = (k - 1) * 10, y = 0, w = 16, h = 16}}) end
+    end
+    c:replaceElements(els)
+    local im = c:imageFromCanvas()
+    c:delete()
+    return im
+  end)
+  return ok and img or nil
+end
+
+
+-- ---------------------------------------------------------------------
+--  CARTELLE: CREARE E MODIFICARE (menu ⚡︎ → Nuova cartella…)
+--  Si sceglie il nome, poi compare un riquadro con già la scheda in cui
+--  sei; ci trascini (o clicchi) le altre schede di Tabby. Fatto = salvata.
+-- ---------------------------------------------------------------------
+
+-- Aggiunge al riquadro una scheda di Tabby (una vista divisa = i suoi membri)
+function FD.feditAdd(t)
+  local fe = T.fedit
+  if not fe or not t or t.folder then return end
+  local list = {}
+  if t.group then
+    for _, k in ipairs(t.group.members) do if T.cand[k] then table.insert(list, FD.itemOf(T.cand[k])) end end
+  elseif t.bid then
+    table.insert(list, FD.itemOf(t))
+  end
+  for _, it in ipairs(list) do
+    local dup = false
+    for _, x in ipairs(fe.items) do if FD.itemKey(x) == FD.itemKey(it) then dup = true end end
+    if not dup then table.insert(fe.items, it) end
+  end
+  fe.hover = false
+  FD.drawFolderEdit()
+end
+
+function FD.onFolderEditMouse(_, msg, id)
+  if msg ~= "mouseUp" then return end
+  id = tostring(id)
+  if id == "fcancel" then FD.cancelFolderEdit(); return end
+  if id == "fdone" then FD.finishFolderEdit(); return end
+  if id == "fname" then
+    local btn, txt = FD.ask(function()
+      return hs.dialog.textPrompt("Nome della cartella", "", T.fedit.name, "OK", "Annulla")
+    end)
+    txt = txt and txt:match("^%s*(.-)%s*$")
+    if btn == "OK" and txt and txt ~= "" then T.fedit.name = txt end
+    FD.drawFolderEdit()
+    return
+  end
+  local k = tonumber(id:match("^fitem(%d+)$"))
+  if k and T.fedit then table.remove(T.fedit.items, k); FD.drawFolderEdit() end
+end
+
+FD.drawFolderEdit = function()
+  local fe = T.fedit
+  if not fe then return end
+  local A = appArea()
+  if not T.fOverlay then
+    T.fOverlay = hs.canvas.new(A)
+    T.fOverlay:level(hs.canvas.windowLevels.floating)
+    T.fOverlay:behavior({"canJoinAllSpaces", "stationary", "fullScreenAuxiliary"})
+    T.fOverlay:clickActivating(false)
+    T.fOverlay:mouseCallback(FD.onFolderEditMouse)
+  else
+    T.fOverlay:frame(A)
+  end
+  local pw = math.min(600, A.w - 40)
+  local ph = 262
+  local px, py = (A.w - pw) / 2, (A.h - ph) / 2
+  local els = {
+    {type = "rectangle", action = "fill", fillColor = {white = 0, alpha = 0.5},
+     frame = {x = 0, y = 0, w = A.w, h = A.h}},
+    {type = "rectangle", action = "strokeAndFill", fillColor = {hex = "#191B20", alpha = 0.98},
+     strokeColor = COL.divider, strokeWidth = 1, roundedRectRadii = {xRadius = 14, yRadius = 14},
+     frame = {x = px, y = py, w = pw, h = ph}},
+    {type = "text", text = (fe.id and "Cartella «" or "Nuova cartella «") .. fe.name .. "»",
+     textSize = 17, textColor = COL.text, textLineBreak = "truncateTail",
+     frame = {x = px + 20, y = py + 16, w = pw - 130, h = 24}},
+    {type = "text", text = "rinomina", textSize = 11, textColor = COL.accent, textAlignment = "right",
+     frame = {x = px + pw - 110, y = py + 21, w = 90, h = 16}},
+    {type = "rectangle", action = "fill", fillColor = {white = 1, alpha = 0.01}, trackMouseUp = true,
+     id = "fname", frame = {x = px + pw - 110, y = py + 16, w = 90, h = 24}},
+  }
+  -- il riquadro dove si lasciano le schede
+  local zr = {x = px + 20, y = py + 52, w = pw - 40, h = 134}
+  T.fZoneAbs = {x = A.x + zr.x, y = A.y + zr.y, w = zr.w, h = zr.h}
+  table.insert(els, {type = "rectangle", action = "strokeAndFill",
+    fillColor = fe.hover and {hex = "#4C8DFF", alpha = 0.18} or {white = 1, alpha = 0.04},
+    strokeColor = fe.hover and COL.accent or {white = 1, alpha = 0.35}, strokeWidth = 2,
+    strokeDashPattern = {9, 6}, roundedRectRadii = {xRadius = 12, yRadius = 12}, frame = zr})
+  local cw = 84
+  local perRow = math.max(1, math.floor((zr.w - 16) / cw))
+  for k, it in ipairs(fe.items) do
+    if k > perRow then
+      table.insert(els, {type = "text", text = "+" .. (#fe.items - perRow + 1), textSize = 14,
+        textColor = COL.textMid, textAlignment = "center",
+        frame = {x = zr.x + 8 + (perRow - 1) * cw, y = zr.y + 40, w = cw, h = 20}})
+      break
+    end
+    local cx = zr.x + 8 + (k - 1) * cw
+    local im = FD.itemIcon(it)
+    if im then
+      table.insert(els, {type = "image", image = im, frame = {x = cx + cw / 2 - 20, y = zr.y + 18, w = 40, h = 40}})
+    end
+    table.insert(els, {type = "text", text = it.name or it.site or it.bid, textSize = 11.5,
+      textColor = COL.text, textAlignment = "center", textLineBreak = "truncateTail",
+      frame = {x = cx + 2, y = zr.y + 64, w = cw - 4, h = 16}})
+    table.insert(els, {type = "text", text = "✕ togli", textSize = 10, textColor = COL.textDim,
+      textAlignment = "center", frame = {x = cx, y = zr.y + 82, w = cw, h = 14}})
+    table.insert(els, {type = "rectangle", action = "fill", fillColor = {white = 1, alpha = 0.01},
+      trackMouseUp = true, id = "fitem" .. k, frame = {x = cx, y = zr.y + 10, w = cw, h = 92}})
+  end
+  if #fe.items < 2 then
+    local hx = zr.x + 8 + #fe.items * cw
+    table.insert(els, {type = "text", text = "Trascina qui le schede di Tabby (o cliccale)",
+      textSize = 14, textColor = {white = 1, alpha = 0.75},
+      frame = {x = hx + 10, y = zr.y + zr.h / 2 - 10, w = zr.x + zr.w - hx - 20, h = 20}})
+  end
+  table.insert(els, {type = "text", text = "Esc annulla · Invio fatto", textSize = 11.5, textColor = COL.textDim,
+    frame = {x = px + 20, y = py + ph - 44, w = 220, h = 18}})
+  button(els, {x = px + pw - 228, y = py + ph - 52, w = 104, h = 34}, "Annulla  esc", COL.active, "fcancel")
+  button(els, {x = px + pw - 116, y = py + ph - 52, w = 104, h = 34}, "Fatto  ↩", COL.accent, "fdone")
+  T.fOverlay:replaceElements(els)
+  T.fOverlay:show()
+  if T.bar then T.bar:orderAbove(T.fOverlay) end
+end
+
+-- f = cartella da modificare; nil = cartella nuova (chiede il nome)
+function FD.openFolderEditor(f)
+  if T.split then exitSplit() end
+  local fe = {id = f and f.id, name = f and f.name, items = {}, hover = false}
+  -- la scheda in cui sei (presa prima della domanda, che porta davanti Tabby)
+  local ai = activeIndex()
+  local cur = ai and T.tabs[ai]
+  if f then
+    for _, it in ipairs(f.items) do table.insert(fe.items, it) end
+  else
+    local btn, txt = FD.ask(function()
+      return hs.dialog.textPrompt("Nuova cartella", "Come si chiama? (es. Lavoro, Studio)", "", "Avanti", "Annulla")
+    end)
+    txt = txt and txt:match("^%s*(.-)%s*$")
+    if btn ~= "Avanti" or not txt or txt == "" then return end
+    fe.name = txt
+  end
+  T.fedit = fe
+  -- si parte dalla scheda in cui sei
+  if not f and cur then FD.feditAdd(cur) end
+  T.revealed = true
+  FD.drawFolderEdit()
+  draw()
+end
+
+FD.cancelFolderEdit = function()
+  T.fedit = nil
+  if T.fOverlay then T.fOverlay:hide() end
+  draw()
+end
+
+FD.finishFolderEdit = function()
+  local fe = T.fedit
+  if not fe then return end
+  FD.cancelFolderEdit()
+  if #fe.items == 0 then return end
+  local f = fe.id and FD.folderById(fe.id)
+  if not f then
+    S.folderSeq = (S.folderSeq or 0) + 1
+    f = {id = S.folderSeq}
+    table.insert(S.folders, f)
+  end
+  f.name, f.items = fe.name, fe.items
+  -- una voce sta in una sola cartella: le altre cartelle la lasciano
+  local mine = {}
+  for _, it in ipairs(f.items) do mine[FD.itemKey(it)] = true end
+  for i = #S.folders, 1, -1 do
+    local o = S.folders[i]
+    if o ~= f then
+      for j = #o.items, 1, -1 do if mine[FD.itemKey(o.items[j])] then table.remove(o.items, j) end end
+      if #o.items == 0 then table.remove(S.folders, i) end
+    end
+  end
+  save("folders"); save("folderSeq")
+  local n = 1
+  for i, x in ipairs(S.folders) do if x == f then n = i end end
+  hs.alert.show(string.format("Cartella «%s» salvata · menu ⚡︎ o ⌃⌥⇧%d", f.name, n))
+  rebuildTabs()
+  draw()
+end
+
+
+-- ---------------------------------------------------------------------
 --  TRASCINARE LE SCHEDE
 --  Fuori dalla divisione: riordina le schede.
 --  Durante la divisione: porta l'app nella zona dove la lasci.
@@ -1893,6 +2416,11 @@ local function onDragMove(p)
   if T.split then
     local k = zoneAt(p)
     if k ~= T.split.hover then T.split.hover = k; drawSplit() end
+  elseif T.fedit then
+    -- creazione di una cartella: illumina il riquadro quando ci sei sopra
+    local z = T.fZoneAbs
+    local hot = z ~= nil and p.x >= z.x and p.x <= z.x + z.w and p.y >= z.y and p.y <= z.y + z.h
+    if hot ~= T.fedit.hover then T.fedit.hover = hot; FD.drawFolderEdit() end
   else
     local _, marker = dropSlot(p)
     local mk = marker and (marker.x .. ":" .. marker.y) or nil
@@ -1913,6 +2441,8 @@ local function onDragEnd(p)
       local k = zoneAt(p)
       T.split.hover = nil
       if k then assignToZone(k, pr.i) else drawSplit() end
+    elseif T.fedit then
+      if T.fedit.hover then FD.feditAdd(T.tabs[pr.i]) else FD.drawFolderEdit() end
     else
       local pos = dropSlot(p)
       T.dropKey, T.dropMarker = nil, nil
@@ -2105,6 +2635,8 @@ local function behaviourMenu()
      fn = toggle("autohide", function() T.revealed = false; refit() end)},
     {title = "Mostra anche app aperte senza finestre", checked = S.showWindowless,
      fn = toggle("showWindowless", rebuildTabs)},
+    {title = "Vista cartelle (una cartella attiva = una scheda sola)", checked = S.folderView,
+     fn = toggle("folderView", function() T.viewFolder = nil; rebuildTabs() end)},
   }
 end
 
@@ -2182,6 +2714,30 @@ local function openQuick()
     })
   end
   table.insert(items, {title = "Spotlight   ⌘Spazio", fn = openSpotlight})
+  -- cartelle: clic = attiva; si creano e si modificano da qui
+  table.insert(items, {title = "-"})
+  table.insert(items, {title = "Cartelle", disabled = true})
+  for i, f in ipairs(S.folders) do
+    table.insert(items, {
+      title   = f.name .. (i <= 9 and ("   ⌃⌥⇧" .. i) or ""),
+      image   = FD.folderImage(f),
+      checked = (S.folderView and FD.isFolderActive(f.id)) or nil,
+      fn      = function() FD.activateFolder(f) end,
+    })
+  end
+  table.insert(items, {title = "Nuova cartella…", fn = function() FD.openFolderEditor(nil) end})
+  if #S.folders > 0 then
+    local edit = {}
+    for _, f in ipairs(S.folders) do
+      table.insert(edit, {title = f.name, image = FD.folderImage(f), menu = {
+        {title = "Modifica le schede…", fn = function() FD.openFolderEditor(f) end},
+        {title = "Rinomina…", fn = function() FD.renameFolder(f) end},
+        {title = "-"},
+        {title = "Elimina la cartella", fn = function() FD.deleteFolder(f) end},
+      }})
+    end
+    table.insert(items, {title = "Modifica le cartelle", menu = edit})
+  end
   table.insert(items, {title = "-"})
   table.insert(items, {title = "Mostra il file del Memo nel Finder", fn = function()
     local f = io.open(MEMO_FILE, "r")
@@ -2189,6 +2745,24 @@ local function openQuick()
     hs.execute('open -R "' .. MEMO_FILE .. '"')
   end})
   popup(items, popPos(T.L.quick))
+end
+
+-- Menu ⋯ di una scheda-cartella (o del nome, nella vista cartella)
+function FD.openFolderMenu(f, pos)
+  local n = 0
+  for _, x in ipairs(T.allTabs) do if T.tabFolder[x.key] == f then n = n + 1 end end
+  local items = {}
+  if T.viewFolder == f.id then
+    table.insert(items, {title = "Torna a tutte le schede", fn = FD.leaveFolderView})
+  else
+    table.insert(items, {title = "Apri la cartella", fn = function() FD.enterFolder(f) end})
+  end
+  table.insert(items, {title = "Esci dalla cartella (le schede tornano libere)", fn = function() FD.releaseFolder(f) end})
+  table.insert(items, {title = "Chiudi cartella (chiude le sue " .. n .. " schede)…", fn = function() FD.closeFolder(f) end})
+  table.insert(items, {title = "-"})
+  table.insert(items, {title = "Modifica le schede…", fn = function() FD.openFolderEditor(f) end})
+  table.insert(items, {title = "Rinomina…", fn = function() FD.renameFolder(f) end})
+  popup(items, pos)
 end
 
 -- Menu del tasto ⊞ (dividi lo schermo)
@@ -2246,6 +2820,18 @@ local function onMouse(_, msg, id)
   if id == "split" then openSplitMenu(); return end
   if id == "more" then openOverflow(); return end
   if id == "desktop" then toggleDesktop(); return end
+  if id == "fback" then FD.leaveFolderView(); return end
+  if id == "fhead" then
+    local f = FD.folderById(T.viewFolder)
+    if f then FD.openFolderMenu(f, popPos(T.L.fhead)) end
+    return
+  end
+  local fm = tonumber(id:match("^fmenu(%d+)$"))
+  if fm then
+    local t = T.tabs[fm]
+    if t and t.folder then FD.openFolderMenu(t.folder, T.closePos[fm]) end
+    return
+  end
   local c = tonumber(id:match("^close(%d+)$"))
   if c then openCloseMenu(c); return end
   local u = tonumber(id:match("^ungroup(%d+)$"))
@@ -2255,7 +2841,9 @@ local function onMouse(_, msg, id)
     return
   end
   if ti then
-    if T.split then assignFirstEmpty(ti) else switchTo(ti) end
+    if T.split then assignFirstEmpty(ti)
+    elseif T.fedit then FD.feditAdd(T.tabs[ti])
+    else switchTo(ti) end
   end
 end
 
@@ -2319,6 +2907,13 @@ local function layout(bf, activeIdx)
     table.insert(L.dividers, {x = third * 2, y = bottomY + 8, w = 1, h = BTN_W - 16})
 
     local start  = BTN_W + 6
+    -- vista cartella: in cima "← Tutte le schede" e il nome della cartella
+    if T.viewFolder and FD.folderById(T.viewFolder) then
+      L.fback = {x = 0, y = BTN_W + 2, w = w, h = 26}
+      L.fhead = {x = 0, y = BTN_W + 28, w = w, h = 30}
+      table.insert(L.dividers, {x = 8, y = BTN_W + 60, w = w - 16, h = 1})
+      start = BTN_W + 66
+    end
     local availH = bottomY - batH - 6 - start
     if n > 0 then
       local rowH = math.floor(math.min(ROW_H, availH / n))
@@ -2355,6 +2950,16 @@ local function layout(bf, activeIdx)
 
     local start = BTN_W + 6
     local avail = w - BTN_W - rightW - 12
+    -- vista cartella: a sinistra "←" e il nome della cartella
+    local vf = T.viewFolder and FD.folderById(T.viewFolder)
+    if vf then
+      local fw = math.floor(math.min(210, 62 + (utf8.len(vf.name) or 6) * 7.5))
+      L.fback = {x = BTN_W, y = 0, w = 30, h = h}
+      L.fhead = {x = BTN_W + 30, y = 0, w = fw - 30, h = h}
+      table.insert(L.dividers, {x = BTN_W + fw, y = 8, w = 1, h = h - 16})
+      start = BTN_W + fw + 6
+      avail = avail - fw
+    end
     -- notch: le schede ci saltano sopra
     local nz = notchZone(bf)
     if nz then avail = avail - (nz.x2 - nz.x1) end
@@ -2524,6 +3129,26 @@ draw = function()
     frame = {x = cx - 5, y = cy + 6, w = 10, h = 1.5}})
   table.insert(els, hitArea("desktop", r))
 
+  -- vista cartella: "← Tutte le schede" e il nome della cartella
+  if L.fhead then
+    local vf = FD.folderById(T.viewFolder)
+    local b, hd = L.fback, L.fhead
+    if vertical then
+      table.insert(els, {type = "text", text = "←  Tutte le schede", textSize = 11.5, textColor = COL.textMid,
+        frame = {x = b.x + 14, y = b.y + b.h / 2 - 8, w = b.w - 20, h = 16}})
+      table.insert(els, {type = "text", text = "▾", textSize = 12, textColor = COL.accent,
+        frame = {x = hd.x + 14, y = hd.y + hd.h / 2 - 8, w = 14, h = 16}})
+      table.insert(els, {type = "text", text = vf.name, textSize = 14, textColor = COL.text,
+        textLineBreak = "truncateTail", frame = {x = hd.x + 30, y = hd.y + hd.h / 2 - 9, w = hd.w - 40, h = 19}})
+    else
+      table.insert(els, centeredGlyph("←", 15, b, COL.textMid))
+      table.insert(els, {type = "text", text = "▾  " .. vf.name, textSize = 13.5, textColor = COL.text,
+        textLineBreak = "truncateTail", frame = {x = hd.x + 4, y = hd.y + hd.h / 2 - 9, w = hd.w - 8, h = 19}})
+    end
+    table.insert(els, hitArea("fback", b))
+    table.insert(els, hitArea("fhead", hd))
+  end
+
   -- schede
   T.closePos = {}
   for _, tv in ipairs(L.tabs) do
@@ -2536,7 +3161,8 @@ draw = function()
 
     if tv.compact then
       -- scheda compatta: solo l'icona (per un gruppo, con il numero di schede)
-      local img = keyIcon(g and (g.focus or g.members[1]) or t.key)
+      local img = t.folder and FD.itemIcon(t.folder.items[1])
+               or keyIcon(g and (g.focus or g.members[1]) or t.key)
       local cx = tr.x + tr.w / 2
       if img then
         table.insert(els, {type = "image", image = img,
@@ -2545,11 +3171,11 @@ draw = function()
       if badge then
         table.insert(els, {type = "circle", action = "fill", fillColor = COL.badge,
           center = {x = cx + 10, y = my - 9}, radius = 4.5})
-      elseif g then
+      elseif g or t.folder then
         table.insert(els, {type = "rectangle", action = "fill", fillColor = COL.accent,
           roundedRectRadii = {xRadius = 6, yRadius = 6},
           frame = {x = cx + 4, y = my - 14, w = 12, h = 12}})
-        table.insert(els, {type = "text", text = tostring(#g.members), textSize = 8,
+        table.insert(els, {type = "text", text = tostring(g and #g.members or #t.folder.items), textSize = 8,
           textColor = COL.text, textAlignment = "center",
           frame = {x = cx + 4, y = my - 13, w = 12, h = 11}})
       end
@@ -2573,7 +3199,18 @@ draw = function()
       -- icone: una per una scheda (logo del sito per le webapp),
       -- affiancate (max 4) per un gruppo
       local textX
-      if g then
+      if t.folder then
+        local items = t.folder.items
+        local nIcons = math.min(#items, 3)
+        for k = nIcons, 1, -1 do
+          local img = FD.itemIcon(items[k])
+          if img then
+            table.insert(els, {type = "image", image = img,
+              frame = {x = ix + (k - 1) * 11, y = my - 9, w = 18, h = 18}})
+          end
+        end
+        textX = ix + 18 + (nIcons - 1) * 11 + 8
+      elseif g then
         local nIcons = math.min(#g.members, 4)
         for k = 1, nIcons do
           local img = keyIcon(g.members[k])
@@ -2615,7 +3252,15 @@ draw = function()
         frame = {x = textX, y = my - 9, w = closeX - badgeW - textX - 2, h = 18}})
 
       local btnR = {x = closeX - 2, y = my - 11, w = closeW + 4, h = 22}
-      if g then
+      if t.folder then
+        -- ⋯ : apri, esci dalla cartella, chiudi cartella, modifica
+        table.insert(els, {type = "text", text = "⋯", textSize = 13,
+          textColor = COL.textMid, textAlignment = "center",
+          frame = {x = closeX, y = my - 9, w = closeW, h = 18}})
+        T.closePos[i] = popPos(btnR)
+        table.insert(els, hitArea("tab" .. i, tr, true))
+        table.insert(els, hitArea("fmenu" .. i, btnR))
+      elseif g then
         -- tasto "Scomponi": due riquadri separati
         table.insert(els, {type = "rectangle", action = "stroke", strokeColor = COL.textMid,
           strokeWidth = 1.2, roundedRectRadii = {xRadius = 1.5, yRadius = 1.5},
@@ -2682,7 +3327,7 @@ end
 
 T.mouseTimer = hs.timer.doEvery(0.08, function()
   if not T.bar then return end
-  if T.press or T.split then return end   -- mentre trascini o dividi, resta visibile
+  if T.press or T.split or T.fedit then return end   -- mentre trascini, dividi o crei una cartella, resta visibile
 
   -- Tabby nella fascia del notch: quando porti il mouse in cima scende la
   -- barra dei menu di macOS, e Tabby si fa da parte per non coprirla.
@@ -2801,7 +3446,7 @@ T.allWins:subscribe(WF.windowTitleChanged, function() scheduleRebuild() end)
 
 -- Browser: titoli e siti cambiano mentre navighi → ricontrolla ogni 3 secondi
 T.browserTimer = hs.timer.doEvery(3, timed("controllo browser", function()
-  if T.press or T.split then return end
+  if T.press or T.split or T.fedit then return end
   if refreshBrowsers() then rebuildTabs(); draw() end
 end))
 
@@ -2897,8 +3542,8 @@ end
 
 -- Elenco delle scorciatoie: tasto (insieme a ⌃⌥) → azione
 local SHORTCUTS = {}
-local function shortcut(key, id, fn, onlyIf)
-  table.insert(SHORTCUTS, {key = key, id = id, fn = fn, onlyIf = onlyIf})
+local function shortcut(key, id, fn, onlyIf, shift)
+  table.insert(SHORTCUTS, {key = key, id = id, fn = fn, onlyIf = onlyIf, shift = shift})
 end
 for i = 1, 9 do shortcut(tostring(i), "tab" .. i, function() switchTo(i) end) end
 shortcut("0", "desktop", toggleDesktop)
@@ -2910,12 +3555,17 @@ shortcut("tab",   "last", toggleLastApp)
 for _, q in ipairs(QUICK) do
   shortcut(q.key, "quick-" .. q.key, function() toggleQuick(q) end)
 end
+-- ⌃⌥⇧ + numero = cartella numero 1…9 (nell'ordine del menu ⚡︎)
+for i = 1, 9 do
+  shortcut(tostring(i), "folder" .. i, function() FD.folderShortcut(i) end, nil, true)
+end
 
 local WANT = {}
 for _, m in ipairs(MODS) do WANT[m] = true end
-local function modsMatch(f)
+local function modsMatch(f, shift)
   for _, m in ipairs({"ctrl", "alt", "cmd", "shift"}) do
-    if (f[m] and true or false) ~= (WANT[m] or false) then return false end
+    local want = WANT[m] or (m == "shift" and shift) or false
+    if (f[m] and true or false) ~= want then return false end
   end
   return true
 end
@@ -2924,6 +3574,12 @@ T.keyTap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(e)
   local f    = e:getFlags()
   local code = e:getKeyCode()
   local noMods = not (f.ctrl or f.alt or f.cmd or f.shift)
+
+  -- Creazione di una cartella: Invio = fatto, Esc = annulla
+  if T.fedit and noMods then
+    if code == K.escape then later(FD.cancelFolderEdit); return true end
+    if code == K["return"] or code == K.padenter then later(FD.finishFolderEdit); return true end
+  end
 
   -- Durante la divisione: Invio = fatto, Esc = annulla
   if T.split and noMods then
@@ -2943,11 +3599,13 @@ T.keyTap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(e)
     end
   end
 
-  -- ⌃⌥ + tasto = scorciatoie di Tabby
-  if modsMatch(f) then
+  -- ⌃⌥ + tasto (o ⌃⌥⇧ + numero per le cartelle) = scorciatoie di Tabby
+  local plain, shifted = modsMatch(f), modsMatch(f, true)
+  if plain or shifted then
     local name = K[code]
     for _, sc in ipairs(SHORTCUTS) do
-      if sc.key == name and (not sc.onlyIf or sc.onlyIf()) then
+      if sc.key == name and ((sc.shift and shifted) or (not sc.shift and plain))
+         and (not sc.onlyIf or sc.onlyIf()) then
         later(function() fire(sc.id, sc.fn, "tap") end)
         return true   -- l'app in primo piano non riceve il tasto
       end
@@ -2965,7 +3623,8 @@ end)
 -- Riserva: le stesse scorciatoie registrate anche come scorciatoie di sistema
 for _, sc in ipairs(SHORTCUTS) do
   if not sc.onlyIf then
-    local ok, hk = pcall(hs.hotkey.bind, MODS, sc.key, function() fire(sc.id, sc.fn, "hotkey") end)
+    local mods = sc.shift and {"ctrl", "alt", "shift"} or MODS
+    local ok, hk = pcall(hs.hotkey.bind, mods, sc.key, function() fire(sc.id, sc.fn, "hotkey") end)
     if ok and hk then table.insert(T.hotkeys, hk) end
   end
 end
@@ -2988,4 +3647,4 @@ T.badgeSig = badgeSig(T.badges)
 rebuildTabs()
 draw()
 handleActive(hs.application.frontmostApplication())
-hs.alert.show("Tabby v9.7 attiva")
+hs.alert.show("Tabby v9.8 attiva")
