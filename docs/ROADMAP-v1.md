@@ -36,6 +36,26 @@ Oggi solo i browser hanno una scheda per finestra. Estendere a tutte le app
 
 ## B. Cartelle (il cuore della v1)
 
+### Rivista il 21/10/2026 con Daniele — questa versione prevale su quella sotto
+Una cartella è uno **spazio di lavoro salvato**: una scheda è in una cartella solo se
+ce l'hai messa tu. Prototipo cliccabile: `docs/prototipo-cartelle.html`.
+1. ⚙︎ → Cartelle → Nuova cartella → nome; sotto, un riquadro con già l'icona della
+   scheda attuale; ci si trascinano (o cliccano) altre schede; Fatto = salvata.
+2. Nel menu ⚡︎: iconcine + nome + scorciatoia della cartella.
+3. Attivarla (clic o scorciatoia): apre le app che mancano; quelle già aperte
+   entrano; le altre finestre si nascondono.
+4. Vista cartella: nome della cartella a sinistra (in alto se laterale), solo le sue
+   schede, tasto per tornare alla vista di prima.
+5. Fuori dalla vista, la cartella è **una scheda sola** con le iconcine (troppe →
+   solo la prima).
+6. ⚙︎ → Comportamento → **Vista cartelle** (confermato): spenta = le app della
+   cartella si aprono come schede normali.
+7. Le scorciatoie valgono solo su ciò che si vede in Tabby.
+Domande aperte (proposte nel prototipo): app aperta fuori cartella durante la vista;
+più cartelle insieme; scorciatoia ⌃⌥⇧+numero; cosa ricorda la cartella; "Chiudi cartella".
+
+### Prima versione (20/10)
+
 Idea di Daniele: come i gruppi di schede di Arc/Safari. "Lavoro" è una riga con toggle
 ▸/▾: aperta mostra le sue schede (Notion, DuckDuckGo, Slack…), chiusa le raccoglie.
 **Le app restano sempre aperte**: la cartella cambia solo come le vedi.

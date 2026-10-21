@@ -1,0 +1,588 @@
+<title>Cartelle di Tabby</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a sinistra lo "schermo" del Mac con Tabby vera (colori di tabby.lua), a destra la storia da provare e le domande. Tema unico scuro, come Tabby. */
+:root {
+  color-scheme: dark;
+  --page: #0E0F12;
+  --bar: #15171B;
+  --active: #2C2F36;
+  --accent: #4C8DFF;
+  --divider: #2A2D33;
+  --text: #E8E9EC;
+  --mid: #B9BDC6;
+  --dim: #7D828C;
+  --badge: #FF453A;
+  --ok: #34C27A;
+  --desk: #1D2026;
+  --panel: #191B20;
+  --sans: "IBM Plex Sans", -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --mac: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.5; }
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 40px; max-width: 1360px; margin: 0 auto; }
+header.top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; margin-bottom: 18px; }
+h1 { font-size: 26px; font-weight: 600; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+header.top p { margin: 0; color: var(--mid); max-width: 68ch; }
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
+@media (max-width: 1020px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* comandi sopra lo schermo */
+.controls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-bottom: 12px; color: var(--mid); font-size: 13px; }
+.seg { display: inline-flex; border: 1px solid var(--divider); border-radius: 8px; overflow: hidden; }
+.seg button, .btn { font: inherit; color: var(--mid); background: transparent; border: 0; padding: 5px 11px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--active); color: var(--text); }
+.btn { border: 1px solid var(--divider); border-radius: 8px; }
+.btn:hover, .seg button:hover { color: var(--text); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* lo schermo del Mac */
+.scroller { overflow-x: auto; border-radius: 12px; }
+.screen { position: relative; min-width: 680px; aspect-ratio: 16 / 10; background: var(--desk); border: 1px solid var(--divider); border-radius: 12px; overflow: hidden; display: flex; font-family: var(--mac); user-select: none; }
+.screen[data-pos="top"] { flex-direction: column-reverse; }
+.desk { position: relative; flex: 1; min-width: 0; min-height: 0; background:
+  radial-gradient(120% 90% at 20% 10%, #23324B 0%, transparent 60%), radial-gradient(90% 80% at 90% 100%, #2B2236 0%, transparent 55%), var(--desk); }
+.appwin { position: absolute; inset: 10px; border-radius: 9px; background: #F4F5F7; color: #1C1E22; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+.appwin .tb { height: 30px; display: flex; align-items: center; gap: 8px; padding: 0 12px; color: #fff; font-size: 12px; font-weight: 600; }
+.appwin .tb i { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,.45); display: inline-block; }
+.appwin .body { flex: 1; padding: 18px 20px; display: grid; gap: 10px; align-content: start; }
+.appwin .line { height: 10px; border-radius: 5px; background: #DDE0E6; }
+.appwin .big { font-size: 20px; font-weight: 600; }
+.appwin .note { font-size: 12px; color: #5B606B; }
+.emptydesk { position: absolute; inset: 0; display: grid; place-items: center; color: var(--mid); font-size: 13px; text-align: center; padding: 20px; }
+
+/* Tabby */
+.bar { background: var(--bar); color: var(--text); display: flex; flex-shrink: 0; font-size: 12.5px; position: relative; }
+.screen[data-pos="right"] .bar { width: 190px; flex-direction: column; border-left: 1px solid #000; }
+.screen[data-pos="top"] .bar { height: 40px; flex-direction: row; border-bottom: 1px solid #000; }
+.bbtn { background: transparent; border: 0; color: var(--dim); cursor: pointer; display: grid; place-items: center; font: inherit; font-size: 16px; }
+.bbtn:hover { color: var(--text); }
+.screen[data-pos="right"] .bbtn { height: 40px; }
+.screen[data-pos="top"] .bbtn { width: 42px; }
+.bottomBtns { display: flex; border-top: 1px solid var(--divider); }
+.bottomBtns .bbtn { flex: 1; }
+.screen[data-pos="top"] .bottomBtns { border-top: 0; border-left: 1px solid var(--divider); }
+.tabs { flex: 1; min-width: 0; min-height: 0; display: flex; overflow: hidden; }
+.screen[data-pos="right"] .tabs { flex-direction: column; padding: 6px 0; border-top: 1px solid var(--divider); }
+.screen[data-pos="top"] .tabs { flex-direction: row; padding: 0 6px; border-left: 1px solid var(--divider); align-items: stretch; }
+.tab { position: relative; display: flex; align-items: center; gap: 8px; color: var(--mid); cursor: pointer; border-radius: 7px; background: transparent; border: 0; font: inherit; text-align: left; touch-action: none; }
+.screen[data-pos="right"] .tab { height: 34px; margin: 1px 6px; padding: 0 8px; }
+.screen[data-pos="top"] .tab { margin: 4px 1px; padding: 0 10px; max-width: 170px; min-width: 0; }
+.tab:hover { background: rgba(255,255,255,.04); }
+.tab.on { background: var(--active); color: var(--text); }
+.screen[data-pos="right"] .tab.on::before { content: ""; position: absolute; left: 0; top: 9px; bottom: 9px; width: 2px; border-radius: 1px; background: var(--accent); }
+.screen[data-pos="top"] .tab.on::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: 2px; height: 2px; border-radius: 1px; background: var(--accent); }
+.tab .nm { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tab .x { color: var(--dim); font-size: 10px; padding: 2px 4px; border-radius: 4px; }
+.tab .x:hover { color: var(--text); background: rgba(255,255,255,.08); }
+.tab .badge { background: var(--badge); color: #fff; font-size: 10px; border-radius: 8px; padding: 0 5px; min-width: 16px; text-align: center; line-height: 15px; }
+.tab.member { padding-left: 18px !important; }
+.screen[data-pos="top"] .tab.member { padding-left: 10px !important; }
+.tab.launching { opacity: .55; }
+.tab.launching .nm::after { content: " · si apre…"; color: var(--dim); }
+.ico { width: 19px; height: 19px; border-radius: 5px; display: grid; place-items: center; color: #fff; font-size: 10.5px; font-weight: 700; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(0,0,0,.25) inset; }
+.icons { display: flex; flex-shrink: 0; }
+.icons .ico + .ico { margin-left: -6px; box-shadow: 0 0 0 2px var(--bar); }
+.tab.on .icons .ico + .ico { box-shadow: 0 0 0 2px var(--active); }
+.more { color: var(--dim); font-size: 10.5px; margin-left: 3px; align-self: center; }
+.sep { color: var(--dim); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; }
+.screen[data-pos="right"] .sep { padding: 10px 14px 4px; }
+.screen[data-pos="top"] .sep { align-self: center; padding: 0 6px 0 10px; border-left: 1px solid var(--divider); margin-left: 6px; }
+
+/* testata della cartella (vista cartella) */
+.fhead { display: flex; align-items: center; gap: 8px; color: var(--text); }
+.screen[data-pos="right"] .fhead { flex-direction: column; align-items: stretch; gap: 4px; padding: 6px 8px 8px; border-top: 1px solid var(--divider); }
+.screen[data-pos="top"] .fhead { padding: 0 8px; border-left: 1px solid var(--divider); }
+.back { display: flex; align-items: center; gap: 6px; color: var(--mid); background: transparent; border: 0; font: inherit; font-size: 11.5px; cursor: pointer; padding: 4px 6px; border-radius: 6px; }
+.back:hover { color: var(--text); background: rgba(255,255,255,.05); }
+.ftitle { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 7px; font-weight: 600; font-size: 13px; }
+.ftitle.droppable { outline: 1.5px dashed var(--accent); outline-offset: 1px; }
+.folderglyph { color: var(--accent); font-size: 13px; }
+
+/* menu */
+.menu { position: absolute; z-index: 30; min-width: 250px; background: rgba(38,40,46,.98); border: 1px solid #3A3D45; border-radius: 9px; padding: 5px; box-shadow: 0 14px 40px rgba(0,0,0,.5); font-size: 12.5px; color: var(--text); }
+.menu .mh { color: var(--dim); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; padding: 6px 9px 3px; }
+.menu .mi { display: flex; align-items: center; gap: 8px; width: 100%; background: transparent; border: 0; color: inherit; font: inherit; text-align: left; padding: 5px 9px; border-radius: 5px; cursor: pointer; }
+.menu .mi:hover { background: var(--accent); }
+.menu .mi.dis { color: var(--dim); cursor: default; }
+.menu .mi.dis:hover { background: transparent; }
+.menu .mi .k { margin-left: auto; color: var(--dim); font-family: var(--mono); font-size: 11px; }
+.menu .mi:hover .k { color: #fff; }
+.menu .ck { width: 12px; color: var(--text); }
+.menu hr { border: 0; border-top: 1px solid #3A3D45; margin: 5px 4px; }
+
+/* creazione della cartella */
+.editor { position: absolute; inset: 0; z-index: 20; background: rgba(0,0,0,.55); display: grid; place-items: center; padding: 18px; }
+.ed { width: min(460px, 100%); background: var(--panel); border: 1px solid var(--divider); border-radius: 14px; padding: 18px; display: grid; gap: 12px; color: var(--text); }
+.ed h3 { margin: 0; font-size: 15px; }
+.ed input { width: 100%; font: inherit; font-size: 14px; color: var(--text); background: #101216; border: 1px solid var(--divider); border-radius: 8px; padding: 8px 10px; }
+.drop { min-height: 96px; border: 2px dashed rgba(255,255,255,.28); border-radius: 12px; padding: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-content: flex-start; }
+.drop.hot { border-color: var(--accent); background: rgba(76,141,255,.12); }
+.chip { display: flex; align-items: center; gap: 7px; background: var(--active); border-radius: 8px; padding: 5px 6px 5px 7px; font-size: 12.5px; }
+.chip button { background: transparent; border: 0; color: var(--dim); cursor: pointer; font-size: 11px; padding: 0 3px; }
+.chip button:hover { color: var(--text); }
+.drop .hint { color: var(--dim); font-size: 12.5px; align-self: center; width: 100%; text-align: center; }
+.edrow { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.edrow .tip { color: var(--dim); font-size: 12px; }
+.edbtns { display: flex; gap: 8px; }
+.pbtn { font: inherit; border: 0; border-radius: 8px; padding: 7px 14px; cursor: pointer; color: var(--text); background: var(--active); }
+.pbtn.primary { background: var(--accent); color: #fff; }
+.pbtn:disabled { opacity: .45; cursor: default; }
+.ghost { position: fixed; z-index: 100; pointer-events: none; display: flex; align-items: center; gap: 7px; background: var(--active); border: 1px solid var(--accent); border-radius: 8px; padding: 5px 10px; font-family: var(--mac); font-size: 12.5px; color: var(--text); }
+.toast { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 40; background: rgba(21,23,27,.97); border: 1px solid var(--divider); color: var(--text); padding: 8px 14px; border-radius: 10px; font-size: 12.5px; max-width: 80%; text-align: center; }
+
+.keys { margin: 10px 2px 0; color: var(--mid); font-size: 12.5px; display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.keys b { font-weight: 500; color: var(--dim); }
+.keys code { font-family: var(--mono); font-size: 11.5px; color: var(--text); background: #1A1C21; border: 1px solid var(--divider); border-radius: 5px; padding: 0 5px; }
+
+/* storia e domande */
+aside { display: grid; gap: 18px; }
+.card { background: var(--panel); border: 1px solid var(--divider); border-radius: 12px; padding: 16px; }
+.card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .07em; color: var(--dim); margin: 0 0 10px; font-weight: 600; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; counter-reset: s; }
+.steps li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; color: var(--mid); }
+.steps li::before { counter-increment: s; content: counter(s); width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--divider); display: grid; place-items: center; font-size: 11px; color: var(--dim); font-family: var(--mono); }
+.steps li.done { color: var(--text); }
+.steps li.done::before { content: "✓"; background: var(--ok); border-color: var(--ok); color: #0E0F12; font-weight: 700; }
+.steps small { display: block; color: var(--dim); font-size: 12px; }
+.qs { margin: 0; padding-left: 18px; display: grid; gap: 10px; color: var(--mid); }
+.qs b { color: var(--text); font-weight: 500; }
+.qs em { font-style: normal; color: var(--accent); }
+kbd { font-family: var(--mono); font-size: 11.5px; color: var(--text); background: #1A1C21; border: 1px solid var(--divider); border-radius: 5px; padding: 0 4px; }
+@media (prefers-reduced-motion: no-preference) { .tab, .chip, .toast { transition: background .12s, opacity .2s; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Cartelle di Tabby</h1>
+    <p>Prototipo cliccabile della storia di Daniele. Si prova sullo schermo qui sotto; le risposte alle domande si scrivono in chat.</p>
+  </header>
+
+  <div class="grid">
+    <section>
+      <div class="controls">
+        <span>Tabby</span>
+        <span class="seg" role="group" aria-label="Posizione di Tabby">
+          <button id="posRight" aria-pressed="true">a destra</button>
+          <button id="posTop" aria-pressed="false">in alto</button>
+        </span>
+        <button class="btn" id="simApp">Simula: apri Mail da Spotlight</button>
+        <button class="btn" id="reset">Ricomincia</button>
+      </div>
+      <div class="scroller">
+        <div class="screen" id="screen" data-pos="right">
+          <div class="desk" id="desk"></div>
+          <nav class="bar" id="bar" aria-label="Tabby"></nav>
+        </div>
+      </div>
+      <p class="keys" id="keys"></p>
+    </section>
+
+    <aside>
+      <div class="card">
+        <h2>Prova la storia</h2>
+        <ol class="steps" id="steps"></ol>
+      </div>
+      <div class="card">
+        <h2>Domande (risposta proposta in blu)</h2>
+        <ol class="qs">
+          <li><b>La scheda unica «Lavoro»</b> è quello che vedi quando esci dalla vista cartella? <em>Sì: cliccandola rientri.</em></li>
+          <li><b>Apri un'app fuori dalla cartella</b> mentre sei dentro (prova il tasto «Simula»). <em>Compare sotto «Fuori cartella»; trascinala sul nome della cartella per aggiungerla.</em></li>
+          <li><b>Più cartelle</b>: attivi «Studio» mentre sei in «Lavoro». <em>Passi a Studio; nella vista normale vedi due schede-cartella.</em></li>
+          <li><b>Scorciatoia delle cartelle</b>. <em><kbd>⌃⌥⇧</kbd> + numero, nell'ordine del menu ⚡︎.</em></li>
+          <li><b>Cosa ricorda la cartella</b>. <em>App e webapp (Gmail, Notion…); una finestra di Chrome con tante pagine diverse, solo come «Chrome».</em></li>
+          <li><b>«Chiudi cartella»</b> (chiude le sue app a fine giornata). <em>Sì, nel menu ⋯ della scheda-cartella, insieme a «Esci dalla cartella».</em></li>
+        </ol>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+(() => {
+  // App del prototipo (icone disegnate: niente immagini esterne)
+  const APPS = {
+    slack:     { name: "Slack", color: "#4A154B", g: "S", note: "#generale · 3 messaggi nuovi", badge: 3 },
+    notion:    { name: "Notion", color: "#2F2F2F", g: "N", note: "Roadmap Q4" },
+    sfdc:      { name: "Salesforce", color: "#0B8DD6", g: "☁", note: "webapp di Chrome · Opportunità" },
+    winapp:    { name: "Windows App", color: "#0067C0", g: "W", note: "Desktop remoto · PC ufficio" },
+    claude:    { name: "Claude", color: "#C9643F", g: "C", note: "Nuova chat" },
+    ddg:       { name: "DuckDuckGo", color: "#DE5833", g: "D", note: "Ricerca" },
+    finder:    { name: "Finder", color: "#1E88E5", g: "F", note: "Download" },
+    spotify:   { name: "Spotify", color: "#1DB954", g: "♪", note: "In riproduzione" },
+    notes:     { name: "Note", color: "#E8B923", g: "≡", note: "Appunti esame" },
+    preview:   { name: "Anteprima", color: "#5E8CC9", g: "A", note: "Dispensa.pdf" },
+    mail:      { name: "Mail", color: "#2D7FF9", g: "✉", note: "Posta in arrivo" },
+  };
+  const START = () => ({
+    open: ["claude", "ddg", "finder", "slack", "notion", "sfdc", "spotify"],   // ordine delle schede
+    current: "slack",
+    folders: [{ id: "studio", name: "Studio", members: ["notes", "preview", "ddg"] }],
+    active: [],          // cartelle attivate (compaiono come scheda unica)
+    view: null,          // cartella mostrata nella vista cartella
+    outside: [],         // app aperte mentre eri dentro la cartella
+    folderView: true,    // ⚙︎ → Comportamento → Vista cartelle
+    launching: {},
+    editor: null,        // {name, members}
+    desktop: false,
+    done: {},
+  });
+  let S = START();
+  let menu = null;       // {kind, x, y, data}
+  let toastMsg = null, toastTimer = null;
+
+  const $ = (id) => document.getElementById(id);
+  const screen = $("screen"), bar = $("bar"), desk = $("desk");
+  const vertical = () => screen.dataset.pos === "right";
+  const folderOf = (key) => S.active.map(fid => S.folders.find(f => f.id === fid)).find(f => f && f.members.includes(key));
+  const isMember = (key) => !!folderOf(key);
+  const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const ico = (k) => `<span class="ico" style="background:${APPS[k].color}">${APPS[k].g}</span>`;
+  const iconsHTML = (members) => members.length <= 3
+    ? `<span class="icons">${members.map(ico).join("")}</span>`
+    : `<span class="icons">${ico(members[0])}</span><span class="more">+${members.length - 1}</span>`;
+
+  function toast(msg) {
+    toastMsg = msg; clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { toastMsg = null; render(); }, 3200);
+  }
+  function mark(step) { S.done[step] = true; }
+
+  // Le schede visibili ora, nell'ordine (servono anche alle scorciatoie)
+  function visibleTabs() {
+    if (S.view) {
+      const f = S.folders.find(x => x.id === S.view);
+      return [...f.members.filter(k => S.open.includes(k) || S.launching[k]), ...S.outside.filter(k => S.open.includes(k))]
+        .map(k => ({ type: "app", key: k }));
+    }
+    const out = S.active.map(fid => ({ type: "folder", id: fid }));
+    for (const k of S.open) if (!isMember(k)) out.push({ type: "app", key: k });
+    return out;
+  }
+
+  function switchTo(t) {
+    S.desktop = false;
+    if (t.type === "folder") { enterFolder(t.id); return; }
+    S.current = t.key;
+    render();
+  }
+
+  function enterFolder(fid) {
+    S.view = fid; S.outside = [];
+    const f = S.folders.find(x => x.id === fid);
+    const first = f.members.find(k => S.open.includes(k)) || f.members[0];
+    S.current = first; S.desktop = false;
+    render();
+  }
+
+  // Attivare una cartella: apre le app che mancano, quelle già aperte entrano
+  function activate(fid) {
+    const f = S.folders.find(x => x.id === fid);
+    menu = null;
+    const closed = f.members.filter(k => !S.open.includes(k));
+    for (const k of closed) {
+      S.launching[k] = true;
+      setTimeout(() => {
+        delete S.launching[k];
+        if (!S.open.includes(k)) S.open.push(k);
+        render();
+      }, 900 + Math.random() * 500);
+    }
+    if (fid === "studio") mark("studio");
+    mark("activate");
+    if (!S.folderView) {
+      mark("normal");
+      toast(`Vista cartelle spenta: le app di «${f.name}» si aprono come schede normali.`);
+      for (const k of f.members) if (S.open.includes(k)) S.current = k;
+      S.view = null; render(); return;
+    }
+    // una scheda sta in una sola cartella: le altre cartelle attive la lasciano
+    if (!S.active.includes(fid)) S.active.unshift(fid);
+    const already = f.members.length - closed.length;
+    toast(closed.length
+      ? `«${f.name}»: ${already} app già aperte entrano nella cartella, ${closed.length} si aprono ora.`
+      : `«${f.name}»: tutte le app erano già aperte e sono entrate nella cartella.`);
+    enterFolder(fid);
+  }
+
+  function leaveView() { S.view = null; S.outside = []; mark("back"); render(); }
+
+  // ------------------------------------------------------------- disegno
+  function render() {
+    renderBar(); renderDesk(); renderKeys(); renderSteps();
+    $("posRight").setAttribute("aria-pressed", String(vertical()));
+    $("posTop").setAttribute("aria-pressed", String(!vertical()));
+  }
+
+  function tabHTML(t, idx) {
+    if (t.type === "folder") {
+      const f = S.folders.find(x => x.id === t.id);
+      const n = f.members.filter(k => S.open.includes(k)).length;
+      return `<button class="tab" data-i="${idx}" title="${esc(f.name)}: ${n} app">
+        ${iconsHTML(f.members)}<span class="nm">${esc(f.name)}</span>
+        <span class="x" data-fmenu="${f.id}" title="Opzioni della cartella">⋯</span></button>`;
+    }
+    const a = APPS[t.key];
+    const on = !S.desktop && S.current === t.key;
+    const member = S.view && S.folders.find(x => x.id === S.view).members.includes(t.key);
+    return `<button class="tab ${on ? "on" : ""} ${member ? "member" : ""} ${S.launching[t.key] ? "launching" : ""}" data-i="${idx}" data-key="${t.key}">
+      ${ico(t.key)}<span class="nm">${esc(a.name)}</span>${a.badge ? `<span class="badge">${a.badge}</span>` : ""}<span class="x">✕</span></button>`;
+  }
+
+  function renderBar() {
+    const tabs = visibleTabs();
+    let mid = "";
+    if (S.view) {
+      const f = S.folders.find(x => x.id === S.view);
+      const head = `<div class="fhead">
+        <button class="back" id="backBtn" title="Torna a tutte le schede">${vertical() ? "← Tutte le schede" : "←"}</button>
+        <div class="ftitle" id="ftitle"><span class="folderglyph">▾</span>${esc(f.name)}</div></div>`;
+      const nIn = f.members.filter(k => S.open.includes(k) || S.launching[k]).length;
+      let list = tabs.slice(0, nIn).map((t, i) => tabHTML(t, i)).join("");
+      if (S.outside.some(k => S.open.includes(k))) {
+        list += `<div class="sep">Fuori cartella</div>` + tabs.slice(nIn).map((t, i) => tabHTML(t, nIn + i)).join("");
+      }
+      mid = head + `<div class="tabs">${list}</div>`;
+    } else {
+      mid = `<div class="tabs">${tabs.map((t, i) => tabHTML(t, i)).join("")}</div>`;
+    }
+    bar.innerHTML = `<button class="bbtn" id="deskBtn" title="Scrivania (⌃⌥0)">▭</button>${mid}
+      <div class="bottomBtns"><button class="bbtn" title="Dividi lo schermo">⊞</button>
+      <button class="bbtn" id="quickBtn" title="Azioni veloci">⚡︎</button>
+      <button class="bbtn" id="setBtn" title="Impostazioni">⚙︎</button></div>`;
+  }
+
+  function renderDesk() {
+    let h = "";
+    if (S.desktop) h = `<div class="emptydesk">Scrivania</div>`;
+    else if (S.current && S.open.includes(S.current)) {
+      const a = APPS[S.current];
+      const f = S.view && S.folders.find(x => x.id === S.view);
+      h = `<div class="appwin"><div class="tb" style="background:${a.color}"><i></i><i></i><i></i>${esc(a.name)}</div>
+        <div class="body"><div class="big">${esc(a.name)}</div><div class="note">${esc(a.note)}${f ? ` · nella cartella «${esc(f.name)}»: le altre app sono nascoste` : ""}</div>
+        <div class="line" style="width:82%"></div><div class="line" style="width:64%"></div><div class="line" style="width:74%"></div></div></div>`;
+    } else if (S.current && S.launching[S.current]) {
+      h = `<div class="emptydesk">${esc(APPS[S.current].name)} si sta aprendo…</div>`;
+    }
+    if (S.editor) h += editorHTML();
+    if (menu) h += menuHTML();
+    if (toastMsg) h += `<div class="toast" role="status">${esc(toastMsg)}</div>`;
+    desk.innerHTML = h;
+    if (S.editor) {
+      const inp = $("fname");
+      inp.value = S.editor.name;
+      inp.oninput = () => { S.editor.name = inp.value; $("doneBtn").disabled = !canSave(); };
+      if (S.editor.focus) { inp.focus(); S.editor.focus = false; }
+    }
+  }
+
+  const canSave = () => S.editor && S.editor.name.trim() && S.editor.members.length > 0;
+
+  function editorHTML() {
+    const e = S.editor;
+    const chips = e.members.map(k => `<span class="chip">${ico(k)}${esc(APPS[k].name)}<button data-rm="${k}" aria-label="Togli ${esc(APPS[k].name)}">✕</button></span>`).join("");
+    return `<div class="editor"><div class="ed" role="dialog" aria-label="Nuova cartella">
+      <h3>Nuova cartella</h3>
+      <input id="fname" placeholder="Nome della cartella, es. Lavoro" autocomplete="off">
+      <div class="drop ${e.hot ? "hot" : ""}" id="drop">${chips || ""}${e.members.length < 2 ? `<div class="hint">Trascina qui le schede di Tabby (o cliccale)</div>` : ""}</div>
+      <div class="edrow"><span class="tip">Esc annulla · Invio fatto</span>
+      <div class="edbtns"><button class="pbtn" id="cancelBtn">Annulla</button><button class="pbtn primary" id="doneBtn" ${canSave() ? "" : "disabled"}>Fatto</button></div></div>
+    </div></div>`;
+  }
+
+  function menuHTML() {
+    const m = menu;
+    let items = "";
+    if (m.kind === "settings") {
+      items = `<div class="mh">Cartelle</div>
+        <button class="mi" data-act="newfolder"><span class="ck"></span>Nuova cartella…</button>
+        ${S.folders.map(f => `<button class="mi dis"><span class="ck"></span>${iconsHTML(f.members)} ${esc(f.name)}</button>`).join("")}
+        <hr><div class="mh">Comportamento</div>
+        <button class="mi" data-act="toggleview"><span class="ck">${S.folderView ? "✓" : ""}</span>Vista cartelle</button>
+        <button class="mi dis"><span class="ck">✓</span>Una app alla volta</button>
+        <hr><button class="mi dis"><span class="ck"></span>Posizione di Tabby · App preferite · Finestre separate…</button>`;
+    } else if (m.kind === "quick") {
+      if (S.folders.length) mark("quick");
+      items = `<button class="mi dis"><span class="ck"></span>Memo<span class="k">⌃⌥M</span></button>
+        <button class="mi dis"><span class="ck"></span>Calcolatrice<span class="k">⌃⌥C</span></button>
+        <button class="mi dis"><span class="ck"></span>Spotlight<span class="k">⌘Spazio</span></button>
+        <hr><div class="mh">Cartelle</div>
+        ${S.folders.map((f, i) => `<button class="mi" data-act="activate" data-f="${f.id}">${iconsHTML(f.members)} ${esc(f.name)}<span class="k">⌃⌥⇧${i + 1}</span></button>`).join("")}`;
+    } else if (m.kind === "folder") {
+      const f = S.folders.find(x => x.id === m.data);
+      items = `<button class="mi" data-act="enter" data-f="${f.id}">Apri la vista «${esc(f.name)}»</button>
+        <button class="mi" data-act="release" data-f="${f.id}">Esci dalla cartella (le schede tornano libere)</button>
+        <button class="mi" data-act="closefolder" data-f="${f.id}">Chiudi cartella (chiude le sue ${f.members.length} app)</button>`;
+    }
+    return `<div class="menu" role="menu" style="left:${m.x}px;top:${m.y}px">${items}</div>`;
+  }
+
+  function renderKeys() {
+    const tabs = visibleTabs().slice(0, 9);
+    const parts = tabs.map((t, i) => `<code>⌃⌥${i + 1}</code> ${esc(t.type === "folder" ? S.folders.find(f => f.id === t.id).name : APPS[t.key].name)}`);
+    const fk = S.folders.map((f, i) => `<code>⌃⌥⇧${i + 1}</code> ${esc(f.name)}`);
+    $("keys").innerHTML = `<b>Scorciatoie ora:</b> ${parts.join(" · ") || "nessuna scheda"} <b>Cartelle:</b> ${fk.join(" · ")}`;
+  }
+
+  const STEPS = [
+    ["create", "Crea la cartella «Lavoro»", "⚙︎ → Nuova cartella. Slack c'è già; trascina dentro Notion e Salesforce, poi Fatto."],
+    ["quick", "Trovala nel menu ⚡︎", "Icone, nome e scorciatoia ⌃⌥⇧ + numero."],
+    ["activate", "Attivala", "Dal menu ⚡︎ o con la scorciatoia: restano solo le sue schede."],
+    ["back", "Torna a tutte le schede", "«← Tutte le schede»: la cartella resta come una scheda sola."],
+    ["studio", "Attiva «Studio»", "Due delle sue tre app sono chiuse: Tabby le apre, DuckDuckGo entra."],
+    ["normal", "Spegni «Vista cartelle» e riattiva", "⚙︎ → Comportamento: le app si aprono come schede normali."],
+  ];
+  function renderSteps() {
+    $("steps").innerHTML = STEPS.map(([id, t, d]) => `<li class="${S.done[id] ? "done" : ""}"><span>${t}<small>${d}</small></span></li>`).join("");
+  }
+
+  // ------------------------------------------------------------- azioni
+  function openMenu(kind, anchor, data) {
+    const r = anchor.getBoundingClientRect(), d = desk.getBoundingClientRect();
+    const w = 270;
+    let x = vertical() ? r.left - d.left - w - 6 : r.left - d.left;
+    let y = vertical() ? r.top - d.top : 4;
+    x = Math.max(8, Math.min(x, d.width - w - 8));
+    if (vertical()) y = Math.min(y, d.height - 260);
+    menu = { kind, x, y: Math.max(8, y), data };
+    render();
+  }
+
+  function startEditor() {
+    menu = null;
+    const cur = S.current && !S.desktop ? [S.current] : [];
+    S.editor = { name: "", members: cur.filter(k => APPS[k]), focus: true, hot: false };
+    render();
+  }
+  function addToEditor(key) {
+    if (!S.editor || !APPS[key] || S.editor.members.includes(key)) return;
+    S.editor.members.push(key); render();
+  }
+  function saveEditor() {
+    if (!canSave()) return;
+    const id = "f" + Date.now();
+    const name = S.editor.name.trim();
+    // una scheda sta in una sola cartella
+    for (const f of S.folders) f.members = f.members.filter(k => !S.editor.members.includes(k));
+    S.folders = S.folders.filter(f => f.members.length);
+    S.folders.push({ id, name, members: S.editor.members.slice() });
+    S.editor = null; mark("create");
+    toast(`Cartella «${name}» salvata: la trovi nel menu ⚡︎ (⌃⌥⇧${S.folders.length}).`);
+    render();
+  }
+
+  bar.addEventListener("click", (ev) => {
+    const fm = ev.target.closest("[data-fmenu]");
+    if (fm) { ev.stopPropagation(); openMenu("folder", fm, fm.dataset.fmenu); return; }
+    if (ev.target.closest(".x")) { ev.stopPropagation(); toast("✕: Chiudi finestra / Chiudi app (come oggi)."); render(); return; }
+    if (ev.target.closest("#backBtn")) { menu = null; leaveView(); return; }
+    if (ev.target.closest("#deskBtn")) { menu = null; S.desktop = !S.desktop; render(); return; }
+    if (ev.target.closest("#quickBtn")) { menu && menu.kind === "quick" ? (menu = null, render()) : openMenu("quick", ev.target.closest("#quickBtn")); return; }
+    if (ev.target.closest("#setBtn")) { menu && menu.kind === "settings" ? (menu = null, render()) : openMenu("settings", ev.target.closest("#setBtn")); return; }
+  });
+
+  desk.addEventListener("click", (ev) => {
+    const mi = ev.target.closest(".mi[data-act]");
+    if (mi) {
+      const act = mi.dataset.act, fid = mi.dataset.f;
+      menu = null;
+      if (act === "newfolder") startEditor();
+      else if (act === "toggleview") { S.folderView = !S.folderView; if (!S.folderView) { S.active = []; S.view = null; } toast(S.folderView ? "Vista cartelle accesa." : "Vista cartelle spenta: ora riattiva una cartella dal menu ⚡︎."); render(); }
+      else if (act === "activate") activate(fid);
+      else if (act === "enter") enterFolder(fid);
+      else if (act === "release") { S.active = S.active.filter(x => x !== fid); if (S.view === fid) S.view = null; toast("Le schede della cartella tornano libere."); render(); }
+      else if (act === "closefolder") { const f = S.folders.find(x => x.id === fid); S.open = S.open.filter(k => !f.members.includes(k)); S.active = S.active.filter(x => x !== fid); if (S.view === fid) S.view = null; if (!S.open.includes(S.current)) S.current = S.open[0]; toast(`«${f.name}» chiusa: le sue app sono state chiuse.`); render(); }
+      return;
+    }
+    if (menu && !ev.target.closest(".menu")) { menu = null; render(); return; }
+    const rm = ev.target.closest("[data-rm]");
+    if (rm) { S.editor.members = S.editor.members.filter(k => k !== rm.dataset.rm); render(); return; }
+    if (ev.target.closest("#cancelBtn")) { S.editor = null; render(); return; }
+    if (ev.target.closest("#doneBtn")) { saveEditor(); return; }
+  });
+
+  // clic e trascinamento delle schede (nella creazione: dentro il riquadro;
+  // nella vista cartella: sul nome della cartella per aggiungere)
+  let press = null, ghost = null;
+  bar.addEventListener("pointerdown", (ev) => {
+    const tab = ev.target.closest(".tab");
+    if (!tab || ev.target.closest(".x")) return;
+    press = { i: +tab.dataset.i, key: tab.dataset.key, x: ev.clientX, y: ev.clientY, moved: false };
+    tab.setPointerCapture(ev.pointerId);
+  });
+  bar.addEventListener("pointermove", (ev) => {
+    if (!press) return;
+    if (!press.moved && Math.abs(ev.clientX - press.x) + Math.abs(ev.clientY - press.y) < 7) return;
+    if (!press.key) return;   // le schede-cartella non si trascinano
+    press.moved = true;
+    if (!ghost) {
+      ghost = document.createElement("div"); ghost.className = "ghost";
+      ghost.innerHTML = ico(press.key) + esc(APPS[press.key].name);
+      document.body.appendChild(ghost);
+    }
+    ghost.style.left = ev.clientX + 12 + "px"; ghost.style.top = ev.clientY + 12 + "px";
+    const over = document.elementFromPoint(ev.clientX, ev.clientY);
+    const drop = $("drop"), ft = $("ftitle");
+    if (drop) drop.classList.toggle("hot", !!(over && over.closest("#drop")));
+    if (ft) ft.classList.toggle("droppable", !!(over && over.closest("#ftitle")));
+  });
+  bar.addEventListener("pointerup", (ev) => {
+    if (!press) return;
+    const p = press; press = null;
+    if (ghost) { ghost.remove(); ghost = null; }
+    if (p.moved) {
+      const over = document.elementFromPoint(ev.clientX, ev.clientY);
+      if (S.editor && over && over.closest("#drop")) { addToEditor(p.key); return; }
+      if (S.view && over && over.closest("#ftitle")) {
+        const f = S.folders.find(x => x.id === S.view);
+        if (!f.members.includes(p.key)) {
+          for (const o of S.folders) o.members = o.members.filter(k => k !== p.key);
+          f.members.push(p.key); S.outside = S.outside.filter(k => k !== p.key);
+          toast(`${APPS[p.key].name} aggiunta a «${f.name}».`);
+        }
+        render(); return;
+      }
+      render(); return;
+    }
+    if (ev.target.closest(".x")) return;
+    if (S.editor) { if (p.key) addToEditor(p.key); return; }
+    menu = null;
+    const t = visibleTabs()[p.i];
+    if (t) switchTo(t);
+  });
+
+  document.addEventListener("keydown", (ev) => {
+    if (S.editor) {
+      if (ev.key === "Escape") { S.editor = null; render(); }
+      else if (ev.key === "Enter") saveEditor();
+      return;
+    }
+    if (ev.key === "Escape" && menu) { menu = null; render(); return; }
+    const m = /^Digit([1-9])$/.exec(ev.code);
+    if (m && ev.ctrlKey && ev.altKey) {
+      ev.preventDefault();
+      const n = +m[1] - 1;
+      if (ev.shiftKey) { const f = S.folders[n]; if (f) activate(f.id); }
+      else { const t = visibleTabs()[n]; if (t) switchTo(t); }
+    }
+  });
+
+  $("posRight").onclick = () => { screen.dataset.pos = "right"; menu = null; render(); };
+  $("posTop").onclick = () => { screen.dataset.pos = "top"; menu = null; render(); };
+  $("reset").onclick = () => { S = START(); menu = null; toastMsg = null; render(); };
+  $("simApp").onclick = () => {
+    if (!S.open.includes("mail")) S.open.push("mail");
+    S.current = "mail"; S.desktop = false;
+    if (S.view && !S.outside.includes("mail")) {
+      S.outside.push("mail");
+      toast("Mail non è nella cartella: compare sotto «Fuori cartella». Trascinala sul nome della cartella per aggiungerla.");
+    } else toast("Mail aperta: nuova scheda.");
+    render();
+  };
+
+  render();
+})();
+</script>
