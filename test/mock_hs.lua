@@ -190,7 +190,10 @@ hs = {
       if not a then return false, nil end
       local out = ""
       for _, w in ipairs(a._wins) do
-        out = out .. w._title .. "\t"
+        -- come il vero browser: il nome della finestra (senza profilo) e la posizione
+        local f = w._frame
+        out = out .. (w._asName or w._title) .. "\t"
+        if not NO_BOUNDS then out = out .. f.x .. "," .. f.y .. "," .. (f.x + f.w) .. "," .. (f.y + f.h) .. "\t" end
         for _, u in ipairs(w._urls) do out = out .. u .. "\t" end
         out = out .. "\n"
       end

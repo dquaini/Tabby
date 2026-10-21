@@ -96,5 +96,5 @@ dà "receive timeout": ripeterla. Sul MacBook col notch la messa in funzione va 
 
 ## Versione attuale
 
-**v9.5** (vedi storia in testa a `tabby.lua`). Prossimo obiettivo: **Tabby v1** (A fatta, prossima: B Cartelle)
+**v9.6** (vedi storia in testa a `tabby.lua`). Prossimo obiettivo: **Tabby v1** (A fatta, prossima: B Cartelle)
 (`docs/ROADMAP-v1.md`).

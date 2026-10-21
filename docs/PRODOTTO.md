@@ -39,6 +39,9 @@ Principi:
 - Finestra con **un solo sito** → **webapp** con nome e logo (Gmail, Notion, Proton Mail…).
 - Altre finestre → "Chrome", o il titolo della finestra se più d'una.
 - Chrome & co.: via AppleScript (la prima volta macOS chiede il permesso "Automazione").
+  Le finestre si abbinano per titolo, inizio del titolo (Chrome con più profili aggiunge
+  "- Profilo") o posizione. In console: `Tabby · Chrome «…»: abbinata per …`, e un
+  avviso se il permesso Automazione manca.
 - DuckDuckGo: senza AppleScript, letto via Accessibilità; webapp solo se la finestra ha
   **una sola scheda**; ricorda i siti anche quando è nascosto.
 

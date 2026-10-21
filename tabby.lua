@@ -1,5 +1,5 @@
 -- =====================================================================
---  TABBY  ·  v9.5
+--  TABBY  ·  v9.6
 --  Una barra con una scheda per ogni app: ne vedi una alla volta,
 --  clicchi (o premi Ctrl+Option+1…9) per passare all'altra.
 --
@@ -27,6 +27,9 @@
 --      della finestra (niente più "Chrome A / B"); ⚙︎ → Finestre separate per
 --      app; app cercate per bundle ID (via un blocco di ~200 ms ogni 3 s);
 --      privacy: di DuckDuckGo si tiene e si scrive solo il sito, non l'indirizzo.
+--  v9.6: Chrome & co.: webapp riconosciute anche con più profili (titolo con
+--      il profilo in fondo) o titolo diverso (abbinate per posizione); logo
+--      anche dal sito stesso; diagnosi in console (abbinamento, permesso, logo).
 -- =====================================================================
 
 
@@ -418,6 +421,13 @@ with timeout of 2 seconds
     repeat with w in windows
       try
         set row to (name of w) & tab
+        try
+          set b to bounds of w
+          set row to row & ((item 1 of b) as text) & "," & ((item 2 of b) as text) & "," & ¬
+            ((item 3 of b) as text) & "," & ((item 4 of b) as text) & tab
+        on error
+          set row to row & "-" & tab
+        end try
         repeat with t in tabs of w
           try
             set row to row & (URL of t) & tab
@@ -432,6 +442,15 @@ with timeout of 2 seconds
   end tell
 end timeout
 ]]
+
+-- Il nome del sito per la diagnosi in console (mai l'indirizzo completo: privacy)
+local function domainsOf(urls)
+  local out = {}
+  for _, u in ipairs(urls or {}) do
+    table.insert(out, u:match("^%a+://([^/:%?#]+)") or u:match("^(%a+:)") or "?")
+  end
+  return table.concat(out, ",")
+end
 
 -- Browser senza AppleScript (DuckDuckGo): guarda dentro la finestra con
 -- l'Accessibilità, senza entrare nella pagina web, e cerca la barra degli
@@ -535,18 +554,39 @@ local function refreshBrowsers()
       local ok, success, res = pcall(function()
         return hs.osascript.applescript(string.format(AS_WINDOWS, B.as))
       end)
-      if ok and success and type(res) == "string" then
+      local answered = ok and success and type(res) == "string"
+      if answered then
         local wins = {}
         for row in res:gmatch("[^\r\n]+") do
           local fields = {}
           for f in (row .. "\t"):gmatch("([^\t]*)\t") do table.insert(fields, f) end
           local name = table.remove(fields, 1) or ""
+          -- posizione della finestra (sinistra,alto,destra,basso): serve ad
+          -- abbinarla anche quando i titoli non coincidono
+          local bounds
+          local x1, y1, x2, y2 = (fields[1] or ""):match("^(%-?[%d%.]+),(%-?[%d%.]+),(%-?[%d%.]+),(%-?[%d%.]+)$")
+          if x1 then
+            bounds = {x = tonumber(x1), y = tonumber(y1), w = x2 - x1, h = y2 - y1}
+            table.remove(fields, 1)
+          elseif fields[1] == "-" then
+            table.remove(fields, 1)
+          end
           local urls = {}
           for _, u in ipairs(fields) do if u ~= "" then table.insert(urls, u) end end
-          table.insert(wins, {name = name, urls = urls})
+          table.insert(wins, {name = name, urls = urls, bounds = bounds})
         end
         new[bid] = wins
         table.insert(sig, bid .. "=" .. res)
+      end
+      -- diagnosi: AppleScript non risponde (di solito manca il permesso)
+      T.asDiag = T.asDiag or {}
+      if T.asDiag[bid] ~= answered then
+        T.asDiag[bid] = answered
+        if not answered then
+          print(string.format("Tabby · %s non risponde ad AppleScript: niente nomi e loghi dei siti. " ..
+            "Controlla Impostazioni di Sistema → Privacy e sicurezza → Automazione → " ..
+            "Hammerspoon → %s (deve essere acceso)", B.short, B.as))
+        end
       end
     end
   end
@@ -626,8 +666,15 @@ local function favicon(domain)
   local sources = {"https://icons.duckduckgo.com/ip3/" .. domain .. ".ico"}
   if parent then table.insert(sources, "https://icons.duckduckgo.com/ip3/" .. parent .. ".ico") end
   table.insert(sources, "https://www.google.com/s2/favicons?sz=64&domain=" .. domain)
+  -- ultima riserva: il logo direttamente dal sito (se una rete aziendale
+  -- blocca i servizi di loghi, il sito che stai usando di sicuro risponde)
+  table.insert(sources, "https://" .. domain .. "/favicon.ico")
   local function try(n)
-    if not sources[n] then T.faviconFail[domain] = hs.timer.secondsSinceEpoch(); return end
+    if not sources[n] then
+      T.faviconFail[domain] = hs.timer.secondsSinceEpoch()
+      print("Tabby · logo di " .. domain .. " non trovato (riprovo tra un minuto)")
+      return
+    end
     pcall(function()
       hs.image.imageFromURL(sources[n], function(img)
         local ok = img and img:size() and img:size().w >= 8
@@ -674,17 +721,18 @@ local function windowName(title, appTitle)
   return t
 end
 
--- Le finestre "normali" di un'app diventano schede. Con una sola finestra la
+-- Le finestre "normali" di un'app diventano schede (titles: titoli da usare
+-- al posto di quelli sullo schermo, per i browser). Con una sola finestra la
 -- scheda si chiama come l'app; con due o più ognuna prende il titolo della sua
 -- finestra (titoli uguali: "Download", "Download (2)"). La prima finestra (la
 -- più vecchia) ha come chiave il bundle ID dell'app, così resta al posto
 -- dell'app (preferite, notifiche del Dock); le altre "win:<numero>".
-local function windowTabs(app, b, wins, add, appTitle)
+local function windowTabs(app, b, wins, add, appTitle, titles)
   local seen = {}
   for n, w in ipairs(wins) do
     local name = appTitle
     if #wins > 1 then
-      local base = windowName(w:title(), appTitle) or appTitle
+      local base = windowName(titles and titles[w:id()] or w:title(), appTitle) or appTitle
       seen[base] = (seen[base] or 0) + 1
       name = seen[base] > 1 and (base .. " (" .. seen[base] .. ")") or base
     end
@@ -693,22 +741,60 @@ local function windowTabs(app, b, wins, add, appTitle)
   end
 end
 
+-- Abbina le finestre sullo schermo a quelle descritte dal browser, in tre
+-- passaggi: 1) stesso titolo; 2) il titolo sullo schermo inizia con quello
+-- del browser (Chrome con più profili aggiunge il nome del profilo:
+-- "Gmail - Lavoro"); 3) stessa posizione e misura della finestra.
+local function matchBrowserWindows(wins, info)
+  local found, how, used = {}, {}, {}
+  local function pass(label, test)
+    for i, w in ipairs(wins) do
+      if not found[i] then
+        for k, e in ipairs(info or {}) do
+          if not used[k] and test(w, e) then
+            used[k], found[i], how[i] = true, e, label
+            break
+          end
+        end
+      end
+    end
+  end
+  pass("titolo", function(w, e) return e.name == (w:title() or "") end)
+  pass("inizio del titolo", function(w, e)
+    local t = w:title() or ""
+    return e.name ~= "" and #t > #e.name and t:sub(1, #e.name) == e.name
+       and t:sub(#e.name + 1, #e.name + 1) == " "
+  end)
+  pass("posizione", function(w, e)
+    local f, r = w:frame(), e.bounds
+    return r ~= nil and math.abs(f.x - r.x) < 4 and math.abs(f.y - r.y) < 4
+       and math.abs(f.w - r.w) < 4 and math.abs(f.h - r.h) < 4
+  end)
+  return found, how
+end
+
 -- Le schede di un browser: una per finestra; una finestra con un solo
 -- sito è una "webapp" (nome e logo del sito)
 local function browserTabs(app, b, B, wins, add)
   table.sort(wins, function(x, y) return x:id() < y:id() end)
   local info = T.binfo[b]
-  local used = {}
-  local plain = {}
-  for _, w in ipairs(wins) do
-    local title = w:title() or ""
-    local found
-    if info then
-      for k, e in ipairs(info) do
-        if not used[k] and e.name == title then used[k] = true; found = e; break end
-      end
-    end
+  local matched, how = matchBrowserWindows(wins, info)
+  local plain, names = {}, {}
+  T.bwDiag = T.bwDiag or {}
+  for i, w in ipairs(wins) do
+    local found = matched[i]
+    -- il titolo come lo dà il browser (senza il nome del profilo)
+    local title = found and found.name or w:title() or ""
+    names[w:id()] = title
     local site = found and siteOf(found.urls)
+    -- diagnosi (solo se il browser risponde ad AppleScript, e solo se cambia)
+    if info and B.kind ~= "ax" then
+      local diag = string.format("Tabby · %s «%s»: abbinata per %s · schede=%s · siti=%s → %s",
+        B.short, tostring(w:title()), how[i] or "NIENTE",
+        found and #found.urls or "?", found and domainsOf(found.urls) or "?",
+        site and ("webapp " .. site) or "finestra normale")
+      if T.bwDiag[w:id()] ~= diag then T.bwDiag[w:id()] = diag; print(diag) end
+    end
     if site then
       -- stesso sito già preso (da un'altra finestra, anche di un altro browser):
       -- questa finestra diventa una scheda a sé
@@ -719,7 +805,7 @@ local function browserTabs(app, b, B, wins, add)
       table.insert(plain, w)
     end
   end
-  windowTabs(app, b, plain, add, B.short)
+  windowTabs(app, b, plain, add, B.short, names)
 end
 
 
@@ -2854,4 +2940,4 @@ T.badgeSig = badgeSig(T.badges)
 rebuildTabs()
 draw()
 handleActive(hs.application.frontmostApplication())
-hs.alert.show("Tabby v9.5 attiva")
+hs.alert.show("Tabby v9.6 attiva")
