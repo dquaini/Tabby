@@ -101,11 +101,15 @@ print("\n== Calendario veloce (⌃⌥A)")
 run('''CAL = ADDAPP("com.apple.iCal", "Calendario"); CAL._wins[1]._frame = {x = 100, y = 100, w = 1200, h = 800}
 Tabby.rebuildTimer:start()''')
 check("il Calendario non è una scheda (è un'app veloce)", "Calendario" not in names())
+L.execute('''   -- come sul Mac: il Calendario non accetta meno di 680 di larghezza
+local w = CAL._wins[1]; local orig = w.setFrame
+w.setFrame = function(self, r) orig(self, {x = r.x, y = r.y, w = math.max(r.w, 680), h = r.h}) end''')
 run('KEY("a", {"ctrl","alt"})')
 check("⌃⌥A apre il Calendario", ev('FRONT == CAL') is True)
-check("piccolo, in alto a destra", ev('CAL._wins[1]._frame.w') == 460 and ev('CAL._wins[1]._frame.h') == 520
-      and ev('CAL._wins[1]._frame.x + 460 + 12') == ev('Tabby.L and (function() local A = hs.screen.primaryScreen():frame(); return A.x + A.w end)()') or
-      ev('CAL._wins[1]._frame.x') > 700)
+check("tutto dentro lo schermo (non tagliato a destra)",
+      ev('CAL._wins[1]._frame.x + CAL._wins[1]._frame.w') <= ev('hs.screen.primaryScreen():frame().x + hs.screen.primaryScreen():frame().w'))
+check("piccolo (680x520), in alto a destra", ev('CAL._wins[1]._frame.w') == 680 and ev('CAL._wins[1]._frame.h') == 520
+      and ev('CAL._wins[1]._frame.x') > 600)
 run('KEY("escape")')
 check("Esc lo chiude", ev('CAL._hidden') is True)
 run('CLICK("quick")')

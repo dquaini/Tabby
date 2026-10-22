@@ -1,5 +1,5 @@
 -- =====================================================================
---  TABBY  ·  v9.20
+--  TABBY  ·  v9.21
 --  Una barra con una scheda per ogni app e finestra: ne vedi una alla
 --  volta, clicchi (o premi Ctrl+Option+1…9) per passare all'altra.
 --  Storia delle versioni: docs/STORIA.md · Roadmap: docs/ROADMAP-v1.md
@@ -49,8 +49,9 @@ local MODS = {"ctrl", "alt"}
 local QUICK = {
   {memo = true, name = "Memo", key = "m"},
   {bid = "com.apple.calculator", name = "Calcolatrice", key = "c"},
-  -- il Calendario si apre piccolo (w × h); A come "Agenda" (C è della Calcolatrice)
-  {bid = "com.apple.iCal", name = "Calendario", key = "a", w = 460, h = 520},
+  -- il Calendario si apre piccolo (w × h: la misura minima che accetta, vista
+  -- sul Mac); A come "Agenda" (C è della Calcolatrice)
+  {bid = "com.apple.iCal", name = "Calendario", key = "a", w = 680, h = 520},
 }
 
 -- Il Memo si salva da solo in questo file (lo trovi nel Finder e con Spotlight)
@@ -1509,6 +1510,12 @@ local function placeFloater(app)
     local off = (n - 1) * 26
     if size then
       w:setFrame({x = area.x + area.w - size.w - 12 - off, y = area.y + 12 + off, w = size.w, h = size.h})
+      -- l'app può rifiutare una misura troppo piccola e allargarsi da sola: si
+      -- rilegge la misura vera e si riporta la finestra dentro lo schermo
+      local got = w:frame()
+      if math.abs(got.w - size.w) > 1 or math.abs(got.h - size.h) > 1 then
+        w:setTopLeft({x = area.x + area.w - got.w - 12 - off, y = area.y + 12 + off})
+      end
     else
       w:setTopLeft({x = area.x + area.w - fr.w - 12 - off, y = area.y + 12 + off})
     end
@@ -4044,4 +4051,4 @@ T.badgeSig = badgeSig(T.badges)
 rebuildTabs()
 draw()
 handleActive(hs.application.frontmostApplication())
-hs.alert.show("Tabby v9.20 attiva")
+hs.alert.show("Tabby v9.21 attiva")

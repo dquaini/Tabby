@@ -69,4 +69,6 @@ v9.19: cambio di scheda più veloce (barra disegnata prima di adattare le
 v9.20: ottimizzazione: batteria letta solo quando cambia (prima ~30 ms a ogni
     disegno); controlli "finestrella" in due funzioni (T.isSmall, T.isFloating);
     storia delle versioni spostata in docs/STORIA.md.
+v9.21: Calendario veloce non più tagliato (680x520, la misura minima che accetta;
+    le app veloci che si allargano da sole vengono riportate dentro lo schermo).
 ```
