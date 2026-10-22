@@ -41,8 +41,8 @@ schermo diviso in zone (nel codice "gruppo").
 - **Finestra di browser con più siti** dentro una cartella: si ricordano le pagine (indirizzo
   senza la parte dopo "?", dove possono finire codici di accesso) e si riaprono come schede di
   una finestra (Chrome/Safari; con DuckDuckGo come schede in una finestra esistente).
-- **"Apri all'avvio"** e altre automazioni (da definire con Daniele).
-- Trascinare una scheda sopra la scheda-cartella per aggiungerla.
+- Trascinare una scheda sopra la scheda-cartella per aggiungerla (da confermare con Daniele
+  se serve: oggi si aggiunge da ⚡︎ → Modifica le cartelle).
 
 ### 3. Avvio e design *(un blocco unico: stessa identità, nero e gatto)*
 **Avvio** (storia di Daniele, versione 2 del 22/10 — prototipo v1: `docs/prototipo-avvio.html`):
@@ -97,6 +97,10 @@ schermo diviso in zone (nel codice "gruppo").
   (Impostazioni → Barra dei menu) potrebbe toglierle anche a Tabby: da verificare.
 
 ## 🔭 Dopo la v1
+
+### Automazione e agenti (secondo filone, deciso il 22/10/2026)
+- **"Apri all'avvio"** delle cartelle e altre automazioni (spazi di lavoro che si preparano
+  da soli), pensate anche come azioni che un agente può usare.
 
 - **Colori di Tabby a scelta** (temi), insieme al design: i colori sono nella tabella `COL`.
 - Dalla mission (`PRODOTTO.md`): Claude/agente dentro Tabby, ricerca veloce, concentrazione,
