@@ -35,6 +35,15 @@ run(f'CLICK("tab{idx("Gmail")}")')
 check("su Gmail: torna Gmail, Sofascore ridotta", ev('GMAIL._min') is False and ev('SOFA._min') is True)
 check("in primo piano Gmail", ev('CHROME._focused == GMAIL') is True)
 
+print("== Cambio di finestra fatto da macOS (non da te): nessuna riduzione")
+run('MINS = 0; for _, w in ipairs(CHROME._wins) do local o = w.minimize; w.minimize = function(self) MINS = MINS + 1; o(self) end end')
+run('SOFA:unminimize(); CHROME._focused = SOFA; WINFILTER.subs["focused"](SOFA)')
+run('CHROME._focused = GMAIL; WINFILTER.subs["focused"](GMAIL)')
+run('CHROME._focused = SOFA; WINFILTER.subs["focused"](SOFA)')
+check("macOS sposta l'attenzione avanti e indietro: Tabby non riduce niente (niente ping-pong)", ev('MINS') == 0)
+run(f'CLICK("tab{idx("Gmail")}")')
+check("ma quando scegli tu una scheda, le altre si riducono", ev('SOFA._min') is True and ev('GMAIL._min') is False)
+
 print("== ⌘N: nuova finestra di Chrome")
 run('''
 NEW = newWindow(CHROME, "Nuova scheda - Google Chrome", {"chrome://newtab/"})

@@ -1,5 +1,5 @@
 -- =====================================================================
---  TABBY  ·  v9.15
+--  TABBY  ·  v9.16
 --  Una barra con una scheda per ogni app: ne vedi una alla volta,
 --  clicchi (o premi Ctrl+Option+1…9) per passare all'altra.
 --
@@ -56,6 +56,8 @@
 --      finestre della stessa app (es. Chrome) si riducono a icona.
 --  v9.15: le finestrelle di accesso (Google…) non riducono la pagina da cui
 --      parti; chiusa una finestra torna l'ultima usata, non il desktop.
+--  v9.16: una scheda alla volta riduce le altre finestre solo quando scegli tu
+--      (scheda, scorciatoia, ⌘N), mai per i cambi di macOS: niente ping-pong.
 -- =====================================================================
 
 
@@ -1442,6 +1444,8 @@ local function minimizeSiblings(apps, keepIds)
         for _, w in ipairs(standardWindows(app)) do
           if not keepIds[w:id()] and not w:isMinimized()
              and not (T.minis and T.minis[w:id()]) then
+            print(string.format("Tabby · una scheda alla volta: riduco «%s» di %s",
+              tostring(w:title()), tostring(app:name())))
             w:minimize()
           end
         end
@@ -1585,8 +1589,15 @@ local handleActive = timed("cambio di scheda", function(app)
       -- finestrella appena aperta che potrebbe essere il video di Meet)
       local fw = hs.window.focusedWindow()
       local fa = fw and fw:application()
-      if fw and fa and fa:bundleID() == bid and fw:isStandard() and not (T.minis and T.minis[fw:id()])
+      -- …ma solo se quella finestra l'hai scelta tu (scheda di Tabby, scorciatoia)
+      -- o l'hai appena aperta (⌘N). Se l'attenzione la sposta macOS (es. mentre
+      -- riduce una finestra) niente: si innescava un ping-pong di finestre che
+      -- comparivano e sparivano (22/10/2026)
+      local pk = T.pickedWin
+      local picked = fw and pk and pk.id == fw:id() and hs.timer.secondsSinceEpoch() - pk.at < 3
+      if picked and fa and fa:bundleID() == bid and fw:isStandard() and not (T.minis and T.minis[fw:id()])
          and not (T.popups and T.popups[fw:id()]) then
+        T.pickedWin = nil
         -- (ricorda l'ordine d'uso delle finestre: serve se poi ne chiudi una)
         T.winHist = T.winHist or {}
         local h = T.winHist[bid] or {}
@@ -1623,6 +1634,8 @@ end
 local function focusWin(e)
   T.desktopMode = false
   local app, w = e.app, e.win
+  -- l'hai scelta tu: le altre finestre della stessa app si possono ridurre
+  if w then T.pickedWin = {id = w:id(), at = hs.timer.secondsSinceEpoch()} end
   if app and app:isHidden() then app:unhide() end
   if w:isMinimized() then w:unminimize() end
   w:focus()
@@ -3673,6 +3686,7 @@ T.allWins:subscribe(WF.windowCreated, function(w)
     -- (accesso con Google, pagamento…): non riduce le altre e non si ingrandisce
     local popup = f.w < A.w * 0.6
     if popup then T.popups = T.popups or {}; T.popups[w:id()] = true end
+    if not popup and w:isStandard() then T.pickedWin = {id = w:id(), at = hs.timer.secondsSinceEpoch()} end
     print(string.format("Tabby · finestra nuova di %s «%s»: tipo=%s · normale=%s · %.0fx%.0f%s",
       BROWSERS[b].short, tostring(w:title()), tostring(w:subrole()), tostring(w:isStandard()), f.w, f.h,
       popup and " → finestrella (accesso/popup)" or ""))
@@ -3688,6 +3702,7 @@ T.allWins:subscribe(WF.windowCreated, function(w)
       if T.memberOf[currentKey()] == g then layoutGroup(g) end
     end)
   elseif a and b == frontBid() then
+    if not BROWSERS[b] and w:isStandard() then T.pickedWin = {id = w:id(), at = hs.timer.secondsSinceEpoch()} end
     -- una finestra piccola di un browser può essere una finestrella (video in
     -- miniatura): si decide dopo, quando il browser ha risposto
     local f, A = w:frame(), appArea()
@@ -4004,4 +4019,4 @@ T.badgeSig = badgeSig(T.badges)
 rebuildTabs()
 draw()
 handleActive(hs.application.frontmostApplication())
-hs.alert.show("Tabby v9.15 attiva")
+hs.alert.show("Tabby v9.16 attiva")
