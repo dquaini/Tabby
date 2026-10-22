@@ -39,6 +39,7 @@ print("== ⌘N: nuova finestra di Chrome")
 run('''
 NEW = newWindow(CHROME, "Nuova scheda - Google Chrome", {"chrome://newtab/"})
 NEW._asName = "Nuova scheda"
+NEW._frame = {x = 0, y = 25, w = 1440, h = 837}   -- come sul Mac: grande come la finestra di prima
 table.insert(CHROME._wins, 1, NEW)
 CHROME._focused = NEW
 WINFILTER.subs["created"](NEW); WINFILTER.subs["focused"](NEW)
@@ -74,6 +75,34 @@ print("== Interruttore spento (⚙︎ → Comportamento → Una scheda alla volt
 run('CLICK("settings"); for _, m in ipairs(MENU) do if m.title == "Comportamento" then for _, it in ipairs(m.menu) do if it.title:find("^Una scheda alla volta") then it.fn() end end end end')
 run(f'SOFA:unminimize(); GMAIL:unminimize(); CLICK("tab{idx("Gmail")}")')
 check("spento: le altre finestre restano come sono", ev('SOFA._min') is False)
+
+print("== Accesso con Google in una finestrella (22/10: si tornava al desktop)")
+run('CLICK("settings"); for _, m in ipairs(MENU) do if m.title == "Comportamento" then for _, it in ipairs(m.menu) do if it.title:find("^Una scheda alla volta") then it.fn() end end end end')
+run(f'CLICK("tab{idx("Sofascore")}")')
+check("di nuovo acceso: su Sofascore", ev('CHROME._focused == SOFA') is True and ev('SOFA._min') is False)
+run('''
+POP = newWindow(CHROME, "Accedi - Account Google - Google Chrome", {"https://accounts.google.com/"})
+POP._asName = "Accedi - Account Google"
+POP._frame = {x = 420, y = 60, w = 590, h = 830}
+table.insert(CHROME._wins, 1, POP)
+WINFILTER.subs["created"](POP)
+CHROME._focused = POP; WINFILTER.subs["focused"](POP)
+Tabby.rebuildTimer:start()''')
+check("la finestra di accesso non riduce Sofascore", ev('SOFA._min') is False)
+check("e Tabby non la ingrandisce", ev('POP._frame.w') == 590)
+run('''POP:close(); CHROME._focused = nil
+WINFILTER.subs["destroyed"](POP); Tabby.rebuildTimer:start()''')
+check("accesso finito: resti su Sofascore", ev('SOFA._min') is False)
+
+print("== ⌘W su una finestra: torna quella di prima, non il desktop")
+run(f'CLICK("tab{idx("Sofascore")}")')
+run(f'CLICK("tab{idx("Gmail")}")')
+check("su Gmail, Sofascore ridotta", ev('SOFA._min') is True)
+run('''local all_min = true
+for _, w in ipairs(CHROME._wins) do if w ~= GMAIL and w ~= PIP and not w._min then w:minimize() end end
+GMAIL:close(); CHROME._focused = nil
+WINFILTER.subs["destroyed"](GMAIL); Tabby.rebuildTimer:start()''')
+check("chiusa Gmail: torna Sofascore (l'ultima usata)", ev('SOFA._min') is False and ev('CHROME._focused == SOFA') is True)
 
 print()
 print("FALLITI: %d" % len(fails) if fails else "TUTTO OK")

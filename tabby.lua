@@ -1,5 +1,5 @@
 -- =====================================================================
---  TABBY  ·  v9.14
+--  TABBY  ·  v9.15
 --  Una barra con una scheda per ogni app: ne vedi una alla volta,
 --  clicchi (o premi Ctrl+Option+1…9) per passare all'altra.
 --
@@ -54,6 +54,8 @@
 --      posizione non distingue finestre che Tabby adatta allo stesso spazio).
 --  v9.14: "una app alla volta" diventa "una scheda alla volta": le altre
 --      finestre della stessa app (es. Chrome) si riducono a icona.
+--  v9.15: le finestrelle di accesso (Google…) non riducono la pagina da cui
+--      parti; chiusa una finestra torna l'ultima usata, non il desktop.
 -- =====================================================================
 
 
@@ -1386,6 +1388,7 @@ local function fitWindow(w, force)
   if not w or (not S.fit and not force) then return end
   if not w:isStandard() or w:isFullScreen() then return end
   if T.minis and T.minis[w:id()] then return end   -- finestrella (video in miniatura)
+  if T.popups and T.popups[w:id()] then return end -- finestrella aperta dal sito (accesso…)
   local a = w:application()
   local b = a and a:bundleID()
   -- mai toccare app veloci e finestre di Hammerspoon (console, memo)
@@ -1582,7 +1585,14 @@ local handleActive = timed("cambio di scheda", function(app)
       -- finestrella appena aperta che potrebbe essere il video di Meet)
       local fw = hs.window.focusedWindow()
       local fa = fw and fw:application()
-      if fw and fa and fa:bundleID() == bid and fw:isStandard() and not (T.minis and T.minis[fw:id()]) then
+      if fw and fa and fa:bundleID() == bid and fw:isStandard() and not (T.minis and T.minis[fw:id()])
+         and not (T.popups and T.popups[fw:id()]) then
+        -- (ricorda l'ordine d'uso delle finestre: serve se poi ne chiudi una)
+        T.winHist = T.winHist or {}
+        local h = T.winHist[bid] or {}
+        for i = #h, 1, -1 do if h[i] == fw:id() then table.remove(h, i) end end
+        table.insert(h, fw:id())
+        T.winHist[bid] = h
         local f, A = fw:frame(), appArea()
         if not (BROWSERS[bid] and f.w < A.w * 0.5 and f.h < A.h * 0.6) then
           minimizeSiblings({[bid] = true}, {[fw:id()] = true})
@@ -3658,9 +3668,14 @@ T.allWins:subscribe(WF.windowCreated, function(w)
   local b = a and a:bundleID()
   -- diagnosi: che finestra ha aperto un browser (es. le finestrelle di Meet)
   if b and BROWSERS[b] then
-    local f = w:frame()
-    print(string.format("Tabby · finestra nuova di %s «%s»: tipo=%s · normale=%s · %.0fx%.0f",
-      BROWSERS[b].short, tostring(w:title()), tostring(w:subrole()), tostring(w:isStandard()), f.w, f.h))
+    local f, A = w:frame(), appArea()
+    -- una finestra di browser che nasce stretta è una finestrella aperta dal sito
+    -- (accesso con Google, pagamento…): non riduce le altre e non si ingrandisce
+    local popup = f.w < A.w * 0.6
+    if popup then T.popups = T.popups or {}; T.popups[w:id()] = true end
+    print(string.format("Tabby · finestra nuova di %s «%s»: tipo=%s · normale=%s · %.0fx%.0f%s",
+      BROWSERS[b].short, tostring(w:title()), tostring(w:subrole()), tostring(w:isStandard()), f.w, f.h,
+      popup and " → finestrella (accesso/popup)" or ""))
   end
   -- (con le finestre separate ogni finestra nuova è una scheda nuova:
   -- non entra nel gruppo)
@@ -3676,12 +3691,47 @@ T.allWins:subscribe(WF.windowCreated, function(w)
     -- una finestra piccola di un browser può essere una finestrella (video in
     -- miniatura): si decide dopo, quando il browser ha risposto
     local f, A = w:frame(), appArea()
-    if not (BROWSERS[b] and f.w < A.w * 0.5 and f.h < A.h * 0.6) then fitWindow(w) end
+    if not (BROWSERS[b] and f.w < A.w * 0.5 and f.h < A.h * 0.6)
+       and not (T.popups and T.popups[w:id()]) then fitWindow(w) end
   end
   scheduleRebuild()
 end)
 
-T.allWins:subscribe(WF.windowDestroyed, function() scheduleRebuild() end)
+-- Chiusa una finestra: se dell'app in primo piano restano solo finestre ridotte
+-- a icona (una scheda alla volta), riapri l'ultima usata invece di lasciare il
+-- desktop (es. finita una finestrella di accesso, o ⌘W su una finestra)
+function T.restoreAfterClose()
+  if not S.oneAtATime then return end
+  local app = hs.application.frontmostApplication()
+  local bid = app and app:bundleID()
+  if not bid or not (BROWSERS[bid] or perWindow(bid)) or FLOATER[bid] then return end
+  local wins = standardWindows(app)
+  if #wins == 0 then return end
+  for _, w in ipairs(wins) do
+    -- c'è ancora una finestra vera in vista (miniature e finestrelle non contano)
+    if not w:isMinimized() and not (T.minis and T.minis[w:id()])
+       and not (T.popups and T.popups[w:id()]) then return end
+  end
+  -- l'ultima usata tra quelle ridotte (se non si sa, la prima)
+  local pick
+  local h = (T.winHist or {})[bid] or {}
+  for i = #h, 1, -1 do
+    for _, w in ipairs(wins) do
+      if not pick and w:id() == h[i] and w:isMinimized() then pick = w end
+    end
+  end
+  if not pick then
+    for _, w in ipairs(wins) do if not pick and w:isMinimized() then pick = w end end
+  end
+  if not pick then return end
+  print("Tabby · chiusa una finestra di " .. tostring(app:name()) .. ": riapro «" .. tostring(pick:title()) .. "»")
+  pick:unminimize()
+  pick:focus()
+end
+T.allWins:subscribe(WF.windowDestroyed, function()
+  scheduleRebuild()
+  hs.timer.doAfter(0.3, T.restoreAfterClose)
+end)
 
 -- Cambio di finestra dentro la stessa app (es. da un documento all'altro,
 -- o da una webapp all'altra con ⌘`): aggiorna la scheda attiva
@@ -3954,4 +4004,4 @@ T.badgeSig = badgeSig(T.badges)
 rebuildTabs()
 draw()
 handleActive(hs.application.frontmostApplication())
-hs.alert.show("Tabby v9.14 attiva")
+hs.alert.show("Tabby v9.15 attiva")
