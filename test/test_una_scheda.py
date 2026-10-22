@@ -44,12 +44,27 @@ check("macOS sposta l'attenzione avanti e indietro: Tabby non riduce niente (nie
 run(f'CLICK("tab{idx("Gmail")}")')
 check("ma quando scegli tu una scheda, le altre si riducono", ev('SOFA._min') is True and ev('GMAIL._min') is False)
 
+print("== La tastiera arriva alla finestra scelta (⌘F)")
+run(f'CLICK("tab{idx("Sofascore")}")')
+# clic su Gmail (ridotta): macOS la riapre ma la tastiera resta su Sofascore
+L.execute(f'''ORIG_FOCUS = GMAIL.focus
+GMAIL.focus = function(self) if self._min then return end FRONT = CHROME; CHROME._focused = self end
+CLICK("tab{idx("Gmail")}")''')
+L.execute('CHROME._focused = SOFA')   # la prima richiesta è stata ignorata
+L.execute('FLUSH()')
+check("dopo il clic la tastiera è su Gmail", ev('CHROME._focused == GMAIL') is True)
+L.execute('GMAIL.focus = ORIG_FOCUS')
+run(f'CLICK("tab{idx("Sofascore")}"); CLICK("tab{idx("Finder")}")')
+check("clic veloci su due schede: vince l'ultima (il controllo non si riprende Sofascore)", ev('FRONT == FINDER') is True)
+
+run(f'CLICK("tab{idx("Gmail")}")')
 print("== ⌘N: nuova finestra di Chrome")
 run('''
 NEW = newWindow(CHROME, "Nuova scheda - Google Chrome", {"chrome://newtab/"})
 NEW._asName = "Nuova scheda"
 NEW._frame = {x = 0, y = 25, w = 1440, h = 837}   -- come sul Mac: grande come la finestra di prima
 table.insert(CHROME._wins, 1, NEW)
+FRONT = CHROME   -- ⌘N si preme dentro Chrome
 CHROME._focused = NEW
 WINFILTER.subs["created"](NEW); WINFILTER.subs["focused"](NEW)
 Tabby.rebuildTimer:start()''')

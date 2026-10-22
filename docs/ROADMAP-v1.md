@@ -125,7 +125,8 @@ solo quello che non si può portare in Tabby.
   problema pesa meno. Si decide dopo la prova.
 
 ## Altri spunti dall'uso del 22/10/2026
-- **⌘F (e le altre scorciatoie dell'app) quando si è appena usata Tabby**: ⌘F non arriva
+- **⌘F dopo il clic su una scheda** (corretto in v9.18: Tabby ricontrolla che la tastiera sia
+  sulla finestra scelta). Testo originale: ⌘F non arriva
   all'app attiva. Da capire in quale caso (dopo un clic su una scheda? dopo un menu ⚡︎/⚙︎?)
   e correggere: la tastiera deve sempre tornare alla finestra attiva.
 - **Scrivania**: quando si vede il desktop, Tabby non è più una barra ma un **pallino in basso

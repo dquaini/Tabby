@@ -1,5 +1,5 @@
 -- =====================================================================
---  TABBY  ·  v9.17
+--  TABBY  ·  v9.18
 --  Una barra con una scheda per ogni app: ne vedi una alla volta,
 --  clicchi (o premi Ctrl+Option+1…9) per passare all'altra.
 --
@@ -59,6 +59,7 @@
 --  v9.16: una scheda alla volta riduce le altre finestre solo quando scegli tu
 --      (scheda, scorciatoia, ⌘N), mai per i cambi di macOS: niente ping-pong.
 --  v9.17: Calendario veloce (⌃⌥A, piccolo in alto a destra); barra nera piena.
+--  v9.18: dopo il clic su una scheda la tastiera arriva davvero alla finestra (⌘F).
 -- =====================================================================
 
 
@@ -1635,6 +1636,7 @@ end
 
 local function focusBid(bid)
   T.desktopMode = false
+  T.focusSeq = (T.focusSeq or 0) + 1   -- annulla i controlli di una scelta precedente
   -- come cliccare l'icona nel Dock: apre l'app o riapre una finestra
   hs.application.launchOrFocusByBundleID(bid)
   afterFocus()
@@ -1650,6 +1652,22 @@ local function focusWin(e)
   if w:isMinimized() then w:unminimize() end
   w:focus()
   afterFocus()
+  -- La tastiera deve arrivare davvero a questa finestra (⌘F, scrivere…): se la
+  -- finestra si stava riaprendo dall'icona, macOS può ignorare la prima
+  -- richiesta. Si ricontrolla due volte e, se serve, si ridà l'attenzione.
+  local wid = w:id()
+  T.focusSeq = (T.focusSeq or 0) + 1
+  local seq = T.focusSeq
+  for _, d in ipairs({0.25, 0.6}) do
+    hs.timer.doAfter(d, function()
+      if T.focusSeq ~= seq then return end   -- nel frattempo hai scelto altro
+      local f = hs.window.focusedWindow()
+      if (not f or f:id() ~= wid) and w:application() and not w:isMinimized() then
+        print(string.format("Tabby · la tastiera non era su «%s»: gliela ridò", tostring(w:title())))
+        w:focus()
+      end
+    end)
+  end
 end
 
 local function focusKey(key)
@@ -1854,6 +1872,7 @@ end
 
 -- Scrivania: nasconde tutto. Ripremendo, torna all'ultima scheda.
 local function toggleDesktop()
+  T.focusSeq = (T.focusSeq or 0) + 1
   if T.desktopMode then
     if T.lastKey then focusKey(T.lastKey) else T.desktopMode = false; draw() end
     return
@@ -4029,4 +4048,4 @@ T.badgeSig = badgeSig(T.badges)
 rebuildTabs()
 draw()
 handleActive(hs.application.frontmostApplication())
-hs.alert.show("Tabby v9.17 attiva")
+hs.alert.show("Tabby v9.18 attiva")

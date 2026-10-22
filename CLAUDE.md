@@ -108,5 +108,5 @@ GitHub, poi `git clone git@github.com:dquaini/Tabby.git` e `init.lua` che punta 
 
 ## Versione attuale
 
-**v9.17** (vedi storia in testa a `tabby.lua`). Prossimo obiettivo: **Tabby v1** (A fatta; B Cartelle: base fatta in v9.8, restano "Apri all'avvio" e rifiniture)
+**v9.18** (vedi storia in testa a `tabby.lua`). Prossimo obiettivo: **Tabby v1** (A fatta; B Cartelle: base fatta in v9.8, restano "Apri all'avvio" e rifiniture)
 (`docs/ROADMAP-v1.md`).
