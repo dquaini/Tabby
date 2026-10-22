@@ -7,6 +7,9 @@ una alla volta, passi dall'una all'altra con un clic o con ⌃⌥ + numero. Pens
 Prima di lavorare leggi:
 - `docs/PRODOTTO.md` — mission, cosa fa oggi, scelte prese, cosa migliorare
 - `docs/ROADMAP-v1.md` — le funzioni decise per la v1, con specifiche e ordine
+- `docs/SPECIFICA.md` — tutto il comportamento di oggi, regola per regola (base per l'app
+  Swift): se cambi un comportamento, aggiornala
+- `docs/CONDIVIDERE.md` — come installare Tabby su un altro Mac / darla ad altri
 
 ## Chi è l'utente (e come parlarci)
 

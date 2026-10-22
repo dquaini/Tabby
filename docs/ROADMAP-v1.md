@@ -42,6 +42,11 @@ configurazione guidata e Dock fatti direttamente lì.
 - **Batteria senza percentuale** (la percentuale al passaggio del puntatore).
 - **Gatto intero** al posto della testa quando Tabby è a destra o a sinistra.
 
+**Piano accettato da Daniele il 23/10/2026**: 1-2 settimane di uso vero sui due Mac (con
+correzioni qui), intanto la specifica completa — fatta: `docs/SPECIFICA.md` — poi l'app Swift
+(prima il motore con lo stesso comportamento, poi design, avvio, configurazione guidata, Dock).
+Come condividerla oggi e domani: `docs/CONDIVIDERE.md`.
+
 **Direttamente nell'app Swift**: animazione d'avvio, pallino sulla scrivania, icona di Tabby
 nelle finestre (cartelle), redesign, colori a scelta, configurazione guidata, Dock.
 
