@@ -1,67 +1,8 @@
 -- =====================================================================
---  TABBY  ·  v9.19
---  Una barra con una scheda per ogni app: ne vedi una alla volta,
---  clicchi (o premi Ctrl+Option+1…9) per passare all'altra.
---
---  v2: tasto impostazioni, schermo intero, barra che si nasconde.
---  v3: solo app con finestre, ✕ per chiudere, tasto scrivania, chiudi tutte.
---  v4: nome Tabby; Ctrl+1…9 in tutte le app; Ctrl+0 = scrivania;
---      Tabby visibile anche a schermo intero; impostazioni raggruppate.
---  v5: ✕ = chiudi finestra / chiudi app; tasto ⚡︎ con app veloci.
---  v6: posizione di Tabby a scelta (alto, basso, sinistra, destra).
---  v7: batteria; ⌥Tab = app di prima; Ctrl+frecce; Esc chiude la
---      Calcolatrice; gestione di tante app (icone compatte e "+N").
---  v8: DIVIDI LO SCHERMO (2, 3 o 4 app) trascinando le schede nelle
---      zone → diventano un'unica scheda di gruppo con tasto "Scomponi";
---      riordino delle schede trascinandole.
---  v8.x: Tabby nella fascia del notch dei MacBook.
---  v9: notifiche sulle schede; scorciatoie tutte su ⌃⌥ (Ctrl+Option);
---      Memo veloce; browser: una scheda per finestra, "webapp" con nome
---      e logo del sito, Chrome A / B / C; correzioni varie.
---  v9.1-9.3: DuckDuckGo (via Accessibilità, ricorda i siti anche da nascosto),
---      loghi da più fonti, Memo salvato in ~/Documents/Tabby Memo.txt.
---  v9.4: revisione: le viste divise seguono le finestre dei browser (non si
---      sciolgono se una webapp cambia sito); stesso sito in due browser = due
---      schede; loghi ritentati senza internet; spia "Tabby · lento" in console.
---  v9.5 (v1 · A): una scheda per ogni finestra di qualsiasi app, col titolo
---      della finestra (niente più "Chrome A / B"); ⚙︎ → Finestre separate per
---      app; app cercate per bundle ID (via un blocco di ~200 ms ogni 3 s);
---      privacy: di DuckDuckGo si tiene e si scrive solo il sito, non l'indirizzo.
---  v9.6: Chrome & co.: webapp riconosciute anche con più profili (titolo con
---      il profilo in fondo) o titolo diverso (abbinate per posizione); logo
---      anche dal sito stesso; diagnosi in console (abbinamento, permesso, logo).
---  v9.7: Chrome/Safari: corretto lo script (dentro il browser "tab" è la
---      scheda, non la tabulazione: le webapp non venivano mai riconosciute);
---      la domanda al browser parte in parallelo (via ~200 ms di blocco ogni 3 s).
---  v9.8 (v1 · B): CARTELLE, spazi di lavoro salvati (app e webapp). Si creano
---      e attivano dal menu ⚡︎ (o ⌃⌥⇧ + numero); attivata = una scheda sola con
---      le icone; cliccata = vista cartella (solo le sue schede, ← per tornare).
---  v9.9: Chrome: le webapp non "lampeggiano" più (memoria per finestra mentre
---      la risposta del browser è in arrivo); diagnosi delle finestre nuove dei
---      browser; diagnosi DuckDuckGo solo quando cambia sito o schede.
---  v9.10: Google Meet: il video in miniatura (finestrella del browser) non è
---      una scheda, non si ridimensiona e resta visibile; abbinamento prima per
---      posizione; webapp "Meet"; console: permesso negato ≠ browser occupato.
---  v9.11: giro di rifiniture: scheda + (Spotlight, che esce dal menu ⚡︎);
---      Scambia nella vista divisa (⇄ e ⌃⌥S); il gatto di Tabby sul tasto
---      scrivania; clic sulla cartella = scegli l'app; niente ridimensionamenti
---      inutili; la spia di lentezza dice quale app è lenta.
---  v9.12: con Spotlight aperto lo sfondo si oscura (⚙︎ → Comportamento).
---      (v9.12.1: il velo restava trasparente per due dissolvenze ravvicinate;
---      v9.12.2: velo all'85%, il testo dietro non si legge più;
---      v9.12.3: il velo sparisce subito quando Spotlight si chiude)
---  v9.13: Chrome con più finestre: niente più schede scambiate (la sola
---      posizione non distingue finestre che Tabby adatta allo stesso spazio).
---  v9.14: "una app alla volta" diventa "una scheda alla volta": le altre
---      finestre della stessa app (es. Chrome) si riducono a icona.
---  v9.15: le finestrelle di accesso (Google…) non riducono la pagina da cui
---      parti; chiusa una finestra torna l'ultima usata, non il desktop.
---  v9.16: una scheda alla volta riduce le altre finestre solo quando scegli tu
---      (scheda, scorciatoia, ⌘N), mai per i cambi di macOS: niente ping-pong.
---  v9.17: Calendario veloce (⌃⌥A, piccolo in alto a destra); barra nera piena.
---  v9.18: dopo il clic su una scheda la tastiera arriva davvero alla finestra (⌘F).
---  v9.19: cambio di scheda più veloce (barra disegnata prima di adattare le
---      finestre); la spia "lento" dice in quale passaggio va il tempo.
+--  TABBY  ·  v9.20
+--  Una barra con una scheda per ogni app e finestra: ne vedi una alla
+--  volta, clicchi (o premi Ctrl+Option+1…9) per passare all'altra.
+--  Storia delle versioni: docs/STORIA.md · Roadmap: docs/ROADMAP-v1.md
 -- =====================================================================
 
 
@@ -344,6 +285,21 @@ local function appArea()
   -- in alto: le app partono subito sotto Tabby (anche se Tabby sta nella fascia del notch)
   local top = baseRect().y + BAR_H
   return hs.geometry.rect(f.x, top, f.w, f.y + f.h - top)
+end
+
+-- Finestra piccola: meno di metà larghezza e del 60% dell'altezza dello spazio
+-- delle app. Per un browser è quasi sempre una finestrella (video in miniatura).
+function T.isSmall(w)
+  local f, A = w:frame(), appArea()
+  return f.w < A.w * 0.5 and f.h < A.h * 0.6
+end
+
+-- Finestrella già riconosciuta: video in miniatura (T.minis) o finestra aperta
+-- da un sito, come l'accesso con Google (T.popups). Non è una scheda, Tabby non
+-- la ingrandisce, non la riduce e non la conta come finestra "vera".
+function T.isFloating(w)
+  local id = w:id()
+  return (T.minis ~= nil and T.minis[id] ~= nil) or (T.popups ~= nil and T.popups[id] ~= nil)
 end
 
 -- Il "notch" (la tacca della fotocamera dei MacBook recenti).
@@ -878,11 +834,7 @@ end
 local function matchBrowserWindows(wins, info)
   local found, how, used = {}, {}, {}
   info = info or {}
-  local A = appArea()
-  local function small(w)
-    local f = w:frame()
-    return f.w < A.w * 0.5 and f.h < A.h * 0.6
-  end
+  local small = T.isSmall
   local function samePlace(w, e)
     local f, r = w:frame(), e.bounds
     return r ~= nil and math.abs(f.x - r.x) < 4 and math.abs(f.y - r.y) < 4
@@ -945,8 +897,7 @@ local function browserTabs(app, b, B, wins, add)
     -- Finestrella (video in miniatura di Meet, barra "stai condividendo"):
     -- piccola e assente dall'elenco del browser. Non è una scheda.
     local f = w:frame()
-    local A = appArea()
-    local mini = info and B.kind ~= "ax" and not found and f.w < A.w * 0.5 and f.h < A.h * 0.6
+    local mini = info and B.kind ~= "ax" and not found and T.isSmall(w)
     if mini then
       minis[w:id()] = w
       if not (T.minis and T.minis[w:id()]) then
@@ -1410,8 +1361,7 @@ end
 local function fitWindow(w, force)
   if not w or (not S.fit and not force) then return end
   if not w:isStandard() or w:isFullScreen() then return end
-  if T.minis and T.minis[w:id()] then return end   -- finestrella (video in miniatura)
-  if T.popups and T.popups[w:id()] then return end -- finestrella aperta dal sito (accesso…)
+  if T.isFloating(w) then return end   -- finestrella (video in miniatura, accesso…)
   local a = w:application()
   local b = a and a:bundleID()
   -- mai toccare app veloci e finestre di Hammerspoon (console, memo)
@@ -1464,7 +1414,7 @@ local function minimizeSiblings(apps, keepIds)
       if app then
         for _, w in ipairs(standardWindows(app)) do
           if not keepIds[w:id()] and not w:isMinimized()
-             and not (T.minis and T.minis[w:id()]) then
+             and not T.isFloating(w) then
             print(string.format("Tabby · una scheda alla volta: riduco «%s» di %s",
               tostring(w:title()), tostring(app:name())))
             w:minimize()
@@ -1633,8 +1583,7 @@ local handleActive = timed("cambio di scheda", function(app)
       -- comparivano e sparivano (22/10/2026)
       local pk = T.pickedWin
       local picked = fw and pk and pk.id == fw:id() and hs.timer.secondsSinceEpoch() - pk.at < 3
-      if picked and fa and fa:bundleID() == bid and fw:isStandard() and not (T.minis and T.minis[fw:id()])
-         and not (T.popups and T.popups[fw:id()]) then
+      if picked and fa and fa:bundleID() == bid and fw:isStandard() and not T.isFloating(fw) then
         T.pickedWin = nil
         -- (ricorda l'ordine d'uso delle finestre: serve se poi ne chiudi una)
         T.winHist = T.winHist or {}
@@ -1642,8 +1591,7 @@ local handleActive = timed("cambio di scheda", function(app)
         for i = #h, 1, -1 do if h[i] == fw:id() then table.remove(h, i) end end
         table.insert(h, fw:id())
         T.winHist[bid] = h
-        local f, A = fw:frame(), appArea()
-        if not (BROWSERS[bid] and f.w < A.w * 0.5 and f.h < A.h * 0.6) then
+        if not (BROWSERS[bid] and T.isSmall(fw)) then
           minimizeSiblings({[bid] = true}, {[fw:id()] = true})
         end
       end
@@ -3181,7 +3129,20 @@ local function pickVisible(n, cap, activeIdx)
   return vis, over
 end
 
-local function hasBattery() return hs.battery.percentage() ~= nil end
+-- Batteria: chiedere a macOS costa ~16 ms (misurato), e prima succedeva due
+-- volte a ogni disegno. Ora Tabby se la ricorda (T.bat) e la rilegge solo
+-- quando macOS avvisa di un cambio (T.batWatcher) e all'avvio.
+function T.readBattery()
+  local pct = hs.battery.percentage()
+  T.bat = pct and {
+    pct = math.floor(pct + 0.5),
+    charging = hs.battery.isCharging() or hs.battery.powerSource() == "AC Power",
+  } or false
+end
+local function hasBattery()
+  if T.bat == nil then T.readBattery() end
+  return T.bat ~= false
+end
 
 -- Dove va ogni pezzo di Tabby (orizzontale o verticale).
 -- Con tante app: prima le schede si stringono, poi diventano solo icona
@@ -3333,10 +3294,8 @@ end
 -- Indicatore batteria: verde da 80% in su, normale fino al 35%,
 -- rosso sotto il 35% (se non è in carica). ⚡︎ = in carica.
 local function drawBattery(els, r)
-  local pct = hs.battery.percentage()
-  if not pct then return end
-  pct = math.floor(pct + 0.5)
-  local charging = hs.battery.isCharging() or hs.battery.powerSource() == "AC Power"
+  if not hasBattery() then return end
+  local pct, charging = T.bat.pct, T.bat.charging
   local col
   if pct >= 80 then col = COL.batFull
   elseif pct < 35 and not charging then col = COL.batLow
@@ -3770,9 +3729,7 @@ T.allWins:subscribe(WF.windowCreated, function(w)
     if not BROWSERS[b] and w:isStandard() then T.pickedWin = {id = w:id(), at = hs.timer.secondsSinceEpoch()} end
     -- una finestra piccola di un browser può essere una finestrella (video in
     -- miniatura): si decide dopo, quando il browser ha risposto
-    local f, A = w:frame(), appArea()
-    if not (BROWSERS[b] and f.w < A.w * 0.5 and f.h < A.h * 0.6)
-       and not (T.popups and T.popups[w:id()]) then fitWindow(w) end
+    if not (BROWSERS[b] and T.isSmall(w)) and not T.isFloating(w) then fitWindow(w) end
   end
   scheduleRebuild()
 end)
@@ -3789,8 +3746,7 @@ function T.restoreAfterClose()
   if #wins == 0 then return end
   for _, w in ipairs(wins) do
     -- c'è ancora una finestra vera in vista (miniature e finestrelle non contano)
-    if not w:isMinimized() and not (T.minis and T.minis[w:id()])
-       and not (T.popups and T.popups[w:id()]) then return end
+    if not w:isMinimized() and not T.isFloating(w) then return end
   end
   -- l'ultima usata tra quelle ridotte (se non si sa, la prima)
   local pick
@@ -3902,7 +3858,10 @@ T.menuWatch = hs.timer.doEvery(10, function()
 end)
 
 -- Batteria: ridisegna quando cambia carica o alimentazione
-T.batWatcher = hs.battery.watcher.new(function() if T.bar then draw() end end)
+T.batWatcher = hs.battery.watcher.new(function()
+  T.readBattery()
+  if T.bar then draw() end
+end)
 T.batWatcher:start()
 
 -- Spotlight: quando si apre, lo sfondo (app e Tabby) si oscura con un velo blu
@@ -4085,4 +4044,4 @@ T.badgeSig = badgeSig(T.badges)
 rebuildTabs()
 draw()
 handleActive(hs.application.frontmostApplication())
-hs.alert.show("Tabby v9.19 attiva")
+hs.alert.show("Tabby v9.20 attiva")

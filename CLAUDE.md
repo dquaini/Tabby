@@ -75,7 +75,9 @@ Prima di lavorare leggi:
 4. Le righe di diagnosi in console iniziano con `Tabby ·` (es. notch, DuckDuckGo,
    app veloci, `Tabby · lento:` per i lavori sopra i 150 ms): usale per capire problemi reali invece di tirare a indovinare.
 5. Non cambiare scorciatoie o comportamenti a cui l'utente è abituato senza dirlo.
-6. Usa git: un commit per ogni versione funzionante, messaggio in italiano.
+6. Usa git: un commit per ogni versione funzionante, messaggio in italiano. A ogni
+   versione: numero in testa a `tabby.lua` e nell'avviso finale (`hs.alert`), riga in
+   `docs/STORIA.md`, "Versione attuale" qui sotto.
 7. **GitHub** (privato: `git@github.com:dquaini/Tabby.git`, ramo `main`): all'inizio di
    ogni sessione `git pull` (l'altro Mac può aver aggiunto versioni); dopo ogni commit
    `git push`, così i due Mac hanno sempre la stessa Tabby. Ogni Mac ha la sua chiave SSH
@@ -108,5 +110,5 @@ GitHub, poi `git clone git@github.com:dquaini/Tabby.git` e `init.lua` che punta 
 
 ## Versione attuale
 
-**v9.19** (vedi storia in testa a `tabby.lua`). Prossimo obiettivo: **Tabby v1** (A fatta; B Cartelle: base fatta in v9.8, restano "Apri all'avvio" e rifiniture)
+**v9.20** (storia in `docs/STORIA.md`). Prossimo obiettivo: **Tabby v1** (A fatta; B Cartelle: base fatta in v9.8, restano "Apri all'avvio" e rifiniture)
 (`docs/ROADMAP-v1.md`).
