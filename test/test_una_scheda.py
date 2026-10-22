@@ -129,5 +129,14 @@ GMAIL:close(); CHROME._focused = nil
 WINFILTER.subs["destroyed"](GMAIL); Tabby.rebuildTimer:start()''')
 check("chiusa Gmail: torna Sofascore (l'ultima usata)", ev('SOFA._min') is False and ev('CHROME._focused == SOFA') is True)
 
+print("== ⌃⌥W: chiude la finestra attiva, non l'app")
+run(f'CLICK("tab{idx("Sofascore")}")')
+run('KEY("w", {"ctrl","alt"}); WINFILTER.subs["destroyed"](SOFA); Tabby.rebuildTimer:start()')
+check("la finestra Sofascore è chiusa", ev('(function() for _, w in ipairs(CHROME._wins) do if w == SOFA then return false end end return true end)()') is True)
+check("Chrome resta aperto", ev('CHROME._running') is True)
+check("e torna in vista un'altra finestra di Chrome (non il desktop)",
+      ev('(function() for _, w in ipairs(CHROME._wins) do if not w._min and w ~= PIP then return true end end return false end)()') is True)
+run('FRONT = hs.application.get("com.apple.calculator") or FRONT')
+
 print()
 print("FALLITI: %d" % len(fails) if fails else "TUTTO OK")

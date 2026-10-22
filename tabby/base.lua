@@ -18,6 +18,15 @@ _G.Tabby = { tabs = {}, icons = {}, hotkeys = {}, fsApps = {}, memberOf = {},
           tabFolder = {}, allTabs = {}, folderStart = {}, folderLast = {} }
 T = Tabby
 
+-- Le righe di diagnosi ("Tabby · …") non devono mai bloccare Tabby: se il
+-- Terminale collegato a Hammerspoon (comando hs) si è interrotto, la print di
+-- Hammerspoon va in errore e fermava il lavoro in corso (visto il 22/10/2026).
+-- Questa print vale per tutti i file di Tabby (spazio comune).
+print = function(...)
+  local ok = pcall(_G.print, ...)
+  if not ok then pcall(hs.console.printStyledtext, table.concat({...}, " ")) end
+end
+
 hs.window.animationDuration = 0
 
 -- La cartella di Tabby (per le immagini in assets/) e l'icona del gatto del

@@ -50,6 +50,21 @@ function openCloseMenu(i)
 end
 
 
+-- ⌃⌥W: chiude la finestra che stai guardando senza chiudere l'app (come ✕ →
+-- "Chiudi finestra"). In un browser chiude la finestra intera (⌘W chiude solo
+-- la scheda del browser). Mai le app veloci né Hammerspoon. Se dell'app resta
+-- una finestra ridotta, torna lei (T.restoreAfterClose).
+function closeActiveWindow()
+  local w = hs.window.focusedWindow()
+  local a = w and w:application()
+  local b = a and a:bundleID()
+  if not w or not b or IGNORE[b] or FLOATER[b] or not w:isStandard() then return end
+  print(string.format("Tabby · ⌃⌥W: chiudo la finestra «%s» di %s", tostring(w:title()), tostring(a:name())))
+  w:close()
+  scheduleRebuild()
+end
+
+
 -- ---------------------------------------------------------------------
 --  MENU IMPOSTAZIONI  (il tasto ⚙︎)
 -- ---------------------------------------------------------------------

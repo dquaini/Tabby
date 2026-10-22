@@ -79,4 +79,6 @@ v9.24: cartelle, i casi della mappa: ogni voce prende una sola finestra, quella
     scelta, e ci resta legata; le altre finestre dello stesso browser/app restano
     fuori (DuckDuckGo, Finder); le schede chiuse si riaprono nella stessa finestra;
     "Aggiorna con le schede di adesso".
+v9.25: ⌃⌥W chiude la finestra attiva (non l'app); le righe di diagnosi non possono
+    più bloccare Tabby se il Terminale collegato si interrompe.
 ```

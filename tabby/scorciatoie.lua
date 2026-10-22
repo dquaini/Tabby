@@ -37,6 +37,7 @@ shortcut("up",    "prev", function() switchRelative(-1) end, isVertical)
 shortcut("down",  "next", function() switchRelative(1) end, isVertical)
 shortcut("tab",   "last", toggleLastApp)
 shortcut("s",     "rotate", function() rotateGroup(currentGroup()) end)
+shortcut("w",     "closewin", function() closeActiveWindow() end)
 for _, q in ipairs(QUICK) do
   shortcut(q.key, "quick-" .. q.key, function() toggleQuick(q) end)
 end

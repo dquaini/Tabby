@@ -87,8 +87,7 @@ schermo diviso in zone (nel codice "gruppo").
   a 3-4 dita li usa già macOS (Mission Control, cambio scrivania); Hammerspoon vede alcuni
   gesti ma non tutti. Possibilità: scorrimento a due dita sopra la barra di Tabby, o gesti
   liberati togliendoli a macOS (Impostazioni → Trackpad).
-- **Chiudere la finestra senza chiudere l'app** (22/10): scorciatoia per chiudere solo la
-  finestra/scheda attiva (come ✕ → "Chiudi finestra"). Proposta **⌃⌥W**.
+- ✅ **Chiudere la finestra senza chiudere l'app** (22/10): **⌃⌥W** (fatto in v9.25).
 
 - **Icone della barra dei menu dentro Tabby** (22/10): le icone in alto a destra di macOS
   (Notion, Claude, VPN, Bluetooth, Wi-Fi…) nel menu ⚡︎ con una scorciatoia ciascuna.
