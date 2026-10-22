@@ -124,6 +124,25 @@ end
 -- Apre / chiude un'azione veloce (stessa scorciatoia)
 -- Azione rapida di un'app (vedi APP_ACTIONS). Per qualche secondo l'app non
 -- nasconde la scheda in cui sei e il suo pannello non viene ingrandito.
+-- Riserva: porta davanti l'app e manda la sua scorciatoia (che vale solo dentro
+-- l'app), quando hai lasciato ⌃⌥
+function actionFallback(a, app)
+  if not a.fallbackKeys then return false end
+  print("Tabby · azione «" .. a.name .. "»: icona nascosta, apro l'app con la sua scorciatoia")
+  T.actionAt = nil
+  app:activate()
+  local function send(tries)
+    local m = hs.eventtap.checkKeyboardModifiers() or {}
+    if (m.ctrl or m.alt) and tries < 30 then
+      hs.timer.doAfter(0.05, function() send(tries + 1) end)
+    else
+      hs.eventtap.keyStroke(a.fallbackKeys[1], a.fallbackKeys[2], 0)
+    end
+  end
+  hs.timer.doAfter(0.4, function() send(0) end)
+  return true
+end
+
 function runAppAction(a, retry)
   local app = appFor(a.bid)
   if not app then
@@ -152,6 +171,13 @@ function runAppAction(a, retry)
       local bar = hs.axuielement.applicationElement(app):attributeValue("AXExtrasMenuBar")
       return bar and (bar:attributeValue("AXChildren") or {})[1]
     end)
+    -- icona spenta in "Consenti nella barra dei menu": macOS la parcheggia fuori
+    -- dallo schermo (vista sul Mac: -1, 899) e un suo menu non si apre più
+    local pos = ok and item and item:attributeValue("AXPosition")
+    local hidden = pos and (pos.x < 0 or pos.y > screen():fullFrame().h - 2)
+    if ok and item and a.menuItem and hidden and actionFallback(a, app) then
+      return
+    end
     if ok and item then
       actionVeil(a)
       item:performAction("AXPress")
@@ -172,6 +198,8 @@ function runAppAction(a, retry)
             hs.timer.doAfter(0.1, look)
           else
             hs.eventtap.keyStroke({}, "escape", 0)
+            T.veil(false)
+            actionFallback(a, app)
             -- diagnosi: cosa c'è sotto l'icona e nell'app
             local seen = {}
             local function roles(el, depth)

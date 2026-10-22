@@ -90,4 +90,6 @@ v9.29: azioni rapide con lo sfondo oscurato come Spotlight; Notion dal menu dell
     icona (le sue scorciatoie valgono solo dentro Notion).
 v9.30: Notion: il menu dell'icona si cerca più a lungo (icona nascosta), con diagnosi;
     tolta l'opzione "Schermo intero con Tabby visibile" (tasto verde normale).
+v9.31: le finestre a schermo intero escono dai radar di Tabby (e Tabby si fa da parte);
+    Notion con l'icona spenta: Notion davanti con la sua scorciatoia.
 ```

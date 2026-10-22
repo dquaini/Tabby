@@ -61,8 +61,12 @@ APP_ACTIONS = {
   {bid = "com.anthropic.claudefordesktop", name = "Claude · chat rapida", key = "l", menubar = true},
   -- Notion: le sue scorciatoie (⌘⇧K, ⌘⇧J) valgono solo dentro Notion; da fuori
   -- si usa la voce del menu della sua icona (menuItem)
-  {bid = "notion.id", name = "Notion · cerca", key = "n", menubar = true, menuItem = "Toggle Command Search"},
-  {bid = "notion.id", name = "Notion AI", key = "i", menubar = true, menuItem = "Toggle Notion AI"},
+  -- (se l'icona è spenta in macOS il menu non si apre: riserva = Notion davanti
+  -- con la sua scorciatoia, "fallbackKeys")
+  {bid = "notion.id", name = "Notion · cerca", key = "n", menubar = true, menuItem = "Toggle Command Search",
+   fallbackKeys = {{"cmd", "shift"}, "k"}},
+  {bid = "notion.id", name = "Notion AI", key = "i", menubar = true, menuItem = "Toggle Notion AI",
+   fallbackKeys = {{"cmd", "shift"}, "j"}},
 }
 
 -- Il Memo si salva da solo in questo file (lo trovi nel Finder e con Spotlight)

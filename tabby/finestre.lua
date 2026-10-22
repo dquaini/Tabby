@@ -156,15 +156,16 @@ function isTabApp(app)
 end
 
 -- L'app in primo piano è a schermo intero?
+-- Schermo intero (23/10/2026, idea di Daniele): una finestra a schermo intero
+-- esce dai radar di Tabby (non è una scheda) e, mentre la guardi, Tabby non si
+-- vede; quando torna normale rientra come scheda.
 function updateFullscreen()
   local w = hs.window.focusedWindow()
   local fs = (w ~= nil) and w:isFullScreen() or false
-  if fs then
-    local a = w:application()
-    if a and a:bundleID() then T.fsApps[a:bundleID()] = true end
-  end
   if fs ~= T.fullscreen then
     T.fullscreen = fs
+    print("Tabby · schermo intero " .. (fs and "acceso: Tabby si fa da parte" or "spento: Tabby torna"))
+    scheduleRebuild()
     draw()
   end
 end
@@ -215,6 +216,11 @@ handleActive = timed("cambio di scheda", function(app)
     -- app veloce: non nasconde niente, si mette in alto a destra
     placeFloater(app)
     draw()
+    return
+  end
+  local fsw = hs.window.focusedWindow()
+  if fsw and fsw:isFullScreen() then
+    updateFullscreen()   -- finestra a schermo intero: Tabby si fa da parte
     return
   end
   if bid and actionRecent(bid) then

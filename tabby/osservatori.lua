@@ -16,11 +16,6 @@ T.appWatcher = W.new(function(_, event, app)
   elseif event == W.launched then
     scheduleRebuild()
   elseif event == W.terminated then
-    local still = {}
-    for b in pairs(T.fsApps) do
-      if appFor(b) then still[b] = true end
-    end
-    T.fsApps = still
     scheduleRebuild()
   end
 end)
@@ -152,9 +147,7 @@ T.allWins:subscribe(WF.windowFullscreened, function()
   hs.timer.doAfter(0.8, updateFullscreen)
 end)
 
-T.allWins:subscribe(WF.windowUnfullscreened, function(w)
-  local a = w and w:application()
-  if a and a:bundleID() then T.fsApps[a:bundleID()] = nil end
+T.allWins:subscribe(WF.windowUnfullscreened, function()
   hs.timer.doAfter(0.8, updateFullscreen)
 end)
 

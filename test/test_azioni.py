@@ -42,6 +42,12 @@ check("⌃⌥I → «Toggle Notion AI»", ev('PRESSED') == "notion.id:AXPress;To
 run('KEY("l", {"ctrl","alt"})')
 check("⌃⌥L → Tabby preme l'icona di Claude", (ev('PRESSED') or "").endswith("com.anthropic.claudefordesktop:AXPress;"))
 
+print("== Icona di Notion spenta in macOS (parcheggiata fuori schermo): riserva")
+run('NOTION._extrasPos = {x = -1, y = 899}; PRESSED = nil; KEYS = {}; FRONT = SLACK; KEY("n", {"ctrl","alt"})')
+check("Tabby non preme l'icona nascosta", (ev('PRESSED') or "") == "")
+check("porta davanti Notion e manda ⌘⇧K", ev('FRONT == NOTION') is True and "cmd+shift+k" in ev('table.concat(KEYS, ",")'))
+run('NOTION._extrasPos = nil')
+
 print("== Velo scuro sotto il pannello, come Spotlight")
 run('FRONT = SLACK; SLACK._focused = SLACK._wins[1]; Tabby.veil(false); KEY("l", {"ctrl","alt"})')
 check("con il pannello aperto lo sfondo è oscurato", ev('Tabby.dimOn') is True)

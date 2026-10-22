@@ -313,10 +313,10 @@ function appsWithWindows()
     for _, w in ipairs(T.allWins:getWindows()) do
       local a = w:application()
       local b = a and a:bundleID()
-      if b then set[b] = true end
+      -- una finestra a schermo intero non conta: è fuori dai radar di Tabby
+      if b and not w:isFullScreen() then set[b] = true end
     end
   end
-  for b in pairs(T.fsApps) do set[b] = true end
   return set
 end
 
@@ -327,7 +327,8 @@ function standardWindows(app)
   local t0 = hs.timer.absoluteTime()
   local out = {}
   for _, w in ipairs(app:allWindows()) do
-    if w:isStandard() then table.insert(out, w) end
+    -- (a schermo intero no: è fuori dai radar di Tabby finché non torna normale)
+    if w:isStandard() and not w:isFullScreen() then table.insert(out, w) end
   end
   if T.appMs then
     local b = app:bundleID() or "?"

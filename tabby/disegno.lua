@@ -571,7 +571,8 @@ draw = function()
 
   T.bar:replaceElements(els)
 
-  if S.autohide then setVisible(T.revealed) else setVisible(not T.menuPeek) end
+  if T.fullscreen then setVisible(false)   -- a schermo intero Tabby si fa da parte
+  elseif S.autohide then setVisible(T.revealed) else setVisible(not T.menuPeek) end
 end
 
 
@@ -605,7 +606,7 @@ T.mouseTimer = hs.timer.doEvery(0.08, function()
     setVisible(true)
   end
 
-  if not S.autohide then return end
+  if not S.autohide or T.fullscreen then return end
   local R  = baseRect()
   local p  = hs.mouse.absolutePosition()
   local bf = barFrame()
