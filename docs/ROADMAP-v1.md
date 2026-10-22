@@ -29,6 +29,22 @@ schermo diviso in zone (nel codice "gruppo").
 
 ---
 
+## 🧭 Decisione del 23/10/2026: finire in Hammerspoon, poi l'app Swift
+Hammerspoon resta il "laboratorio" (correzioni in minuti, 21 gruppi di test). Si finiscono
+qui le funzioni piccole o riusabili, si usa Tabby 1-2 settimane sui due Mac (soprattutto quello
+di lavoro col notch), si scrive la **specifica completa del comportamento**, poi si rifà Tabby
+come **app Swift** (installabile e condivisibile, senza Hammerspoon) con design, avvio,
+configurazione guidata e Dock fatti direttamente lì.
+
+**Ancora in Hammerspoon** (lista di Daniele):
+- **Memo** con elenchi puntati, cose da fare (to do) e sezioni apribili (toggle): è una pagina
+  web, riusabile tale e quale nell'app Swift.
+- **Batteria senza percentuale** (la percentuale al passaggio del puntatore).
+- **Gatto intero** al posto della testa quando Tabby è a destra o a sinistra.
+
+**Direttamente nell'app Swift**: animazione d'avvio, pallino sulla scrivania, icona di Tabby
+nelle finestre (cartelle), redesign, colori a scelta, configurazione guidata, Dock.
+
 ## ▶ Prossimi passi, in ordine
 
 ### 1. Stabilità e velocità *(adesso)*
