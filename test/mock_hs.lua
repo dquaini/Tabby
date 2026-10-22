@@ -149,7 +149,13 @@ hs = {
   },
   timer = {
     doAfter = function(_, fn) table.insert(timers, fn); return {} end,
-    doEvery = function(_, fn) return {fn = fn, stop = function() end} end,
+    doEvery = function(_, fn)
+      local t = {fn = fn, on = true}
+      function t:stop() self.on = false; return self end
+      function t:start() self.on = true; return self end
+      function t:running() return self.on end
+      return t
+    end,
     delayed = {new = function(_, fn) return {start = function() table.insert(timers, fn) end} end},
     secondsSinceEpoch = function() return CLOCK or 1000 end,
     absoluteTime = function() return 0 end,

@@ -571,6 +571,7 @@ draw = function()
 
   T.bar:replaceElements(els)
 
+  T.updateMouseTimer()
   if T.fullscreen then setVisible(false)   -- a schermo intero Tabby si fa da parte
   elseif S.autohide then setVisible(T.revealed) else setVisible(not T.menuPeek) end
 end
@@ -583,6 +584,19 @@ T.diag = {draw = draw, layout = layout, activeIndex = activeIndex, badgeFor = ba
 -- ---------------------------------------------------------------------
 --  "NASCONDI TABBY": APPARE PORTANDO IL MOUSE SUL BORDO DELLO SCHERMO
 -- ---------------------------------------------------------------------
+
+-- Il controllo del mouse (12 volte al secondo) serve solo con "Nascondi Tabby"
+-- o con la fascia del notch: altrimenti è spento (consumo, 23/10/2026)
+function T.updateMouseTimer()
+  if not T.mouseTimer then return end
+  local need = S.autohide or useNotchBand()
+  if need and not T.mouseTimer:running() then
+    T.mouseTimer:start()
+  elseif not need and T.mouseTimer:running() then
+    T.mouseTimer:stop()
+    if T.menuPeek then T.menuPeek = false end
+  end
+end
 
 T.mouseTimer = hs.timer.doEvery(0.08, function()
   if not T.bar then return end

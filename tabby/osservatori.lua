@@ -8,11 +8,18 @@
 --  OSSERVATORI
 -- ---------------------------------------------------------------------
 
+-- Schermo intero: Tabby controlla subito e poi ancora durante l'animazione di
+-- macOS (prima aspettava ~1 s: Tabby restava visibile, o tornava in ritardo)
+function checkFullscreenSoon()
+  updateFullscreen()
+  for _, d in ipairs({0.25, 0.6, 1.1}) do hs.timer.doAfter(d, updateFullscreen) end
+end
+
 W = hs.application.watcher
 T.appWatcher = W.new(function(_, event, app)
   if event == W.activated then
     hs.timer.doAfter(0.1, function() handleActive(app) end)
-    hs.timer.doAfter(0.9, updateFullscreen)
+    checkFullscreenSoon()
   elseif event == W.launched then
     scheduleRebuild()
     -- un'app appena aperta (anche appena installata) ha un'icona nella barra dei menu?
@@ -120,8 +127,13 @@ T.allWins:subscribe(WF.windowFocused, function() T.focusTimer:start() end)
 T.allWins:subscribe(WF.windowTitleChanged, function() scheduleRebuild() end)
 
 -- Browser: titoli e siti cambiano mentre navighi → ricontrolla ogni 3 secondi
+-- se ne stai usando uno, ogni 15 se sono in secondo piano (consumo: era la voce
+-- più pesante di Tabby da ferma, misurato il 23/10/2026)
 T.browserTimer = hs.timer.doEvery(3, timed("controllo browser", function()
   if T.press or T.split or T.fedit then return end
+  local now = hs.timer.secondsSinceEpoch()
+  if not BROWSERS[frontBid() or ""] and now - (T.lastBrowserCheck or 0) < 15 then return end
+  T.lastBrowserCheck = now
   local changed = refreshBrowsers(); T.step("browser")
   if changed then rebuildTabs(); T.step("schede"); draw(); T.step("disegno") end
 end))
@@ -133,7 +145,7 @@ function badgeSig(b)
   table.sort(parts)
   return table.concat(parts, ",")
 end
-T.badgeTimer = hs.timer.doEvery(3, timed("notifiche del Dock", function()
+T.badgeTimer = hs.timer.doEvery(5, timed("notifiche del Dock", function()
   local b = readDockBadges()
   local sig = badgeSig(b)
   if sig ~= T.badgeSig then
@@ -145,17 +157,12 @@ end))
 -- Tasto verde: lo schermo intero normale di macOS (l'opzione "Schermo intero con
 -- Tabby visibile" è stata tolta il 23/10/2026: non funzionava con tutte le app;
 -- da riprendere più avanti, vedi roadmap)
-T.allWins:subscribe(WF.windowFullscreened, function()
-  hs.timer.doAfter(0.8, updateFullscreen)
-end)
-
-T.allWins:subscribe(WF.windowUnfullscreened, function()
-  hs.timer.doAfter(0.8, updateFullscreen)
-end)
+T.allWins:subscribe(WF.windowFullscreened, function() checkFullscreenSoon() end)
+T.allWins:subscribe(WF.windowUnfullscreened, function() checkFullscreenSoon() end)
 
 -- Cambio di scrivania (le app a schermo intero hanno la loro)
 T.spaceWatcher = hs.spaces.watcher.new(function()
-  hs.timer.doAfter(0.5, updateFullscreen)
+  checkFullscreenSoon()
 end)
 T.spaceWatcher:start()
 
@@ -168,7 +175,7 @@ end)
 T.screenWatcher:start()
 
 -- Se cambi l'impostazione "nascondi la barra dei menu", Tabby si adegua
-T.menuWatch = hs.timer.doEvery(10, function()
+T.menuWatch = hs.timer.doEvery(30, function()
   local v = detectMenuHidden()
   if v ~= T.menuHidden then
     T.menuHidden = v

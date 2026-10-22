@@ -1,5 +1,5 @@
 -- =====================================================================
---  TABBY  ·  v9.32
+--  TABBY  ·  v9.33
 --  Una barra con una scheda per ogni app e finestra: ne vedi una alla
 --  volta, clicchi (o premi Ctrl+Option+1…9) per passare all'altra.
 --  Storia delle versioni: docs/STORIA.md · Roadmap: docs/ROADMAP-v1.md
@@ -24,4 +24,4 @@ for _, name in ipairs(FILES) do
 end
 Tabby._env = E   -- tiene in vita lo spazio comune (e serve alla diagnosi dal Terminale)
 
-hs.alert.show("Tabby v9.32 attiva")
+hs.alert.show("Tabby v9.33 attiva")

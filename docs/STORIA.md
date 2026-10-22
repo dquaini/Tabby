@@ -95,4 +95,7 @@ v9.31: le finestre a schermo intero escono dai radar di Tabby (e Tabby si fa da 
 v9.32: azioni delle app: Tabby scopre da sola le app con un'icona nella barra dei menu
     (anche quelle nuove), ⚡︎ → App ▸ (una riga anche con 100 app), Gestisci: mostra/
     nascondi e scorciatoia ⌃⌥ + lettera.
+v9.33: consumi più bassi (mouse controllato solo se serve, browser in secondo piano ogni
+    15 s, notifiche ogni 5 s); schermo intero senza ritardo; "Apri <app>" con l'icona
+    spenta apre l'app.
 ```

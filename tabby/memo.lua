@@ -178,6 +178,14 @@ function runAppAction(a, retry)
     if ok and item and a.menuItem and hidden and actionFallback(a, app) then
       return
     end
+    if ok and item and a.generic and hidden then
+      -- "Apri <app>" con l'icona spenta: premerla non apre niente (Proton VPN, 23/10):
+      -- si apre direttamente l'app (come cliccarla nel Dock)
+      print("Tabby · azione «" .. a.name .. "»: icona spenta in macOS, apro l'app")
+      T.actionAt = nil
+      FD.runTask("/usr/bin/open", {"-b", a.bid})
+      return
+    end
     if ok and item then
       actionVeil(a)
       local before = hs.window.focusedWindow()
