@@ -81,6 +81,14 @@ schermo diviso in zone (nel codice "gruppo").
 
 ## 📥 In attesa (da collocare)
 
+- **Gesti del trackpad** (22/10): un gesto per passare alla scheda dopo/prima e uno per
+  tornare alla scheda di prima (come ⌃⌥→ / ⌃⌥←, ⌃⌥Tab). Da verificare cosa si può: i gesti
+  a 3-4 dita li usa già macOS (Mission Control, cambio scrivania); Hammerspoon vede alcuni
+  gesti ma non tutti. Possibilità: scorrimento a due dita sopra la barra di Tabby, o gesti
+  liberati togliendoli a macOS (Impostazioni → Trackpad).
+- **Chiudere la finestra senza chiudere l'app** (22/10): scorciatoia per chiudere solo la
+  finestra/scheda attiva (come ✕ → "Chiudi finestra"). Proposta **⌃⌥W**.
+
 - **Icone della barra dei menu dentro Tabby** (22/10): le icone in alto a destra di macOS
   (Notion, Claude, VPN, Bluetooth, Wi-Fi…) nel menu ⚡︎ con una scorciatoia ciascuna.
   Obiettivo di Daniele: *in Tabby tutto ciò che è possibile, nella barra dei menu di Apple
