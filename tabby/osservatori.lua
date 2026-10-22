@@ -15,6 +15,8 @@ T.appWatcher = W.new(function(_, event, app)
     hs.timer.doAfter(0.9, updateFullscreen)
   elseif event == W.launched then
     scheduleRebuild()
+    -- un'app appena aperta (anche appena installata) ha un'icona nella barra dei menu?
+    if app then hs.timer.doAfter(3, function() scanMenuBarApps(app) end) end
   elseif event == W.terminated then
     scheduleRebuild()
   end

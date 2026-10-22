@@ -30,8 +30,8 @@ def check(what, ok):
     if not ok: fails.append(what)
 
 run('CLICK("quick")')
-titles = ev('(function() local o = {} for _, it in ipairs(MENU) do o[#o+1] = it.title end return table.concat(o, "|") end)()').split("|")
-check("menu ⚡︎: sezione «App» con le tre azioni", "App" in titles and "Claude · chat rapida   ⌃⌥L" in titles
+titles = ev('(function() local o = {} for _, it in ipairs(MENU) do if it.title == "App" then for _, x in ipairs(it.menu) do o[#o+1] = x.title end end end return table.concat(o, "|") end)()').split("|")
+check("menu ⚡︎ → «App ▸» con le tre azioni", "Claude · chat rapida   ⌃⌥L" in titles
       and "Notion · cerca   ⌃⌥N" in titles and "Notion AI   ⌃⌥I" in titles)
 
 run('PRESSED = nil; KEY("n", {"ctrl","alt"})')

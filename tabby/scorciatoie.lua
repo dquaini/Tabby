@@ -41,6 +41,14 @@ shortcut("w",     "closewin", function() closeActiveWindow() end)
 for _, a in ipairs(APP_ACTIONS) do
   shortcut(a.key, "azione-" .. a.key, function() runAppAction(a) end)
 end
+-- scorciatoie scelte per le app con l'icona nella barra dei menu (⚡︎ → App → Gestisci)
+for b, m in pairs(S.menuApps) do
+  if m.key and m.on then
+    shortcut(m.key, "app-" .. b, function()
+      for _, a in ipairs(appActionsList()) do if a.bid == b then runAppAction(a); return end end
+    end)
+  end
+end
 for _, q in ipairs(QUICK) do
   shortcut(q.key, "quick-" .. q.key, function() toggleQuick(q) end)
 end

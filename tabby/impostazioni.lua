@@ -28,6 +28,7 @@ DEFAULTS = {
   folderView      = true,    -- ⚙︎ → Comportamento → Vista cartelle
   spotlightDim    = true,    -- con Spotlight aperto lo sfondo si oscura
   gestures        = true,    -- tre dita a destra / sinistra cambiano scheda
+  menuApps        = {},      -- app con un'icona nella barra dei menu: {[bid] = {name, on, key}}
 }
 
 -- App da non mostrare mai come scheda

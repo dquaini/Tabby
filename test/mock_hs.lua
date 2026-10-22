@@ -273,7 +273,7 @@ hs = {
       end}
       local item = {performAction = function(_, act) PRESSED = (PRESSED or "") .. app._bid .. ":" .. act .. ";" end,
                     attributeValue = function(_, k)
-                      if k == "AXChildren" then return {menu} end
+                      if k == "AXChildren" then return app._menu and {menu} or {} end   -- un menu solo se l'app ce l'ha
                       if k == "AXPosition" then return app._extrasPos or {x = 1200, y = 0} end
                     end}
       local bar = {attributeValue = function(_, k) if k == "AXChildren" then return {item} end end}

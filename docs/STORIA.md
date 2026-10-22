@@ -92,4 +92,7 @@ v9.30: Notion: il menu dell'icona si cerca più a lungo (icona nascosta), con di
     tolta l'opzione "Schermo intero con Tabby visibile" (tasto verde normale).
 v9.31: le finestre a schermo intero escono dai radar di Tabby (e Tabby si fa da parte);
     Notion con l'icona spenta: Notion davanti con la sua scorciatoia.
+v9.32: azioni delle app: Tabby scopre da sola le app con un'icona nella barra dei menu
+    (anche quelle nuove), ⚡︎ → App ▸ (una riga anche con 100 app), Gestisci: mostra/
+    nascondi e scorciatoia ⌃⌥ + lettera.
 ```

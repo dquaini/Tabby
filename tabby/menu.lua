@@ -303,19 +303,39 @@ function openQuick()
   end
   -- cartelle: clic = attiva; si creano e si modificano da qui
   table.insert(items, {title = "-"})
-  -- azioni rapide delle app (quelle dell'icona nella barra dei menu di macOS)
-  local actions = {}
-  for _, a in ipairs(APP_ACTIONS) do
-    if hs.application.pathForBundleID(a.bid) then table.insert(actions, a) end
+  -- azioni delle app (icone della barra dei menu di macOS): una riga sola,
+  -- "App ▸", anche con tante app; dentro, "Gestisci ▸" per mostrarle e scegliere
+  -- la scorciatoia
+  local actions = appActionsList()
+  local sub = {}
+  for _, a in ipairs(actions) do
+    table.insert(sub, {title = a.name .. (a.key and ("   ⌃⌥" .. a.key:upper()) or ""),
+                       image = smallIcon(a.bid), fn = function() runAppAction(a) end})
   end
-  if #actions > 0 then
-    table.insert(items, {title = "-"})
-    table.insert(items, {title = "App", disabled = true})
-    for _, a in ipairs(actions) do
-      table.insert(items, {title = a.name .. "   ⌃⌥" .. a.key:upper(), image = smallIcon(a.bid),
-                           fn = function() runAppAction(a) end})
-    end
+  local manage = {}
+  local known = {}
+  for b, m in pairs(S.menuApps) do table.insert(known, {b = b, m = m}) end
+  table.sort(known, function(x, y) return x.m.name:lower() < y.m.name:lower() end)
+  for _, x in ipairs(known) do
+    local b, m = x.b, x.m
+    table.insert(manage, {title = m.name .. (m.key and ("   ⌃⌥" .. m.key:upper()) or ""), image = smallIcon(b),
+      checked = m.on or nil, menu = {
+        {title = "Mostra in ⚡︎ → App", checked = m.on or nil,
+         fn = function() m.on = not m.on; save("menuApps") end},
+        {title = "Scorciatoia ⌃⌥ + lettera…", fn = function() chooseAppShortcut(b) end},
+        {title = "Togli la scorciatoia", disabled = (m.key == nil),
+         fn = function() m.key = nil; save("menuApps"); hs.timer.doAfter(0.5, function() hs.reload() end) end},
+      }})
   end
+  if #manage == 0 then table.insert(manage, {title = "Nessuna app trovata (si aggiungono da sole)", disabled = true}) end
+  if #sub > 0 then table.insert(sub, {title = "-"}) end
+  table.insert(sub, {title = "Gestisci", menu = manage})
+  table.insert(sub, {title = "Cerca app nuove adesso", fn = function()
+    local n = scanMenuBarApps()
+    hs.alert.show(n > 0 and (n .. " app nuove in ⚡︎ → App") or "Nessuna app nuova")
+  end})
+  table.insert(items, {title = "-"})
+  table.insert(items, {title = "App", menu = sub})
   table.insert(items, {title = "Cartelle", disabled = true})
   for i, f in ipairs(S.folders) do
     table.insert(items, {

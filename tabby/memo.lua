@@ -180,7 +180,27 @@ function runAppAction(a, retry)
     end
     if ok and item then
       actionVeil(a)
+      local before = hs.window.focusedWindow()
       item:performAction("AXPress")
+      -- "Apri <app>": se non si è aperto niente (l'icona apre un menu, ma è spenta
+      -- in macOS e il menu non compare), si apre l'app
+      if a.generic then
+        hs.timer.doAfter(1.2, function()
+          local now = hs.window.focusedWindow()
+          local menuOpen = false
+          pcall(function()
+            for _, c in ipairs(item:attributeValue("AXChildren") or {}) do
+              if c:attributeValue("AXRole") == "AXMenu" then menuOpen = true end
+            end
+          end)
+          local same = (before == nil and now == nil) or (before and now and before:id() == now:id())
+          if same and not menuOpen then
+            T.veil(false)
+            print("Tabby · azione «" .. a.name .. "»: non si è aperto niente, apro l'app")
+            app:activate()
+          end
+        end)
+      end
       -- Notion: dal menu dell'icona si preme la voce giusta ("Toggle Command Search")
       if a.menuItem then
         -- il menu può metterci un po' ad aprirsi (con l'icona nascosta dalla barra
@@ -250,6 +270,89 @@ function actionVeil(a)
     if before and f:id() == before:id() then return true end
     return T.winKey[f:id()] ~= nil and not T.isSmall(f)
   end)
+end
+
+-- ---------------------------------------------------------------------
+--  AZIONI DELLE APP: tutte le app con un'icona nella barra dei menu.
+--  Tabby le scopre da sola (all'avvio, a ogni app aperta, ogni 10 minuti),
+--  anche quelle installate dopo, le aggiunge al menu ⚡︎ → App e se le ricorda
+--  (S.menuApps). Per ognuna: mostra / nascondi e una scorciatoia ⌃⌥ + lettera.
+--  Le app di sistema di Apple restano fuori (Wi-Fi, Bluetooth…).
+-- ---------------------------------------------------------------------
+MENUBAR_SKIP = {["org.hammerspoon.Hammerspoon"] = true}
+
+function menuBarItemOf(app)
+  local ok, item = pcall(function()
+    local bar = hs.axuielement.applicationElement(app):attributeValue("AXExtrasMenuBar")
+    return bar and (bar:attributeValue("AXChildren") or {})[1]
+  end)
+  return ok and item or nil
+end
+
+-- Cerca app nuove con un'icona nella barra dei menu (only = solo quell'app)
+function scanMenuBarApps(only)
+  local found = 0
+  for _, app in ipairs(only and {only} or hs.application.runningApplications()) do
+    local b = app:bundleID()
+    if b and not b:match("^com%.apple%.") and not MENUBAR_SKIP[b] and not S.menuApps[b]
+       and (app:kind() or -1) >= 0 and menuBarItemOf(app) then
+      S.menuApps[b] = {name = app:name() or b, on = true}
+      found = found + 1
+      print("Tabby · nuova app con icona nella barra dei menu: " .. S.menuApps[b].name .. " (aggiunta in ⚡︎ → App)")
+    end
+  end
+  if found > 0 then save("menuApps") end
+  return found
+end
+
+-- Tutte le azioni del menu ⚡︎ → App: prima quelle speciali (APP_ACTIONS), poi
+-- "Apri <app>" per le altre app scoperte e mostrate, in ordine alfabetico
+function appActionsList()
+  local list, special = {}, {}
+  for _, a in ipairs(APP_ACTIONS) do
+    if hs.application.pathForBundleID(a.bid) then table.insert(list, a) end
+    special[a.bid] = true
+  end
+  local extra = {}
+  for b, m in pairs(S.menuApps) do
+    if m.on and not special[b] then
+      table.insert(extra, {bid = b, name = "Apri " .. m.name, key = m.key, menubar = true, generic = true})
+    end
+  end
+  table.sort(extra, function(x, y) return x.name:lower() < y.name:lower() end)
+  for _, a in ipairs(extra) do table.insert(list, a) end
+  return list
+end
+
+-- Lettere già usate dalle scorciatoie di Tabby (per non sceglierne una doppia)
+function usedShortcutKeys()
+  local used = {}
+  for _, sc in ipairs(SHORTCUTS or {}) do if not sc.shift then used[sc.key] = true end end
+  for _, a in ipairs(APP_ACTIONS) do used[a.key] = true end
+  for _, m in pairs(S.menuApps) do if m.key then used[m.key] = true end end
+  return used
+end
+
+-- Scegli la scorciatoia di un'app (⌃⌥ + una lettera libera). Tabby si ricarica
+-- per attivarla.
+function chooseAppShortcut(b)
+  local m = S.menuApps[b]
+  if not m then return end
+  local btn, txt = FD.ask(function()
+    return hs.dialog.textPrompt("Scorciatoia per " .. m.name, "Una lettera: si userà con ⌃⌥ (es. D → ⌃⌥D)",
+      m.key and m.key:upper() or "", "OK", "Annulla")
+  end)
+  local k = txt and txt:lower():match("^%s*(%a)%s*$")
+  if btn ~= "OK" or not k then return end
+  local used = usedShortcutKeys()
+  if used[k] and m.key ~= k then
+    hs.alert.show("⌃⌥" .. k:upper() .. " è già usata: scegline un'altra")
+    return
+  end
+  m.key = k
+  save("menuApps")
+  hs.alert.show(m.name .. ": ⌃⌥" .. k:upper())
+  hs.timer.doAfter(0.8, function() hs.reload() end)
 end
 
 -- Un'azione rapida è appena partita per quest'app? (il suo pannello non è una scheda)
