@@ -312,6 +312,7 @@ function FD.openFolderChooser(f, pos)
   table.insert(items, {title = "Altre azioni", menu = {
     {title = "Esci dalla cartella (le schede tornano libere)", fn = function() FD.releaseFolder(f) end},
     {title = "Chiudi cartella…", fn = function() FD.closeFolder(f) end},
+    {title = "Aggiorna con le schede di adesso", fn = function() FD.updateFromNow(f) end},
     {title = "Modifica le schede…", fn = function() FD.openFolderEditor(f) end},
     {title = "Rinomina…", fn = function() FD.renameFolder(f) end},
   }})
@@ -330,6 +331,7 @@ function FD.openFolderMenu(f, pos)
   end
   table.insert(items, {title = "Esci dalla cartella (le schede tornano libere)", fn = function() FD.releaseFolder(f) end})
   table.insert(items, {title = "Chiudi cartella (chiude le sue " .. n .. " schede)…", fn = function() FD.closeFolder(f) end})
+  table.insert(items, {title = "Aggiorna con le schede di adesso", fn = function() FD.updateFromNow(f) end})
   table.insert(items, {title = "-"})
   table.insert(items, {title = "Modifica le schede…", fn = function() FD.openFolderEditor(f) end})
   table.insert(items, {title = "Rinomina…", fn = function() FD.renameFolder(f) end})

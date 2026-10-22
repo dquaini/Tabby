@@ -232,7 +232,7 @@ hs = {
        if not w._noAS then   -- le finestrelle (video in miniatura) non sono nell'elenco del browser
         -- come il vero browser: il nome della finestra (senza profilo) e la posizione
         local f = w._frame
-        out = out .. (w._asName or w._title) .. T9
+        out = out .. (w._asName or w._title) .. T9 .. "id" .. w._id .. T9
         if not NO_BOUNDS then out = out .. f.x .. "," .. f.y .. "," .. (f.x + f.w) .. "," .. (f.y + f.h) .. T9 end
         for _, u in ipairs(w._urls) do out = out .. u .. T9 end
         out = out .. "\n"

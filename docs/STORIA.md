@@ -75,4 +75,8 @@ v9.22: codice diviso in 15 file (cartella tabby/) con uno spazio comune di nomi:
     niente più limite dei 200 nomi locali; tabby.lua carica i file in ordine.
 v9.23: cartelle: una finestra di Chrome/Safari con più pagine si ricorda con le sue
     pagine (senza ?/#) e, attivando la cartella, si riapre con tutte le pagine.
+v9.24: cartelle, i casi della mappa: ogni voce prende una sola finestra, quella
+    scelta, e ci resta legata; le altre finestre dello stesso browser/app restano
+    fuori (DuckDuckGo, Finder); le schede chiuse si riaprono nella stessa finestra;
+    "Aggiorna con le schede di adesso".
 ```

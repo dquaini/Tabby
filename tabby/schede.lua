@@ -98,10 +98,16 @@ end
 
 local function hostOf(u) return (u:match("^https?://([^/:]+)") or ""):lower():gsub("^www%.", "") end
 
--- La voce di ricetta di una scheda: webapp (site), finestra di un browser con
--- le sue pagine (pages: Chrome/Safari, che dicono gli indirizzi), o app intera
-function FD.itemOf(e)
-  if e.site then return {site = e.site, bid = e.bid, name = e.name} end
+-- La voce di ricetta di una scheda:
+--  · webapp (site) · finestra di Chrome/Safari con le sue pagine (pages)
+--  · finestra precisa (win): DuckDuckGo (che non dice gli indirizzi) o un'app
+--    con più finestre (es. una finestra del Finder): si riconosce dal titolo e,
+--    per DuckDuckGo, dal sito della pagina in vista (host)
+--  · app intera (solo bid): app con una finestra sola (Slack, Claude…)
+function FD.itemOf(e, asPages)
+  -- asPages: la finestra era una voce "pagine" (Aggiorna): resta tale anche se
+  -- ora ha una pagina sola (così si riapre quella pagina, non la home del sito)
+  if e.site and not asPages then return {site = e.site, bid = e.bid, name = e.name} end
   local B = BROWSERS[e.bid]
   if B and e.win and e.urls then
     local pages, seen = {}, {}
@@ -116,11 +122,25 @@ function FD.itemOf(e)
               name = title .. " · " .. #pages .. (#pages == 1 and " pagina" or " pagine")}
     end
   end
+  -- finestra precisa: di un browser senza indirizzi, o di un'app con più finestre
+  local several = false
+  if e.win and not B then
+    for _, x in pairs(T.cand) do
+      if x ~= e and x.bid == e.bid and x.win then several = true end
+    end
+  end
+  if e.win and (B or several) then
+    local host = e.active and e.active:match("^https?://([^/:]+)")
+    local title = e.title or e.name
+    return {bid = e.bid, win = true, title = title, host = host and host:lower():gsub("^www%.", ""),
+            name = (B and (B.short .. " · ") or "") .. (title or appName(e.bid, e.app))}
+  end
   return {bid = e.bid, name = appName(e.bid, e.app)}
 end
 
 function FD.itemKey(it)
   if it.pages then return "pagine:" .. it.bid .. ":" .. it.pages[1] end
+  if it.win then return "finestra:" .. it.bid .. ":" .. tostring(it.title) .. ":" .. tostring(it.host) end
   return it.site and ("site:" .. it.site) or it.bid
 end
 
@@ -145,28 +165,87 @@ end
 function FD.itemMatches(it, e)
   if it.site then return e.site == it.site end
   if it.pages then return e.bid == it.bid and not e.site and e.win ~= nil and pagesMatch(it, e) end
+  if it.win then
+    if e.bid ~= it.bid or e.site or not e.win then return false end
+    if it.title and e.title == it.title then return true end
+    local h = e.active and e.active:match("^https?://([^/:]+)")
+    return it.host ~= nil and h ~= nil and h:lower():gsub("^www%.", "") == it.host
+  end
   return e.bid == it.bid and not e.site
 end
 
--- La cartella attiva a cui appartiene una scheda (per una vista divisa basta
--- un suo membro). nil se Vista cartelle è spenta.
-function FD.folderOfEntry(e)
-  if not S.folderView then return nil end
-  local list = {}
-  if e.group then
-    for _, k in ipairs(e.group.members) do if T.cand[k] then table.insert(list, T.cand[k]) end end
-  else
-    list = {e}
+-- ---- Quale scheda appartiene a quale voce (il "motore" delle cartelle) ----
+-- 1. ogni voce prende al massimo UNA scheda (due finestre di Gmail: ne entra una)
+-- 2. una finestra entrata in una cartella resta legata alla sua voce finché è
+--    aperta, anche se ci navighi dentro (T.itemWins, ricordato anche dopo un
+--    ricaricamento di Tabby)
+-- 3. le altre finestre dello stesso browser o app restano fuori
+function FD.bindKey(f, it) return f.id .. "|" .. FD.itemKey(it) end
+T.itemWins = T.itemWins or hs.settings.get("tabbar.itemWins") or {}
+
+local function entryMatches(it, t)
+  if t.group then
+    for _, k in ipairs(t.group.members) do
+      local e = T.cand[k]
+      if e and FD.itemMatches(it, e) then return true end
+    end
+    return false
   end
-  for _, id in ipairs(S.activeFolders) do
-    local f = FD.folderById(id)
-    if f then
-      for _, x in ipairs(list) do
-        for _, it in ipairs(f.items) do if FD.itemMatches(it, x) then return f end end
+  return FD.itemMatches(it, t)
+end
+
+local function entryWinIds(t)
+  local ids = {}
+  if t.win then ids[t.win:id()] = true end
+  if t.group then
+    for _, k in ipairs(t.group.members) do
+      local w = T.keyWin[k]
+      if w then ids[w:id()] = true end
+    end
+  end
+  return ids
+end
+
+-- Assegna le schede (tabs) alle voci delle cartelle (folders, in ordine).
+-- Ritorna byTab[chiave scheda] = cartella e byItem[bindKey] = scheda.
+function FD.assign(folders, tabs)
+  local byTab, byItem = {}, {}
+  for _, f in ipairs(folders) do
+    for _, it in ipairs(f.items) do
+      local bk = FD.bindKey(f, it)
+      local tab
+      local wid = T.itemWins[bk]
+      if wid then   -- la finestra legata a questa voce, se c'è ancora
+        for _, t in ipairs(tabs) do
+          if not byTab[t.key] and entryWinIds(t)[wid] then tab = t; break end
+        end
+      end
+      if not tab then
+        for _, t in ipairs(tabs) do
+          if not byTab[t.key] and entryMatches(it, t) then tab = t; break end
+        end
+      end
+      if tab then
+        byTab[tab.key], byItem[bk] = f, tab
+        local first = next(entryWinIds(tab))
+        if first and T.itemWins[bk] ~= first then
+          T.itemWins[bk] = first
+          T.itemWinsDirty = true
+        end
       end
     end
   end
-  return nil
+  return byTab, byItem
+end
+
+-- Le cartelle attive, nell'ordine in cui sono state attivate
+function FD.activeList()
+  local list = {}
+  for _, id in ipairs(S.activeFolders) do
+    local f = FD.folderById(id)
+    if f then table.insert(list, f) end
+  end
+  return list
 end
 
 -- Ricostruisce l'elenco delle schede.
@@ -306,9 +385,13 @@ function rebuildTabs()
   for _, k in ipairs(S.order) do if shown[k] then table.insert(all, shown[k]) end end
   T.allTabs, T.tabFolder = all, {}
   local count = {}
-  for _, t in ipairs(all) do
-    local f = FD.folderOfEntry(t)
-    if f then T.tabFolder[t.key] = f; count[f.id] = (count[f.id] or 0) + 1 end
+  if S.folderView then
+    T.tabFolder = FD.assign(FD.activeList(), all)
+    for _, f in pairs(T.tabFolder) do count[f.id] = (count[f.id] or 0) + 1 end
+  end
+  if T.itemWinsDirty then
+    T.itemWinsDirty = false
+    hs.settings.set("tabbar.itemWins", T.itemWins)
   end
   -- una cartella attiva rimasta senza schede (app chiuse) si spegne; non
   -- subito dopo l'attivazione, perché le app ci mettono un po' ad aprirsi

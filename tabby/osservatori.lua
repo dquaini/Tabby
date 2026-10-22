@@ -33,6 +33,13 @@ T.allWins = WF.new(false):setDefaultFilter({})
 T.allWins:subscribe(WF.windowCreated, function(w)
   local a = w and w:application()
   local b = a and a:bundleID()
+  -- una cartella aspettava una finestra di quest'app (l'ha appena aperta lei)?
+  local pb = b and T.pendingBind and T.pendingBind[b]
+  if pb and w:isStandard() and hs.timer.secondsSinceEpoch() - pb.at < 8 then
+    T.pendingBind[b] = nil
+    T.itemWins[pb.bk] = w:id()
+    T.itemWinsDirty = true
+  end
   -- diagnosi: che finestra ha aperto un browser (es. le finestrelle di Meet)
   if b and BROWSERS[b] then
     local f, A = w:frame(), appArea()

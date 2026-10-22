@@ -58,6 +58,11 @@ Principi:
   scheda sola** (3 icone, somma delle notifiche) e resti dove sei.
 - Una **finestra di Chrome/Safari con più pagine** messa in una cartella si ricorda le sue
   pagine e, se non è aperta, si riapre con tutte. (DuckDuckGo: solo il browser.)
+- **Regole delle cartelle** (mappa del 22/10): ogni voce prende **una sola** finestra, quella
+  che hai scelto, e ci resta legata finché è aperta (anche se ci navighi); le altre finestre
+  dello stesso browser o app restano fuori; la ricetta è fissa: riattivando, le schede chiuse
+  si riaprono nella stessa finestra (solo se non c'è più nessuna scheda di quel sito); ⋯ →
+  **Aggiorna con le schede di adesso** per cambiare la ricetta.
 - **Vista cartella**: solo le sue schede, nome in cima (o a sinistra), «←» per tornare.
   ⌃⌥1…9 contano solo le schede visibili. Un'app aperta fuori cartella si vede nella vista generale.
 - ⋯ sulla scheda-cartella: Apri · Esci dalla cartella · **Chiudi cartella** (chiude le sue app;

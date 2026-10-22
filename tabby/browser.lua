@@ -24,6 +24,11 @@ with timeout of 2 seconds
       try
         set row to (name of w) & TB
         try
+          set row to row & "id" & ((id of w) as text) & TB
+        on error
+          set row to row & "id?" & TB
+        end try
+        try
           set b to bounds of w
           set row to row & ((item 1 of b) as text) & "," & ((item 2 of b) as text) & "," & ((item 3 of b) as text) & "," & ((item 4 of b) as text) & TB
         on error
@@ -126,7 +131,7 @@ function axBrowserInfo(app, short)
       end
       -- webapp solo se sappiamo che c'è una sola scheda; altrimenti finestra normale
       local urls = (r.url and r.tabs == 1) and {r.url} or {"about:mixed"}
-      table.insert(wins, {name = w:title() or "", urls = urls})
+      table.insert(wins, {name = w:title() or "", urls = urls, active = r.url})
       table.insert(sigParts, (w:title() or "") .. "|" .. tostring(r.url) .. "|" .. tostring(r.tabs))
       -- per la diagnosi: cosa ha trovato Tabby (scritto in console solo se cambia)
       local roles = {}
@@ -200,6 +205,12 @@ function refreshBrowsers(ask)
           local name = table.remove(fields, 1) or ""
           -- posizione della finestra (sinistra,alto,destra,basso): serve ad
           -- abbinarla anche quando i titoli non coincidono
+          -- il numero della finestra per il browser (serve ad aggiungerle schede)
+          local asId
+          if fields[1] and fields[1]:match("^id") then
+            asId = tonumber(fields[1]:match("^id(%d+)$"))
+            table.remove(fields, 1)
+          end
           local bounds
           local x1, y1, x2, y2 = (fields[1] or ""):match("^(%-?[%d%.]+),(%-?[%d%.]+),(%-?[%d%.]+),(%-?[%d%.]+)$")
           if x1 then
@@ -210,7 +221,7 @@ function refreshBrowsers(ask)
           end
           local urls = {}
           for _, u in ipairs(fields) do if u ~= "" then table.insert(urls, u) end end
-          table.insert(wins, {name = name, urls = urls, bounds = bounds})
+          table.insert(wins, {name = name, urls = urls, bounds = bounds, asId = asId})
         end
         new[bid] = wins
         table.insert(sig, bid .. "=" .. res)
@@ -375,7 +386,7 @@ end
 -- finestra (titoli uguali: "Download", "Download (2)"). La prima finestra (la
 -- più vecchia) ha come chiave il bundle ID dell'app, così resta al posto
 -- dell'app (preferite, notifiche del Dock); le altre "win:<numero>".
-function windowTabs(app, b, wins, add, appTitle, titles, urlsOf)
+function windowTabs(app, b, wins, add, appTitle, titles, infoOf)
   local seen = {}
   for n, w in ipairs(wins) do
     local name = appTitle
@@ -385,7 +396,11 @@ function windowTabs(app, b, wins, add, appTitle, titles, urlsOf)
       name = seen[base] > 1 and (base .. " (" .. seen[base] .. ")") or base
     end
     add({key = (n == 1) and b or ("win:" .. w:id()), bid = b, app = app,
-         win = w, name = name, primary = (n == 1), urls = urlsOf and urlsOf[w:id()],
+         win = w, name = name, primary = (n == 1),
+         -- per le cartelle: indirizzi delle schede, pagina in vista, numero per il browser
+         urls = infoOf and infoOf[w:id()] and infoOf[w:id()].urls,
+         active = infoOf and infoOf[w:id()] and infoOf[w:id()].active,
+         asId = infoOf and infoOf[w:id()] and infoOf[w:id()].asId,
          title = windowName(titles and titles[w:id()] or w:title(), appTitle)})
   end
 end
@@ -450,7 +465,7 @@ function browserTabs(app, b, B, wins, add)
   table.sort(wins, function(x, y) return x:id() < y:id() end)
   local info = T.binfo[b]
   local matched, how = matchBrowserWindows(wins, info)
-  local plain, names, urlsOf = {}, {}, {}
+  local plain, names, infoOf = {}, {}, {}
   -- Memoria per finestra: l'ultima descrizione riconosciuta. La risposta del
   -- browser arriva in parallelo e può essere vecchia di qualche secondo: se nel
   -- frattempo titolo e posizione sono cambiati (Meet e Gmail cambiano titolo di
@@ -478,7 +493,7 @@ function browserTabs(app, b, B, wins, add)
     -- il titolo come lo dà il browser (senza il nome del profilo)
     local title = found and found.name or w:title() or ""
     names[w:id()] = title
-    if found then urlsOf[w:id()] = found.urls end   -- per le cartelle (finestra con più pagine)
+    if found then infoOf[w:id()] = found end   -- per le cartelle (pagine, numero della finestra)
     local site = found and siteOf(found.urls)
     -- diagnosi (solo se il browser risponde ad AppleScript, e solo se il
     -- risultato cambia)
@@ -497,7 +512,8 @@ function browserTabs(app, b, B, wins, add)
       -- questa finestra diventa una scheda a sé. Le notifiche si leggono dal
       -- titolo attuale della finestra (quello del browser può essere vecchio).
       local e = {key = "site:" .. site, bid = b, app = app, win = w, site = site,
-                 name = siteName(title, site), titleBadge = titleBadge(w:title()) or titleBadge(title)}
+                 name = siteName(title, site), titleBadge = titleBadge(w:title()) or titleBadge(title),
+                 urls = found.urls, asId = found.asId, title = title}   -- (per le cartelle)
       if not add(e) then e.key = "win:" .. w:id(); add(e) end
     else
       table.insert(plain, w)
@@ -509,5 +525,5 @@ function browserTabs(app, b, B, wins, add)
   T.minisOf[b] = next(minis) and minis or nil
   T.minis = {}
   for _, m in pairs(T.minisOf) do for id, w in pairs(m) do T.minis[id] = w end end
-  windowTabs(app, b, plain, add, B.short, names, urlsOf)
+  windowTabs(app, b, plain, add, B.short, names, infoOf)
 end

@@ -28,8 +28,14 @@ function FD.runTask(path, args)
 end
 
 -- Apre una voce della ricetta che non è aperta, senza portarla davanti
-function FD.openItem(it)
+function FD.openItem(it, bk)
   local B = it.bid and BROWSERS[it.bid]
+  -- la prossima finestra nuova di quest'app (entro qualche secondo) è quella
+  -- della voce: viene legata a lei (vedi T.allWins → windowCreated)
+  if bk and it.bid then
+    T.pendingBind = T.pendingBind or {}
+    T.pendingBind[it.bid] = {bk = bk, at = hs.timer.secondsSinceEpoch()}
+  end
   if it.pages then
     -- finestra con più pagine: Chrome/Safari ne aprono una nuova con tutte le
     -- pagine come schede; gli altri browser le aprono come schede
@@ -73,6 +79,38 @@ function FD.openItem(it)
   end
 end
 
+-- Ricetta fissa: nella finestra della cartella mancano pagine (schede chiuse)?
+-- Si riaprono lì. Una pagina "manca" solo se nessuna scheda è più di quel sito
+-- (se dentro Notion sei passato a un altro documento, non si riapre).
+function FD.reopenMissingPages(it, tab)
+  local B = BROWSERS[it.bid]
+  if not (B and tab.urls and tab.asId) then return 0 end
+  local present = {}
+  for _, u in ipairs(tab.urls) do
+    local h = u:match("^https?://([^/:]+)")
+    if h then present[h:lower():gsub("^www%.", "")] = true end
+  end
+  local missing = {}
+  for _, p in ipairs(it.pages) do
+    local c = FD.cleanUrl(p)
+    local h = c and c:match("^https?://([^/:]+)")
+    if h and not present[h:lower():gsub("^www%.", "")] then table.insert(missing, c) end
+  end
+  if #missing == 0 then return 0 end
+  local src = {'tell application "' .. B.as .. '"', 'tell window id ' .. math.floor(tab.asId)}
+  for _, u in ipairs(missing) do
+    if B.kind == "safari" then
+      table.insert(src, 'make new tab at end of tabs with properties {URL:"' .. u .. '"}')
+    else
+      table.insert(src, 'make new tab with properties {URL:"' .. u .. '"}')
+    end
+  end
+  table.insert(src, 'end tell'); table.insert(src, 'end tell')
+  FD.runTask("/usr/bin/osascript", {"-e", table.concat(src, "\n")})
+  print(string.format("Tabby · cartella: riapro %d schede chiuse in «%s»", #missing, tostring(tab.title or tab.name)))
+  return #missing
+end
+
 -- La scheda in cui sei appartiene alla cartella f?
 function FD.currentInFolder(f)
   local key = currentKey()
@@ -106,12 +144,21 @@ function FD.activateFolder(f)
   if not f then return end
   T.folderStart[f.id] = hs.timer.secondsSinceEpoch()
   local before = hs.window.focusedWindow()
-  -- 1. apri quello che manca (le altre voci, già aperte, entrano da sole)
+  -- 1. apri quello che manca (le altre voci, già aperte, entrano da sole). Chi
+  --    c'è e chi manca lo decide il motore delle cartelle (FD.assign), tenendo
+  --    conto delle cartelle già attive (una finestra sta in una cartella sola)
+  local order = {}
+  for _, x in ipairs(FD.activeList()) do if x ~= f then table.insert(order, x) end end
+  table.insert(order, f)
+  local _, byItem = FD.assign(order, T.allTabs)
   local opened = 0
   for _, it in ipairs(f.items) do
-    local present = false
-    for _, e in pairs(T.cand) do if FD.itemMatches(it, e) then present = true; break end end
-    if not present then FD.openItem(it); opened = opened + 1 end
+    local tab = byItem[FD.bindKey(f, it)]
+    if not tab then
+      FD.openItem(it, FD.bindKey(f, it)); opened = opened + 1
+    elseif it.pages then
+      opened = opened + FD.reopenMissingPages(it, tab)   -- ricetta fissa: schede chiuse
+    end
   end
   print(string.format("Tabby · cartella «%s» attivata: %d voci, %d da aprire", f.name, #f.items, opened))
   -- le app appena aperte non devono portarti via da dove sei
@@ -185,6 +232,43 @@ function FD.closeFolder(f)
   scheduleRebuild()
 end
 
+-- "Aggiorna con le schede di adesso": la ricetta diventa quello che c'è ora
+-- nella cartella (finestre con le loro pagine di adesso; voci chiuse tolte)
+function FD.updateFromNow(f)
+  local items, seen = {}, {}
+  -- le finestre che erano voci "pagine" restano voci "pagine"
+  local wasPages = {}
+  for _, it in ipairs(f.items) do
+    local wid = it.pages and T.itemWins[FD.bindKey(f, it)]
+    if wid then wasPages[wid] = true end
+  end
+  local function addItem(e, win)
+    local it = FD.itemOf(e, win and wasPages[win:id()])
+    local k = FD.itemKey(it)
+    if seen[k] then return end
+    seen[k] = true
+    table.insert(items, it)
+    if win then T.itemWins[FD.bindKey(f, it)] = win:id(); T.itemWinsDirty = true end
+  end
+  for _, t in ipairs(T.allTabs) do
+    if T.tabFolder[t.key] == f then
+      if t.group then
+        for _, k in ipairs(t.group.members) do
+          if T.cand[k] then addItem(T.cand[k], T.keyWin[k]) end
+        end
+      else
+        addItem(t, t.win)
+      end
+    end
+  end
+  if #items == 0 then return end
+  f.items = items
+  save("folders")
+  hs.alert.show(string.format("Cartella «%s» aggiornata: %d voci", f.name, #items))
+  rebuildTabs()
+  draw()
+end
+
 function FD.deleteFolder(f)
   FD.releaseFolder(f)
   for i = #S.folders, 1, -1 do if S.folders[i] == f then table.remove(S.folders, i) end end
@@ -251,16 +335,23 @@ end
 function FD.feditAdd(t)
   local fe = T.fedit
   if not fe or not t or t.folder then return end
-  local list = {}
+  local list, wins = {}, {}
   if t.group then
-    for _, k in ipairs(t.group.members) do if T.cand[k] then table.insert(list, FD.itemOf(T.cand[k])) end end
+    for _, k in ipairs(t.group.members) do
+      if T.cand[k] then table.insert(list, FD.itemOf(T.cand[k])); wins[#list] = T.keyWin[k] end
+    end
   elseif t.bid then
-    table.insert(list, FD.itemOf(t))
+    table.insert(list, FD.itemOf(t)); wins[1] = t.win
   end
-  for _, it in ipairs(list) do
+  fe.wins = fe.wins or {}
+  for n, it in ipairs(list) do
     local dup = false
     for _, x in ipairs(fe.items) do if FD.itemKey(x) == FD.itemKey(it) then dup = true end end
-    if not dup then table.insert(fe.items, it) end
+    if not dup then
+      table.insert(fe.items, it)
+      -- la finestra scelta: al salvataggio la voce viene legata proprio a lei
+      if wins[n] then fe.wins[FD.itemKey(it)] = wins[n]:id() end
+    end
   end
   fe.hover = false
   FD.drawFolderEdit()
@@ -410,6 +501,11 @@ FD.finishFolderEdit = function()
       for j = #o.items, 1, -1 do if mine[FD.itemKey(o.items[j])] then table.remove(o.items, j) end end
       if #o.items == 0 then table.remove(S.folders, i) end
     end
+  end
+  -- ogni voce si lega alla finestra che hai scelto (es. quale delle due Gmail)
+  for _, it in ipairs(f.items) do
+    local wid = fe.wins and fe.wins[FD.itemKey(it)]
+    if wid then T.itemWins[FD.bindKey(f, it)] = wid; T.itemWinsDirty = true end
   end
   save("folders"); save("folderSeq")
   local n = 1
