@@ -97,5 +97,20 @@ run('CLICK("settings"); for _, m in ipairs(MENU) do if m.title == "Comportamento
 run('SPOTFILTER.subs["visible"]()')
 check("interruttore spento → niente velo", ev('Tabby.dim._shown') is False)
 
+print("\n== Calendario veloce (⌃⌥A)")
+run('''CAL = ADDAPP("com.apple.iCal", "Calendario"); CAL._wins[1]._frame = {x = 100, y = 100, w = 1200, h = 800}
+Tabby.rebuildTimer:start()''')
+check("il Calendario non è una scheda (è un'app veloce)", "Calendario" not in names())
+run('KEY("a", {"ctrl","alt"})')
+check("⌃⌥A apre il Calendario", ev('FRONT == CAL') is True)
+check("piccolo, in alto a destra", ev('CAL._wins[1]._frame.w') == 460 and ev('CAL._wins[1]._frame.h') == 520
+      and ev('CAL._wins[1]._frame.x + 460 + 12') == ev('Tabby.L and (function() local A = hs.screen.primaryScreen():frame(); return A.x + A.w end)()') or
+      ev('CAL._wins[1]._frame.x') > 700)
+run('KEY("escape")')
+check("Esc lo chiude", ev('CAL._hidden') is True)
+run('CLICK("quick")')
+check("nel menu ⚡︎ c'è «Calendario ⌃⌥A»", any("Calendario   ⌃⌥A" == (it or "") for it in
+      ev('(function() local o = {} for _, it in ipairs(MENU) do o[#o+1] = it.title end return table.concat(o, "|") end)()').split("|")))
+
 print()
 print("FALLITI: %d" % len(fails) if fails else "TUTTO OK")

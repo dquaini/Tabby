@@ -86,7 +86,7 @@ Principi:
 | ⌃⌥Tab | scheda usata prima |
 | ⌃⌥S | Scambia: ruota le app della vista divisa |
 | ⌃⌥⇧1…9 | attiva la cartella 1…9 |
-| ⌃⌥M · ⌃⌥C | Memo · Calcolatrice |
+| ⌃⌥M · ⌃⌥C · ⌃⌥A | Memo · Calcolatrice · Calendario |
 | Esc | chiude Memo / Calcolatrice; annulla la divisione |
 | ⌘⌃⌥R | ricarica Tabby |
 

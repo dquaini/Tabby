@@ -1,5 +1,5 @@
 -- =====================================================================
---  TABBY  ·  v9.16
+--  TABBY  ·  v9.17
 --  Una barra con una scheda per ogni app: ne vedi una alla volta,
 --  clicchi (o premi Ctrl+Option+1…9) per passare all'altra.
 --
@@ -58,6 +58,7 @@
 --      parti; chiusa una finestra torna l'ultima usata, non il desktop.
 --  v9.16: una scheda alla volta riduce le altre finestre solo quando scegli tu
 --      (scheda, scorciatoia, ⌘N), mai per i cambi di macOS: niente ping-pong.
+--  v9.17: Calendario veloce (⌃⌥A, piccolo in alto a destra); barra nera piena.
 -- =====================================================================
 
 
@@ -104,6 +105,8 @@ local MODS = {"ctrl", "alt"}
 local QUICK = {
   {memo = true, name = "Memo", key = "m"},
   {bid = "com.apple.calculator", name = "Calcolatrice", key = "c"},
+  -- il Calendario si apre piccolo (w × h); A come "Agenda" (C è della Calcolatrice)
+  {bid = "com.apple.iCal", name = "Calendario", key = "a", w = 460, h = 520},
 }
 
 -- Il Memo si salva da solo in questo file (lo trovi nel Finder e con Spotlight)
@@ -152,7 +155,7 @@ local MIN_ROW_H = 26          -- altezza minima di una scheda in verticale
 local FINDER    = "com.apple.finder"
 
 local COL = {
-  bar     = {hex = "#15171B"},
+  bar     = {hex = "#000000"},   -- nero pieno (richiesta di Daniele, 22/10/2026)
   active  = {hex = "#2C2F36"},
   accent  = {hex = "#4C8DFF"},
   divider = {hex = "#2A2D33"},
@@ -1530,10 +1533,17 @@ local function placeFloater(app)
     if not w:isMinimized() and not w:isFullScreen() then table.insert(wins, w) end
   end
   table.sort(wins, function(a, b) return a:id() < b:id() end)
+  -- misura fissa per le app veloci che ce l'hanno (es. il Calendario)
+  local size
+  for _, q in ipairs(QUICK) do if q.bid == app:bundleID() and q.w then size = q end end
   for n, w in ipairs(wins) do
     local fr = w:frame()
     local off = (n - 1) * 26
-    w:setTopLeft({x = area.x + area.w - fr.w - 12 - off, y = area.y + 12 + off})
+    if size then
+      w:setFrame({x = area.x + area.w - size.w - 12 - off, y = area.y + 12 + off, w = size.w, h = size.h})
+    else
+      w:setTopLeft({x = area.x + area.w - fr.w - 12 - off, y = area.y + 12 + off})
+    end
   end
   local msg = string.format("Tabby · %s: %d finestre messe in alto a destra",
                             tostring(app:name()), #wins)
@@ -4019,4 +4029,4 @@ T.badgeSig = badgeSig(T.badges)
 rebuildTabs()
 draw()
 handleActive(hs.application.frontmostApplication())
-hs.alert.show("Tabby v9.16 attiva")
+hs.alert.show("Tabby v9.17 attiva")

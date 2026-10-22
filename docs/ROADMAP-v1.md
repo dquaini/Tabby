@@ -124,6 +124,15 @@ solo quello che non si può portare in Tabby.
   Tabby (non più "premibile"). Con la barra dei menu già nascosta (come la usa Daniele) il
   problema pesa meno. Si decide dopo la prova.
 
+## Altri spunti dall'uso del 22/10/2026
+- **⌘F (e le altre scorciatoie dell'app) quando si è appena usata Tabby**: ⌘F non arriva
+  all'app attiva. Da capire in quale caso (dopo un clic su una scheda? dopo un menu ⚡︎/⚙︎?)
+  e correggere: la tastiera deve sempre tornare alla finestra attiva.
+- **Scrivania**: quando si vede il desktop, Tabby non è più una barra ma un **pallino in basso
+  a destra** con l'icona del gatto; cliccato, riapre l'ultima app. (Oggi la barra sul desktop
+  "è integrata male".) Insieme all'avvio e al design.
+- **Calendario veloce** con ⌃⌥A (fatto in v9.17).
+
 ## Cartelle, seconda parte (dopo C)
 - **Finestra di browser con più siti** dentro una cartella: ricordare l'elenco dei siti e
   riaprirli come schede di una finestra (Chrome/Safari). Da decidere: siti o pagine esatte.
@@ -148,7 +157,20 @@ solo quello che non si può portare in Tabby.
   prototipo cliccabile, come per le cartelle.
 
 ## C. Avvio e schermata di partenza
-### Rivista il 22/10/2026 con Daniele — prevale su quanto sotto
+### Versione 2 (22/10/2026, dopo il prototipo) — prevale su tutto quanto sotto
+1. All'avvio di Tabby: schermata **nera** a tutto schermo, al centro l'**animazione di Daniele
+   (circa 10 s)**; intanto Tabby carica quello che serve.
+2. Finita la prima animazione, un clic fa partire una **seconda animazione**; alla fine al
+   centro resta **solo il riquadro tratteggiato** (nessun logo, nessuna icona).
+3. Clic sul riquadro: **primo accesso** → Spotlight; **dalle volte successive** → un pannello
+   con le cartelle impostate; se non ce ne sono, un pulsante che apre Spotlight.
+4. Sfondo nero; anche la barra di Tabby nera piena (fatto in v9.17).
+5. Nella pagina iniziale solo animazione + riquadro, più in alto a destra l'**icona bianca
+   delle impostazioni**.
+6. Scelta la prima app, Tabby parte con barra e scorciatoie (prima no).
+Animazioni: le fornisce Daniele (da chiedere formato: video MP4/WebM, GIF o Lottie).
+
+### Versione 1 (22/10/2026, prototipo `docs/prototipo-avvio.html`)
 Prototipo: `docs/prototipo-avvio.html`. All'avvio Tabby si apre come un'app a tutto schermo:
 logo del gatto (quadrato nero, angoli morbidi) animato al centro; finita l'animazione, un clic
 scopre al centro: **primo avvio** → quadratino tratteggiato con + (apre Spotlight, scegli
