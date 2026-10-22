@@ -130,6 +130,9 @@ solo quello che non si può portare in Tabby.
 - "Apri all'avvio" e altre automazioni.
 
 ## Dopo la v1 (aggiunte)
+- **Batteria più compatta** (richiesta del 22/10/2026): sulla barra solo l'icona della
+  batteria con l'indicatore di carica (colori come oggi); la percentuale compare portando il
+  puntatore sopra l'icona. Libera spazio per le schede. Da fare insieme al design.
 - **Design di Tabby e colori a scelta** (un unico filone, richiesta del 22/10/2026):
   rivedere l'aspetto di Tabby nel suo insieme (schede, icone, tasti, menu, riquadri delle
   cartelle e della vista divisa, velo di Spotlight) con un'identità coerente partendo dal
