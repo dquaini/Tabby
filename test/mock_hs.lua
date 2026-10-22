@@ -164,7 +164,9 @@ hs = {
     new = newCanvas,
     windowLevels = {floating = 3, dragging = 500},
   },
-  spaces = {watcher = {new = function() return {start = function(s) return s end} end}},
+  spaces = {watcher = {new = function() return {start = function(s) return s end} end},
+            focusedSpace = function() return 1 end,
+            spaceType = function() return SPACE_KIND or "user" end},
   battery = {
     percentage = function() return 72 end,
     isCharging = function() return false end,

@@ -160,8 +160,12 @@ end
 -- esce dai radar di Tabby (non è una scheda) e, mentre la guardi, Tabby non si
 -- vede; quando torna normale rientra come scheda.
 function updateFullscreen()
+  -- prima si chiede a macOS che scrivania stai guardando: se è quella di
+  -- un'app a schermo intero lo sa subito (0,4 ms), senza aspettare l'avviso
+  -- sulla finestra, che arriva ~1 s dopo la fine dell'animazione
+  local okS, kind = pcall(function() return hs.spaces.spaceType(hs.spaces.focusedSpace()) end)
   local w = hs.window.focusedWindow()
-  local fs = (w ~= nil) and w:isFullScreen() or false
+  local fs = (okS and kind == "fullscreen") or ((w ~= nil) and w:isFullScreen()) or false
   if fs ~= T.fullscreen then
     T.fullscreen = fs
     print("Tabby · schermo intero " .. (fs and "acceso: Tabby si fa da parte" or "spento: Tabby torna"))

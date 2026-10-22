@@ -25,11 +25,14 @@ def check(what, ok):
 check("all'inizio: Slack è una scheda e Tabby si vede", "Slack" in names() and ev('BAR()._shown') is True)
 run('SLACK._wins[1]._fs = true; WINFILTER.subs["fs"](SLACK._wins[1])')
 check("Slack a schermo intero: non è più una scheda", "Slack" not in names())
-check("e macOS non mostra Tabby sopra le app a schermo intero (niente «fullScreenAuxiliary»)",
-      "fullScreenAuxiliary" not in ev('table.concat(BAR()._behavior, ",")'))
+check("e Tabby non si vede", ev('BAR()._shown') is False)
 check("la finestra non è stata toccata (resta a schermo intero)", ev('SLACK._wins[1]._fs') is True)
 run('SLACK._wins[1]._fs = false; WINFILTER.subs["unfs"](SLACK._wins[1])')
 check("tornata normale: Slack rientra come scheda", "Slack" in names())
+print("== Scrivania a schermo intero riconosciuta subito (senza aspettare la finestra)")
+run('SPACE_KIND = "fullscreen"; Tabby._env.updateFullscreen()')
+check("macOS dice «scrivania a schermo intero»: Tabby sparisce subito", ev('BAR()._shown') is False)
+run('SPACE_KIND = "user"; Tabby._env.updateFullscreen()')
 check("e Tabby si vede", ev('BAR()._shown') is True)
 
 print()

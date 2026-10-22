@@ -327,7 +327,8 @@ function openQuick()
   table.sort(known, function(x, y) return x.m.name:lower() < y.m.name:lower() end)
   for _, x in ipairs(known) do
     local b, m = x.b, x.m
-    table.insert(manage, {title = m.name .. (m.key and ("   ⌃⌥" .. m.key:upper()) or ""), image = smallIcon(b),
+    table.insert(manage, {title = m.name .. (m.iconOnly and "  · tieni l'icona accesa" or "") ..
+                                  (m.key and ("   ⌃⌥" .. m.key:upper()) or ""), image = smallIcon(b),
       checked = m.on or nil, menu = {
         {title = "Mostra in ⚡︎ → App", checked = m.on or nil,
          fn = function() m.on = not m.on; save("menuApps") end},

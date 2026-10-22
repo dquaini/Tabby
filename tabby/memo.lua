@@ -308,16 +308,24 @@ end
 -- Cerca app nuove con un'icona nella barra dei menu (only = solo quell'app)
 function scanMenuBarApps(only)
   local found = 0
+  local changed = false
   for _, app in ipairs(only and {only} or hs.application.runningApplications()) do
     local b = app:bundleID()
-    if b and not b:match("^com%.apple%.") and not MENUBAR_SKIP[b] and not S.menuApps[b]
-       and (app:kind() or -1) >= 0 and menuBarItemOf(app) then
-      S.menuApps[b] = {name = app:name() or b, on = true}
-      found = found + 1
-      print("Tabby · nuova app con icona nella barra dei menu: " .. S.menuApps[b].name .. " (aggiunta in ⚡︎ → App)")
+    local kind = app:kind() or -1
+    if b and not b:match("^com%.apple%.") and not MENUBAR_SKIP[b] and kind >= 0 then
+      local m = S.menuApps[b]
+      if not m and menuBarItemOf(app) then
+        m = {name = app:name() or b, on = true}
+        S.menuApps[b] = m
+        found, changed = found + 1, true
+        print("Tabby · nuova app con icona nella barra dei menu: " .. m.name .. " (aggiunta in ⚡︎ → App)")
+      end
+      -- app "solo icona" (niente finestre né Dock, es. Proton VPN): si apre solo
+      -- dalla sua icona, che quindi va lasciata accesa in macOS
+      if m and m.iconOnly ~= (kind == 0) then m.iconOnly = (kind == 0); changed = true end
     end
   end
-  if found > 0 then save("menuApps") end
+  if changed then save("menuApps") end
   return found
 end
 

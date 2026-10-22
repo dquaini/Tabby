@@ -332,10 +332,9 @@ draw = function()
     T.barLevel = hs.canvas.windowLevels.floating
     T.bar:level(T.barLevel)
     -- visibile su tutte le scrivanie, anche sopra le app a schermo intero
-    -- su tutte le scrivanie, ma NON sopra le app a schermo intero: lì la
-    -- nasconde macOS stesso, all'istante (23/10/2026: prima Tabby si toglieva da
-    -- sola, ma macOS avvisava ~1 s dopo)
-    T.bar:behavior({"canJoinAllSpaces", "stationary"})
+    -- visibile su tutte le scrivanie (sopra le app a schermo intero si nasconde
+    -- da sola: vedi updateFullscreen)
+    T.bar:behavior({"canJoinAllSpaces", "stationary", "fullScreenAuxiliary"})
     T.bar:clickActivating(false)
     T.bar:mouseCallback(onMouse)
   end
@@ -579,7 +578,8 @@ draw = function()
   T.bar:replaceElements(els)
 
   T.updateMouseTimer()
-  if S.autohide then setVisible(T.revealed) else setVisible(not T.menuPeek) end
+  if T.fullscreen then setVisible(false)   -- a schermo intero Tabby si fa da parte
+  elseif S.autohide then setVisible(T.revealed) else setVisible(not T.menuPeek) end
 end
 
 

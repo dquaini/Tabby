@@ -101,4 +101,6 @@ v9.33: consumi più bassi (mouse controllato solo se serve, browser in secondo p
 v9.34: chiusa l'ultima finestra della scheda attiva in qualsiasi modo (anche col pallino
     rosso) si passa alla scheda accanto; Tabby non compare sopra le app a schermo intero
     (lo fa macOS, senza ritardo); Terminale veloce ⌃⌥T; avviso per le app solo icona.
+v9.35: schermo intero: Tabby chiede a macOS il tipo di scrivania e sparisce subito (la
+    v9.34 la lasciava visibile); in Gestisci le app "solo icona" sono segnalate.
 ```
