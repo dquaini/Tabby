@@ -38,6 +38,9 @@ shortcut("down",  "next", function() switchRelative(1) end, isVertical)
 shortcut("tab",   "last", toggleLastApp)
 shortcut("s",     "rotate", function() rotateGroup(currentGroup()) end)
 shortcut("w",     "closewin", function() closeActiveWindow() end)
+for _, a in ipairs(APP_ACTIONS) do
+  shortcut(a.key, "azione-" .. a.key, function() runAppAction(a) end)
+end
 for _, q in ipairs(QUICK) do
   shortcut(q.key, "quick-" .. q.key, function() toggleQuick(q) end)
 end
@@ -104,6 +107,7 @@ T.keyTap:start()
 -- macOS a volte spegne gli intercettatori di tasti: li riaccendiamo
 T.keyTapGuard = hs.timer.doEvery(5, function()
   if not T.keyTap:isEnabled() then T.keyTap:start() end
+  if T.gestureTap and not T.gestureTap:isEnabled() then T.gestureTap:start() end
 end)
 
 -- Riserva: le stesse scorciatoie registrate anche come scorciatoie di sistema

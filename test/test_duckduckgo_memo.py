@@ -10,21 +10,7 @@ os.environ["HOME"] = home
 SRC = codice(base)
 
 mock = open(base + '/test/mock_hs.lua').read()
-mock = mock.replace("axuielement = {applicationElement = function()", '''axuielement = {
-  windowElement = function(w)
-    local function el(role, attrs, kids)
-      return {attributeValue = function(_, k)
-        if k == "AXRole" then return role end
-        if k == "AXChildren" then return kids or {} end
-        return attrs and attrs[k]
-      end}
-    end
-    local tabs = {}
-    for i = 1, (w._ntabs or 1) do tabs[i] = el("AXButton", {AXRoleDescription = "scheda"}) end
-    return el("AXWindow", nil, {el("AXGroup", nil, tabs),
-      el("AXWebArea", {AXURL = {url = w._page}}, {el("AXTextField", {AXValue = "non-deve-leggermi.com"})})})
-  end,
-  applicationElement = function()''')
+# (la lettura delle finestre di DuckDuckGo è nel Mac simulato: mock_hs.lua)
 L = l.LuaRuntime(); L.execute(mock)
 L.execute('''
 DDG = ADDAPP("com.duckduckgo.macos.browser", "DuckDuckGo"); DDG._wins = {}

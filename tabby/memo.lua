@@ -122,6 +122,39 @@ function toggleMemo()
 end
 
 -- Apre / chiude un'azione veloce (stessa scorciatoia)
+-- Azione rapida di un'app (vedi APP_ACTIONS). Per qualche secondo l'app non
+-- nasconde la scheda in cui sei e il suo pannello non viene ingrandito.
+function runAppAction(a, retry)
+  local app = appFor(a.bid)
+  if not app then
+    -- l'app non è aperta: si apre dietro e si riprova tra poco (una volta)
+    if retry then return end
+    FD.runTask("/usr/bin/open", {"-g", "-b", a.bid})
+    hs.timer.doAfter(2.5, function() runAppAction(a, true) end)
+    return
+  end
+  T.actionAt = {bid = a.bid, at = hs.timer.secondsSinceEpoch()}
+  if a.keys then
+    hs.eventtap.keyStroke(a.keys[1], a.keys[2], 0)
+  elseif a.menubar then
+    local ok, item = pcall(function()
+      local bar = hs.axuielement.applicationElement(app):attributeValue("AXExtrasMenuBar")
+      return bar and (bar:attributeValue("AXChildren") or {})[1]
+    end)
+    if ok and item then
+      item:performAction("AXPress")
+    else
+      print("Tabby · azione «" .. a.name .. "»: icona dell'app non trovata nella barra dei menu")
+      hs.alert.show("Non trovo l'icona di " .. appName(a.bid, app) .. " nella barra dei menu")
+    end
+  end
+end
+
+-- Un'azione rapida è appena partita per quest'app? (il suo pannello non è una scheda)
+function actionRecent(bid)
+  return T.actionAt ~= nil and T.actionAt.bid == bid and hs.timer.secondsSinceEpoch() - T.actionAt.at < 3
+end
+
 function toggleQuick(q)
   if q.memo then toggleMemo(); return end
   local bid = q.bid

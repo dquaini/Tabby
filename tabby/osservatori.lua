@@ -62,7 +62,7 @@ T.allWins:subscribe(WF.windowCreated, function(w)
     hs.timer.doAfter(0.2, function()
       if T.memberOf[currentKey()] == g then layoutGroup(g) end
     end)
-  elseif a and b == frontBid() then
+  elseif a and b == frontBid() and not actionRecent(b) then
     if not BROWSERS[b] and w:isStandard() then T.pickedWin = {id = w:id(), at = hs.timer.secondsSinceEpoch()} end
     -- una finestra piccola di un browser può essere una finestrella (video in
     -- miniatura): si decide dopo, quando il browser ha risposto
@@ -251,3 +251,50 @@ end
 T.spotFilter = WF.new("Spotlight")
 T.spotFilter:subscribe({WF.windowCreated, WF.windowVisible}, function() T.spotlightDim(true) end)
 T.spotFilter:subscribe({WF.windowDestroyed, WF.windowNotVisible}, function() T.spotlightDim(false) end)
+
+
+-- ---------------------------------------------------------------------
+--  GESTI DEL TRACKPAD: tre dita verso sinistra = scheda dopo, verso destra =
+--  scheda prima (come le scrivanie di macOS). Tabby legge i tocchi dagli eventi
+--  "gesture" (esplorato sul Mac il 23/10/2026: arrivano con 1-4 dita). Il gesto
+--  va tolto a macOS (Impostazioni → Trackpad → Altri gesti), se no lo fanno
+--  entrambi. Un solo cambio di scheda per gesto.
+-- ---------------------------------------------------------------------
+GESTURE_MOVE = 0.15   -- spostamento delle dita (frazione della larghezza del trackpad)
+
+-- La posizione media orizzontale delle dita appoggiate (nil, 0 se nessuna)
+function touchesX(touches)
+  local sum, n = 0, 0
+  for _, t in ipairs(touches or {}) do
+    local p = t.normalizedPosition
+    local ph = tostring(t.phase or "")
+    if p and p.x and ph ~= "ended" and ph ~= "cancelled" then sum, n = sum + p.x, n + 1 end
+  end
+  return n > 0 and sum / n or nil, n
+end
+
+T.gestureTap = hs.eventtap.new({hs.eventtap.event.types.gesture}, function(e)
+  if not S.gestures then return false end
+  local ok, touches = pcall(function() return e:getTouches() end)
+  if not ok or type(touches) ~= "table" then return false end
+  local x, n = touchesX(touches)
+  if n ~= 3 then T.swipe = nil; return false end   -- finito, o un gesto con altre dita
+  if not T.swipe then
+    T.swipe = {x0 = x, done = false}
+    if not T.gestureDiag then   -- la prima volta: cosa c'è in un tocco (per la diagnosi)
+      T.gestureDiag = true
+      local keys = {}
+      for k in pairs(touches[1] or {}) do table.insert(keys, tostring(k)) end
+      table.sort(keys)
+      print("Tabby · gesti: tre dita viste (un tocco ha: " .. table.concat(keys, ", ") .. ")")
+    end
+    return false
+  end
+  if not T.swipe.done and math.abs(x - T.swipe.x0) > GESTURE_MOVE then
+    T.swipe.done = true
+    local delta = (x < T.swipe.x0) and 1 or -1   -- dita verso sinistra → scheda dopo
+    later(function() switchRelative(delta) end)
+  end
+  return false
+end)
+T.gestureTap:start()

@@ -221,6 +221,8 @@ function behaviourMenu()
      fn = toggle("autohide", function() T.revealed = false; refit() end)},
     {title = "Mostra anche app aperte senza finestre", checked = S.showWindowless,
      fn = toggle("showWindowless", rebuildTabs)},
+    {title = "Tre dita a sinistra / destra: scheda dopo / prima", checked = S.gestures,
+     fn = toggle("gestures")},
     {title = "Oscura lo sfondo quando apri Spotlight", checked = S.spotlightDim,
      fn = toggle("spotlightDim", function() T.spotlightDim(false) end)},
     {title = "Vista cartelle (una cartella attiva = una scheda sola)", checked = S.folderView,
@@ -303,6 +305,19 @@ function openQuick()
   end
   -- cartelle: clic = attiva; si creano e si modificano da qui
   table.insert(items, {title = "-"})
+  -- azioni rapide delle app (quelle dell'icona nella barra dei menu di macOS)
+  local actions = {}
+  for _, a in ipairs(APP_ACTIONS) do
+    if hs.application.pathForBundleID(a.bid) then table.insert(actions, a) end
+  end
+  if #actions > 0 then
+    table.insert(items, {title = "-"})
+    table.insert(items, {title = "App", disabled = true})
+    for _, a in ipairs(actions) do
+      table.insert(items, {title = a.name .. "   ⌃⌥" .. a.key:upper(), image = smallIcon(a.bid),
+                           fn = function() runAppAction(a) end})
+    end
+  end
   table.insert(items, {title = "Cartelle", disabled = true})
   for i, f in ipairs(S.folders) do
     table.insert(items, {

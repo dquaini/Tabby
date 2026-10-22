@@ -28,6 +28,7 @@ DEFAULTS = {
   activeFolders   = {},      -- cartelle attivate (sulla barra come scheda unica)
   folderView      = true,    -- ⚙︎ → Comportamento → Vista cartelle
   spotlightDim    = true,    -- con Spotlight aperto lo sfondo si oscura
+  gestures        = true,    -- tre dita a destra / sinistra cambiano scheda
 }
 
 -- App da non mostrare mai come scheda
@@ -50,6 +51,17 @@ QUICK = {
   -- il Calendario si apre piccolo (w × h: la misura minima che accetta, vista
   -- sul Mac); A come "Agenda" (C è della Calcolatrice)
   {bid = "com.apple.iCal", name = "Calendario", key = "a", w = 680, h = 520},
+}
+
+-- Azioni rapide delle app (menu ⚡︎ → App): quelle che alcune app offrono con la
+-- loro icona nella barra dei menu di macOS, portate in Tabby (idea di Daniele:
+-- averle solo in Tabby). "keys" = la scorciatoia dell'app: funziona anche
+-- togliendo la sua icona dalla barra di Apple. "menubar" = Tabby preme l'icona
+-- dell'app nella barra dei menu. "key" va premuto insieme a ⌃⌥.
+APP_ACTIONS = {
+  {bid = "com.anthropic.claudefordesktop", name = "Claude · chat rapida", key = "l", menubar = true},
+  {bid = "notion.id", name = "Notion · cerca", key = "n", keys = {{"cmd", "shift"}, "k"}},
+  {bid = "notion.id", name = "Notion AI", key = "i", keys = {{"cmd", "shift"}, "j"}},
 }
 
 -- Il Memo si salva da solo in questo file (lo trovi nel Finder e con Spotlight)

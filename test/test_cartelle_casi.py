@@ -10,20 +10,7 @@ from aiuto import carica
 base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 mock = open(base + '/test/mock_hs.lua').read()
 # DuckDuckGo letto con l'Accessibilità (come nel test di DuckDuckGo)
-mock = mock.replace("axuielement = {applicationElement = function()", '''axuielement = {
-  windowElement = function(w)
-    local function el(role, attrs, kids)
-      return {attributeValue = function(_, k)
-        if k == "AXRole" then return role end
-        if k == "AXChildren" then return kids or {} end
-        return attrs and attrs[k]
-      end}
-    end
-    local tabs = {}
-    for i = 1, (w._ntabs or 1) do tabs[i] = el("AXButton", {AXRoleDescription = "scheda"}) end
-    return el("AXWindow", nil, {el("AXGroup", nil, tabs), el("AXWebArea", {AXURL = {url = w._page}}, {})})
-  end,
-  applicationElement = function()''')
+# (la lettura delle finestre di DuckDuckGo è nel Mac simulato: mock_hs.lua)
 L = l.LuaRuntime()
 L.execute(mock)
 L.execute('''

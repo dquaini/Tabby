@@ -166,7 +166,7 @@ hs = {
     watcher = {new = function() return {start = function(s) return s end} end},
   },
   eventtap = {
-    event = {types = {keyDown = 10, leftMouseDragged = 6, leftMouseUp = 2}},
+    event = {types = {keyDown = 10, leftMouseDragged = 6, leftMouseUp = 2, gesture = 29}},
     new = function(types, fn)
       local t = {types = types, fn = fn, on = false}
       function t:start() self.on = true; return self end
@@ -241,7 +241,28 @@ hs = {
       return true, out
     end,
   },
-  axuielement = {applicationElement = function()
+  axuielement = {
+  -- l'interno di una finestra di browser letto con l'Accessibilità (DuckDuckGo):
+  -- w._ntabs pulsanti delle schede e la pagina w._page
+  windowElement = function(w)
+    local function el(role, attrs, kids)
+      return {attributeValue = function(_, k)
+        if k == "AXRole" then return role end
+        if k == "AXChildren" then return kids or {} end
+        return attrs and attrs[k]
+      end}
+    end
+    local tabs = {}
+    for i = 1, (w._ntabs or 1) do tabs[i] = el("AXButton", {AXRoleDescription = "scheda"}) end
+    return el("AXWindow", nil, {el("AXGroup", nil, tabs),
+      el("AXWebArea", {AXURL = {url = w._page}}, {el("AXTextField", {AXValue = "non-deve-leggermi.com"})})})
+  end,
+  applicationElement = function(app)
+    if app and app._extras then   -- un'app con l'icona nella barra dei menu
+      local item = {performAction = function(_, act) PRESSED = (PRESSED or "") .. app._bid .. ":" .. act .. ";" end}
+      local bar = {attributeValue = function(_, k) if k == "AXChildren" then return {item} end end}
+      return {attributeValue = function(_, k) if k == "AXExtrasMenuBar" then return bar end end}
+    end
     local items = {}
     for bid, label in pairs(DOCK_BADGES or {}) do
       table.insert(items, {attributeValue = function(_, k)
@@ -277,7 +298,7 @@ hs = {
 
 -- tastiera: mappa bidirezionale come quella vera
 local codes = {["0"]=29,["1"]=18,["2"]=19,["3"]=20,["4"]=21,["5"]=23,["6"]=22,["7"]=26,["8"]=28,["9"]=25,
-  a=0, c=8, m=46, s=1, w=13, left=123, right=124, down=125, up=126, escape=53, ["return"]=36, padenter=76, tab=48}
+  a=0, c=8, m=46, s=1, w=13, l=37, n=45, i=34, left=123, right=124, down=125, up=126, escape=53, ["return"]=36, padenter=76, tab=48}
 for k, v in pairs(codes) do hs.keycodes.map[k] = v; hs.keycodes.map[v] = k end
 
 function KEY(name, mods)

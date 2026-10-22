@@ -83,4 +83,6 @@ v9.25: ⌃⌥W chiude la finestra attiva (non l'app); le righe di diagnosi non p
     più bloccare Tabby se il Terminale collegato si interrompe.
 v9.26: chiusa l'ultima finestra della scheda attiva (⌃⌥W o ✕) si passa alla scheda a
     sinistra (a destra se era la prima), non al desktop vuoto.
+v9.27: gesti: tre dita a sinistra/destra = scheda dopo/prima; azioni rapide delle app
+    nel menu ⚡︎ (Claude chat rapida ⌃⌥L, Notion cerca ⌃⌥N, Notion AI ⌃⌥I).
 ```

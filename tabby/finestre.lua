@@ -217,6 +217,12 @@ handleActive = timed("cambio di scheda", function(app)
     draw()
     return
   end
+  if bid and actionRecent(bid) then
+    -- azione rapida (chat di Claude, ricerca di Notion): il pannello si apre
+    -- sopra quello che stai facendo, che non va nascosto
+    draw()
+    return
+  end
   if T.desktopMode then
     -- sulla scrivania il Finder è in primo piano: va bene così
     if bid == FINDER or not isTabApp(app) then draw(); return end
