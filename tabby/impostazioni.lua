@@ -60,8 +60,10 @@ QUICK = {
 -- dell'app nella barra dei menu. "key" va premuto insieme a ⌃⌥.
 APP_ACTIONS = {
   {bid = "com.anthropic.claudefordesktop", name = "Claude · chat rapida", key = "l", menubar = true},
-  {bid = "notion.id", name = "Notion · cerca", key = "n", keys = {{"cmd", "shift"}, "k"}},
-  {bid = "notion.id", name = "Notion AI", key = "i", keys = {{"cmd", "shift"}, "j"}},
+  -- Notion: le sue scorciatoie (⌘⇧K, ⌘⇧J) valgono solo dentro Notion; da fuori
+  -- si usa la voce del menu della sua icona (menuItem)
+  {bid = "notion.id", name = "Notion · cerca", key = "n", menubar = true, menuItem = "Toggle Command Search"},
+  {bid = "notion.id", name = "Notion AI", key = "i", menubar = true, menuItem = "Toggle Notion AI"},
 }
 
 -- Il Memo si salva da solo in questo file (lo trovi nel Finder e con Spotlight)

@@ -86,4 +86,6 @@ v9.26: chiusa l'ultima finestra della scheda attiva (⌃⌥W o ✕) si passa all
 v9.27: gesti: tre dita a sinistra/destra = scheda dopo/prima; azioni rapide delle app
     nel menu ⚡︎ (Claude chat rapida ⌃⌥L, Notion cerca ⌃⌥N, Notion AI ⌃⌥I).
 v9.28: ⌃⌥N/⌃⌥I: la scorciatoia di Notion parte quando hai lasciato ⌃⌥.
+v9.29: azioni rapide con lo sfondo oscurato come Spotlight; Notion dal menu della sua
+    icona (le sue scorciatoie valgono solo dentro Notion).
 ```

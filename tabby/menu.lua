@@ -223,7 +223,7 @@ function behaviourMenu()
      fn = toggle("showWindowless", rebuildTabs)},
     {title = "Tre dita a sinistra / destra: scheda dopo / prima", checked = S.gestures,
      fn = toggle("gestures")},
-    {title = "Oscura lo sfondo quando apri Spotlight", checked = S.spotlightDim,
+    {title = "Oscura lo sfondo con Spotlight e le azioni rapide", checked = S.spotlightDim,
      fn = toggle("spotlightDim", function() T.spotlightDim(false) end)},
     {title = "Vista cartelle (una cartella attiva = una scheda sola)", checked = S.folderView,
      fn = toggle("folderView", function() T.viewFolder = nil; rebuildTabs() end)},

@@ -204,7 +204,10 @@ T.batWatcher:start()
 -- Spotlight: quando si apre, lo sfondo (app e Tabby) si oscura con un velo blu
 -- scuro; quando si chiude, il velo sparisce. Il velo non prende i clic: un clic
 -- fuori da Spotlight lo chiude come sempre.
-function T.spotlightDim(on)
+-- Il velo scuro sotto Spotlight e sotto i pannelli delle azioni rapide (chat
+-- di Claude, ricerca di Notion). isOver() dice quando toglierlo: Tabby lo
+-- controlla da sé 20 volte al secondo (macOS avvisa con ~1 s di ritardo).
+function T.veil(on, isOver)
   if on and S.spotlightDim then
     if not T.dim then
       T.dim = hs.canvas.new(screen():fullFrame())
@@ -221,20 +224,25 @@ function T.spotlightDim(on)
     T.dim:show()
     if T.bar then T.dim:orderAbove(T.bar) end
     T.dimOn = true
-    -- macOS avvisa della chiusura di Spotlight con ~1 secondo di ritardo: finché
-    -- il velo è acceso, Tabby controlla da sé 20 volte al secondo se Spotlight
-    -- c'è ancora (costa 0,06 ms, misurato sul Mac vero)
+    T.veilOver = isOver
     T.dimSince = hs.timer.secondsSinceEpoch()
     if T.dimPoll then T.dimPoll:stop() end
     T.dimPoll = hs.timer.doEvery(0.05, function()
-      if hs.timer.secondsSinceEpoch() - T.dimSince < 0.15 then return end
-      if not T.spotlightOpen() then T.spotlightDim(false) end
+      local age = hs.timer.secondsSinceEpoch() - T.dimSince
+      if age < 0.15 then return end
+      -- (dopo 10 minuti si toglie comunque: rete di sicurezza)
+      if age > 600 or (T.veilOver and T.veilOver()) then T.veil(false) end
     end)
   elseif T.dim and T.dimOn then
     T.dim:hide()
     T.dimOn = false
     if T.dimPoll then T.dimPoll:stop(); T.dimPoll = nil end
   end
+end
+
+-- Spotlight: velo finché Spotlight è aperto
+function T.spotlightDim(on)
+  T.veil(on, function() return not T.spotlightOpen() end)
 end
 
 -- Spotlight è aperto? Lo si capisce dalla finestra attiva: mentre è aperto è

@@ -260,7 +260,19 @@ hs = {
   end,
   applicationElement = function(app)
     if app and app._extras then   -- un'app con l'icona nella barra dei menu
-      local item = {performAction = function(_, act) PRESSED = (PRESSED or "") .. app._bid .. ":" .. act .. ";" end}
+      local entries = {}
+      for _, title in ipairs(app._menu or {}) do
+        table.insert(entries, {attributeValue = function(_, k)
+          if k == "AXRole" then return "AXMenuItem" end
+          if k == "AXTitle" then return title end
+        end, performAction = function(_, act) PRESSED = (PRESSED or "") .. title .. ":" .. act .. ";" end})
+      end
+      local menu = {attributeValue = function(_, k)
+        if k == "AXRole" then return "AXMenu" end
+        if k == "AXChildren" then return entries end
+      end}
+      local item = {performAction = function(_, act) PRESSED = (PRESSED or "") .. app._bid .. ":" .. act .. ";" end,
+                    attributeValue = function(_, k) if k == "AXChildren" then return {menu} end end}
       local bar = {attributeValue = function(_, k) if k == "AXChildren" then return {item} end end}
       return {attributeValue = function(_, k) if k == "AXExtrasMenuBar" then return bar end end}
     end

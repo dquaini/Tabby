@@ -88,7 +88,7 @@ L.execute('''
 SAVED_FW = hs.window.focusedWindow
 SPOTAPP = {bundleID = function() return "com.apple.Spotlight" end}
 hs.window.focusedWindow = function() return {application = function() return SPOTAPP end} end
-CLOCK = 2000; Tabby.dimPoll.fn()''')
+CLOCK = (CLOCK or 1000) + 1; Tabby.dimPoll.fn()''')
 check("Spotlight ancora aperto: il controllo lascia il velo", ev('Tabby.dim._shown') is True)
 L.execute('hs.window.focusedWindow = SAVED_FW; Tabby.dimPoll.fn()')
 check("Spotlight chiuso: il controllo toglie il velo subito (senza aspettare macOS)", ev('Tabby.dim._shown') is False)

@@ -153,12 +153,51 @@ function runAppAction(a, retry)
       return bar and (bar:attributeValue("AXChildren") or {})[1]
     end)
     if ok and item then
+      actionVeil(a)
       item:performAction("AXPress")
+      -- Notion: dal menu dell'icona si preme la voce giusta ("Toggle Command Search")
+      if a.menuItem then
+        hs.timer.doAfter(0.25, function()
+          local mi = findMenuItem(item, a.menuItem)
+          if mi then
+            mi:performAction("AXPress")
+          else
+            hs.eventtap.keyStroke({}, "escape", 0)
+            print("Tabby · azione «" .. a.name .. "»: voce «" .. a.menuItem .. "» non trovata nel menu")
+          end
+        end)
+      end
     else
       print("Tabby · azione «" .. a.name .. "»: icona dell'app non trovata nella barra dei menu")
       hs.alert.show("Non trovo l'icona di " .. appName(a.bid, app) .. " nella barra dei menu")
     end
   end
+end
+
+-- Una voce nel menu (aperto) di un'icona della barra dei menu, dal titolo
+function findMenuItem(el, title)
+  for _, c in ipairs(el:attributeValue("AXChildren") or {}) do
+    local role = c:attributeValue("AXRole")
+    if role == "AXMenuItem" and c:attributeValue("AXTitle") == title then return c end
+    if role == "AXMenu" or role == "AXMenuItem" then
+      local found = findMenuItem(c, title)
+      if found then return found end
+    end
+  end
+  return nil
+end
+
+-- Il velo scuro sotto il pannello dell'azione (come per Spotlight). Si toglie
+-- quando torni alla finestra di prima, o passi a una finestra "vera" (una
+-- scheda grande: es. apri il risultato della ricerca in Notion).
+function actionVeil(a)
+  local before = hs.window.focusedWindow()
+  T.veil(true, function()
+    local f = hs.window.focusedWindow()
+    if not f then return false end
+    if before and f:id() == before:id() then return true end
+    return T.winKey[f:id()] ~= nil and not T.isSmall(f)
+  end)
 end
 
 -- Un'azione rapida è appena partita per quest'app? (il suo pannello non è una scheda)
