@@ -135,7 +135,18 @@ function runAppAction(a, retry)
   end
   T.actionAt = {bid = a.bid, at = hs.timer.secondsSinceEpoch()}
   if a.keys then
-    hs.eventtap.keyStroke(a.keys[1], a.keys[2], 0)
+    -- la scorciatoia dell'app si manda quando hai lasciato ⌃⌥: se no per macOS
+    -- diventa ⌃⌥⌘⇧K, che non è quella di Notion (visto sul Mac il 22/10/2026)
+    local function send(tries)
+      local m = hs.eventtap.checkKeyboardModifiers() or {}
+      if (m.ctrl or m.alt) and tries < 30 then
+        hs.timer.doAfter(0.05, function() send(tries + 1) end)
+      else
+        T.actionAt.at = hs.timer.secondsSinceEpoch()
+        hs.eventtap.keyStroke(a.keys[1], a.keys[2], 0)
+      end
+    end
+    send(0)
   elseif a.menubar then
     local ok, item = pcall(function()
       local bar = hs.axuielement.applicationElement(app):attributeValue("AXExtrasMenuBar")

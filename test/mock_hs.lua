@@ -176,6 +176,7 @@ hs = {
       return t
     end,
     keyStroke = function() end,
+    checkKeyboardModifiers = function() return HELD or {} end,
   },
   keycodes = {map = {}},
   mouse = {absolutePosition = function() return {x = MOUSE.x, y = MOUSE.y} end},

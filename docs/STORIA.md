@@ -85,4 +85,5 @@ v9.26: chiusa l'ultima finestra della scheda attiva (⌃⌥W o ✕) si passa all
     sinistra (a destra se era la prima), non al desktop vuoto.
 v9.27: gesti: tre dita a sinistra/destra = scheda dopo/prima; azioni rapide delle app
     nel menu ⚡︎ (Claude chat rapida ⌃⌥L, Notion cerca ⌃⌥N, Notion AI ⌃⌥I).
+v9.28: ⌃⌥N/⌃⌥I: la scorciatoia di Notion parte quando hai lasciato ⌃⌥.
 ```

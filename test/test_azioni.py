@@ -33,8 +33,10 @@ titles = ev('(function() local o = {} for _, it in ipairs(MENU) do o[#o+1] = it.
 check("menu ⚡︎: sezione «App» con le tre azioni", "App" in titles and "Claude · chat rapida   ⌃⌥L" in titles
       and "Notion · cerca   ⌃⌥N" in titles and "Notion AI   ⌃⌥I" in titles)
 
-run('KEY("n", {"ctrl","alt"})')
-check("⌃⌥N → la scorciatoia di Notion ⌘⇧K", "cmd+shift+k" in ev('table.concat(KEYS, ",")'))
+L.execute('HELD = {ctrl = true, alt = true}; KEY("n", {"ctrl","alt"}); FLUSH(3)')
+check("con ⌃⌥ ancora premuti, Tabby aspetta (non manda ⌘⇧K)", "cmd+shift+k" not in ev('table.concat(KEYS, ",")'))
+run('HELD = nil')
+check("lasciati ⌃⌥ → la scorciatoia di Notion ⌘⇧K", "cmd+shift+k" in ev('table.concat(KEYS, ",")'))
 run('KEY("i", {"ctrl","alt"})')
 check("⌃⌥I → Notion AI ⌘⇧J", "cmd+shift+j" in ev('table.concat(KEYS, ",")'))
 run('KEY("l", {"ctrl","alt"})')
