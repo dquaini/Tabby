@@ -25,6 +25,9 @@ Principi:
 ## Cosa fa oggi (v9.3)
 
 ### Schede
+- **Una scheda alla volta**: le altre app si nascondono e le altre finestre della stessa app
+  (es. un'altra finestra di Chrome) si riducono a icona; tornano quando le scegli. Restano
+  insieme le finestre di una vista divisa e il video in miniatura di Meet.
 - Una scheda per ogni **finestra** (Finder, TextEdit, Word…): con più finestre ognuna prende
   il titolo (nome del documento o della cartella). ⚙︎ → Finestre separate: per app, si può
   tornare a una scheda sola. Ne vedi una alla volta (le altre app si nascondono).

@@ -1,0 +1,79 @@
+"""Una scheda alla volta: con più finestre della stessa app (Chrome, Finder…) si
+vede solo quella scelta; le altre si riducono a icona e tornano quando le scegli.
+Restano insieme le finestre di una vista divisa e il video in miniatura di Meet."""
+import os
+import lupa.lua54 as l
+
+base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+L = l.LuaRuntime()
+L.execute(open(base + '/test/mock_hs.lua').read())
+L.execute('''
+print = function() end
+FINDER = ADDAPP("com.apple.finder", "Finder")
+SLACK = ADDAPP("com.tinyspeck.slackmacgap", "Slack")
+CHROME = ADDBROWSER("com.google.Chrome", "Google Chrome", {
+  {"Calcio | Sofascore - Google Chrome", {"https://www.sofascore.com/"}},
+  {"Posta in arrivo - Gmail - Google Chrome", {"https://mail.google.com/mail/u/0/"}},
+})
+CHROME._wins[1]._asName = "Calcio | Sofascore"; CHROME._wins[2]._asName = "Posta in arrivo - Gmail"
+SOFA, GMAIL = CHROME._wins[1], CHROME._wins[2]
+FRONT = FINDER
+''')
+L.execute(open(base + '/tabby.lua').read())
+L.execute('FLUSH()')
+def ev(code): return L.execute('return ' + code)
+def run(code): L.execute(code); L.execute('FLUSH()')
+def idx(name): return ev(f'(function() for i, t in ipairs(Tabby.tabs) do if t.name == "{name}" then return i end end end)()')
+fails = []
+def check(what, ok):
+    print(("  ok   " if ok else "  NO   ") + what)
+    if not ok: fails.append(what)
+
+run(f'CLICK("tab{idx("Sofascore")}")')
+check("su Sofascore: Gmail (stessa app) è ridotta a icona", ev('GMAIL._min') is True and ev('SOFA._min') is False)
+run(f'CLICK("tab{idx("Gmail")}")')
+check("su Gmail: torna Gmail, Sofascore ridotta", ev('GMAIL._min') is False and ev('SOFA._min') is True)
+check("in primo piano Gmail", ev('CHROME._focused == GMAIL') is True)
+
+print("== ⌘N: nuova finestra di Chrome")
+run('''
+NEW = newWindow(CHROME, "Nuova scheda - Google Chrome", {"chrome://newtab/"})
+NEW._asName = "Nuova scheda"
+table.insert(CHROME._wins, 1, NEW)
+CHROME._focused = NEW
+WINFILTER.subs["created"](NEW); WINFILTER.subs["focused"](NEW)
+Tabby.rebuildTimer:start()''')
+check("la finestra di prima (Gmail) si riduce a icona", ev('GMAIL._min') is True and ev('NEW._min') is False)
+
+print("== Vista divisa Gmail + Slack")
+run(f'CLICK("tab{idx("Gmail")}")')
+run('CLICK("split"); MENU[1].fn()')
+run(f'CLICK("tab{idx("Slack")}")')
+check("Gmail visibile nella vista divisa, le altre di Chrome ridotte",
+      ev('GMAIL._min') is False and ev('SOFA._min') is True and ev('NEW._min') is True)
+
+print("== Video in miniatura di Meet")
+run(f'CLICK("ungroup{idx("Gmail + Slack")}")')
+run('''
+PIP = newWindow(CHROME, "Gmail", {}); PIP._noAS = true
+PIP._frame = {x = 1100, y = 480, w = 300, h = 390}
+table.insert(CHROME._wins, PIP); WINFILTER.subs["created"](PIP); Tabby.rebuildTimer:start()''')
+run(f'CLICK("tab{idx("Sofascore")}")')
+check("la miniatura non si riduce mai", ev('PIP._min') is False)
+
+print("== App con le finestre in una scheda sola (⚙︎ → Finestre separate spento)")
+run('''local w = newWindow(FINDER, "Download"); table.insert(FINDER._wins, w); FINDER2 = w
+WINFILTER.subs["created"](w); Tabby.rebuildTimer:start()''')
+run(f'CLICK("tab{idx("Download")}")')
+check("Finder: la finestra non scelta si riduce", ev('FINDER._wins[1]._min') is True)
+run('CLICK("settings"); for _, m in ipairs(MENU) do if m.title == "Finestre separate" then for _, it in ipairs(m.menu) do if it.title == "Finder" then it.fn() end end end end')
+run(f'FINDER._wins[1]:unminimize(); CLICK("tab{idx("Finder")}")')
+check("Finder in una scheda sola: nessuna finestra ridotta", ev('FINDER._wins[1]._min') is False and ev('FINDER2._min') is False)
+
+print("== Interruttore spento (⚙︎ → Comportamento → Una scheda alla volta)")
+run('CLICK("settings"); for _, m in ipairs(MENU) do if m.title == "Comportamento" then for _, it in ipairs(m.menu) do if it.title:find("^Una scheda alla volta") then it.fn() end end end end')
+run(f'SOFA:unminimize(); GMAIL:unminimize(); CLICK("tab{idx("Gmail")}")')
+check("spento: le altre finestre restano come sono", ev('SOFA._min') is False)
+
+print()
+print("FALLITI: %d" % len(fails) if fails else "TUTTO OK")

@@ -1,5 +1,5 @@
 -- =====================================================================
---  TABBY  ·  v9.13
+--  TABBY  ·  v9.14
 --  Una barra con una scheda per ogni app: ne vedi una alla volta,
 --  clicchi (o premi Ctrl+Option+1…9) per passare all'altra.
 --
@@ -52,6 +52,8 @@
 --      v9.12.3: il velo sparisce subito quando Spotlight si chiude)
 --  v9.13: Chrome con più finestre: niente più schede scambiate (la sola
 --      posizione non distingue finestre che Tabby adatta allo stesso spazio).
+--  v9.14: "una app alla volta" diventa "una scheda alla volta": le altre
+--      finestre della stessa app (es. Chrome) si riducono a icona.
 -- =====================================================================
 
 
@@ -64,7 +66,7 @@
 local DEFAULTS = {
   position        = "top",   -- dove sta Tabby: top / bottom / left / right
   pinned          = { "com.apple.finder", "com.apple.iCal", "com.apple.Notes" },
-  oneAtATime      = true,    -- nasconde le altre app
+  oneAtATime      = true,    -- una scheda alla volta: nasconde le altre app e finestre
   fit             = true,    -- adatta le finestre a Tabby
   autohide        = false,   -- Tabby nascosta, appare col mouse sul bordo
   showWindowless  = false,   -- mostra anche app aperte ma senza finestre
@@ -1424,10 +1426,31 @@ local function hideOthers(keep)
   end
 end
 
+-- Una scheda alla volta, anche dentro la stessa app: macOS nasconde solo app
+-- intere, quindi le altre finestre-scheda delle app in "apps" si riducono a
+-- icona (tornano quando le scegli). keepIds = finestre da lasciare in vista.
+-- Mai la miniatura di Meet, mai le app con le finestre in una scheda sola.
+local function minimizeSiblings(apps, keepIds)
+  if not S.oneAtATime then return end
+  for bid in pairs(apps) do
+    if not FLOATER[bid] and (BROWSERS[bid] or perWindow(bid)) then
+      local app = appFor(bid)
+      if app then
+        for _, w in ipairs(standardWindows(app)) do
+          if not keepIds[w:id()] and not w:isMinimized()
+             and not (T.minis and T.minis[w:id()]) then
+            w:minimize()
+          end
+        end
+      end
+    end
+  end
+end
+
 -- Mette ogni scheda del gruppo nella sua zona e nasconde le altre app.
 -- Una scheda può essere un'app intera o una singola finestra di un browser.
 layoutGroup = function(g)
-  local keep = {}
+  local keep, winApps, keepIds = {}, {}, {}
   for k, key in ipairs(g.members) do
     local bid = T.keyBid[key] or key
     keep[bid] = true
@@ -1436,6 +1459,11 @@ layoutGroup = function(g)
       if app:isHidden() then app:unhide() end
       local r = zoneRect(g.layout, k)
       local w = T.keyWin[key]
+      if w then
+        winApps[bid] = true
+        keepIds[w:id()] = true
+        if w:isMinimized() then w:unminimize() end
+      end
       local wins = w and {w} or standardWindows(app)
       for _, x in ipairs(wins) do
         if not x:isFullScreen() and not x:isMinimized() then
@@ -1446,6 +1474,8 @@ layoutGroup = function(g)
     end
   end
   hideOthers(keep)
+  -- le altre finestre delle stesse app (es. le altre finestre di Chrome) si riducono
+  minimizeSiblings(winApps, keepIds)
 end
 
 
@@ -1547,6 +1577,17 @@ local handleActive = timed("cambio di scheda", function(app)
       end)
     else
       hideOthers({[bid] = true})
+      -- una scheda alla volta: le altre finestre della stessa app si riducono
+      -- (solo se la finestra attiva è una finestra "vera", non un dialogo o una
+      -- finestrella appena aperta che potrebbe essere il video di Meet)
+      local fw = hs.window.focusedWindow()
+      local fa = fw and fw:application()
+      if fw and fa and fa:bundleID() == bid and fw:isStandard() and not (T.minis and T.minis[fw:id()]) then
+        local f, A = fw:frame(), appArea()
+        if not (BROWSERS[bid] and f.w < A.w * 0.5 and f.h < A.h * 0.6) then
+          minimizeSiblings({[bid] = true}, {[fw:id()] = true})
+        end
+      end
       fitApp(app)
       -- alcune app creano le finestre con un attimo di ritardo
       hs.timer.doAfter(0.6, function() fitApp(app) end)
@@ -2760,7 +2801,7 @@ end
 
 local function behaviourMenu()
   return {
-    {title = "Una app alla volta", checked = S.oneAtATime, fn = toggle("oneAtATime")},
+    {title = "Una scheda alla volta (nasconde le altre app e finestre)", checked = S.oneAtATime, fn = toggle("oneAtATime")},
     {title = "Adatta le finestre a Tabby", checked = S.fit, fn = toggle("fit", refit)},
     {title = "Schermo intero con Tabby visibile (tasto verde)", checked = S.tabbyFullscreen,
      fn = toggle("tabbyFullscreen")},
@@ -3913,4 +3954,4 @@ T.badgeSig = badgeSig(T.badges)
 rebuildTabs()
 draw()
 handleActive(hs.application.frontmostApplication())
-hs.alert.show("Tabby v9.13 attiva")
+hs.alert.show("Tabby v9.14 attiva")
