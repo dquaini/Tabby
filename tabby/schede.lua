@@ -88,18 +88,63 @@ function FD.isFolderActive(id)
   return false
 end
 
--- La voce di ricetta di una scheda (app intera, oppure webapp)
+-- Indirizzo di una pagina da ricordare in una cartella: solo http(s), senza
+-- la parte dopo "?" o "#" (lì a volte finiscono codici di accesso) e senza
+-- caratteri che potrebbero rompere lo script del browser
+function FD.cleanUrl(u)
+  local base = type(u) == "string" and u:match("^(https?://[^?#%s\"]+)")
+  return base
+end
+
+local function hostOf(u) return (u:match("^https?://([^/:]+)") or ""):lower():gsub("^www%.", "") end
+
+-- La voce di ricetta di una scheda: webapp (site), finestra di un browser con
+-- le sue pagine (pages: Chrome/Safari, che dicono gli indirizzi), o app intera
 function FD.itemOf(e)
   if e.site then return {site = e.site, bid = e.bid, name = e.name} end
+  local B = BROWSERS[e.bid]
+  if B and e.win and e.urls then
+    local pages, seen = {}, {}
+    for _, u in ipairs(e.urls) do
+      local c = FD.cleanUrl(u)
+      if c and not seen[c] then seen[c] = true; table.insert(pages, c) end
+    end
+    if #pages > 0 then
+      -- nome: il titolo della finestra (la pagina che si vede), o quello del browser
+      local title = e.title or ((e.name and e.name ~= B.short) and e.name) or B.short
+      return {bid = e.bid, pages = pages,
+              name = title .. " · " .. #pages .. (#pages == 1 and " pagina" or " pagine")}
+    end
+  end
   return {bid = e.bid, name = appName(e.bid, e.app)}
 end
 
-function FD.itemKey(it) return it.site and ("site:" .. it.site) or it.bid end
+function FD.itemKey(it)
+  if it.pages then return "pagine:" .. it.bid .. ":" .. it.pages[1] end
+  return it.site and ("site:" .. it.site) or it.bid
+end
+
+-- Una finestra di browser corrisponde a una voce "pagine" se almeno metà delle
+-- sue schede sono di siti della voce (le pagine dentro cambiano mentre lavori)
+local function pagesMatch(it, e)
+  if not e.urls then return false end
+  local hosts = {}
+  for _, p in ipairs(it.pages) do hosts[hostOf(p)] = true end
+  local total, inside = 0, 0
+  for _, u in ipairs(e.urls) do
+    if u:match("^https?://") then
+      total = total + 1
+      if hosts[hostOf(u)] then inside = inside + 1 end
+    end
+  end
+  return total > 0 and inside * 2 >= total
+end
 
 -- La scheda e corrisponde alla voce? (per un browser, la voce "app" sono le
 -- sue finestre normali, non le webapp)
 function FD.itemMatches(it, e)
   if it.site then return e.site == it.site end
+  if it.pages then return e.bid == it.bid and not e.site and e.win ~= nil and pagesMatch(it, e) end
   return e.bid == it.bid and not e.site
 end
 

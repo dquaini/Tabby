@@ -56,6 +56,8 @@ Principi:
   (webapp di Chrome/Safari in una finestra nuova; DuckDuckGo come scheda); quello già aperto
   entra. Se sei su una sua app → vista cartella; se sei altrove → la cartella diventa **una
   scheda sola** (3 icone, somma delle notifiche) e resti dove sei.
+- Una **finestra di Chrome/Safari con più pagine** messa in una cartella si ricorda le sue
+  pagine e, se non è aperta, si riapre con tutte. (DuckDuckGo: solo il browser.)
 - **Vista cartella**: solo le sue schede, nome in cima (o a sinistra), «←» per tornare.
   ⌃⌥1…9 contano solo le schede visibili. Un'app aperta fuori cartella si vede nella vista generale.
 - ⋯ sulla scheda-cartella: Apri · Esci dalla cartella · **Chiudi cartella** (chiude le sue app;

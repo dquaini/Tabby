@@ -30,7 +30,34 @@ end
 -- Apre una voce della ricetta che non è aperta, senza portarla davanti
 function FD.openItem(it)
   local B = it.bid and BROWSERS[it.bid]
-  if it.site then
+  if it.pages then
+    -- finestra con più pagine: Chrome/Safari ne aprono una nuova con tutte le
+    -- pagine come schede; gli altri browser le aprono come schede
+    local pages = {}
+    for _, p in ipairs(it.pages) do local c = FD.cleanUrl(p); if c then table.insert(pages, c) end end
+    if #pages == 0 then return end
+    if B and B.kind == "chrome" then
+      local src = {'tell application "' .. B.as .. '"', 'set w to make new window',
+                   'set URL of active tab of w to "' .. pages[1] .. '"'}
+      for i = 2, #pages do
+        table.insert(src, 'tell w to make new tab with properties {URL:"' .. pages[i] .. '"}')
+      end
+      table.insert(src, 'end tell')
+      FD.runTask("/usr/bin/osascript", {"-e", table.concat(src, "\n")})
+    elseif B and B.kind == "safari" then
+      local src = {'tell application "' .. B.as .. '"',
+                   'make new document with properties {URL:"' .. pages[1] .. '"}'}
+      for i = 2, #pages do
+        table.insert(src, 'tell front window to make new tab at end of tabs with properties {URL:"' .. pages[i] .. '"}')
+      end
+      table.insert(src, 'end tell')
+      FD.runTask("/usr/bin/osascript", {"-e", table.concat(src, "\n")})
+    else
+      local args = {"-g", "-b", it.bid}
+      for _, p in ipairs(pages) do table.insert(args, p) end
+      FD.runTask("/usr/bin/open", args)
+    end
+  elseif it.site then
     if not it.site:match("^[%w%.%-]+$") then return end
     local url = "https://" .. it.site .. "/"
     if B and FD.OPEN_SITE[B.kind] then

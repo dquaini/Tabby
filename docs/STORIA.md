@@ -73,4 +73,6 @@ v9.21: Calendario veloce non più tagliato (680x520, la misura minima che accett
     le app veloci che si allargano da sole vengono riportate dentro lo schermo).
 v9.22: codice diviso in 15 file (cartella tabby/) con uno spazio comune di nomi:
     niente più limite dei 200 nomi locali; tabby.lua carica i file in ordine.
+v9.23: cartelle: una finestra di Chrome/Safari con più pagine si ricorda con le sue
+    pagine (senza ?/#) e, attivando la cartella, si riapre con tutte le pagine.
 ```

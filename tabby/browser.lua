@@ -375,7 +375,7 @@ end
 -- finestra (titoli uguali: "Download", "Download (2)"). La prima finestra (la
 -- più vecchia) ha come chiave il bundle ID dell'app, così resta al posto
 -- dell'app (preferite, notifiche del Dock); le altre "win:<numero>".
-function windowTabs(app, b, wins, add, appTitle, titles)
+function windowTabs(app, b, wins, add, appTitle, titles, urlsOf)
   local seen = {}
   for n, w in ipairs(wins) do
     local name = appTitle
@@ -385,7 +385,8 @@ function windowTabs(app, b, wins, add, appTitle, titles)
       name = seen[base] > 1 and (base .. " (" .. seen[base] .. ")") or base
     end
     add({key = (n == 1) and b or ("win:" .. w:id()), bid = b, app = app,
-         win = w, name = name, primary = (n == 1)})
+         win = w, name = name, primary = (n == 1), urls = urlsOf and urlsOf[w:id()],
+         title = windowName(titles and titles[w:id()] or w:title(), appTitle)})
   end
 end
 
@@ -449,7 +450,7 @@ function browserTabs(app, b, B, wins, add)
   table.sort(wins, function(x, y) return x:id() < y:id() end)
   local info = T.binfo[b]
   local matched, how = matchBrowserWindows(wins, info)
-  local plain, names = {}, {}
+  local plain, names, urlsOf = {}, {}, {}
   -- Memoria per finestra: l'ultima descrizione riconosciuta. La risposta del
   -- browser arriva in parallelo e può essere vecchia di qualche secondo: se nel
   -- frattempo titolo e posizione sono cambiati (Meet e Gmail cambiano titolo di
@@ -477,6 +478,7 @@ function browserTabs(app, b, B, wins, add)
     -- il titolo come lo dà il browser (senza il nome del profilo)
     local title = found and found.name or w:title() or ""
     names[w:id()] = title
+    if found then urlsOf[w:id()] = found.urls end   -- per le cartelle (finestra con più pagine)
     local site = found and siteOf(found.urls)
     -- diagnosi (solo se il browser risponde ad AppleScript, e solo se il
     -- risultato cambia)
@@ -507,5 +509,5 @@ function browserTabs(app, b, B, wins, add)
   T.minisOf[b] = next(minis) and minis or nil
   T.minis = {}
   for _, m in pairs(T.minisOf) do for id, w in pairs(m) do T.minis[id] = w end end
-  windowTabs(app, b, plain, add, B.short, names)
+  windowTabs(app, b, plain, add, B.short, names, urlsOf)
 end

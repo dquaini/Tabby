@@ -38,9 +38,10 @@ schermo diviso in zone (nel codice "gruppo").
   cartelle), con l'aiuto della console.
 
 ### 2. Cartelle, seconda parte
-- **Finestra di browser con più siti** dentro una cartella: si ricordano le pagine (indirizzo
-  senza la parte dopo "?", dove possono finire codici di accesso) e si riaprono come schede di
-  una finestra (Chrome/Safari; con DuckDuckGo come schede in una finestra esistente).
+- ✅ **Finestra di browser con più siti** dentro una cartella (v9.23): si ricordano le pagine
+  (senza la parte dopo "?" e "#") e si riaprono come schede di una finestra nuova (Chrome,
+  Safari). DuckDuckGo non dice gli indirizzi delle sue schede: una sua finestra resta
+  "DuckDuckGo" (si riapre il browser, non le pagine).
 - Trascinare una scheda sopra la scheda-cartella per aggiungerla (da confermare con Daniele
   se serve: oggi si aggiunge da ⚡︎ → Modifica le cartelle).
 
