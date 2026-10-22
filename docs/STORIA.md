@@ -81,4 +81,6 @@ v9.24: cartelle, i casi della mappa: ogni voce prende una sola finestra, quella
     "Aggiorna con le schede di adesso".
 v9.25: ⌃⌥W chiude la finestra attiva (non l'app); le righe di diagnosi non possono
     più bloccare Tabby se il Terminale collegato si interrompe.
+v9.26: chiusa l'ultima finestra della scheda attiva (⌃⌥W o ✕) si passa alla scheda a
+    sinistra (a destra se era la prima), non al desktop vuoto.
 ```

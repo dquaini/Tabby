@@ -31,11 +31,13 @@ function openCloseMenu(i)
   local main = t.win or app:mainWindow() or app:focusedWindow() or wins[1]
 
   local items = {}
+  -- se è la scheda attiva, dopo la chiusura si passa a quella accanto
+  local neighbor = (activeIndex() == i) and neighborOfActive() or nil
   if main then
     local title = shorten(main:title(), 40)
     table.insert(items, {
       title = title and ("Chiudi finestra  “" .. title .. "”") or "Chiudi finestra",
-      fn = function() main:close(); scheduleRebuild() end,
+      fn = function() main:close(); scheduleRebuild(); afterCloseGoTo(neighbor) end,
     })
   end
   if t.bid == FINDER then
@@ -43,7 +45,7 @@ function openCloseMenu(i)
   else
     table.insert(items, {
       title = "Chiudi " .. appName(t.bid, app),   -- l'app intera (es. Chrome, non Gmail)
-      fn = function() app:kill(); scheduleRebuild() end,
+      fn = function() app:kill(); scheduleRebuild(); afterCloseGoTo(neighbor) end,
     })
   end
   popup(items, T.closePos[i])
@@ -60,8 +62,37 @@ function closeActiveWindow()
   local b = a and a:bundleID()
   if not w or not b or IGNORE[b] or FLOATER[b] or not w:isStandard() then return end
   print(string.format("Tabby · ⌃⌥W: chiudo la finestra «%s» di %s", tostring(w:title()), tostring(a:name())))
+  local neighbor = neighborOfActive()
   w:close()
   scheduleRebuild()
+  afterCloseGoTo(neighbor)
+end
+
+-- La scheda accanto a quella attiva: a sinistra, o a destra se è la prima
+function neighborOfActive()
+  local ai = activeIndex()
+  local t = ai and (T.tabs[ai - 1] or T.tabs[ai + 1])
+  return t and t.key
+end
+
+-- Dopo aver chiuso la scheda attiva: se dell'app non resta nessuna finestra in
+-- vista (e "Mostra anche app aperte senza finestre" è spento), passa alla scheda
+-- accanto invece di lasciare il desktop vuoto. Se resta una finestra della
+-- stessa app (anche ridotta: la riapre T.restoreAfterClose), resta lei.
+function afterCloseGoTo(neighborKey)
+  if not neighborKey or S.showWindowless then return end
+  hs.timer.doAfter(0.6, function()
+    local fw = hs.window.focusedWindow()
+    if fw and fw:isStandard() and not fw:isMinimized() and not T.isFloating(fw) then return end
+    rebuildTabs()
+    for i, t in ipairs(T.tabs) do
+      if t.key == neighborKey then
+        print("Tabby · chiusa l'ultima finestra: passo alla scheda «" .. tostring(t.name) .. "»")
+        switchTo(i)
+        return
+      end
+    end
+  end)
 end
 
 

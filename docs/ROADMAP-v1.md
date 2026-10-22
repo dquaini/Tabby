@@ -83,13 +83,20 @@ schermo diviso in zone (nel codice "gruppo").
 ## 📥 In attesa (da collocare)
 
 - **Gesti del trackpad** (22/10): un gesto per passare alla scheda dopo/prima e uno per
-  tornare alla scheda di prima (come ⌃⌥→ / ⌃⌥←, ⌃⌥Tab). Da verificare cosa si può: i gesti
-  a 3-4 dita li usa già macOS (Mission Control, cambio scrivania); Hammerspoon vede alcuni
-  gesti ma non tutti. Possibilità: scorrimento a due dita sopra la barra di Tabby, o gesti
-  liberati togliendoli a macOS (Impostazioni → Trackpad).
+  tornare alla scheda di prima (come ⌃⌥→ / ⌃⌥←, ⌃⌥Tab). **Esplorato il 23/10**: Tabby vede i
+  tocchi con 1-4 dita (eventi "gesture" con l'elenco dei tocchi), gli scorrimenti e il
+  pizzico. Un gesto a 3-4 dita già usato da macOS lo farebbero entrambi: va tolto a macOS
+  (Impostazioni → Trackpad → Altri gesti). Proposta da decidere con Daniele.
 - ✅ **Chiudere la finestra senza chiudere l'app** (22/10): **⌃⌥W** (fatto in v9.25).
 
-- **Icone della barra dei menu dentro Tabby** (22/10): le icone in alto a destra di macOS
+- **Icone della barra dei menu dentro Tabby** (22/10). **Esplorato il 23/10** sul Mac: le
+  hanno Centro di Controllo (batteria, Wi-Fi, Bluetooth, audio/video, orologio), Spotlight,
+  Claude, Proton VPN, Hammerspoon, Notion (solo quando l'app è aperta); tutte si possono
+  "premere" (AXPress). Notion apre un menu leggibile con azioni e scorciatoie (Toggle Command
+  Search ⌘⇧K, Toggle Notion AI ⌘⇧J); Claude apre qualcosa che non è un menu leggibile
+  (chat rapida); Proton VPN apre un pannello. Due tipi di azioni in ⚡︎: (1) aprire l'icona
+  di un'app (serve che l'icona resti nella barra di Apple, anche nascosta); (2) lanciare
+  direttamente un'azione con scorciatoia (funziona anche togliendo l'icona). Testo originale: le icone in alto a destra di macOS
   (Notion, Claude, VPN, Bluetooth, Wi-Fi…) nel menu ⚡︎ con una scorciatoia ciascuna.
   Obiettivo di Daniele: *in Tabby tutto ciò che è possibile, nella barra dei menu di Apple
   solo il resto.* Tecnicamente: Tabby le legge e le "preme" con l'Accessibilità
