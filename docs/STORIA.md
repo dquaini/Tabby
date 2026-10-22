@@ -105,4 +105,5 @@ v9.35: schermo intero: Tabby chiede a macOS il tipo di scrivania e sparisce subi
     v9.34 la lasciava visibile); in Gestisci le app "solo icona" sono segnalate.
 v9.36: schermo intero: Tabby sparisce al gesto (clic sul pallino verde, ⌃⌘F), prima
     dell'animazione; console con l'ora al millesimo di ogni passaggio.
+v9.37: con Tabby a destra o a sinistra, in cima il gatto intero (disegni di Daniele).
 ```

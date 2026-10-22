@@ -35,6 +35,15 @@ T.dir = TABBY_DIR   -- la cartella di Tabby (la passa tabby.lua)
 if T.dir and hs.image.imageFromPath then
   T.catOff = hs.image.imageFromPath(T.dir .. "/assets/gatto-spento.png")
   T.catOn  = hs.image.imageFromPath(T.dir .. "/assets/gatto-acceso.png")
+  -- con Tabby a destra o a sinistra c'è spazio per il gatto intero (disegni di
+  -- Daniele): a destra guarda verso sinistra (verso le app), a sinistra il contrario
+  T.catFull = {}
+  for _, side in ipairs({"destra", "sinistra"}) do
+    T.catFull[side] = {
+      off = hs.image.imageFromPath(T.dir .. "/assets/gatto-intero-" .. side .. "-spento.png"),
+      on  = hs.image.imageFromPath(T.dir .. "/assets/gatto-intero-" .. side .. "-acceso.png"),
+    }
+  end
 end
 
 -- Impostazioni salvate (restano anche dopo riavvio)

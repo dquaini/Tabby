@@ -112,6 +112,14 @@ end
 -- Dove va ogni pezzo di Tabby (orizzontale o verticale).
 -- Con tante app: prima le schede si stringono, poi diventano solo icona
 -- (tranne quella attiva), infine le ultime finiscono nel menu "+N".
+-- Il gatto intero per Tabby laterale (nil se Tabby è in alto/in basso o se
+-- manca l'immagine). on = scrivania attiva (gatto chiaro)
+function catFullImage(on)
+  if not isVertical() or not T.catFull then return nil end
+  local side = T.catFull[S.position == "left" and "sinistra" or "destra"]
+  return side and (on and side.on or side.off) or nil
+end
+
 function layout(bf, activeIdx)
   local L = {tabs = {}, dividers = {}}
   local n = #T.tabs
@@ -123,24 +131,26 @@ function layout(bf, activeIdx)
     local bottomY = h - BTN_W
     local batH    = bat and 30 or 0
     local third   = w / 3
-    L.desk     = {x = 0, y = 0, w = w, h = BTN_W}
+    -- in cima il gatto intero (se c'è l'immagine): un po' più di spazio
+    local deskH   = catFullImage(false) and 92 or BTN_W
+    L.desk     = {x = 0, y = 0, w = w, h = deskH}
     L.split    = {x = 0, y = bottomY, w = third, h = BTN_W}
     L.quick    = {x = third, y = bottomY, w = third, h = BTN_W}
     L.settings = {x = third * 2, y = bottomY, w = third, h = BTN_W}
     if bat then L.battery = {x = 0, y = bottomY - batH, w = w, h = batH} end
-    table.insert(L.dividers, {x = 8, y = BTN_W, w = w - 16, h = 1})
+    table.insert(L.dividers, {x = 8, y = deskH, w = w - 16, h = 1})
     table.insert(L.dividers, {x = 8, y = bottomY - batH, w = w - 16, h = 1})
     table.insert(L.dividers, {x = 8, y = bottomY, w = w - 16, h = 1})
     table.insert(L.dividers, {x = third, y = bottomY + 8, w = 1, h = BTN_W - 16})
     table.insert(L.dividers, {x = third * 2, y = bottomY + 8, w = 1, h = BTN_W - 16})
 
-    local start  = BTN_W + 6
+    local start  = deskH + 6
     -- vista cartella: in cima "← Tutte le schede" e il nome della cartella
     if T.viewFolder and FD.folderById(T.viewFolder) then
-      L.fback = {x = 0, y = BTN_W + 2, w = w, h = 26}
-      L.fhead = {x = 0, y = BTN_W + 28, w = w, h = 30}
-      table.insert(L.dividers, {x = 8, y = BTN_W + 60, w = w - 16, h = 1})
-      start = BTN_W + 66
+      L.fback = {x = 0, y = deskH + 2, w = w, h = 26}
+      L.fhead = {x = 0, y = deskH + 28, w = w, h = 30}
+      table.insert(L.dividers, {x = 8, y = deskH + 60, w = w - 16, h = 1})
+      start = deskH + 66
     end
     -- in fondo alle schede, la scheda "+" (apre Spotlight)
     local availH = bottomY - batH - 6 - start - MIN_ROW_H
@@ -364,7 +374,16 @@ draw = function()
       frame = {x = r.x + 4, y = r.y + 4, w = r.w - 8, h = r.h - 8}})
   end
   local cat = T.desktopMode and T.catOn or T.catOff
-  if cat then
+  local full = catFullImage(T.desktopMode)
+  if full then
+    -- il gatto intero, il più grande possibile nello spazio in cima
+    local sz = full:size()
+    local maxW, maxH = r.w - 28, r.h - 16
+    local k = math.min(maxW / sz.w, maxH / sz.h)
+    local iw, ih = sz.w * k, sz.h * k
+    table.insert(els, {type = "image", image = full, imageScaling = "scaleProportionally",
+      frame = {x = cx - iw / 2, y = cy - ih / 2, w = iw, h = ih}})
+  elseif cat then
     local sz = vertical and 26 or 24
     table.insert(els, {type = "image", image = cat, imageScaling = "scaleProportionally",
       frame = {x = cx - sz / 2, y = cy - sz / 2, w = sz, h = sz}})
