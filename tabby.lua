@@ -1,5 +1,5 @@
 -- =====================================================================
---  TABBY  ·  v9.12
+--  TABBY  ·  v9.13
 --  Una barra con una scheda per ogni app: ne vedi una alla volta,
 --  clicchi (o premi Ctrl+Option+1…9) per passare all'altra.
 --
@@ -50,6 +50,8 @@
 --      (v9.12.1: il velo restava trasparente per due dissolvenze ravvicinate;
 --      v9.12.2: velo all'85%, il testo dietro non si legge più;
 --      v9.12.3: il velo sparisce subito quando Spotlight si chiude)
+--  v9.13: Chrome con più finestre: niente più schede scambiate (la sola
+--      posizione non distingue finestre che Tabby adatta allo stesso spazio).
 -- =====================================================================
 
 
@@ -836,24 +838,40 @@ local function windowTabs(app, b, wins, add, appTitle, titles)
   end
 end
 
--- Abbina le finestre sullo schermo a quelle descritte dal browser, in tre
--- passaggi: 1) stessa posizione e misura (la più sicura, se la risposta è
--- fresca); 2) stesso titolo; 3) il titolo sullo schermo inizia con quello del
--- browser (Chrome con più profili aggiunge il nome del profilo: "Gmail - Lavoro").
--- Una finestra piccola si abbina solo per posizione: il video in miniatura di
--- Meet ha lo stesso titolo della pagina e "ruberebbe" l'abbinamento.
+-- Abbina le finestre sullo schermo a quelle descritte dal browser, dal modo
+-- più sicuro al meno sicuro:
+--  1) stesso titolo E stessa posizione/misura
+--  2) titolo che inizia con quello del browser E stessa posizione (Chrome con
+--     più profili, o col nome "Google Chrome", allunga il titolo: "Gmail - Lavoro")
+--  3) stesso titolo  ·  4) titolo che inizia uguale  (solo finestre grandi: il
+--     video in miniatura di Meet ha lo stesso titolo della pagina)
+--  5) solo posizione, ma solo se è unica: Tabby adatta le finestre tutte allo
+--     stesso spazio, quindi di solito la posizione da sola NON le distingue
+--     (difetto della v9.10: Sofascore e Google scambiate)
 local function matchBrowserWindows(wins, info)
   local found, how, used = {}, {}, {}
+  info = info or {}
   local A = appArea()
   local function small(w)
     local f = w:frame()
     return f.w < A.w * 0.5 and f.h < A.h * 0.6
   end
+  local function samePlace(w, e)
+    local f, r = w:frame(), e.bounds
+    return r ~= nil and math.abs(f.x - r.x) < 4 and math.abs(f.y - r.y) < 4
+       and math.abs(f.w - r.w) < 4 and math.abs(f.h - r.h) < 4
+  end
+  local function sameTitle(w, e) return e.name == (w:title() or "") end
+  local function startsTitle(w, e)
+    local t = w:title() or ""
+    return e.name ~= "" and #t > #e.name and t:sub(1, #e.name) == e.name
+       and t:sub(#e.name + 1, #e.name + 1) == " "
+  end
   local function pass(label, test, bigOnly)
     for i, w in ipairs(wins) do
       if not found[i] and not (bigOnly and small(w)) then
-        for k, e in ipairs(info or {}) do
-          if not used[k] and test(w, e) then
+        for k, e in ipairs(info) do
+          if not used[k] and test(w, e, i, k) then
             used[k], found[i], how[i] = true, e, label
             break
           end
@@ -861,17 +879,20 @@ local function matchBrowserWindows(wins, info)
       end
     end
   end
-  pass("posizione", function(w, e)
-    local f, r = w:frame(), e.bounds
-    return r ~= nil and math.abs(f.x - r.x) < 4 and math.abs(f.y - r.y) < 4
-       and math.abs(f.w - r.w) < 4 and math.abs(f.h - r.h) < 4
+  pass("titolo e posizione", function(w, e) return sameTitle(w, e) and samePlace(w, e) end)
+  pass("inizio del titolo e posizione", function(w, e) return startsTitle(w, e) and samePlace(w, e) end)
+  pass("titolo", sameTitle, true)
+  pass("inizio del titolo", startsTitle, true)
+  pass("posizione (unica)", function(w, e, i, k)
+    if not samePlace(w, e) then return false end
+    for i2, w2 in ipairs(wins) do
+      if i2 ~= i and not found[i2] and samePlace(w2, e) then return false end
+    end
+    for k2, e2 in ipairs(info) do
+      if k2 ~= k and not used[k2] and samePlace(w, e2) then return false end
+    end
+    return true
   end)
-  pass("titolo", function(w, e) return e.name == (w:title() or "") end, true)
-  pass("inizio del titolo", function(w, e)
-    local t = w:title() or ""
-    return e.name ~= "" and #t > #e.name and t:sub(1, #e.name) == e.name
-       and t:sub(#e.name + 1, #e.name + 1) == " "
-  end, true)
   return found, how
 end
 
@@ -3892,4 +3913,4 @@ T.badgeSig = badgeSig(T.badges)
 rebuildTabs()
 draw()
 handleActive(hs.application.frontmostApplication())
-hs.alert.show("Tabby v9.12 attiva")
+hs.alert.show("Tabby v9.13 attiva")
