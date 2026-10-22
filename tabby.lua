@@ -1,5 +1,5 @@
 -- =====================================================================
---  TABBY  ·  v9.18
+--  TABBY  ·  v9.19
 --  Una barra con una scheda per ogni app: ne vedi una alla volta,
 --  clicchi (o premi Ctrl+Option+1…9) per passare all'altra.
 --
@@ -60,6 +60,8 @@
 --      (scheda, scorciatoia, ⌘N), mai per i cambi di macOS: niente ping-pong.
 --  v9.17: Calendario veloce (⌃⌥A, piccolo in alto a destra); barra nera piena.
 --  v9.18: dopo il clic su una scheda la tastiera arriva davvero alla finestra (⌘F).
+--  v9.19: cambio di scheda più veloce (barra disegnata prima di adattare le
+--      finestre); la spia "lento" dice in quale passaggio va il tempo.
 -- =====================================================================
 
 
@@ -231,10 +233,19 @@ local function later(fn) hs.timer.doAfter(0, fn) end
 -- fa scattare anche la tastiera. Se un lavoro supera SLOW_MS lo scrive in
 -- console ("Tabby · lento: …"), al massimo una volta al minuto per lavoro.
 local SLOW_MS = 150
+-- segna la fine di un passaggio (per il dettaglio di "Tabby · lento")
+function Tabby.step(name)
+  local now = hs.timer.absoluteTime()
+  if Tabby.steps then
+    table.insert(Tabby.steps, {name = name, ms = (now - (Tabby.stepAt or now)) / 1e6})
+  end
+  Tabby.stepAt = now
+end
 local function timed(name, fn)
   return function(...)
     T.appMs = {}   -- tempo speso a chiedere le finestre a ogni app (vedi standardWindows)
     local t0 = hs.timer.absoluteTime()
+    T.steps, T.stepAt = {}, t0   -- passaggi segnati con T.step("nome")
     fn(...)
     local ms = (hs.timer.absoluteTime() - t0) / 1e6
     if ms > SLOW_MS then
@@ -246,7 +257,13 @@ local function timed(name, fn)
         local worst, wms = nil, 0
         for b, v in pairs(T.appMs) do if v > wms then worst, wms = b, v end end
         local who = (worst and wms > 40) and string.format(" (più lenta a rispondere: %s %.0f ms)", worst, wms) or ""
-        print(string.format("Tabby · lento: %s %.0f ms%s", name, ms, who))
+        -- dove è andato il tempo: i passaggi segnati, dal più lungo
+        local parts = {}
+        for _, st in ipairs(T.steps or {}) do
+          if st.ms >= 10 then table.insert(parts, string.format("%s %.0f", st.name, st.ms)) end
+        end
+        local detail = #parts > 0 and (" · passaggi (ms): " .. table.concat(parts, ", ")) or ""
+        print(string.format("Tabby · lento: %s %.0f ms%s%s", name, ms, who, detail))
       end
     end
   end
@@ -1492,9 +1509,9 @@ end
 
 -- Ricostruzione "ritardata": se arrivano tanti eventi insieme, la fa una volta sola
 T.rebuildTimer = hs.timer.delayed.new(0.3, timed("ricostruzione schede", function()
-  refreshBrowsers()
-  rebuildTabs()
-  draw()
+  refreshBrowsers(); T.step("browser")
+  rebuildTabs();     T.step("schede")
+  draw();            T.step("disegno")
 end))
 local function scheduleRebuild() T.rebuildTimer:start() end
 
@@ -1559,6 +1576,7 @@ end
 -- Quando un'app passa in primo piano (o cambia finestra in primo piano)
 local handleActive = timed("cambio di scheda", function(app)
   local bid = app and app:bundleID()
+  local drawn = false
   if bid and FLOATER[bid] then
     -- app veloce: non nasconde niente, si mette in alto a destra
     placeFloater(app)
@@ -1586,15 +1604,24 @@ local handleActive = timed("cambio di scheda", function(app)
     local cf = T.tabFolder[key] or (gk and T.tabFolder["g:" .. gk.id])
     if cf then T.folderLast[cf.id] = key end
     local g = T.memberOf[key]
+    T.step("preparazione")
     if g then
       -- scheda di un gruppo: si mostra tutto il gruppo, diviso come l'avevi messo
       g.focus = key
       layoutGroup(g)
+      T.step("vista divisa")
       hs.timer.doAfter(0.6, function()
         if T.memberOf[currentKey()] == g then layoutGroup(g) end
       end)
     else
       hideOthers({[bid] = true})
+      T.step("nascondi altre app")
+      -- La barra si ridisegna SUBITO, prima di toccare le finestre: dopo averle
+      -- ridimensionate l'app è occupata e ogni domanda a lei (es. "qual è la
+      -- finestra attiva?") aspetta in coda. Era ~600 ms a ogni cambio di scheda.
+      draw()
+      T.step("disegno")
+      drawn = true
       -- una scheda alla volta: le altre finestre della stessa app si riducono
       -- (solo se la finestra attiva è una finestra "vera", non un dialogo o una
       -- finestrella appena aperta che potrebbe essere il video di Meet)
@@ -1620,12 +1647,17 @@ local handleActive = timed("cambio di scheda", function(app)
           minimizeSiblings({[bid] = true}, {[fw:id()] = true})
         end
       end
+      T.step("riduci finestre")
       fitApp(app)
+      T.step("adatta finestre")
       -- alcune app creano le finestre con un attimo di ritardo
       hs.timer.doAfter(0.6, function() fitApp(app) end)
     end
   end
-  draw()
+  if not drawn then
+    draw()
+    T.step("disegno")
+  end
 end)
 
 local function afterFocus()
@@ -3619,6 +3651,10 @@ draw = function()
 end
 
 
+-- Per la diagnosi dal Terminale (hs -c): le funzioni del disegno
+T.diag = {draw = draw, layout = layout, activeIndex = activeIndex, badgeFor = badgeFor,
+          keyIcon = keyIcon, barFrame = barFrame, rebuildTabs = rebuildTabs}
+
 -- ---------------------------------------------------------------------
 --  "NASCONDI TABBY": APPARE PORTANDO IL MOUSE SUL BORDO DELLO SCHERMO
 -- ---------------------------------------------------------------------
@@ -3796,7 +3832,8 @@ T.allWins:subscribe(WF.windowTitleChanged, function() scheduleRebuild() end)
 -- Browser: titoli e siti cambiano mentre navighi → ricontrolla ogni 3 secondi
 T.browserTimer = hs.timer.doEvery(3, timed("controllo browser", function()
   if T.press or T.split or T.fedit then return end
-  if refreshBrowsers() then rebuildTabs(); draw() end
+  local changed = refreshBrowsers(); T.step("browser")
+  if changed then rebuildTabs(); T.step("schede"); draw(); T.step("disegno") end
 end))
 
 -- Notifiche: ricontrolla i numerini del Dock ogni 3 secondi
@@ -4048,4 +4085,4 @@ T.badgeSig = badgeSig(T.badges)
 rebuildTabs()
 draw()
 handleActive(hs.application.frontmostApplication())
-hs.alert.show("Tabby v9.18 attiva")
+hs.alert.show("Tabby v9.19 attiva")
