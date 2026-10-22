@@ -215,8 +215,6 @@ function behaviourMenu()
   return {
     {title = "Una scheda alla volta (nasconde le altre app e finestre)", checked = S.oneAtATime, fn = toggle("oneAtATime")},
     {title = "Adatta le finestre a Tabby", checked = S.fit, fn = toggle("fit", refit)},
-    {title = "Schermo intero con Tabby visibile (tasto verde)", checked = S.tabbyFullscreen,
-     fn = toggle("tabbyFullscreen")},
     {title = "Nascondi Tabby (appare col mouse sul bordo)", checked = S.autohide,
      fn = toggle("autohide", function() T.revealed = false; refit() end)},
     {title = "Mostra anche app aperte senza finestre", checked = S.showWindowless,

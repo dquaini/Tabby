@@ -145,23 +145,11 @@ T.badgeTimer = hs.timer.doEvery(3, timed("notifiche del Dock", function()
   end
 end))
 
-T.allWins:subscribe(WF.windowFullscreened, function(w)
-  if S.tabbyFullscreen and w then
-    -- tasto verde: invece dello schermo intero di macOS, riempi lo
-    -- spazio accanto a Tabby (o la zona, se l'app è in un gruppo)
-    hs.timer.doAfter(0.3, function()
-      w:setFullScreen(false)
-      hs.timer.doAfter(0.9, function()
-        local a = w:application()
-        local g = a and T.memberOf[T.winKey[w:id()] or a:bundleID()]
-        if g then layoutGroup(g) else fitWindow(w, true) end
-        w:focus()
-        updateFullscreen()
-      end)
-    end)
-  else
-    hs.timer.doAfter(0.8, updateFullscreen)
-  end
+-- Tasto verde: lo schermo intero normale di macOS (l'opzione "Schermo intero con
+-- Tabby visibile" è stata tolta il 23/10/2026: non funzionava con tutte le app;
+-- da riprendere più avanti, vedi roadmap)
+T.allWins:subscribe(WF.windowFullscreened, function()
+  hs.timer.doAfter(0.8, updateFullscreen)
 end)
 
 T.allWins:subscribe(WF.windowUnfullscreened, function(w)

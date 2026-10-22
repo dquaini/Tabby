@@ -105,12 +105,11 @@ Funzionano anche in app che catturano la tastiera (Claude, Windows App), con dop
 ### Aspetto e adattamento
 - Posizione: in alto, in basso, a sinistra, a destra.
 - "Nascondi Tabby": appare portando il mouse sul bordo.
-- Pallino verde (schermo intero) → l'app riempie lo spazio **con Tabby visibile** (opzione).
 - **Notch** (MacBook recenti): con barra dei menu nascosta Tabby occupa la fascia del
   notch e le schede ci saltano sopra; se il mouse va in cima, Tabby si fa da parte per la
   barra dei menu. Interruttore manuale "Usa la fascia del notch".
-- Impostazioni (⚙︎): Posizione · App preferite · Comportamento (una app alla volta,
-  adatta finestre, schermo intero con Tabby, nascondi Tabby, app senza finestre) ·
+- Impostazioni (⚙︎): Posizione · App preferite · Comportamento (una scheda alla volta,
+  adatta finestre, nascondi Tabby, app senza finestre, vista cartelle, gesti, velo) ·
   Chiudi tutte le app · Ricarica · Console.
 
 ## Cosa si può migliorare in quello che c'è
@@ -118,7 +117,6 @@ Funzionano anche in app che catturano la tastiera (Claude, Windows App), con dop
 **Esperienza**
 - Avvio a vuoto poco accogliente (→ schermata di partenza, roadmap v1).
 - Tabby non nasconde ancora da sola Dock e barra dei menu (→ configurazione guidata).
-- Pallino verde: piccolo "rimbalzo" (macOS entra ed esce dallo schermo intero).
 - Esc nella Calcolatrice non azzera più il conto (si usa il tasto C).
 - La fascia del notch resta vuota se Tabby non è in alto (limite di macOS per le finestre).
 

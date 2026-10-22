@@ -88,4 +88,6 @@ v9.27: gesti: tre dita a sinistra/destra = scheda dopo/prima; azioni rapide dell
 v9.28: ⌃⌥N/⌃⌥I: la scorciatoia di Notion parte quando hai lasciato ⌃⌥.
 v9.29: azioni rapide con lo sfondo oscurato come Spotlight; Notion dal menu della sua
     icona (le sue scorciatoie valgono solo dentro Notion).
+v9.30: Notion: il menu dell'icona si cerca più a lungo (icona nascosta), con diagnosi;
+    tolta l'opzione "Schermo intero con Tabby visibile" (tasto verde normale).
 ```

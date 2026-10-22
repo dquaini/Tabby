@@ -17,7 +17,6 @@ DEFAULTS = {
   fit             = true,    -- adatta le finestre a Tabby
   autohide        = false,   -- Tabby nascosta, appare col mouse sul bordo
   showWindowless  = false,   -- mostra anche app aperte ma senza finestre
-  tabbyFullscreen = true,    -- il tasto verde riempie lo spazio accanto a Tabby
   notchBand       = "auto",  -- Tabby nella fascia del notch: "auto" / "on" / "off"
   order           = {},      -- ordine delle schede (si aggiorna trascinandole)
   groups          = {},      -- gruppi di app con lo schermo diviso

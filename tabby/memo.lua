@@ -157,15 +157,38 @@ function runAppAction(a, retry)
       item:performAction("AXPress")
       -- Notion: dal menu dell'icona si preme la voce giusta ("Toggle Command Search")
       if a.menuItem then
-        hs.timer.doAfter(0.25, function()
-          local mi = findMenuItem(item, a.menuItem)
+        -- il menu può metterci un po' ad aprirsi (con l'icona nascosta dalla barra
+        -- di Apple): si cerca per un secondo e mezzo, nell'icona e nell'app
+        local axApp = hs.axuielement.applicationElement(app)
+        local t0 = hs.timer.secondsSinceEpoch()
+        local tries = 0
+        local function look()
+          tries = tries + 1
+          local mi = findMenuItem(item, a.menuItem) or findMenuItem(axApp, a.menuItem, true)
           if mi then
+            print(string.format("Tabby · azione «%s»: voce trovata dopo %.1f s", a.name, hs.timer.secondsSinceEpoch() - t0))
             mi:performAction("AXPress")
+          elseif tries < 15 then
+            hs.timer.doAfter(0.1, look)
           else
             hs.eventtap.keyStroke({}, "escape", 0)
-            print("Tabby · azione «" .. a.name .. "»: voce «" .. a.menuItem .. "» non trovata nel menu")
+            -- diagnosi: cosa c'è sotto l'icona e nell'app
+            local seen = {}
+            local function roles(el, depth)
+              if depth > 3 then return end
+              for _, c in ipairs(el:attributeValue("AXChildren") or {}) do
+                table.insert(seen, string.rep(">", depth) .. tostring(c:attributeValue("AXRole")) ..
+                  (c:attributeValue("AXTitle") and ("«" .. c:attributeValue("AXTitle") .. "»") or ""))
+                if #seen < 25 then roles(c, depth + 1) end
+              end
+            end
+            pcall(roles, item, 1)
+            local p = item:attributeValue("AXPosition")
+            print(string.format("Tabby · azione «%s»: voce «%s» non trovata (icona in %s,%s) · sotto l'icona: %s",
+              a.name, a.menuItem, tostring(p and p.x), tostring(p and p.y), table.concat(seen, " ")))
           end
-        end)
+        end
+        hs.timer.doAfter(0.1, look)
       end
     else
       print("Tabby · azione «" .. a.name .. "»: icona dell'app non trovata nella barra dei menu")
@@ -175,12 +198,13 @@ function runAppAction(a, retry)
 end
 
 -- Una voce nel menu (aperto) di un'icona della barra dei menu, dal titolo
-function findMenuItem(el, title)
+function findMenuItem(el, title, onlyMenus)
   for _, c in ipairs(el:attributeValue("AXChildren") or {}) do
     local role = c:attributeValue("AXRole")
     if role == "AXMenuItem" and c:attributeValue("AXTitle") == title then return c end
-    if role == "AXMenu" or role == "AXMenuItem" then
-      local found = findMenuItem(c, title)
+    -- onlyMenus: nell'app si guarda solo dentro i menu aperti (non nelle finestre)
+    if role == "AXMenu" or role == "AXMenuItem" or (not onlyMenus and role ~= "AXWindow") then
+      local found = (role == "AXMenu" or role == "AXMenuItem" or not onlyMenus) and findMenuItem(c, title, onlyMenus)
       if found then return found end
     end
   end

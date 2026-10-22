@@ -105,6 +105,10 @@ schermo diviso in zone (nel codice "gruppo").
 
 ## 🔭 Dopo la v1
 
+- **Schermo intero con Tabby visibile** (tolto il 23/10/2026): il tasto verde riempiva lo
+  spazio accanto a Tabby invece dello schermo intero di macOS, ma non funzionava con tutte
+  le app (rimbalzo). Da ripensare con calma.
+
 ### Automazione e agenti (secondo filone, deciso il 22/10/2026)
 - **"Apri all'avvio"** delle cartelle e altre automazioni (spazi di lavoro che si preparano
   da soli), pensate anche come azioni che un agente può usare.
