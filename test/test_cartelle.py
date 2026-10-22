@@ -4,6 +4,7 @@ caso B: sei altrove → scheda unica e resti dove sei), app chiuse che si aprono
 vista cartella, ⌃⌥⇧ + numero, Vista cartelle spenta, Esci / Chiudi cartella.
 """
 import os
+from aiuto import carica, codice
 import lupa.lua54 as l
 
 base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -41,7 +42,7 @@ MAKE_HOOK = function(src)
   WINFILTER.subs["created"](w)
 end
 ''')
-L.execute(open(base + '/tabby.lua').read())
+L.execute(carica(base))
 L.execute('FLUSH()')
 
 def ev(code): return L.execute('return ' + code)

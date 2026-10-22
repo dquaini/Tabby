@@ -1,9 +1,10 @@
 """Test notch (MacBook Air 13"): fascia del notch, macOS che spinge giù le finestre, schede che saltano il notch."""
 import os
+from aiuto import carica, codice
 import lupa.lua54 as l
 
 base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = open(base + '/tabby.lua').read()
+SRC = codice(base)
 
 def make(menu_hidden, notch, fy, push_down=False, extra=3):
     mock = open(base + '/test/mock_hs.lua').read()
@@ -26,7 +27,7 @@ def make(menu_hidden, notch, fy, push_down=False, extra=3):
     L.execute('print = function() end')
     L.execute('ADDAPP("com.apple.finder","Finder"); ADDAPP("com.tinyspeck.slackmacgap","Slack"); '
               'for k = 1, %d do ADDAPP("com.test.app"..k, "App "..k) end; FRONT = APPS[2]' % extra)
-    L.execute(SRC); L.execute('FLUSH()')
+    L.execute(carica(base)); L.execute('FLUSH()')
     return L
 
 def under_notch(L):

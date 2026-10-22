@@ -2,6 +2,7 @@
 Spotlight fuori dal menu ⚡︎, ⌃⌥ + numero sulla scheda-cartella, niente
 ridimensionamenti inutili."""
 import os
+from aiuto import carica, codice
 import lupa.lua54 as l
 
 base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -16,7 +17,7 @@ FRONT = NOTION
 KEYSTROKES = {}
 hs.eventtap.keyStroke = function(m, k) KEYSTROKES[#KEYSTROKES+1] = table.concat(m, "+") .. "+" .. k end
 ''')
-L.execute(open(base + '/tabby.lua').read())
+L.execute(carica(base))
 L.execute('FLUSH()')
 def ev(code): return L.execute('return ' + code)
 def run(code): L.execute(code); L.execute('FLUSH()')

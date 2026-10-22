@@ -4,6 +4,7 @@
 3. loghi dei siti: se manca internet si riprova più tardi (non mai più)
 """
 import os
+from aiuto import carica, codice
 import lupa.lua54 as l
 
 base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -22,7 +23,7 @@ SAFARI = ADDBROWSER("com.apple.Safari", "Safari", {
 })
 FRONT = APPS[2]
 ''')
-L.execute(open(base + '/tabby.lua').read())
+L.execute(carica(base))
 L.execute('FLUSH()')
 
 def ev(code): return L.execute('return ' + code)

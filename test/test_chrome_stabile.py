@@ -1,6 +1,7 @@
 """Chrome: le webapp non devono "lampeggiare" (icona del sito che va e viene) quando
 il titolo cambia e la finestra si sposta prima che Chrome risponda di nuovo."""
 import os
+from aiuto import carica, codice
 import lupa.lua54 as l
 
 base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -18,7 +19,7 @@ CHROME._wins[1]._asName = "Meet - abc-defg-hij"
 CHROME._wins[2]._asName = "(3) Posta in arrivo - Gmail"
 FRONT = APPS[1]
 ''')
-L.execute(open(base + '/tabby.lua').read())
+L.execute(carica(base))
 L.execute('FLUSH()')
 def ev(code): return L.execute('return ' + code)
 def keys(): return ev('(function() local o = {} for _, t in ipairs(Tabby.tabs) do o[#o+1] = t.key end return table.concat(o, ",") end)()')

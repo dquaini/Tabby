@@ -1,12 +1,13 @@
 """Test DuckDuckGo (Accessibilità, ricordo da nascosto, loghi di riserva), nomi delle webapp, Memo su file."""
 import os, tempfile
+from aiuto import carica, codice
 import lupa.lua54 as l
 
 base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 home = tempfile.mkdtemp()
 os.makedirs(os.path.join(home, "Documents"))
 os.environ["HOME"] = home
-SRC = open(base + '/tabby.lua').read()
+SRC = codice(base)
 
 mock = open(base + '/test/mock_hs.lua').read()
 mock = mock.replace("axuielement = {applicationElement = function()", '''axuielement = {
@@ -35,7 +36,7 @@ FAVICON_FAIL = "ip3/mail.proton.me"
 PRINTS = {}
 print = function(...) local t = {} for i = 1, select("#", ...) do t[#t+1] = tostring(select(i, ...)) end PRINTS[#PRINTS+1] = table.concat(t, " ") end
 ''')
-L.execute(SRC); L.execute('FLUSH()')
+L.execute(carica(base)); L.execute('FLUSH()')
 names = lambda: L.execute('local o = {} for _, t in ipairs(Tabby.tabs) do o[#o+1] = t.name end return table.concat(o, "|")')
 
 ok = True
@@ -55,7 +56,7 @@ return out''')
 check("privacy: in console e in memoria solo il sito, non l'indirizzo completo",
       "/u/0/inbox" not in leak and "wiki/Gatto" not in leak and "https://mail.proton.me/" in leak)
 
-a = SRC.index("local function siteName(title, dom)"); b = SRC.index("\nend", a) + 4
+a = SRC.index("function siteName(title, dom)"); b = SRC.index("\nend", a) + 4
 N = l.LuaRuntime(); N.execute(SRC[a:b] + "\nSN = siteName")
 for title, dom, want in [("Proton Mail", "mail.proton.me", "Proton Mail"), ("Inbox (3) - io@gmail.com - Gmail", "mail.google.com", "Gmail"),
                          ("Notion – La mia pagina", "notion.so", "Notion"), ("(2) WhatsApp", "web.whatsapp.com", "WhatsApp"),

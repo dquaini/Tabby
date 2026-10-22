@@ -2,6 +2,7 @@
 anche quando il titolo sullo schermo non coincide con quello di AppleScript
 (più profili: "Gmail - Lavoro"), e diagnosi in console se AppleScript non risponde."""
 import os
+from aiuto import carica, codice
 import lupa.lua54 as l
 
 base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -26,7 +27,7 @@ CHROME._wins[4]._asName = "Slack | generale | Azienda"
 for i, w in ipairs(CHROME._wins) do w._frame = {x = 10 * i, y = 40 + i, w = 900 + i, h = 700} end
 FRONT = APPS[1]
 ''')
-L.execute(open(base + '/tabby.lua').read())
+L.execute(carica(base))
 L.execute('FLUSH()')
 
 def ev(code): return L.execute('return ' + code)
@@ -81,10 +82,10 @@ L.execute('AS_DENIED = false; AS_TIMEOUT = nil; Tabby.rebuildTimer:start(); FLUS
 check("permesso dato: tornano le webapp", ev('Tabby.cand["site:mail.google.com"] ~= nil') is True)
 
 print("\n== Velocità e script")
-src = open(base + '/tabby.lua').read()
+src = codice(base)
 check("la domanda a Chrome parte in parallelo (Tabby non resta ferma ad aspettare)",
       "hs.osascript.applescript(" not in src and ev('(TASKS or 0) > 0') is True)
-script = src[src.index("local AS_WINDOWS = [["):]
+script = src[src.index("AS_WINDOWS = [["):]
 script = script[:script.index("]]")]
 check("lo script non usa la parola «tab» come separatore (dentro Chrome è la scheda)",
       "& TB" in script and "& tab" not in script)

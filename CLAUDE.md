@@ -22,16 +22,25 @@ Prima di lavorare leggi:
 
 ## Come è fatto il progetto
 
-- `tabby.lua` — tutto Tabby, un solo file Lua per **Hammerspoon** (~2700 righe,
-  commenti in italiano). Sezioni principali (cerca i titoli `--  NOME`):
-  IMPOSTAZIONI DI BASE (config in cima) · BROWSER · NOTIFICHE · ORDINE DELLE SCHEDE E
-  GRUPPI · FINESTRE · PASSARE DA UNA SCHEDA ALL'ALTRA · MEMO · GRUPPI · DIVIDI LO
-  SCHERMO · TRASCINARE LE SCHEDE · MENU · DISEGNO DI TABBY · NASCONDI TABBY ·
-  OSSERVATORI · SCORCIATOIE · AVVIO.
+- `tabby.lua` — il punto di partenza (lo carica Hammerspoon): numero di versione e
+  caricamento, in ordine, dei file della cartella **`tabby/`** (commenti in italiano):
+  `impostazioni` (config: app veloci, browser, schemi, misure, colori) · `base` (stato T,
+  impostazioni S, schermo, notch, utilità) · `browser` · `notifiche` · `schede` (ordine,
+  ricette delle cartelle, `rebuildTabs`) · `finestre` (adattare, nascondere, passare da una
+  scheda all'altra) · `memo` · `dividi` (vista divisa) · `cartelle` · `trascina` · `menu` ·
+  `disegno` · `osservatori` · `scorciatoie` · `avvio`.
+- **Come si scrive codice nei file di `tabby/`**: tutti condividono uno **spazio comune di
+  nomi** (tabella `E`, `Tabby._env`). A livello del file si scrive `function nome()` /
+  `nome = …` **senza `local`**: così il nome si usa direttamente negli altri file e non c'è
+  il limite di Lua dei 200 nomi locali (che il file unico aveva quasi raggiunto). `local`
+  solo dentro le funzioni, o per cose davvero private del file. L'ordine di `FILES` in
+  `tabby.lua` conta: una funzione si può *chiamare* solo dopo che il suo file è caricato.
+  Diagnosi dal Terminale: `hs -c "Tabby._env.nomeFunzione(...)"` o `Tabby.diag`.
 - `test/` — il **Mac simulato**: `mock_hs.lua` è un finto Hammerspoon (app, finestre,
   canvas, timer, tastiera, AppleScript, Accessibilità, webview) in cui gira il vero
   `tabby.lua`; i `test_*.py` simulano l'uso (clic, trascinamenti, scorciatoie…).
-  Eseguili con `test/run_all.sh` (serve `pip3 install lupa`).
+  Eseguili con `test/run_all.sh` (serve `pip3 install lupa`). I test caricano Tabby con
+  `test/aiuto.py` (`carica`, e `codice` per i controlli sul testo).
 - Installazione sul Mac: `~/.hammerspoon/init.lua` deve caricare `tabby.lua` di questa
   cartella (vedi "Messa in funzione" sotto).
 
@@ -46,8 +55,7 @@ Prima di lavorare leggi:
   `T.cand` (tutte le schede possibili), `T.keyWin`, `T.winKey`, `T.keyBid`, `T.memberOf`.
 - `rebuildTabs()` ricostruisce le schede; `draw()` ridisegna la barra (un `hs.canvas`);
   `layout()` calcola le posizioni (orizzontale/verticale, compatto, "+N", notch).
-- **Cartelle** (v9.8): funzioni nella tabella `FD` (Lua ha un limite di 200 nomi locali
-  per file: non aggiungere altri `local` in cima, usa tabelle). `S.folders` = ricette
+- **Cartelle** (v9.8): funzioni nella tabella `FD`. `S.folders` = ricette
   (`items` = `{bid}` o `{site, bid}`), `S.activeFolders`, `T.viewFolder` (vista cartella),
   `T.allTabs` (tutte le schede) vs `T.tabs` (quelle visibili: su queste lavorano
   scorciatoie e clic), `T.tabFolder[chiave]`.
@@ -76,7 +84,7 @@ Prima di lavorare leggi:
    app veloci, `Tabby · lento:` per i lavori sopra i 150 ms): usale per capire problemi reali invece di tirare a indovinare.
 5. Non cambiare scorciatoie o comportamenti a cui l'utente è abituato senza dirlo.
 6. Usa git: un commit per ogni versione funzionante, messaggio in italiano. A ogni
-   versione: numero in testa a `tabby.lua` e nell'avviso finale (`hs.alert`), riga in
+   versione: numero in `tabby.lua` (in testa e nell'avviso `hs.alert` in fondo), riga in
    `docs/STORIA.md`, "Versione attuale" qui sotto.
 7. **GitHub** (privato: `git@github.com:dquaini/Tabby.git`, ramo `main`): all'inizio di
    ogni sessione `git pull` (l'altro Mac può aver aggiunto versioni); dopo ogni commit
@@ -110,5 +118,5 @@ GitHub, poi `git clone git@github.com:dquaini/Tabby.git` e `init.lua` che punta 
 
 ## Versione attuale
 
-**v9.21** (storia in `docs/STORIA.md`). Prossimo obiettivo: **Tabby v1** (A fatta; B Cartelle: base fatta in v9.8, restano "Apri all'avvio" e rifiniture)
+**v9.22** (storia in `docs/STORIA.md`). Prossimo obiettivo: **Tabby v1** (A fatta; B Cartelle: base fatta in v9.8, restano "Apri all'avvio" e rifiniture)
 (`docs/ROADMAP-v1.md`).

@@ -125,7 +125,7 @@ Funzionano anche in app che catturano la tastiera (Claude, Windows App), con dop
 - Rilevamento DuckDuckGo su siti diversi (righe `Tabby · DuckDuckGo` in console).
 
 **Codice**
-- Un solo file da ~2700 righe: dividerlo in moduli (`tabby/browser.lua`, `tabby/draw.lua`…).
+- ~~Un solo file: dividerlo in moduli~~ fatto in v9.22 (cartella `tabby/`).
 - Rinominare "gruppo" → "vista divisa" (`split`) nel codice; prefisso impostazioni `tabbar.`.
 - Polling ogni 3 s (AppleScript browser, notifiche Dock): valutare eventi o frequenze adattive.
 

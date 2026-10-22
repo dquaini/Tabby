@@ -1,5 +1,6 @@
 """Test v9: browser (webapp, Chrome A/B/C, permesso negato), notifiche, scorciatoie ⌃⌥ e riserva, console non ridimensionata."""
 import sys
+from aiuto import carica, codice
 import lupa.lua54 as l
 
 import os
@@ -21,8 +22,7 @@ ADDAPP("com.apple.Stickies", "Stickies")
 DOCK_BADGES = {["com.tinyspeck.slackmacgap"] = "5"}
 FRONT = APPS[2]
 ''')
-src = open(base + '/tabby.lua').read()
-L.execute(src)
+L.execute(carica(base))
 L.execute('FLUSH()')
 
 def ev(code): return L.execute('return ' + code)

@@ -1,6 +1,7 @@
 """Google Meet: la finestrella del video in miniatura (300x390, fuori dall'elenco di
 Chrome) non è una scheda, non si ridimensiona e resta visibile quando cambi app."""
 import os
+from aiuto import carica, codice
 import lupa.lua54 as l
 
 base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -16,7 +17,7 @@ CHROME = ADDBROWSER("com.google.Chrome", "Google Chrome", {
 CHROME._wins[1]._asName = "Meet - wan-eyrd-qih"
 FRONT = CHROME
 ''')
-L.execute(open(base + '/tabby.lua').read())
+L.execute(carica(base))
 L.execute('FLUSH()')
 def ev(code): return L.execute('return ' + code)
 def run(code): L.execute(code); L.execute('FLUSH()')

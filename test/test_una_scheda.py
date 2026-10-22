@@ -2,6 +2,7 @@
 vede solo quella scelta; le altre si riducono a icona e tornano quando le scegli.
 Restano insieme le finestre di una vista divisa e il video in miniatura di Meet."""
 import os
+from aiuto import carica, codice
 import lupa.lua54 as l
 
 base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -19,7 +20,7 @@ CHROME._wins[1]._asName = "Calcio | Sofascore"; CHROME._wins[2]._asName = "Posta
 SOFA, GMAIL = CHROME._wins[1], CHROME._wins[2]
 FRONT = FINDER
 ''')
-L.execute(open(base + '/tabby.lua').read())
+L.execute(carica(base))
 L.execute('FLUSH()')
 def ev(code): return L.execute('return ' + code)
 def run(code): L.execute(code); L.execute('FLUSH()')

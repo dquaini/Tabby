@@ -1,5 +1,6 @@
 """v1 · A: più schede per qualsiasi app (una scheda per finestra, nome = titolo)."""
 import os
+from aiuto import carica, codice
 import lupa.lua54 as l
 
 base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -17,7 +18,7 @@ table.insert(TE._wins, newWindow(TE, "Relazione — TextEdit"))
 table.insert(TE._wins, newWindow(TE, "Senza titolo"))
 FRONT = APPS[2]
 ''')
-L.execute(open(base + '/tabby.lua').read())
+L.execute(carica(base))
 L.execute('FLUSH()')
 
 def ev(code): return L.execute('return ' + code)

@@ -1,5 +1,6 @@
 """Test di base: schede, scorciatoie, viste divise (gruppi), riordino, tante app, posizioni."""
 import sys
+from aiuto import carica, codice
 import lupa.lua54 as l
 
 import os
@@ -15,8 +16,7 @@ ADDAPP("com.tinyspeck.slackmacgap", "Slack")
 FRONT = APPS[2]
 ''')
 
-src = open(base + '/tabby.lua').read()
-L.execute(src)
+L.execute(carica(base))
 L.execute('FLUSH()')
 
 def ev(code):

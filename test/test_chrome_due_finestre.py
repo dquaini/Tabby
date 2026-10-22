@@ -3,6 +3,7 @@ allo stesso spazio) e Chrome che le elenca in un altro ordine (prima quella in
 primo piano): ogni scheda deve restare con la sua finestra e il suo sito.
 Difetto visto sul Mac vero il 22/10/2026 (Sofascore e Google scambiate)."""
 import os
+from aiuto import carica, codice
 import lupa.lua54 as l
 
 base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -20,7 +21,7 @@ SOFA = CHROME._wins[1]
 SOFA._frame = {x = 0, y = 38, w = 1440, h = 862}
 FRONT = CHROME
 ''')
-L.execute(open(base + '/tabby.lua').read())
+L.execute(carica(base))
 L.execute('FLUSH()')
 def ev(code): return L.execute('return ' + code)
 def run(code): L.execute(code); L.execute('FLUSH()')

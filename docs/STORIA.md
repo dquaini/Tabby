@@ -71,4 +71,6 @@ v9.20: ottimizzazione: batteria letta solo quando cambia (prima ~30 ms a ogni
     storia delle versioni spostata in docs/STORIA.md.
 v9.21: Calendario veloce non più tagliato (680x520, la misura minima che accetta;
     le app veloci che si allargano da sole vengono riportate dentro lo schermo).
+v9.22: codice diviso in 15 file (cartella tabby/) con uno spazio comune di nomi:
+    niente più limite dei 200 nomi locali; tabby.lua carica i file in ordine.
 ```
