@@ -130,6 +130,14 @@ solo quello che non si può portare in Tabby.
 - "Apri all'avvio" e altre automazioni.
 
 ## Dopo la v1 (aggiunte)
+- **Finestre di dialogo col gatto, non con Hammerspoon** (richiesta del 22/10/2026): oggi le
+  domande di Tabby (nome della nuova cartella, rinomina, conferme come "Chiudi cartella")
+  usano le finestre di macOS di Hammerspoon, che mostrano il suo logo (il martello). Daniele
+  vuole l'icona di Tabby: la faccia del gatto bianca su **sfondo nero, quadrato con angoli
+  arrotondati e morbidi** (stile icona di app macOS). Come: Tabby non può cambiare l'icona di
+  Hammerspoon nelle finestre di sistema, quindi serve una finestra di dialogo tutta di Tabby
+  (come il Memo: una piccola pagina con campo di testo, tasti e icona del gatto). La stessa
+  icona servirà poi come icona dell'app Tabby. Da fare insieme al design.
 - **Batteria più compatta** (richiesta del 22/10/2026): sulla barra solo l'icona della
   batteria con l'indicatore di carica (colori come oggi); la percentuale compare portando il
   puntatore sopra l'icona. Libera spazio per le schede. Da fare insieme al design.
