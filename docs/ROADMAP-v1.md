@@ -1,217 +1,95 @@
 # Tabby v1 — roadmap
 
-Obiettivo: chiudere una **v1 solida** con questi cinque filoni, decisi insieme a Daniele
-il 20/10/2026. Ordine consigliato: **A → B → C → D → E** (ognuno prepara il successivo).
-
-Nomi decisi:
-- **Cartella** = insieme di schede con toggle aperta/chiusa (Lavoro, Studio…).
-- **Vista divisa** = schermo diviso in zone (oggi nel codice "gruppo").
+Aggiornata il 22/10/2026 con Daniele. Mission: lo spazio di lavoro per persone e agenti AI
+(vedi `PRODOTTO.md`). Nomi: **Cartella** = spazio di lavoro salvato; **Vista divisa** =
+schermo diviso in zone (nel codice "gruppo").
 
 ---
 
-## A. Più schede per qualsiasi app — ✅ fatta (v9.5)
+## ✅ Fatto (v9.4 → v9.18)
 
-Come è stata fatta: ogni finestra standard di ogni app è una scheda (anche con
-una sola finestra la scheda è legata a quella finestra); con 2+ finestre il nome è
-il titolo (senza il nome dell'app in fondo; doppioni → "(2)"); vale anche per le
-finestre normali dei browser (via le lettere A/B/C). Interruttore per app in
-⚙︎ → Finestre separate (spento = tutte le finestre in una scheda, come prima).
-Chiavi: la finestra più vecchia ha il bundle ID dell'app, le altre `win:<id>`; le
-viste divise seguono la finestra (`g.winOf`). Restano da fare per B: chiavi che
-sopravvivano al riavvio dell'app (oggi `win:<id>` si perde).
-
-Specifica originale:
-
-Oggi solo i browser hanno una scheda per finestra. Estendere a tutte le app
-(Finder, Word, Excel, Anteprima…).
-
-- Nome della scheda = **titolo della finestra** (nome del documento, della cartella del
-  Finder…), non lettere A/B/C. *(confermato)*
-- Evitare l'"esplosione" di schede: solo finestre standard; regola automatica (un'app
-  diventa "a finestre" quando ha ≥2 finestre standard) + **interruttore per app** in
-  impostazioni (es. "Finestre separate per: Finder ✓, Word ✓").
-- Chiavi stabili per finestra (oggi `win:<id>`): valutare come farle sopravvivere al
-  riavvio (titolo del documento?), servirà alle Cartelle.
-- Va bene con viste divise (una finestra di Word a sinistra, Chrome a destra).
-
-## B. Cartelle (il cuore della v1)
-
-### Rivista il 21/10/2026 con Daniele — questa versione prevale su quella sotto
-**Stato: base fatta in v9.8** (test `test/test_cartelle.py`). Correzioni di Daniele applicate:
-attivare non sposta (caso A: sei su una sua app → vista cartella, resti lì; caso B: sei
-altrove → scheda unica, resti lì); almeno 3 icone; un'app aperta fuori cartella si vede solo
-nella vista generale; creazione e attivazione tutte dal menu ⚡︎; ⌃⌥⇧+numero; Chiudi cartella.
-Da fare: "Apri all'avvio", trascinare una scheda sopra la scheda-cartella per aggiungerla.
-
-Una cartella è uno **spazio di lavoro salvato**: una scheda è in una cartella solo se
-ce l'hai messa tu. Prototipo cliccabile: `docs/prototipo-cartelle.html`.
-1. ⚙︎ → Cartelle → Nuova cartella → nome; sotto, un riquadro con già l'icona della
-   scheda attuale; ci si trascinano (o cliccano) altre schede; Fatto = salvata.
-2. Nel menu ⚡︎: iconcine + nome + scorciatoia della cartella.
-3. Attivarla (clic o scorciatoia): apre le app che mancano; quelle già aperte
-   entrano; le altre finestre si nascondono.
-4. Vista cartella: nome della cartella a sinistra (in alto se laterale), solo le sue
-   schede, tasto per tornare alla vista di prima.
-5. Fuori dalla vista, la cartella è **una scheda sola** con le iconcine (troppe →
-   solo la prima).
-6. ⚙︎ → Comportamento → **Vista cartelle** (confermato): spenta = le app della
-   cartella si aprono come schede normali.
-7. Le scorciatoie valgono solo su ciò che si vede in Tabby.
-Domande aperte (proposte nel prototipo): app aperta fuori cartella durante la vista;
-più cartelle insieme; scorciatoia ⌃⌥⇧+numero; cosa ricorda la cartella; "Chiudi cartella".
-
-### Prima versione (20/10)
-
-Idea di Daniele: come i gruppi di schede di Arc/Safari. "Lavoro" è una riga con toggle
-▸/▾: aperta mostra le sue schede (Notion, DuckDuckGo, Slack…), chiusa le raccoglie.
-**Le app restano sempre aperte**: la cartella cambia solo come le vedi.
-
-Decisioni:
-- **Una scheda sta in una sola cartella.** *(confermato)*
-- Schede fuori da ogni cartella = schede libere, come oggi.
-- Una cartella può contenere anche **viste divise**.
-- **Interruttore generale "Cartelle: attive / disattivate"** in impostazioni: spento →
-  tutte le schede si vedono sciolte. *(interpretazione di Claude da confermare con
-  Daniele: "mettiamo un interruttore cartella on/off così se uno la vuole divisa le vede
-  tutte divise")*
-- **"Chiudi cartella"** = chiude tutte le app della cartella (es. fine lavoro, ma resta
-  aperto il PDF che stai leggendo). *(confermato)*
-- **"Apri cartella"**: lancia le app della cartella che non sono aperte e apre i suoi
-  siti come webapp. Con Chrome/Safari: finestre nuove via AppleScript. **Con DuckDuckGo
-  non è possibile in modo affidabile** (niente AppleScript): documentare "funzione
-  completa con Chrome/Safari"; per DuckDuckGo valutare apertura come schede/`open -a`.
-- **"Apri all'avvio"** per ogni cartella: la mattina la cartella si prepara da sola.
-- La cartella ricorda la sua "ricetta": app (bundle ID), siti (URL), viste divise.
-
-Interfaccia:
-- **Configurazione dal tasto ⚡︎**: voce "Cartelle" → nuova cartella, rinomina, apri,
-  chiudi; si **trascinano le schede dentro** (stesso meccanismo delle zone). Anche
-  trascinando una scheda sopra una cartella direttamente sulla barra.
-- **Tabby laterale** (come la usa Daniele): riga cartella con ▸/▾, nome, numero schede;
-  aperta mostra le schede rientrate sotto.
-- **Tabby in alto/in basso**: la cartella è una scheda con ▸; cliccata **si apre in
-  linea** (le sue schede compaiono accanto, rientrate o con sfondo diverso); se manca
-  spazio → menu a tendina. *(confermato: "apertura in linea è top")*
-- Notifiche: la riga cartella mostra la somma (come le viste divise).
-- Scorciatoie: ⌃⌥numero conta le schede visibili; valutare ⌃⌥ + lettera per cartelle.
-
-## Giro di rifiniture (feedback di Daniele del 21/10/2026, prima di C)
-1. **Google Meet** fa "impazzire" Tabby (difetto, servono dettagli; sospetto: finestrelle
-   di Meet come condivisione schermo / video in miniatura trattate come finestre normali).
-2. **Scheda "+"** in fondo alle schede: apre Spotlight; Spotlight esce dal menu ⚡︎.
-   (Cambia la decisione D "nessun tasto +".) Da decidere: nella vista cartella l'app
-   aperta col + entra nella cartella (proposta).
-3. **Scambia** nella vista divisa: ruota le app tra le zone (2 = scambio). Tasto ⇄ sulla
-   scheda della vista divisa + ⌃⌥S (proposta; Daniele aveva detto "a caso").
-4. **Icona del gatto** al posto dello schermo (tasto scrivania): disegno di Daniele, senza
-   sfondo nero, colori di Tabby.
-5. Lentezze viste in console (DuckDuckGo con pagine complesse fino a 336 ms, cambio di
-   scheda fino a 595 ms; diagnosi DuckDuckGo troppo chiacchierona) + GitHub privato per
-   tenere uguali i due Mac.
-
-## Icone della barra dei menu dentro Tabby (richiesta del 22/10/2026)
-Le icone in alto a destra di macOS (Notion, Claude, VPN, riproduzione, Bluetooth, Wi-Fi,
-batteria, Centro di Controllo…) dentro il menu ⚡︎, ognuna con una scorciatoia; e possibilmente
-nascoste dalla barra dei menu di Apple, visibili solo in Tabby.
-**Obiettivo di Daniele:** in Tabby tutto ciò che è possibile; nella barra dei menu di Apple
-solo quello che non si può portare in Tabby.
-- **Leggerle e aprirle**: con l'Accessibilità ogni app espone le sue icone (AXExtrasMenuBar);
-  Tabby può elencarle e "premerle" per aprire il loro menu. Da provare sul Mac vero con la
-  barra dei menu nascosta: il menu potrebbe comparire in alto, sotto la barra che scende.
-- **Scorciatoie**: proposta ⌃⌥ + lettera scelta per ogni icona (o ⌃⌥⇧ + lettera).
-- **Nasconderle da Apple**: macOS 26 ha Impostazioni → Barra dei menu → "Consenti nella barra
-  dei menu" per ogni app. Rischio da verificare: un'icona spenta lì potrebbe sparire anche per
-  Tabby (non più "premibile"). Con la barra dei menu già nascosta (come la usa Daniele) il
-  problema pesa meno. Si decide dopo la prova.
-
-## Altri spunti dall'uso del 22/10/2026
-- **⌘F dopo il clic su una scheda** (corretto in v9.18: Tabby ricontrolla che la tastiera sia
-  sulla finestra scelta). Testo originale: ⌘F non arriva
-  all'app attiva. Da capire in quale caso (dopo un clic su una scheda? dopo un menu ⚡︎/⚙︎?)
-  e correggere: la tastiera deve sempre tornare alla finestra attiva.
-- **Scrivania**: quando si vede il desktop, Tabby non è più una barra ma un **pallino in basso
-  a destra** con l'icona del gatto; cliccato, riapre l'ultima app. (Oggi la barra sul desktop
-  "è integrata male".) Insieme all'avvio e al design.
-- **Calendario veloce** con ⌃⌥A (fatto in v9.17).
-
-## Cartelle, seconda parte (dopo C)
-- **Finestra di browser con più siti** dentro una cartella: ricordare l'elenco dei siti e
-  riaprirli come schede di una finestra (Chrome/Safari). Da decidere: siti o pagine esatte.
-- "Apri all'avvio" e altre automazioni.
-
-## Dopo la v1 (aggiunte)
-- **Finestre di dialogo col gatto, non con Hammerspoon** (richiesta del 22/10/2026): oggi le
-  domande di Tabby (nome della nuova cartella, rinomina, conferme come "Chiudi cartella")
-  usano le finestre di macOS di Hammerspoon, che mostrano il suo logo (il martello). Daniele
-  vuole l'icona di Tabby: la faccia del gatto bianca su **sfondo nero, quadrato con angoli
-  arrotondati e morbidi** (stile icona di app macOS). Come: Tabby non può cambiare l'icona di
-  Hammerspoon nelle finestre di sistema, quindi serve una finestra di dialogo tutta di Tabby
-  (come il Memo: una piccola pagina con campo di testo, tasti e icona del gatto). La stessa
-  icona servirà poi come icona dell'app Tabby. Da fare insieme al design.
-- **Batteria più compatta** (richiesta del 22/10/2026): sulla barra solo l'icona della
-  batteria con l'indicatore di carica (colori come oggi); la percentuale compare portando il
-  puntatore sopra l'icona. Libera spazio per le schede. Da fare insieme al design.
-- **Design di Tabby e colori a scelta** (un unico filone, richiesta del 22/10/2026):
-  rivedere l'aspetto di Tabby nel suo insieme (schede, icone, tasti, menu, riquadri delle
-  cartelle e della vista divisa, velo di Spotlight) con un'identità coerente partendo dal
-  gatto; poi temi/colori a scelta. I colori sono già tutti nella tabella `COL`. Prima un
-  prototipo cliccabile, come per le cartelle.
-
-## C. Avvio e schermata di partenza
-### Versione 2 (22/10/2026, dopo il prototipo) — prevale su tutto quanto sotto
-1. All'avvio di Tabby: schermata **nera** a tutto schermo, al centro l'**animazione di Daniele
-   (circa 10 s)**; intanto Tabby carica quello che serve.
-2. Finita la prima animazione, un clic fa partire una **seconda animazione**; alla fine al
-   centro resta **solo il riquadro tratteggiato** (nessun logo, nessuna icona).
-3. Clic sul riquadro: **primo accesso** → Spotlight; **dalle volte successive** → un pannello
-   con le cartelle impostate; se non ce ne sono, un pulsante che apre Spotlight.
-4. Sfondo nero; anche la barra di Tabby nera piena (fatto in v9.17).
-5. Nella pagina iniziale solo animazione + riquadro, più in alto a destra l'**icona bianca
-   delle impostazioni**.
-6. Scelta la prima app, Tabby parte con barra e scorciatoie (prima no).
-Animazioni: le fornisce Daniele (da chiedere formato: video MP4/WebM, GIF o Lottie).
-
-### Versione 1 (22/10/2026, prototipo `docs/prototipo-avvio.html`)
-Prototipo: `docs/prototipo-avvio.html`. All'avvio Tabby si apre come un'app a tutto schermo:
-logo del gatto (quadrato nero, angoli morbidi) animato al centro; finita l'animazione, un clic
-scopre al centro: **primo avvio** → quadratino tratteggiato con + (apre Spotlight, scegli
-un'app, parte Tabby come oggi); **volte successive** → le cartelle (icone, nome, scorciatoia)
-e la scheda Spotlight. Fattibile con una pagina a tutto schermo come il Memo (hs.webview).
-Proposte da confermare: compare solo all'avvio (non ai ricaricamenti); Esc salta; un tasto
-vale come clic; il gatto della barra, senza app aperte, riporta a questa schermata.
-
-
-Problema: con nessuna scheda aperta Tabby è "vuota" e non accoglie.
-
-- **Schermata di partenza** (come la "nuova scheda" del browser) quando non c'è nulla
-  aperto o si è sulla scrivania: pannello al centro con saluto, **cartelle** (cliccabili:
-  aprono la cartella), app preferite.
-- **Configurazione guidata al primo avvio**: permessi (Accessibilità, Automazione per i
-  browser), barra dei menu e Dock nascosti (applicati da Tabby con consenso), avvio di
-  Hammerspoon al login, posizione di Tabby.
-
-## D. Dock e scrivania
-
-Decisione: **Tabby sostituisce il Dock** → Dock sempre nascosto. *(confermato)*
-
-- Tabby può nasconderlo da sola (con consenso): `defaults write com.apple.dock autohide
-  -bool true` (+ eventuale ritardo lungo) e `killall Dock`; ripristino dalle impostazioni.
-- App nuove: **Spotlight**, più le cartelle con "Apri all'avvio" e la schermata di
-  partenza. Nessun tasto "+" necessario per ora. *(confermato)*
-- Scrivania (tasto / ⌃⌥0): mostrare la schermata di partenza.
-- Notifiche: oggi lette dal Dock; con il Dock nascosto continuano a funzionare
-  (verificare sul Mac vero).
-
-## E. Documentazione e buone pratiche
-
-- **Foglio delle scorciatoie** dentro Tabby (⌃⌥? e voce "Guida" in impostazioni).
-- **Guida utente** (in italiano): installazione, scorciatoie, cartelle, viste divise,
-  impostazioni consigliate (Dock e barra dei menu nascosti, Tabby a destra su portatile).
-- **Tabella browser**: cosa funziona con Chrome/Safari/Brave/Edge vs DuckDuckGo.
-- Farla per ultima, quando il comportamento della v1 è definitivo.
+- **Revisione e velocità** (v9.4–9.7): viste divise che seguono le finestre, loghi ritentati,
+  spia `Tabby · lento`, app cercate per bundle ID, domande ai browser in parallelo, privacy
+  (DuckDuckGo: solo il sito, mai l'indirizzo completo).
+- **A. Più schede per qualsiasi app** (v9.5): una scheda per finestra, nome = titolo;
+  ⚙︎ → Finestre separate per app.
+- **Chrome e browser** (v9.6–9.13): webapp riconosciute con profili e titoli diversi, niente
+  icone che lampeggiano, niente schede scambiate con più finestre, Google Meet (la miniatura
+  resta visibile).
+- **B. Cartelle, prima parte** (v9.8, storia di Daniele del 21/10): si creano e attivano dal
+  menu ⚡︎ (o ⌃⌥⇧ + numero); attivata = una scheda sola con 3 icone; clic = scegli l'app e si
+  entra nella vista cartella; Esci / Chiudi / Modifica / Rinomina; ⚙︎ → Vista cartelle.
+  Prototipo: `docs/prototipo-cartelle.html`.
+- **Rifiniture** (v9.11–9.18): scheda **+** (Spotlight); **Scambia** nella vista divisa (⇄,
+  ⌃⌥S); il **gatto** sul tasto scrivania; **velo scuro** con Spotlight (85%, reattivo);
+  **una scheda alla volta** anche tra finestre della stessa app (senza ping-pong, finestre di
+  accesso escluse, ⌘W torna alla finestra di prima); **Calendario veloce** (⌃⌥A); barra
+  **nera**; ⌘F dopo il clic su una scheda.
+- **GitHub** privato `dquaini/Tabby`: i due Mac aggiornati con un comando.
 
 ---
 
-## Dopo la v1
-Vedi "Futuro oltre la v1" in `PRODOTTO.md` (app Swift, Claude/agente, ricerca veloce,
-concentrazione, più monitor, iCloud).
+## ▶ Prossimi passi, in ordine
+
+### 1. Stabilità e velocità *(adesso)*
+- DuckDuckGo con più schede rallenta Tabby fino a ~0,7 s ("lento: ricostruzione schede",
+  "controllo browser"); "cambio di scheda" fino a 1,1 s.
+- Controllo generale dopo le tante novità del 21–22/10 (una scheda alla volta, finestrelle,
+  cartelle), con l'aiuto della console.
+
+### 2. Cartelle, seconda parte
+- **Finestra di browser con più siti** dentro una cartella: si ricordano le pagine (indirizzo
+  senza la parte dopo "?", dove possono finire codici di accesso) e si riaprono come schede di
+  una finestra (Chrome/Safari; con DuckDuckGo come schede in una finestra esistente).
+- **"Apri all'avvio"** e altre automazioni (da definire con Daniele).
+- Trascinare una scheda sopra la scheda-cartella per aggiungerla.
+
+### 3. Avvio e design *(un blocco unico: stessa identità, nero e gatto)*
+**Avvio** (storia di Daniele, versione 2 del 22/10 — prototipo v1: `docs/prototipo-avvio.html`):
+1. All'avvio di Tabby: schermo **nero**, al centro l'animazione `assets/avvio/1-logo.mp4`
+   (10 s), **centrata e più piccola** (non a tutto schermo); intanto Tabby carica.
+2. Finita, un clic fa partire `assets/avvio/2-gatto.mp4`; alla fine al centro resta **solo il
+   riquadro tratteggiato** (nessun logo).
+3. Clic sul riquadro: **primo accesso** → Spotlight; **dopo** → pannello con le cartelle, o un
+   pulsante per Spotlight se non ce ne sono.
+4. In alto a destra solo l'**icona bianca delle impostazioni**.
+5. Scelta la prima app, Tabby parte con barra e scorciatoie.
+6. Video **senza suono**; il marchio "KlingAI 4.0" in basso a destra **si ritaglia**.
+7. Proposte da confermare: compare solo all'avvio (non ai ricaricamenti); Esc salta.
+
+**Design**:
+- **Scrivania**: sul desktop Tabby diventa un **pallino in basso a destra** col gatto; cliccato
+  riapre l'ultima app.
+- **Finestre di dialogo di Tabby** con l'icona del gatto (bianco su quadrato nero con angoli
+  morbidi), al posto di quelle di Hammerspoon col martello. La stessa icona sarà l'icona
+  dell'app.
+- **Batteria compatta**: solo l'icona; la percentuale al passaggio del puntatore.
+- **Revisione dell'aspetto** di tutta Tabby (schede, tasti, menu, riquadri, velo), con un
+  prototipo cliccabile prima.
+
+### 4. Configurazione guidata e Dock
+- Al primo avvio: permessi (Accessibilità, Automazione per i browser), barra dei menu e Dock
+  nascosti (con consenso), avvio di Hammerspoon al login, posizione di Tabby.
+- **Tabby sostituisce il Dock** (confermato): lo nasconde da sola, con ripristino dalle
+  impostazioni. Verificare che le notifiche (lette dal Dock) funzionino con il Dock nascosto.
+
+### 5. Guida → **v1 chiusa**
+- Foglio delle scorciatoie dentro Tabby (⌃⌥? e voce "Guida"), guida utente in italiano,
+  tabella di cosa funziona con ogni browser.
+
+---
+
+## 📥 In attesa (da collocare)
+
+- **Icone della barra dei menu dentro Tabby** (22/10): le icone in alto a destra di macOS
+  (Notion, Claude, VPN, Bluetooth, Wi-Fi…) nel menu ⚡︎ con una scorciatoia ciascuna.
+  Obiettivo di Daniele: *in Tabby tutto ciò che è possibile, nella barra dei menu di Apple
+  solo il resto.* Tecnicamente: Tabby le legge e le "preme" con l'Accessibilità
+  (AXExtrasMenuBar); da provare con la barra dei menu nascosta. Nasconderle da Apple
+  (Impostazioni → Barra dei menu) potrebbe toglierle anche a Tabby: da verificare.
+
+## 🔭 Dopo la v1
+
+- **Colori di Tabby a scelta** (temi), insieme al design: i colori sono nella tabella `COL`.
+- Dalla mission (`PRODOTTO.md`): Claude/agente dentro Tabby, ricerca veloce, concentrazione,
+  più monitor, app vera in Swift, impostazioni sincronizzate.
