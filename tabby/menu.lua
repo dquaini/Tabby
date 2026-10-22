@@ -80,10 +80,19 @@ end
 -- accanto invece di lasciare il desktop vuoto. Se resta una finestra della
 -- stessa app (anche ridotta: la riapre T.restoreAfterClose), resta lei.
 function afterCloseGoTo(neighborKey)
-  if not neighborKey or S.showWindowless then return end
+  if not neighborKey or S.showWindowless or T.desktopMode then return end
   hs.timer.doAfter(0.6, function()
+    -- è appena tornata un'altra finestra della stessa app: si resta lì
+    if T.restoredAt and hs.timer.secondsSinceEpoch() - T.restoredAt < 1.5 then return end
     local fw = hs.window.focusedWindow()
     if fw and fw:isStandard() and not fw:isMinimized() and not T.isFloating(fw) then return end
+    -- resta in vista un'altra finestra dell'app in primo piano? Allora si resta lì
+    local front = hs.application.frontmostApplication()
+    if front then
+      for _, w in ipairs(standardWindows(front)) do
+        if not w:isMinimized() and not T.isFloating(w) then return end
+      end
+    end
     rebuildTabs()
     for i, t in ipairs(T.tabs) do
       if t.key == neighborKey then

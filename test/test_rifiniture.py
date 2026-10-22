@@ -117,5 +117,11 @@ run('CLICK("quick")')
 check("nel menu ⚡︎ c'è «Calendario ⌃⌥A»", any("Calendario   ⌃⌥A" == (it or "") for it in
       ev('(function() local o = {} for _, it in ipairs(MENU) do o[#o+1] = it.title end return table.concat(o, "|") end)()').split("|")))
 
+print("\n== Terminale veloce (⌃⌥T)")
+run('''TERM = ADDAPP("com.apple.Terminal", "Terminale"); Tabby.rebuildTimer:start()''')
+check("il Terminale non è una scheda (è un'app veloce)", "Terminale" not in names())
+run('KEY("t", {"ctrl","alt"})')
+check("⌃⌥T lo apre in alto a destra, 760x480", ev('FRONT == TERM') is True and ev('TERM._wins[1]._frame.w') == 760)
+
 print()
 print("FALLITI: %d" % len(fails) if fails else "TUTTO OK")

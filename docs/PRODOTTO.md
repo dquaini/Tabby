@@ -96,7 +96,7 @@ Principi:
 | ⌃⌥L · ⌃⌥N · ⌃⌥I | Claude chat rapida · Notion cerca · Notion AI |
 | tre dita ← / → | scheda dopo / prima |
 | ⌃⌥⇧1…9 | attiva la cartella 1…9 |
-| ⌃⌥M · ⌃⌥C · ⌃⌥A | Memo · Calcolatrice · Calendario |
+| ⌃⌥M · ⌃⌥C · ⌃⌥A · ⌃⌥T | Memo · Calcolatrice · Calendario · Terminale |
 | Esc | chiude Memo / Calcolatrice; annulla la divisione |
 | ⌘⌃⌥R | ricarica Tabby |
 

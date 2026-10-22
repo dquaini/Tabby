@@ -41,6 +41,13 @@ run(f'CLICK("close{idx(first)}")')
 run(f'local w = hs.application.get("com.apple.finder")._wins[1]; MENU[1].fn(); FINDER._focused = nil; WINFILTER.subs["destroyed"](w); Tabby.rebuildTimer:start()')
 check(f"chiusa «{first}»: ora sei su «{right}»", ev('FRONT._name') == right)
 
+print("== Chiusa col pallino rosso della finestra (non da Tabby): si passa alla scheda accanto")
+run('PREV = ADDAPP("com.apple.Preview", "Anteprima"); Tabby.rebuildTimer:start()')
+run(f'CLICK("tab{idx("Anteprima")}")')
+nb = ev('Tabby.activeNeighborKey')
+run('local w = PREV._wins[1]; w:close(); PREV._focused = nil; WINFILTER.subs["destroyed"](w); Tabby.rebuildTimer:start()')
+check("chiusa la foto: sei sulla scheda accanto, non sulla scrivania", nb is not None and ev('FRONT._name') != "Anteprima")
+
 print("== Con «Mostra anche app aperte senza finestre» acceso, non si cambia scheda")
 L.execute('NOTE2 = ADDAPP("com.apple.TextEdit", "TextEdit")')
 run('Tabby.rebuildTimer:start()')

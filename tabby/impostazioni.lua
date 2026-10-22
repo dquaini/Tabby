@@ -51,6 +51,7 @@ QUICK = {
   -- il Calendario si apre piccolo (w × h: la misura minima che accetta, vista
   -- sul Mac); A come "Agenda" (C è della Calcolatrice)
   {bid = "com.apple.iCal", name = "Calendario", key = "a", w = 680, h = 520},
+  {bid = "com.apple.Terminal", name = "Terminale", key = "t", w = 760, h = 480},
 }
 
 -- Azioni rapide delle app (menu ⚡︎ → App): quelle che alcune app offrono con la

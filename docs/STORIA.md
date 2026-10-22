@@ -98,4 +98,7 @@ v9.32: azioni delle app: Tabby scopre da sola le app con un'icona nella barra de
 v9.33: consumi più bassi (mouse controllato solo se serve, browser in secondo piano ogni
     15 s, notifiche ogni 5 s); schermo intero senza ritardo; "Apri <app>" con l'icona
     spenta apre l'app.
+v9.34: chiusa l'ultima finestra della scheda attiva in qualsiasi modo (anche col pallino
+    rosso) si passa alla scheda accanto; Tabby non compare sopra le app a schermo intero
+    (lo fa macOS, senza ritardo); Terminale veloce ⌃⌥T; avviso per le app solo icona.
 ```

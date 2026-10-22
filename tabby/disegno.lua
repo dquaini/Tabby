@@ -332,7 +332,10 @@ draw = function()
     T.barLevel = hs.canvas.windowLevels.floating
     T.bar:level(T.barLevel)
     -- visibile su tutte le scrivanie, anche sopra le app a schermo intero
-    T.bar:behavior({"canJoinAllSpaces", "stationary", "fullScreenAuxiliary"})
+    -- su tutte le scrivanie, ma NON sopra le app a schermo intero: lì la
+    -- nasconde macOS stesso, all'istante (23/10/2026: prima Tabby si toglieva da
+    -- sola, ma macOS avvisava ~1 s dopo)
+    T.bar:behavior({"canJoinAllSpaces", "stationary"})
     T.bar:clickActivating(false)
     T.bar:mouseCallback(onMouse)
   end
@@ -340,6 +343,10 @@ draw = function()
 
   local vertical  = isVertical()
   local activeIdx = activeIndex()
+  -- la scheda accanto a quella attiva (a sinistra, o a destra se è la prima):
+  -- se chiudi l'ultima finestra della scheda attiva, in qualsiasi modo, si va lì
+  local nb = activeIdx and (T.tabs[activeIdx - 1] or T.tabs[activeIdx + 1])
+  T.activeNeighborKey = nb and nb.key or nil
   local L = layout(bf, activeIdx)
   T.bf, T.L = bf, L
 
@@ -572,8 +579,7 @@ draw = function()
   T.bar:replaceElements(els)
 
   T.updateMouseTimer()
-  if T.fullscreen then setVisible(false)   -- a schermo intero Tabby si fa da parte
-  elseif S.autohide then setVisible(T.revealed) else setVisible(not T.menuPeek) end
+  if S.autohide then setVisible(T.revealed) else setVisible(not T.menuPeek) end
 end
 
 

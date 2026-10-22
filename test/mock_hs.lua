@@ -77,7 +77,7 @@ CANVASES = {}
 local function newCanvas(fr)
   local c = {_frame = fr, _els = {}, _shown = false}
   function c:level() return self end
-  function c:behavior() return self end
+  function c:behavior(b) self._behavior = b; return self end
   function c:clickActivating() return self end
   function c:mouseCallback(fn) self._cb = fn; return self end
   function c:frame(f) if f then self._frame = f; return self end return self._frame end
@@ -320,7 +320,7 @@ hs = {
 
 -- tastiera: mappa bidirezionale come quella vera
 local codes = {["0"]=29,["1"]=18,["2"]=19,["3"]=20,["4"]=21,["5"]=23,["6"]=22,["7"]=26,["8"]=28,["9"]=25,
-  a=0, c=8, m=46, s=1, w=13, l=37, n=45, i=34, left=123, right=124, down=125, up=126, escape=53, ["return"]=36, padenter=76, tab=48}
+  a=0, c=8, m=46, s=1, w=13, l=37, n=45, i=34, t=17, left=123, right=124, down=125, up=126, escape=53, ["return"]=36, padenter=76, tab=48}
 for k, v in pairs(codes) do hs.keycodes.map[k] = v; hs.keycodes.map[v] = k end
 
 function KEY(name, mods)

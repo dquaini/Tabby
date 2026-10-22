@@ -102,12 +102,16 @@ function T.restoreAfterClose()
   end
   if not pick then return end
   print("Tabby · chiusa una finestra di " .. tostring(app:name()) .. ": riapro «" .. tostring(pick:title()) .. "»")
+  T.restoredAt = hs.timer.secondsSinceEpoch()   -- (così non scatta anche "scheda accanto")
   pick:unminimize()
   pick:focus()
 end
 T.allWins:subscribe(WF.windowDestroyed, function()
+  local neighbor = T.activeNeighborKey   -- (presa prima che le schede cambino)
   scheduleRebuild()
   hs.timer.doAfter(0.3, T.restoreAfterClose)
+  -- chiusa l'ultima finestra (anche col pallino rosso): si passa alla scheda accanto
+  afterCloseGoTo(neighbor)
 end)
 
 -- Cambio di finestra dentro la stessa app (es. da un documento all'altro,

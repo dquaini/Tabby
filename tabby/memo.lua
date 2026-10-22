@@ -204,8 +204,16 @@ function runAppAction(a, retry)
           local same = (before == nil and now == nil) or (before and now and before:id() == now:id())
           if same and not menuOpen then
             T.veil(false)
-            print("Tabby · azione «" .. a.name .. "»: non si è aperto niente, apro l'app")
-            app:activate()
+            if (app:kind() or 1) == 0 then
+              -- app "solo icona" (niente finestre né Dock, es. Proton VPN): senza la
+              -- sua icona nella barra dei menu non c'è niente da aprire
+              print("Tabby · azione «" .. a.name .. "»: app solo icona, icona spenta in macOS")
+              hs.alert.show(appName(a.bid, app) .. " si apre solo dalla sua icona: riaccendila in\n" ..
+                "Impostazioni di Sistema → Barra dei menu → Consenti nella barra dei menu", 5)
+            else
+              print("Tabby · azione «" .. a.name .. "»: non si è aperto niente, apro l'app")
+              app:activate()
+            end
           end
         end)
       end
