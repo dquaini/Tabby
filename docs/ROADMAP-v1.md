@@ -148,6 +148,15 @@ solo quello che non si può portare in Tabby.
   prototipo cliccabile, come per le cartelle.
 
 ## C. Avvio e schermata di partenza
+### Rivista il 22/10/2026 con Daniele — prevale su quanto sotto
+Prototipo: `docs/prototipo-avvio.html`. All'avvio Tabby si apre come un'app a tutto schermo:
+logo del gatto (quadrato nero, angoli morbidi) animato al centro; finita l'animazione, un clic
+scopre al centro: **primo avvio** → quadratino tratteggiato con + (apre Spotlight, scegli
+un'app, parte Tabby come oggi); **volte successive** → le cartelle (icone, nome, scorciatoia)
+e la scheda Spotlight. Fattibile con una pagina a tutto schermo come il Memo (hs.webview).
+Proposte da confermare: compare solo all'avvio (non ai ricaricamenti); Esc salta; un tasto
+vale come clic; il gatto della barra, senza app aperte, riporta a questa schermata.
+
 
 Problema: con nessuna scheda aperta Tabby è "vuota" e non accoglie.
 
