@@ -78,6 +78,11 @@ T.keyTap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(e)
     if code == K["return"] or code == K.padenter then later(FD.finishFolderEdit); return true end
   end
 
+  -- ⌃⌘F = schermo intero in arrivo: Tabby si fa da parte subito
+  if f.cmd and f.ctrl and not f.alt and not f.shift and code == K.f and not T.fullscreen then
+    later(function() anticipateFullscreen("⌃⌘F") end)
+  end
+
   -- Durante la divisione: Invio = fatto, Esc = annulla
   if T.split and noMods then
     if code == K.escape then later(exitSplit); return true end
@@ -116,6 +121,7 @@ T.keyTap:start()
 T.keyTapGuard = hs.timer.doEvery(5, function()
   if not T.keyTap:isEnabled() then T.keyTap:start() end
   if T.gestureTap and not T.gestureTap:isEnabled() then T.gestureTap:start() end
+  if T.fsClickTap and not T.fsClickTap:isEnabled() then T.fsClickTap:start() end
 end)
 
 -- Riserva: le stesse scorciatoie registrate anche come scorciatoie di sistema

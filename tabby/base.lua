@@ -75,6 +75,12 @@ function later(fn) hs.timer.doAfter(0, fn) end
 -- fa scattare anche la tastiera. Se un lavoro supera SLOW_MS lo scrive in
 -- console ("Tabby · lento: …"), al massimo una volta al minuto per lavoro.
 SLOW_MS = 150
+-- L'ora con i millesimi, per le righe di diagnosi sui tempi (es. schermo intero)
+function clockMs()
+  local t = hs.timer.secondsSinceEpoch()
+  return os.date("%H:%M:%S", math.floor(t)) .. string.format(".%03d", math.floor((t % 1) * 1000))
+end
+
 -- segna la fine di un passaggio (per il dettaglio di "Tabby · lento")
 function Tabby.step(name)
   local now = hs.timer.absoluteTime()

@@ -578,7 +578,8 @@ draw = function()
   T.bar:replaceElements(els)
 
   T.updateMouseTimer()
-  if T.fullscreen then setVisible(false)   -- a schermo intero Tabby si fa da parte
+  local fsHint = T.fsHintUntil and hs.timer.secondsSinceEpoch() < T.fsHintUntil
+  if T.fullscreen or fsHint then setVisible(false)   -- a schermo intero Tabby si fa da parte
   elseif S.autohide then setVisible(T.revealed) else setVisible(not T.menuPeek) end
 end
 

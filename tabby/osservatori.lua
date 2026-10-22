@@ -166,8 +166,30 @@ T.allWins:subscribe(WF.windowUnfullscreened, function() checkFullscreenSoon() en
 
 -- Cambio di scrivania (le app a schermo intero hanno la loro)
 T.spaceWatcher = hs.spaces.watcher.new(function()
+  print("Tabby · scrivania cambiata alle " .. clockMs())
   checkFullscreenSoon()
 end)
+
+-- Clic sul pallino verde di una finestra = schermo intero in arrivo: Tabby si fa
+-- da parte subito (vedi anticipateFullscreen). Il controllo costa poco: si
+-- guarda il pallino solo se il clic è nell'angolo in alto a sinistra della
+-- finestra attiva.
+T.fsClickTap = hs.eventtap.new({hs.eventtap.event.types.leftMouseDown}, function(e)
+  if T.fullscreen then return false end
+  local p = e:location()
+  pcall(function()
+    local w = hs.window.focusedWindow()
+    local f = w and w:frame()
+    if not f or p.x < f.x or p.x > f.x + 120 or p.y < f.y or p.y > f.y + 60 then return end
+    local btn = hs.axuielement.windowElement(w):attributeValue("AXFullScreenButton")
+    local bp, bs = btn and btn:attributeValue("AXPosition"), btn and btn:attributeValue("AXSize")
+    if bp and bs and p.x >= bp.x and p.x <= bp.x + bs.w and p.y >= bp.y and p.y <= bp.y + bs.h then
+      anticipateFullscreen("pallino verde")
+    end
+  end)
+  return false
+end)
+T.fsClickTap:start()
 T.spaceWatcher:start()
 
 -- Cambio di monitor o risoluzione

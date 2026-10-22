@@ -174,7 +174,7 @@ hs = {
     watcher = {new = function() return {start = function(s) return s end} end},
   },
   eventtap = {
-    event = {types = {keyDown = 10, leftMouseDragged = 6, leftMouseUp = 2, gesture = 29}},
+    event = {types = {keyDown = 10, leftMouseDragged = 6, leftMouseUp = 2, gesture = 29, leftMouseDown = 1}},
     new = function(types, fn)
       local t = {types = types, fn = fn, on = false}
       function t:start() self.on = true; return self end
@@ -263,7 +263,10 @@ hs = {
     end
     local tabs = {}
     for i = 1, (w._ntabs or 1) do tabs[i] = el("AXButton", {AXRoleDescription = "scheda"}) end
-    return el("AXWindow", nil, {el("AXGroup", nil, tabs),
+    -- il pallino verde: 16x16, a 48 punti dal bordo sinistro, in alto
+    local f = w._frame or {x = 0, y = 0}
+    local green = el("AXButton", {AXPosition = {x = f.x + 48, y = f.y + 6}, AXSize = {w = 16, h = 16}})
+    return el("AXWindow", {AXFullScreenButton = green}, {el("AXGroup", nil, tabs),
       el("AXWebArea", {AXURL = {url = w._page}}, {el("AXTextField", {AXValue = "non-deve-leggermi.com"})})})
   end,
   applicationElement = function(app)
@@ -322,7 +325,7 @@ hs = {
 
 -- tastiera: mappa bidirezionale come quella vera
 local codes = {["0"]=29,["1"]=18,["2"]=19,["3"]=20,["4"]=21,["5"]=23,["6"]=22,["7"]=26,["8"]=28,["9"]=25,
-  a=0, c=8, m=46, s=1, w=13, l=37, n=45, i=34, t=17, left=123, right=124, down=125, up=126, escape=53, ["return"]=36, padenter=76, tab=48}
+  a=0, c=8, f=3, m=46, s=1, w=13, l=37, n=45, i=34, t=17, left=123, right=124, down=125, up=126, escape=53, ["return"]=36, padenter=76, tab=48}
 for k, v in pairs(codes) do hs.keycodes.map[k] = v; hs.keycodes.map[v] = k end
 
 function KEY(name, mods)

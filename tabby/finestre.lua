@@ -159,6 +159,21 @@ end
 -- Schermo intero (23/10/2026, idea di Daniele): una finestra a schermo intero
 -- esce dai radar di Tabby (non è una scheda) e, mentre la guardi, Tabby non si
 -- vede; quando torna normale rientra come scheda.
+-- Anticipo: hai appena chiesto lo schermo intero (pallino verde o ⌃⌘F): Tabby
+-- sparisce subito, senza aspettare la fine dell'animazione di macOS. Se dopo 2 s
+-- lo schermo intero non c'è, ricompare.
+function anticipateFullscreen(how)
+  if T.fullscreen then return end
+  T.fsHintUntil = hs.timer.secondsSinceEpoch() + 2
+  print("Tabby · schermo intero chiesto (" .. how .. ") alle " .. clockMs() .. ": Tabby si fa da parte")
+  draw()
+  hs.timer.doAfter(2.1, function()
+    T.fsHintUntil = nil
+    updateFullscreen()
+    draw()
+  end)
+end
+
 function updateFullscreen()
   -- prima si chiede a macOS che scrivania stai guardando: se è quella di
   -- un'app a schermo intero lo sa subito (0,4 ms), senza aspettare l'avviso
@@ -168,7 +183,8 @@ function updateFullscreen()
   local fs = (okS and kind == "fullscreen") or ((w ~= nil) and w:isFullScreen()) or false
   if fs ~= T.fullscreen then
     T.fullscreen = fs
-    print("Tabby · schermo intero " .. (fs and "acceso: Tabby si fa da parte" or "spento: Tabby torna"))
+    print("Tabby · schermo intero " .. (fs and "acceso" or "spento") .. " alle " .. clockMs() ..
+          (fs and ": Tabby si fa da parte" or ": Tabby torna"))
     scheduleRebuild()
     draw()
   end
