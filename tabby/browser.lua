@@ -399,6 +399,7 @@ end
 
 -- Icona di una scheda: logo del sito per le webapp, altrimenti icona dell'app
 function keyIcon(key)
+  if key == "memo" then return icon("com.apple.TextEdit") end
   local e = T.cand[key]
   local s = e and (e.site or e.iconSite)
   if s then

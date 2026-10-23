@@ -316,7 +316,9 @@ guardando: la scheda attiva nella zona 1 (o le schede della vista divisa attiva)
 Il velo e le zone stanno **sopra tutte le finestre** (anche le app veloci e il Memo) e
 Tabby sopra di loro, per trascinarci le schede (v9.42; stesso per il riquadro delle
 cartelle). Le **app veloci aperte** (Terminale, Calcolatrice…) entrano già nelle zone libere (un
-clic sulla zona le toglie); nella vista diventano app normali (v9.39).
+clic sulla zona le toglie); nella vista diventano app normali (v9.39). Anche il **Memo**
+aperto entra in una zona (v9.44): nella vista sta nella sua zona; chiudendolo la vista si
+scioglie. Se sei sul Memo o su un'app veloce, la zona 1 è la scheda in cui eri prima.
 Una scheda entra in una vista sola (togliendola da un'altra vista). Le viste divise
 e le cartelle non si mettono in una zona.
 
@@ -581,6 +583,13 @@ in vista ma senza tastiera le dà la tastiera. Se un'app rifiuta la misura, si r
 quella vera e la si riporta dentro lo schermo. Riprova a sistemarle dopo 0,3, 0,8, 1,6 s.
 Si ricordano anche dopo un ricaricamento (`floatMode`).
 
+**Q-1b In fila** (v9.44): più app veloci aperte insieme (Memo compreso) stanno in fila in
+alto a destra, a 12 punti l'una dall'altra: in colonne da destra verso sinistra, o una
+sotto l'altra nella stessa colonna. Aprendone una mentre un'altra è aperta compaiono **due
+riquadri tratteggiati** dove andrebbe: **1** accanto (colonna nuova a sinistra), **2**
+sotto l'ultima (se c'è spazio; altrimenti c'è solo l'1). Tasto 1/2 o clic; Esc annulla
+(non si apre niente). Chiudendone una, **le altre si spostano** a riempire il posto.
+
 **Q-2 Memo**: blocco note 340×280 in alto a destra, scuro, testo 14. Il testo è un
 **file vero**: `~/Documents/Tabby Memo.txt` (si apre anche con TextEdit, si trova con
 Spotlight); si salva da solo 0,3 s dopo che smetti di scrivere e alla chiusura; si
@@ -796,6 +805,7 @@ Ogni regola ha un test in `test/`; nell'app Swift diventano test di accettazione
 | `test_barra_menu_notifiche.py` | A-4, A-6 (barra dei menu e Dock), N-5 |
 | `test_browser_nomi.py` | B-3 (passaggio 0), B-8 |
 | `test_app_veloci.py` | Q-1, D-2 (app veloci nelle zone) |
+| `test_app_veloci_fila.py` | Q-1b, D-2 (Memo nelle zone) |
 | `test_finestre_fluide.py` | C-4 (giallo, ⌘Q, macOS che cambia app prima), D-4, L (angoli), W-0, Q-2 |
 | `test_cartelle.py`, `test_cartelle_casi.py`, `test_cartelle_pagine.py` | F-1…F-10 |
 | `test_notch.py` | A-2, L-6 |

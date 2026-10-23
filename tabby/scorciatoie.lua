@@ -72,6 +72,13 @@ T.keyTap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(e)
   local code = e:getKeyCode()
   local noMods = not (f.ctrl or f.alt or f.cmd or f.shift)
 
+  -- Dove mettere una nuova app veloce: 1 accanto, 2 sotto, Esc annulla
+  if T.fchoose and noMods then
+    if code == K["1"] or code == K.pad1 then later(function() chooseFloat("side") end); return true end
+    if code == K["2"] or code == K.pad2 then later(function() chooseFloat("below") end); return true end
+    if code == K.escape then later(cancelFloatChoice); return true end
+  end
+
   -- Creazione di una cartella: Invio = fatto, Esc = annulla
   if T.fedit and noMods then
     if code == K.escape then later(FD.cancelFolderEdit); return true end

@@ -31,6 +31,7 @@ function createGroup(layoutId, zones, nz)
   saveGroups()
   rebuildTabs()
   showGroup(g)
+  hs.timer.doAfter(0, layoutFloaters)   -- le app veloci rimaste si rimettono in fila
 end
 
 -- "Scambia" (tasto ⇄ e ⌃⌥S): le app della vista divisa ruotano di una zona
@@ -141,7 +142,7 @@ drawSplit = function()
           frame = {x = cx - 32, y = cy - 52, w = 64, h = 64}})
       end
       local e = T.cand[bid]
-      table.insert(els, {type = "text", text = e and e.name or appName(bid, appFor(bid)),
+      table.insert(els, {type = "text", text = (bid == "memo" and "Memo") or (e and e.name) or appName(bid, appFor(bid)),
         textSize = 16, textColor = COL.text, textAlignment = "center",
         frame = {x = r.x, y = cy + 18, w = r.w, h = 22}})
       table.insert(els, {type = "text", text = "clic per svuotare",
@@ -179,6 +180,9 @@ function enterSplit(layoutId)
   -- parti da quello che stai guardando: l'app attiva (o il gruppo attivo)
   local ai = activeIndex()
   local t = ai and T.tabs[ai]
+  if not t and T.lastKey then   -- (sei sul Memo o su un'app veloce: la scheda di prima)
+    for _, x in ipairs(T.tabs) do if x.key == T.lastKey then t = x end end
+  end
   if t and t.group then
     for k, b in ipairs(t.group.members) do if k <= nz then sp.zones[k] = b end end
   elseif t then
@@ -192,6 +196,7 @@ function enterSplit(layoutId)
     if a and not a:isHidden() then table.insert(fl, bid) end
   end
   table.sort(fl)
+  if T.memoOpen and not T.memberOf["memo"] then table.insert(fl, "memo") end   -- anche il Memo
   for _, bid in ipairs(fl) do
     for k = 1, nz do
       if not sp.zones[k] then sp.zones[k] = bid; break end

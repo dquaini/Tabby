@@ -103,6 +103,7 @@ function openMemo()
   m:frame(memoRect())
   m:show()
   T.memoOpen = true
+  layoutFloaters()   -- in fila con le altre app veloci aperte
   memoTakeKeyboard()
   -- La tastiera deve arrivare davvero al Memo: Hammerspoon diventa l'app attiva
   -- con un attimo di ritardo, e fino ad allora la finestra non riceve i tasti
@@ -140,6 +141,10 @@ end
 closeMemo = function()
   if not T.memo or not T.memoOpen then return end
   T.memoOpen = false
+  hs.timer.doAfter(0, function()
+    layoutFloaters()   -- le altre app veloci si spostano a riempire il posto
+    if T.memberOf["memo"] then scheduleRebuild() end   -- era in una vista divisa
+  end)
   T.memo:evaluateJavaScript("send({text: t.value})")   -- salva l'ultima cosa scritta
   T.memo:hide()
   backToPrev()
@@ -413,22 +418,102 @@ function actionRecent(bid)
 end
 
 function toggleQuick(q)
-  if q.memo then toggleMemo(); return end
-  local bid = q.bid
-  local app = appFor(bid)
-  if app and floating(bid) and not app:isHidden() then
-    if frontBid() == bid then hideFloater(bid); return end   -- torni all'app di prima
-    app:activate()   -- è in vista ma la tastiera è altrove: gliela dai
-    return
+  local key = q.memo and "memo" or q.bid
+  if q.memo then
+    if T.memoOpen then closeMemo(); return end
+  else
+    local app = appFor(key)
+    if app and floating(key) and not app:isHidden() then
+      if frontBid() == key then hideFloater(key); return end   -- torni all'app di prima
+      app:activate()   -- è in vista ma la tastiera è altrove: gliela dai
+      return
+    end
   end
+  -- c'è già un'altra app veloce aperta? Scegli dove mettere questa: 1 accanto, 2 sotto
+  for _, it in ipairs(T.floatStack) do
+    if it.key ~= key and floatItemOpen(it.key) then chooseFloatPlace(q); return end
+  end
+  openQuickApp(q, "side")
+end
+
+function openQuickApp(q, place)
+  local key = q.memo and "memo" or q.bid
+  for i = #T.floatStack, 1, -1 do if T.floatStack[i].key == key then table.remove(T.floatStack, i) end end
+  table.insert(T.floatStack, {key = key, place = place or "side"})
+  if q.memo then openMemo(); return end
+  local bid = q.bid
   -- (anche se era aperta come app normale: diventa piccola, in alto a destra)
   setFloatMode(bid, true)
   scheduleRebuild()   -- non è più una scheda
   hs.application.launchOrFocusByBundleID(bid)
   -- l'app può metterci un po' ad aprire le finestre: riprova più volte
   for _, delay in ipairs({0.3, 0.8, 1.6}) do
-    hs.timer.doAfter(delay, function() placeFloater(appFor(bid)) end)
+    hs.timer.doAfter(delay, layoutFloaters)
   end
+end
+
+-- Due riquadri tratteggiati mostrano dove può andare la nuova app veloce: 1 accanto
+-- alle altre, 2 sotto l'ultima. Tasto 1 o 2 (o clic), Esc annulla.
+function chooseFloatPlace(q)
+  local key = q.memo and "memo" or q.bid
+  layoutFloaters()
+  local base = {}
+  for _, it in ipairs(T.floatStack) do if it.key ~= key then table.insert(base, it) end end
+  local function lastRect(place)
+    local st = {}
+    for _, it in ipairs(base) do table.insert(st, it) end
+    table.insert(st, {key = key, place = place})
+    local pos = floatPositions(st)
+    return pos[#pos]
+  end
+  local r1, r2 = lastRect("side"), lastRect("below")
+  T.fchoose = {q = q, rects = {r1, r2}}
+  local ff = screen():fullFrame()
+  if not T.fcCanvas then
+    T.fcCanvas = hs.canvas.new(ff)
+    T.fcCanvas:level(hs.canvas.windowLevels.modalPanel or hs.canvas.windowLevels.floating)
+    T.fcCanvas:behavior({"canJoinAllSpaces", "stationary", "fullScreenAuxiliary"})
+    T.fcCanvas:clickActivating(false)
+    T.fcCanvas:mouseCallback(function(_, msg, id)
+      if msg ~= "mouseUp" then return end
+      id = tostring(id)
+      if id == "fc1" then chooseFloat("side") elseif id == "fc2" then chooseFloat("below") else cancelFloatChoice() end
+    end)
+  else
+    T.fcCanvas:frame(ff)
+  end
+  local name = q.name or "App"
+  local els = {{type = "rectangle", action = "fill", fillColor = {white = 0, alpha = 0.25},
+                trackMouseUp = true, id = "fcbg", frame = {x = 0, y = 0, w = ff.w, h = ff.h}}}
+  for n, r in ipairs({r1, r2}) do
+    local fr = {x = r.x - ff.x, y = r.y - ff.y, w = r.w, h = r.h}
+    if n == 2 and r1.x == r2.x and r1.y == r2.y then break end   -- sotto non c'è posto
+    table.insert(els, {type = "rectangle", action = "strokeAndFill", fillColor = {hex = "#4C8DFF", alpha = 0.18},
+      strokeColor = COL.accent, strokeWidth = 2, strokeDashPattern = {10, 6},
+      roundedRectRadii = {xRadius = 12, yRadius = 12}, frame = fr})
+    table.insert(els, {type = "text", text = tostring(n), textSize = 54, textColor = COL.text, textAlignment = "center",
+      frame = {x = fr.x, y = fr.y + fr.h / 2 - 50, w = fr.w, h = 64}})
+    table.insert(els, {type = "text", text = name .. " " .. (n == 1 and "accanto" or "sotto"), textSize = 15,
+      textColor = COL.text, textAlignment = "center", frame = {x = fr.x, y = fr.y + fr.h / 2 + 16, w = fr.w, h = 20}})
+    table.insert(els, {type = "rectangle", action = "fill", fillColor = {white = 1, alpha = 0.01},
+      trackMouseUp = true, id = "fc" .. n, frame = fr})
+  end
+  T.fcCanvas:replaceElements(els)
+  T.fcCanvas:show()
+  print("Tabby · dove metto " .. name .. "? 1 accanto, 2 sotto")
+end
+
+function chooseFloat(place)
+  local fc = T.fchoose
+  if not fc then return end
+  T.fchoose = nil
+  if T.fcCanvas then T.fcCanvas:hide() end
+  openQuickApp(fc.q, place)
+end
+
+function cancelFloatChoice()
+  T.fchoose = nil
+  if T.fcCanvas then T.fcCanvas:hide() end
 end
 
 -- Esc (o di nuovo la scorciatoia): l'app veloce si nasconde e torna un'app normale
@@ -437,6 +522,7 @@ function hideFloater(bid)
   setFloatMode(bid, false)
   if app then app:hide() end
   scheduleRebuild()
+  hs.timer.doAfter(0, layoutFloaters)   -- le altre si spostano a riempire il posto
 end
 
 function openSpotlight()

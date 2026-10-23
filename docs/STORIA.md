@@ -126,4 +126,7 @@ v9.42: chiusa un'app lenta a chiudersi (Spotify) dalla ✕: si va alla scheda ac
 v9.43: barra dei menu e Dock che si nascondono da soli: quando compaiono dalla parte di
     Tabby (barra dei menu con Tabby in alto, Dock dallo stesso lato) Tabby esce dallo
     schermo e rientra quando se ne vanno (al posto di "attaccata sotto" della v9.41).
+v9.44: app veloci in fila: aprendone una con un'altra già aperta si sceglie dove (1 accanto,
+    2 sotto); chiudendone una le altre si spostano; il Memo entra nelle zone della vista
+    divisa.
 ```

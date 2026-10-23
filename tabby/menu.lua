@@ -171,6 +171,7 @@ function tabWins(t)
     if app then for _, w in ipairs(standardWindows(app)) do out[w:id()] = w end end
   end
   local function addKey(k)
+    if k == "memo" then return end
     local w = T.keyWin[k]
     if w then out[w:id()] = w else addApp(appFor(T.keyBid[k] or k)) end
   end

@@ -26,7 +26,10 @@ T.appWatcher = W.new(function(_, event, app)
     if app then hs.timer.doAfter(3, function() scanMenuBarApps(app) end) end
   elseif event == W.terminated then
     scheduleRebuild()
-    if app and app:bundleID() and floating(app:bundleID()) then setFloatMode(app:bundleID(), false) end
+    if app and app:bundleID() and floating(app:bundleID()) then
+      setFloatMode(app:bundleID(), false)
+      hs.timer.doAfter(0, layoutFloaters)
+    end
     -- chiusa l'app della scheda attiva (⌘Q, ✕ → Chiudi app): scheda accanto
     local b = app and app:bundleID()
     local snap = b and snapForApp(b)

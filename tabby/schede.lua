@@ -283,6 +283,14 @@ function rebuildTabs()
       end
     end
   end
+  -- il Memo può stare in una vista divisa (23/10/2026): è una "scheda" solo lì dentro
+  if T.memoOpen then
+    for _, g in ipairs(S.groups) do
+      for _, k in ipairs(g.members) do
+        if k == "memo" then add({key = "memo", bid = "org.hammerspoon.Hammerspoon", name = "Memo", memo = true}) end
+      end
+    end
+  end
   local oldWinKey = T.winKey or {}
   applyTabNames(cand)   -- nomi scelti da te, sito scelto per le finestre con più siti
   T.cand, T.keyWin, T.winKey, T.keyBid = cand, keyWin, winKey, keyBid

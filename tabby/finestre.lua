@@ -31,6 +31,8 @@ function currentKey()
     local w = hs.window.focusedWindow()
     local k = w and T.winKey[w:id()]
     if k then return k end
+    -- il Memo dentro una vista divisa
+    if T.memberOf["memo"] and T.memoOpen and bid == "org.hammerspoon.Hammerspoon" then return "memo" end
   end
   return bid
 end
@@ -120,7 +122,12 @@ layoutGroup = function(g, bring)
   for k, key in ipairs(g.members) do
     local bid = T.keyBid[key] or key
     keep[bid] = true
-    local app = appFor(bid)
+    local app = (key ~= "memo") and appFor(bid) or nil
+    if key == "memo" and T.memo and LAYOUTS[g.layout].zones[k] then
+      -- il Memo nella sua zona
+      local r = zoneRect(g.layout, k)
+      if not sameFrame(T.memo:frame(), r) then T.memo:frame(r); moved = true end
+    end
     if app and LAYOUTS[g.layout].zones[k] then
       if app:isHidden() then app:unhide() end
       local r = zoneRect(g.layout, k)
@@ -237,35 +244,109 @@ end
 
 -- App veloci: piccole, in alto a destra
 -- (con più finestre, es. più post-it, si dispongono a cascata)
-function placeFloater(app)
+-- ---------------------------------------------------------------------
+--  APP VELOCI UNA ACCANTO ALL'ALTRA (23/10/2026, Daniele)
+--  Memo, Calcolatrice, Calendario, Terminale aperti insieme stanno in alto a
+--  destra in fila: in colonne da destra verso sinistra, oppure uno sotto l'altro
+--  ("sotto" = nella stessa colonna di quello prima). Quando ne chiudi uno gli altri
+--  si spostano a riempire il posto (niente buchi in mezzo).
+--  T.floatStack = {{key = "memo" o bundle ID, place = "side" / "below"}, …}
+-- ---------------------------------------------------------------------
+T.floatStack = T.floatStack or {}
+FLOAT_GAP = 12
+
+function floatItemSize(key)
+  if key == "memo" then return MEMO_W, MEMO_H end
+  for _, q in ipairs(QUICK) do if q.bid == key and q.w then return q.w, q.h end end
+  local app = appFor(key)
+  local w = app and app:allWindows()[1]
+  if w then local f = w:frame(); return f.w, f.h end
+  return 300, 300
+end
+
+-- Dove va ogni voce della fila (rettangoli in coordinate dello schermo)
+function floatPositions(stack)
+  local A, G = appArea(), FLOAT_GAP
+  local out, colRight, colLeft, colBottom = {}, A.x + A.w - G, nil, nil
+  for i, it in ipairs(stack) do
+    local w, h = floatItemSize(it.key)
+    local y
+    local below = i > 1 and it.place == "below" and colBottom + G + h <= A.y + A.h
+    if below then
+      y = colBottom + G
+      colLeft = math.min(colLeft, colRight - w)
+    else
+      if i > 1 then colRight = colLeft - G end
+      y = A.y + G
+      colLeft = colRight - w
+    end
+    out[i] = {x = colRight - w, y = y, w = w, h = h}
+    colBottom = y + h
+  end
+  return out
+end
+
+function floatItemOpen(key)
+  if key == "memo" then return T.memoOpen == true and not T.memberOf["memo"] end
+  local app = appFor(key)
+  return floating(key) and app ~= nil and not app:isHidden()
+end
+
+-- Rimette in fila tutte le app veloci aperte
+function layoutFloaters()
+  local keep, seen = {}, {}
+  for _, it in ipairs(T.floatStack) do
+    if floatItemOpen(it.key) and not seen[it.key] then seen[it.key] = true; table.insert(keep, it) end
+  end
+  -- aperte ma non ancora in fila (es. dopo un ricaricamento di Tabby)
+  local extra = {}
+  for bid in pairs(T.floatMode) do if not seen[bid] and floatItemOpen(bid) then table.insert(extra, bid) end end
+  table.sort(extra)
+  for _, bid in ipairs(extra) do seen[bid] = true; table.insert(keep, {key = bid, place = "side"}) end
+  if not seen.memo and floatItemOpen("memo") then table.insert(keep, {key = "memo", place = "side"}) end
+  T.floatStack = keep
+  local pos = floatPositions(keep)
+  for i, it in ipairs(keep) do placeFloatItem(it.key, pos[i]) end
+  local names = {}
+  for _, it in ipairs(keep) do table.insert(names, it.key == "memo" and "Memo" or appName(it.key, appFor(it.key))) end
+  local msg = "Tabby · app veloci in fila: " .. table.concat(names, ", ")
+  if T.floaterDiag ~= msg then T.floaterDiag = msg; print(msg) end
+end
+
+function placeFloatItem(key, r)
+  if key == "memo" then
+    if T.memo then T.memo:frame(r) end
+    return
+  end
+  local app = appFor(key)
   if not app then return end
-  local area = appArea()
   local wins = {}
   for _, w in ipairs(app:allWindows()) do
     if not w:isMinimized() and not w:isFullScreen() then table.insert(wins, w) end
   end
   table.sort(wins, function(a, b) return a:id() < b:id() end)
-  -- misura fissa per le app veloci che ce l'hanno (es. il Calendario)
   local size
-  for _, q in ipairs(QUICK) do if q.bid == app:bundleID() and q.w then size = q end end
+  for _, q in ipairs(QUICK) do if q.bid == key and q.w then size = q end end
   for n, w in ipairs(wins) do
-    local fr = w:frame()
-    local off = (n - 1) * 26
+    local off = (n - 1) * 26   -- più finestre della stessa app: a cascata
     if size then
-      w:setFrame({x = area.x + area.w - size.w - 12 - off, y = area.y + 12 + off, w = size.w, h = size.h})
-      -- l'app può rifiutare una misura troppo piccola e allargarsi da sola: si
-      -- rilegge la misura vera e si riporta la finestra dentro lo schermo
+      w:setFrame({x = r.x + r.w - size.w - off, y = r.y + off, w = size.w, h = size.h})
+      -- l'app può rifiutare una misura troppo piccola: si rilegge quella vera
       local got = w:frame()
       if math.abs(got.w - size.w) > 1 or math.abs(got.h - size.h) > 1 then
-        w:setTopLeft({x = area.x + area.w - got.w - 12 - off, y = area.y + 12 + off})
+        w:setTopLeft({x = r.x + r.w - got.w - off, y = r.y + off})
       end
     else
-      w:setTopLeft({x = area.x + area.w - fr.w - 12 - off, y = area.y + 12 + off})
+      local fr = w:frame()
+      w:setTopLeft({x = r.x + r.w - fr.w - off, y = r.y + off})
     end
   end
-  local msg = string.format("Tabby · %s: %d finestre messe in alto a destra",
-                            tostring(app:name()), #wins)
-  if T.floaterDiag ~= msg then T.floaterDiag = msg; print(msg) end
+end
+
+-- (nome storico: sistemare un'app veloce = rimettere in fila tutte)
+function placeFloater(app)
+  if not app then return end
+  layoutFloaters()
 end
 
 
@@ -413,6 +494,10 @@ function focusWin(e)
 end
 
 function focusKey(key)
+  if key == "memo" then
+    if T.memoOpen then memoTakeKeyboard() else openMemo() end
+    return
+  end
   local e = key and T.cand[key]
   if e and e.win then focusWin(e)
   elseif key then focusBid(T.keyBid[key] or key) end
