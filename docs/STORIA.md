@@ -123,4 +123,7 @@ v9.41: con la barra dei menu nascosta, quando scende Tabby le scende sotto (in a
 v9.42: chiusa un'app lenta a chiudersi (Spotify) dalla ✕: si va alla scheda accanto, non
     sulla Scrivania; i menu di Tabby e i riquadri della vista divisa stanno sopra il Memo e
     le app veloci; rinominare una scheda col tasto destro.
+v9.43: barra dei menu e Dock che si nascondono da soli: quando compaiono dalla parte di
+    Tabby (barra dei menu con Tabby in alto, Dock dallo stesso lato) Tabby esce dallo
+    schermo e rientra quando se ne vanno (al posto di "attaccata sotto" della v9.41).
 ```

@@ -507,7 +507,7 @@ ricontrollato ogni 30 s); oppure forzata accesa/spenta a mano (⚙︎ → Posizi
 la fascia del notch; "torna automatico"). Con la fascia: Tabby sale in cima, nella
 striscia accanto al notch, e **le schede saltano il notch** (nessuna scheda sotto la
 tacca, margine 6); le app partono subito sotto Tabby. Quando scende la barra dei menu di
-macOS, Tabby le scende sotto (A-6; fino alla v9.40 si faceva da parte).
+macOS, Tabby esce dallo schermo e poi rientra (A-6).
 
 **A-3 Nascondi Tabby** (⚙︎ → Comportamento): Tabby è nascosta e le app usano tutto
 lo schermo; appare portando il mouse sul **bordo** dalla sua parte (entro 2 punti) e
@@ -516,16 +516,19 @@ sopra Tabby). In alto con la barra dei menu che scende: Tabby si mette sotto di 
 Durante trascinamenti, divisione o creazione di cartelle resta visibile.
 
 **A-4 Controllo del mouse** (12 volte al secondo): **acceso solo** con Nascondi
-Tabby o con la barra dei menu di macOS nascosta; spento negli altri casi (consumo).
+Tabby o quando barra dei menu / Dock possono coprire Tabby (A-6); spento negli altri
+casi (consumo).
 
-**A-6 Attaccata sotto la barra dei menu** (v9.41, al posto di "si fa da parte"): con la
-barra dei menu di macOS su "nascondi sempre" e Tabby in alto o di lato, quando il
-puntatore tocca il bordo in alto dello schermo (la barra scende) Tabby **scende sotto di
-lei** dell'altezza vera della barra (chiesta a macOS: 30 punti su macOS 26 senza notch).
-Risale quando il puntatore torna giù oltre Tabby; **finché il puntatore è sopra Tabby
-resta giù**, così le schede non scappano da sotto il dito. Non con Nascondi Tabby né a
-schermo intero. (Tabby non può sapere direttamente se la barra è giù: lo deduce dal
-puntatore.)
+**A-6 Barra dei menu e Dock che si nascondono da soli** (v9.43, al posto di "attaccata
+sotto la barra dei menu" della v9.41): quando compaiono **dalla parte di Tabby** e la
+coprirebbero, Tabby **scivola fuori dallo schermo** dal suo lato (6 passi in ~0,13 s) e
+rientra quando se ne vanno. Coprono Tabby: la barra dei menu (su "nascondi sempre") se
+Tabby è **in alto**; il Dock (che si nasconde da solo) se sta **dallo stesso lato** di
+Tabby. Negli altri casi non cambia nulla (es. Tabby a destra e barra dei menu: copre solo
+l'angolo del gatto). Tabby non vede direttamente barra e Dock: lo deduce dal puntatore
+(tocca quel bordo dello schermo → compaiono; si allontana oltre l'altezza della barra dei
+menu, 30 punti su macOS 26, o lo spessore del Dock + 10 → se ne vanno). Lato, "nascondi"
+e dimensione del Dock si leggono dalle preferenze di macOS all'avvio e ogni 30 s.
 
 **A-5 Cambio di monitor o risoluzione**: si rileva di nuovo il notch e si ridisegna.
 Tabby usa sempre lo **schermo principale**.
@@ -790,7 +793,7 @@ Ogni regola ha un test in `test/`; nell'app Swift diventano test di accettazione
 | `test_correzioni.py` | S-6, B-6, D-7 |
 | `test_una_scheda.py` | U-1, U-2, C-3 |
 | `test_chiudi.py` | C-1, C-2, C-4 |
-| `test_barra_menu_notifiche.py` | A-4, A-6, N-5 |
+| `test_barra_menu_notifiche.py` | A-4, A-6 (barra dei menu e Dock), N-5 |
 | `test_browser_nomi.py` | B-3 (passaggio 0), B-8 |
 | `test_app_veloci.py` | Q-1, D-2 (app veloci nelle zone) |
 | `test_finestre_fluide.py` | C-4 (giallo, ⌘Q, macOS che cambia app prima), D-4, L (angoli), W-0, Q-2 |

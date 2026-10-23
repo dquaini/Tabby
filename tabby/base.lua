@@ -204,12 +204,6 @@ function baseRect()
 end
 
 -- Dove sta Tabby in questo momento
--- Barra dei menu di macOS nascosta ("nascondi sempre"): quando scende (puntatore in
--- cima allo schermo) Tabby scende sotto di lei, come attaccata (23/10/2026, Daniele).
--- Vale con Tabby in alto e di lato; in basso non serve.
-function menuFollow()
-  return T.menuHidden == true and S.position ~= "bottom" and not S.autohide
-end
 -- L'altezza vera della barra dei menu (chiesta a macOS una volta)
 function realMenuH()
   if T.realMenuH then return T.realMenuH end
@@ -223,19 +217,40 @@ function realMenuH()
   if h and h > 10 and h < 60 then T.realMenuH = h; return h end
   return menuBarH()
 end
-function menuDownOffset()
-  if T.menuDown and menuFollow() and not T.fullscreen then return realMenuH() end
-  return 0
+
+-- Il Dock: si nasconde da solo? Da che lato sta? Quanto è spesso?
+function readDockPrefs()
+  local p = {autohide = false, side = "bottom", size = 68}
+  pcall(function()
+    p.autohide = ((hs.execute("defaults read com.apple.dock autohide 2>/dev/null") or ""):match("1")) ~= nil
+    local o = (hs.execute("defaults read com.apple.dock orientation 2>/dev/null") or ""):match("%a+")
+    if o == "left" or o == "right" or o == "bottom" then p.side = o end
+    local t = tonumber(((hs.execute("defaults read com.apple.dock tilesize 2>/dev/null") or ""):match("[%d%.]+")))
+    if t then p.size = t + 20 end
+  end)
+  return p
+end
+
+-- Barra dei menu e Dock che si nascondono da soli (23/10/2026, Daniele): quando
+-- compaiono e coprirebbero Tabby, Tabby esce dallo schermo e rientra quando se ne
+-- vanno. Coprono Tabby solo dallo stesso lato: la barra dei menu se Tabby è in alto,
+-- il Dock se sta dalla stessa parte di Tabby. Negli altri casi non cambia nulla.
+function edgeWatch()
+  if S.autohide then return nil end
+  local w = {}
+  if S.position == "top" and T.menuHidden then w.menu = true end
+  local d = T.dockPrefs
+  if d and d.autohide and d.side == S.position then w.dock = true end
+  return next(w) and w or nil
 end
 
 function barFrame()
   local R = baseRect()
   local p = S.position
-  local off = menuDownOffset()
   if p == "bottom" then return {x = R.x, y = R.y + R.h - BAR_H, w = R.w, h = BAR_H} end
-  if p == "left"   then return {x = R.x, y = R.y + off, w = SIDE_W, h = R.h - off} end
-  if p == "right"  then return {x = R.x + R.w - SIDE_W, y = R.y + off, w = SIDE_W, h = R.h - off} end
-  local y = R.y + off
+  if p == "left"   then return {x = R.x, y = R.y, w = SIDE_W, h = R.h} end
+  if p == "right"  then return {x = R.x + R.w - SIDE_W, y = R.y, w = SIDE_W, h = R.h} end
+  local y = R.y
   -- se appare col mouse e la barra dei menu scende anche lei, mettiti sotto
   if S.autohide and y == screen():fullFrame().y then y = y + menuBarH() end
   return {x = R.x, y = y, w = R.w, h = BAR_H}

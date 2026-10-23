@@ -10,6 +10,7 @@
 menuBarH()
 T.notch = detectNotch()
 T.menuHidden = detectMenuHidden()
+T.dockPrefs = readDockPrefs()
 logDiagnostics()
 updateFullscreen()
 refreshBrowsers()

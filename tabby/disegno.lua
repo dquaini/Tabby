@@ -620,6 +620,7 @@ draw = function()
   T.updateMouseTimer()
   local fsHint = T.fsHintUntil and hs.timer.secondsSinceEpoch() < T.fsHintUntil
   if T.fullscreen or fsHint then setVisible(false)   -- a schermo intero Tabby si fa da parte
+  elseif T.edgeHidden or T.slideTimer then -- (fuori dallo schermo o mentre scivola)
   elseif S.autohide then setVisible(T.revealed) else setVisible(true) end
 end
 
@@ -632,47 +633,80 @@ T.diag = {draw = draw, layout = layout, activeIndex = activeIndex, badgeFor = ba
 --  "NASCONDI TABBY": APPARE PORTANDO IL MOUSE SUL BORDO DELLO SCHERMO
 -- ---------------------------------------------------------------------
 
+-- Tabby scivola fuori dallo schermo dal suo lato (out = true) o rientra
+function slideBar(out)
+  if not T.bar then return end
+  if T.slideTimer then T.slideTimer:stop(); T.slideTimer = nil end
+  local bf = barFrame()
+  local function at(frac)   -- 0 = al suo posto, 1 = fuori dallo schermo
+    local f, p = {x = bf.x, y = bf.y, w = bf.w, h = bf.h}, S.position
+    if p == "top" then f.y = bf.y - (bf.h + 4) * frac
+    elseif p == "bottom" then f.y = bf.y + (bf.h + 4) * frac
+    elseif p == "left" then f.x = bf.x - (bf.w + 4) * frac
+    else f.x = bf.x + (bf.w + 4) * frac end
+    return f
+  end
+  print("Tabby · " .. (out and ("esce dallo schermo (" .. tostring(T.edgeHidden) .. ")") or "rientra"))
+  if not out then T.bar:frame(at(1)); T.bar:show(); T.visible = true end
+  local steps, k = 6, 0
+  T.slideTimer = hs.timer.doEvery(0.022, function()
+    k = k + 1
+    T.bar:frame(at(out and k / steps or 1 - k / steps))
+    if k >= steps then
+      if T.slideTimer then T.slideTimer:stop() end
+      T.slideTimer = nil
+      if out then T.bar:hide(); T.visible = false; T.bar:frame(bf) else draw() end
+    end
+  end)
+end
+
 -- Il controllo del mouse (12 volte al secondo) serve solo con "Nascondi Tabby" o
--- con la barra dei menu di macOS nascosta (Tabby le scende sotto quando appare):
+-- con la barra dei menu / il Dock che si nascondono dallo stesso lato di Tabby:
 -- altrimenti è spento (consumo, 23/10/2026)
 function T.updateMouseTimer()
   if not T.mouseTimer then return end
-  local need = S.autohide or menuFollow()
+  local need = S.autohide or edgeWatch() ~= nil
   if need and not T.mouseTimer:running() then
     T.mouseTimer:start()
   elseif not need and T.mouseTimer:running() then
     T.mouseTimer:stop()
-    if T.menuDown then T.menuDown = false end
   end
+  if not need and T.edgeHidden then T.edgeHidden = nil; slideBar(false) end
 end
 
 T.mouseTimer = hs.timer.doEvery(0.08, function()
   if not T.bar then return end
   if T.press or T.split or T.fedit then return end   -- mentre trascini, dividi o crei una cartella, resta visibile
 
-  -- Barra dei menu di macOS nascosta: quando porti il puntatore in cima, la barra
-  -- scende e Tabby scende sotto di lei (in alto e di lato, anche nella fascia del
-  -- notch). Risale quando il puntatore torna giù oltre Tabby; finché il puntatore è
-  -- sopra Tabby resta giù, così le schede non ti scappano da sotto il dito.
-  if menuFollow() and not T.fullscreen then
+  -- Barra dei menu o Dock che si nascondono da soli: quando arrivano dalla parte di
+  -- Tabby (il puntatore tocca quel bordo dello schermo) Tabby esce dallo schermo; quando
+  -- se ne vanno (il puntatore si allontana dal bordo) rientra.
+  local ew = (not T.fullscreen) and edgeWatch() or nil
+  if ew then
     local ff = screen():fullFrame()
     local p  = hs.mouse.absolutePosition()
-    if not T.menuDown and p.y <= ff.y + 1 then
-      T.menuDown = true
-      draw()
-    elseif T.menuDown then
-      local bf = T.bf or barFrame()
-      local inside = p.x >= bf.x and p.x <= bf.x + bf.w and p.y >= bf.y and p.y <= bf.y + bf.h
-      local limit = isVertical() and (ff.y + realMenuH() + 8) or (bf.y + bf.h + 8)
-      if p.y > limit and not inside then
-        T.menuDown = false
-        draw()
+    local d  = T.dockPrefs or {}
+    if not T.edgeHidden then
+      local hit
+      if ew.menu and p.y <= ff.y + 1 then hit = "barra dei menu" end
+      if ew.dock and ((d.side == "bottom" and p.y >= ff.y + ff.h - 2)
+                   or (d.side == "left" and p.x <= ff.x + 1)
+                   or (d.side == "right" and p.x >= ff.x + ff.w - 2)) then hit = "Dock" end
+      if hit then T.edgeHidden = hit; slideBar(true) end
+    else
+      local away
+      if T.edgeHidden == "barra dei menu" then
+        away = p.y > ff.y + realMenuH() + 10
+      else
+        local dist = (d.side == "bottom" and (ff.y + ff.h - p.y)) or (d.side == "left" and (p.x - ff.x)) or (ff.x + ff.w - p.x)
+        away = dist > (d.size or 68) + 10
       end
+      if away then T.edgeHidden = nil; slideBar(false) end
     end
     return
-  elseif T.menuDown then
-    T.menuDown = false
-    draw()
+  elseif T.edgeHidden then
+    T.edgeHidden = nil
+    slideBar(false)
   end
 
   if not S.autohide or T.fullscreen then return end

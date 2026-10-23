@@ -1,6 +1,6 @@
-"""v9.41 (feedback del 23/10/2026): con la barra dei menu di macOS nascosta, quando scende
-(puntatore in cima) Tabby le scende sotto, in alto e di lato, e risale quando il puntatore
-torna giù oltre Tabby; le notifiche di macOS non compaiono sopra Tabby."""
+"""v9.43 (feedback del 23/10/2026): barra dei menu e Dock che si nascondono da soli: quando
+compaiono dalla parte di Tabby, Tabby esce dallo schermo e rientra quando se ne vanno
+(negli altri casi non cambia nulla); le notifiche di macOS non compaiono sopra Tabby (v9.41)."""
 import os
 import lupa.lua54 as l
 from aiuto import carica
@@ -25,26 +25,35 @@ def check(what, ok):
 def tick(x, y): run(f'MOUSE = {{x = {x}, y = {y}}}; Tabby.mouseTimer.fn()')
 def bar(): return ev('(function() local f = Tabby.bf; return f.x .. "," .. f.y .. "," .. f.w .. "," .. f.h end)()')
 
-run('Tabby.menuHidden = true; Tabby._env.draw()')
-check("con la barra dei menu nascosta il controllo del puntatore è acceso", ev('Tabby.mouseTimer:running()') is True)
-y0 = ev('Tabby.bf.y'); mh = ev('Tabby._env.realMenuH()')
-print("== Tabby in alto:", bar())
-tick(700, 0)
-check(f"puntatore in cima: Tabby scende sotto la barra dei menu (+{mh})", ev('Tabby.bf.y') == y0 + mh)
-tick(700, y0 + mh + 20)
-check("puntatore sopra Tabby: resta giù (le schede non scappano)", ev('Tabby.bf.y') == y0 + mh)
-tick(700, 400)
-check("puntatore giù nelle app: Tabby risale", ev('Tabby.bf.y') == y0)
+def slide():
+    L.execute('for _ = 1, 20 do if not Tabby.slideTimer then break end Tabby.slideTimer.fn() end FLUSH()')
 
-print("== Tabby a destra")
+run('Tabby.menuHidden = true; Tabby.dockPrefs = {autohide = true, side = "right", size = 68}; Tabby._env.draw()')
+check("barra dei menu nascosta e Tabby in alto: il controllo del puntatore è acceso", ev('Tabby.mouseTimer:running()') is True)
+print("== Tabby in alto, scende la barra dei menu")
+tick(700, 0); slide()
+check("Tabby esce dallo schermo", ev('Tabby.edgeHidden') == "barra dei menu" and ev('Tabby.bar._shown') is False)
+tick(700, 20); slide()
+check("finché il puntatore è sulla barra dei menu resta fuori", ev('Tabby.bar._shown') is False)
+tick(700, 300); slide()
+check("la barra dei menu se ne va: Tabby rientra al suo posto", ev('Tabby.edgeHidden') is None and ev('Tabby.bar._shown') is True and ev('Tabby.bar:frame().y') == ev('Tabby.bf.y'))
+
+print("== Tabby a destra, Dock a destra")
 run('CLICK("settings"); MENU[1].menu[4].fn()')
-h0 = ev('Tabby.bf.h'); y0 = ev('Tabby.bf.y')
-tick(300, 0)
-check("puntatore in cima: la colonna di Tabby comincia sotto la barra dei menu", ev('Tabby.bf.y') == y0 + mh and ev('Tabby.bf.h') == h0 - mh)
-tick(1350, 300)
-check("puntatore su Tabby: resta giù", ev('Tabby.bf.y') == y0 + mh)
-tick(600, 300)
-check("puntatore nelle app: torna su", ev('Tabby.bf.y') == y0)
+tick(300, 0); slide()
+check("la barra dei menu non tocca Tabby di lato: non cambia nulla", ev('Tabby.edgeHidden') is None and ev('Tabby.bar._shown') is True)
+tick(1439, 400); slide()
+check("il Dock arriva da destra: Tabby esce dallo schermo", ev('Tabby.edgeHidden') == "Dock" and ev('Tabby.bar._shown') is False)
+tick(1400, 400); slide()
+check("puntatore ancora sul Dock: resta fuori", ev('Tabby.bar._shown') is False)
+tick(900, 400); slide()
+check("il Dock se ne va: Tabby rientra", ev('Tabby.edgeHidden') is None and ev('Tabby.bar._shown') is True)
+
+print("== Dock in basso, Tabby a destra: non cambia nulla")
+run('Tabby.dockPrefs = {autohide = true, side = "bottom", size = 68}; Tabby._env.draw()')
+tick(700, 899); slide()
+check("Tabby resta al suo posto", ev('Tabby.edgeHidden') is None and ev('Tabby.bar._shown') is True)
+run('Tabby.dockPrefs = {autohide = false, side = "right", size = 68}')
 
 print("== Notifiche di macOS")
 L.execute('''

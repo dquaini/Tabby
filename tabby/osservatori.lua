@@ -278,6 +278,12 @@ T.menuWatch = hs.timer.doEvery(30, function()
     draw()
     refit()
   end
+  local d = readDockPrefs()
+  if T.dockPrefs == nil or d.autohide ~= T.dockPrefs.autohide or d.side ~= T.dockPrefs.side then
+    T.dockPrefs = d
+    T.updateMouseTimer()
+  end
+  T.dockPrefs = d
 end)
 
 -- Batteria: ridisegna quando cambia carica o alimentazione
