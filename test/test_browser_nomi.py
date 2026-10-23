@@ -41,15 +41,30 @@ run('Tabby.rebuildTimer:start()')
 check("la prima finestra ha ancora la riunione abc", "abc" in (url_of("M1") or ""))
 check("la seconda ha ancora la riunione xyz", "xyz" in (url_of("M2") or ""))
 
-print("== Rinominare una scheda")
+def rclick(i):
+    # tasto destro sul centro della scheda i
+    run(f'''local tv; for _, x in ipairs(Tabby.L.tabs) do if x.i == {i} then tv = x end end
+local p = {{x = Tabby.bf.x + tv.r.x + tv.r.w / 2, y = Tabby.bf.y + tv.r.y + tv.r.h / 2}}
+MENU = nil
+for _, t in ipairs(TAPS) do if t.types[1] == 3 and t.on then RIGHT_SWALLOWED = t.fn({{location = function() return p end}}) end end''')
+
+print("== Rinominare una scheda (tasto destro)")
 i = idx("Chrome")
 run(f'CLICK("close{i}")')
-check("nel menu della ✕ c'è «Rinomina la scheda…»", ev('(function() for _, it in ipairs(MENU) do if it.title == "Rinomina la scheda…" then return true end end return false end)()') is True)
+check("il menu della ✕ non ha più «Rinomina»", ev('(function() for _, it in ipairs(MENU) do if it.title == "Rinomina la scheda…" then return true end end return false end)()') is False)
+rclick(i)
+check("tasto destro sulla scheda: menu con «Rinomina la scheda…»", ev('MENU ~= nil and (function() for _, it in ipairs(MENU) do if it.title == "Rinomina la scheda…" then return true end end return false end)()') is True)
+check("…e il clic destro non arriva all'app sotto", ev('RIGHT_SWALLOWED') is True)
 run('PROMPT_TEXT = "Rassegna stampa"; for _, it in ipairs(MENU) do if it.title == "Rinomina la scheda…" then it.fn() end end')
 check("la scheda ora si chiama «Rassegna stampa»", "Rassegna stampa" in names())
 run('Tabby.rebuildTimer:start()')
 check("…e resta così anche dopo un aggiornamento", "Rassegna stampa" in names())
-run(f'CLICK("close{idx("Rassegna stampa")}"); for _, it in ipairs(MENU) do if it.title == "Torna al nome di prima" then it.fn() end end')
+rclick(idx("Rassegna stampa"))
+run('for _, it in ipairs(MENU) do if it.title == "Torna al nome di prima" then it.fn() end end')
+print("== Anche un'app in una scheda sola si rinomina")
+rclick(idx("Finder"))
+run('PROMPT_TEXT = "File"; for _, it in ipairs(MENU) do if it.title == "Rinomina la scheda…" then it.fn() end end')
+check("il Finder ora si chiama «File»", "File" in names())
 check("«Torna al nome di prima»: di nuovo «Chrome»", "Chrome" in names())
 
 print("== Clic sull'icona di una finestra con più siti: scegli quale mostrare")

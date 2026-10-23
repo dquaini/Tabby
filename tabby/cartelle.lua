@@ -381,7 +381,7 @@ FD.drawFolderEdit = function()
   local A = appArea()
   if not T.fOverlay then
     T.fOverlay = hs.canvas.new(A)
-    T.fOverlay:level(hs.canvas.windowLevels.floating)
+    T.fOverlay:level(hs.canvas.windowLevels.modalPanel or hs.canvas.windowLevels.floating)
     T.fOverlay:behavior({"canJoinAllSpaces", "stationary", "fullScreenAuxiliary"})
     T.fOverlay:clickActivating(false)
     T.fOverlay:mouseCallback(FD.onFolderEditMouse)
@@ -446,6 +446,7 @@ FD.drawFolderEdit = function()
   button(els, {x = px + pw - 116, y = py + ph - 52, w = 104, h = 34}, "Fatto  ↩", COL.accent, "fdone")
   T.fOverlay:replaceElements(els)
   T.fOverlay:show()
+  barOverOverlays(true)
   if T.bar then T.bar:orderAbove(T.fOverlay) end
 end
 
@@ -477,6 +478,7 @@ end
 FD.cancelFolderEdit = function()
   T.fedit = nil
   if T.fOverlay then T.fOverlay:hide() end
+  barOverOverlays(T.split ~= nil)
   draw()
 end
 

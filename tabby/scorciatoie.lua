@@ -123,6 +123,7 @@ T.keyTapGuard = hs.timer.doEvery(5, function()
   if T.gestureTap and not T.gestureTap:isEnabled() then T.gestureTap:start() end
   if T.fsClickTap and not T.fsClickTap:isEnabled() then T.fsClickTap:start() end
   if T.floatTap and not T.floatTap:isEnabled() then T.floatTap:start() end
+  if T.rightTap and not T.rightTap:isEnabled() then T.rightTap:start() end
 end)
 
 -- Riserva: le stesse scorciatoie registrate anche come scorciatoie di sistema

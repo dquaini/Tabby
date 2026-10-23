@@ -386,6 +386,11 @@ function applyTabNames(cand)
       local n = T.tabNames[tostring(id)]
       if n then e.name, e.customName = n, true end
     end
+    local kid = "k:" .. tostring(e.key)
+    if not e.win then
+      alive[kid] = true
+      if T.tabNames[kid] then e.name, e.customName = T.tabNames[kid], true end
+    end
   end
   local changed = false
   for id in pairs(T.tabNames) do if not alive[id] then T.tabNames[id] = nil; changed = true end end

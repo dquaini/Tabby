@@ -215,6 +215,17 @@ T.fsClickTap = hs.eventtap.new({hs.eventtap.event.types.leftMouseDown}, function
 end)
 T.fsClickTap:start()
 
+-- Tasto destro su una scheda di Tabby: menu con «Rinomina la scheda…»
+T.rightTap = hs.eventtap.new({hs.eventtap.event.types.rightMouseDown}, function(e)
+  local ok, p = pcall(function() return e:location() end)
+  if not ok or not p then p = hs.mouse.absolutePosition() end
+  local i = tabAtPoint(p)
+  if not i then return false end
+  later(function() openTabContextMenu(i, {x = p.x, y = p.y}) end)
+  return true   -- l'app sotto non riceve il clic
+end)
+T.rightTap:start()
+
 -- Un clic può portare una finestra sopra un'app veloce: Tabby la rimette sopra
 T.floatTap = hs.eventtap.new({hs.eventtap.event.types.leftMouseUp}, function()
   if next(T.floatMode) then hs.timer.doAfter(0.08, raiseFloaters) end

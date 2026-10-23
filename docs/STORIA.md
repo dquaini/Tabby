@@ -120,4 +120,7 @@ v9.40: browser: più finestre con lo stesso titolo (due "Meet") non si scambiano
 v9.41: con la barra dei menu nascosta, quando scende Tabby le scende sotto (in alto e di
     lato) e risale quando il puntatore torna giù; le notifiche di macOS compaiono sotto
     Tabby (in alto) o alla sua sinistra (a destra), non più sopra.
+v9.42: chiusa un'app lenta a chiudersi (Spotify) dalla ✕: si va alla scheda accanto, non
+    sulla Scrivania; i menu di Tabby e i riquadri della vista divisa stanno sopra il Memo e
+    le app veloci; rinominare una scheda col tasto destro.
 ```

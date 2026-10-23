@@ -107,7 +107,8 @@ drawSplit = function()
   local A = appArea()
   if not T.overlay then
     T.overlay = hs.canvas.new(A)
-    T.overlay:level(hs.canvas.windowLevels.floating)
+    -- sopra le app veloci e il Memo (23/10/2026: il Memo copriva le zone)
+    T.overlay:level(hs.canvas.windowLevels.modalPanel or hs.canvas.windowLevels.floating)
     T.overlay:behavior({"canJoinAllSpaces", "stationary", "fullScreenAuxiliary"})
     T.overlay:clickActivating(false)
     T.overlay:mouseCallback(onOverlayMouse)
@@ -168,6 +169,7 @@ drawSplit = function()
 
   T.overlay:replaceElements(els)
   T.overlay:show()
+  barOverOverlays(true)
   if T.bar then T.bar:orderAbove(T.overlay) end
 end
 
@@ -201,9 +203,19 @@ function enterSplit(layoutId)
   drawSplit()
 end
 
+-- Durante la divisione (e la creazione di una cartella) i riquadri stanno sopra
+-- tutte le finestre, e Tabby sopra i riquadri, per trascinarci le schede
+function barOverOverlays(on)
+  if not T.bar then return end
+  local L = hs.canvas.windowLevels
+  if on then T.bar:level(math.max(T.barLevel or 0, (L.modalPanel or L.floating) + 1))
+  else T.bar:level(T.barLevel or L.floating) end
+end
+
 exitSplit = function()
   T.split = nil
   if T.overlay then T.overlay:hide() end
+  barOverOverlays(T.fedit ~= nil)
   draw()
 end
 

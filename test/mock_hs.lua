@@ -171,7 +171,7 @@ hs = {
   },
   canvas = {
     new = newCanvas,
-    windowLevels = {floating = 3, dragging = 500},
+    windowLevels = {floating = 3, modalPanel = 8, dragging = 500},
   },
   spaces = {watcher = {new = function() return {start = function(s) return s end} end},
             focusedSpace = function() return 1 end,
@@ -183,7 +183,7 @@ hs = {
     watcher = {new = function() return {start = function(s) return s end} end},
   },
   eventtap = {
-    event = {types = {keyDown = 10, leftMouseDragged = 6, leftMouseUp = 2, gesture = 29, leftMouseDown = 1}},
+    event = {types = {keyDown = 10, leftMouseDragged = 6, leftMouseUp = 2, gesture = 29, leftMouseDown = 1, rightMouseDown = 3}},
     new = function(types, fn)
       local t = {types = types, fn = fn, on = false}
       function t:start() self.on = true; return self end

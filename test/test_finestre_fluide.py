@@ -67,6 +67,17 @@ nb = neighbor_of("Note")
 run('NOTE:kill(); APPWATCH(nil, "term", NOTE)')
 check(f"chiusa Note: sei su «{nb}»", ev('FRONT and FRONT._name') == nb or ev('FRONT._focused and FRONT._focused._title') == nb)
 
+print("== ✕ → Chiudi Spotify (che ci mette un po' a chiudersi): scheda accanto, non la Scrivania")
+run('SPOT = ADDAPP("com.spotify.client", "Spotify"); Tabby.rebuildTimer:start()')
+run(f'CLICK("tab{idx("Spotify")}")')
+nb = neighbor_of("Spotify")
+# come sul Mac: la finestra resta lì ancora per un po' e intanto macOS attiva il Finder
+L.execute('''function SPOT:kill() SLOW_KILLED = true; FRONT = FINDER end''')
+run(f'CLICK("close{idx("Spotify")}"); for _, it in ipairs(MENU) do if it.title == "Chiudi Spotify" then it.fn() end end')
+cur = ev('(function() local i = Tabby._env.activeIndex(); return i and Tabby.tabs[i].name end)()')
+check(f"chiusa Spotify: sei su «{nb}», non sul Finder (sei su «{cur}»)", cur == nb)
+L.execute('SPOT._running = false; for i, x in ipairs(APPS) do if x == SPOT then table.remove(APPS, i) end end; APPWATCH(nil, "term", SPOT); FLUSH()')
+
 print("== Vista divisa con due finestre di Tally: niente vibrazione")
 L.execute('for _, w in ipairs(CHROME._wins) do w._min = false end')
 tally = [i + 1 for i, n in enumerate(names()) if n == "Tally"]

@@ -157,9 +157,11 @@ Nome (`siteName`): si toglie un "(3) " iniziale; si divide il titolo sui separat
 4. il nome del dominio con l'iniziale maiuscola ("Youtube").
 Icona: il logo del sito (vedi B-6).
 
-**B-8 Rinominare** (v9.40): ✕ → «Rinomina la scheda…» su ogni scheda-finestra; il nome
-resta finché la finestra è aperta (anche dopo un ricaricamento di Tabby); «Torna al nome
-di prima». **Scegliere il sito**: clic sull'icona di una finestra di browser con più
+**B-8 Rinominare**: **tasto destro sulla scheda** (v9.42; prima era nel menu della ✕) →
+«Rinomina la scheda…»; vale per ogni scheda tranne viste divise e cartelle; il nome resta
+finché la finestra (o l'app, se è in una scheda sola) è aperta, anche dopo un
+ricaricamento di Tabby; «Torna al nome di prima». Nello stesso menu, per le finestre di
+browser, i siti da mostrare. **Scegliere il sito**: clic sull'icona di una finestra di browser con più
 siti → l'elenco dei siti aperti (con i loghi); scelto uno, la scheda prende nome e logo
 di quel sito finché quel sito è aperto nella finestra, poi torna «Chrome». Con
 DuckDuckGo (che dice solo il sito della scheda in vista) la scelta resta finché la
@@ -279,7 +281,10 @@ Una scheda ridotta resta sulla barra: cliccandola la finestra torna. Non vale in
 modalità scrivania, né per le riduzioni fatte da Tabby stessa (una scheda alla volta,
 scrivania). A ogni disegno Tabby annota la scheda attiva (chiave, posizione, scheda
 accanto, finestre, app) e tiene anche quella di prima per 1,5 s: macOS a volte attiva
-un'altra app un istante prima di dire che la finestra è chiusa.
+un'altra app un istante prima di dire che la finestra è chiusa. Un'app che si chiude
+(✕ → Chiudi app, ⌘Q) può metterci qualche secondo (Spotify, v9.42): le sue finestre non
+contano più e Tabby riprova fino a 4 s; se nel frattempo scegli tu un'altra scheda, non
+ti sposta.
 
 **C-5 ⚙︎ → Chiudi tutte le app…** chiede conferma; chiude tutte le app (le app con
 documenti non salvati chiedono loro); del Finder chiude solo le finestre.
@@ -308,7 +313,9 @@ guardando: la scheda attiva nella zona 1 (o le schede della vista divisa attiva)
 - tutte le zone piene → 0,35 s dopo la vista nasce da sola;
 - Fatto/Invio con zone vuote → vista con le app messe, schema adattato al numero;
   una sola app → nessuna vista, si va su quell'app; Esc/Annulla → niente.
-Le **app veloci aperte** (Terminale, Calcolatrice…) entrano già nelle zone libere (un
+Il velo e le zone stanno **sopra tutte le finestre** (anche le app veloci e il Memo) e
+Tabby sopra di loro, per trascinarci le schede (v9.42; stesso per il riquadro delle
+cartelle). Le **app veloci aperte** (Terminale, Calcolatrice…) entrano già nelle zone libere (un
 clic sulla zona le toglie); nella vista diventano app normali (v9.39).
 Una scheda entra in una vista sola (togliendola da un'altra vista). Le viste divise
 e le cartelle non si mettono in una zona.
@@ -576,7 +583,8 @@ Si ricordano anche dopo un ricaricamento (`floatMode`).
 Spotlight); si salva da solo 0,3 s dopo che smetti di scrivere e alla chiusura; si
 ricarica dal file a ogni apertura. Esc o ⌃⌥M lo chiudono e riportano all'app di
 prima. Cursore in fondo al testo all'apertura. La tastiera deve arrivare davvero al
-Memo: Tabby ricontrolla dopo 0,08, 0,25 e 0,6 s e, se serve, gliela ridà (v9.38). ⚡︎ → "Mostra il file del Memo nel
+Memo: Tabby ricontrolla dopo 0,08, 0,25 e 0,6 s e, se serve, gliela ridà (v9.38). Il
+Memo sta davanti alle finestre ma sotto i menu di Tabby (v9.42). ⚡︎ → "Mostra il file del Memo nel
 Finder". **Da fare** (roadmap): righe che iniziano con "- " = elenco puntato;
 "[ ] " = casella da spuntare (spuntata: riga barrata); "> " = sezione apribile
 (▸/▾). Il file resta testo semplice.

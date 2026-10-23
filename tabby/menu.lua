@@ -40,32 +40,33 @@ function openCloseMenu(i)
       fn = function() main:close(); scheduleRebuild(); goNeighborSoon(snap, "chiusa la finestra") end,
     })
   end
-  if t.win then
-    local id = tostring(t.win:id())
-    table.insert(items, {title = "Rinomina la scheda…", fn = function() renameTab(t) end})
-    if T.tabNames[id] then
-      table.insert(items, {title = "Torna al nome di prima", fn = function()
-        T.tabNames[id] = nil; hs.settings.set("tabbar.tabNames", T.tabNames); rebuildTabs(); draw()
-      end})
-    end
-    table.insert(items, {title = "-"})
-  end
   if t.bid == FINDER then
     table.insert(items, {title = "Il Finder non si può chiudere", disabled = true})
   else
     table.insert(items, {
       title = "Chiudi " .. appName(t.bid, app),   -- l'app intera (es. Chrome, non Gmail)
-      fn = function() app:kill(); scheduleRebuild(); goNeighborSoon(snap, "chiusa l'app") end,
+      fn = function()
+        T.quitting = T.quitting or {}
+        T.quitting[t.bid] = hs.timer.secondsSinceEpoch()   -- (vale per 6 secondi)
+        app:kill(); scheduleRebuild(); goNeighborSoon(snap, "chiusa l'app")
+      end,
     })
   end
   popup(items, T.closePos[i])
 end
 
 
--- Rinomina una scheda (una finestra): il nome resta finché la finestra è aperta
+-- Il nome scelto per una scheda si ricorda per la sua finestra (finché è aperta) o,
+-- per un'app in una scheda sola, per la sua chiave (finché l'app è aperta)
+function tabNameId(t)
+  if t.win then return tostring(t.win:id()) end
+  return "k:" .. tostring(t.key)
+end
+
+-- Rinomina una scheda (tasto destro sulla scheda)
 function renameTab(t)
-  if not t or not t.win then return end
-  local id = tostring(t.win:id())
+  if not t or t.group or t.folder then return end
+  local id = tabNameId(t)
   local btn, txt = FD.ask(function()
     return hs.dialog.textPrompt("Rinomina la scheda", "Nuovo nome (vuoto = quello di prima):", t.name or "", "Rinomina", "Annulla")
   end)
@@ -74,6 +75,48 @@ function renameTab(t)
   T.tabNames[id] = (txt ~= "") and txt or nil
   hs.settings.set("tabbar.tabNames", T.tabNames)
   rebuildTabs(); draw()
+end
+
+-- Tasto destro su una scheda (23/10/2026, al posto della ✕): rinomina, nome di
+-- prima, e per le finestre di browser con più siti il sito da mostrare
+function openTabContextMenu(i, pos)
+  local t = T.tabs[i]
+  if not t or t.group or t.folder then return end
+  local id = tabNameId(t)
+  local items = {{title = "Rinomina la scheda…", fn = function() renameTab(t) end}}
+  if T.tabNames[id] then
+    table.insert(items, {title = "Torna al nome di prima", fn = function()
+      T.tabNames[id] = nil; hs.settings.set("tabbar.tabNames", T.tabNames); rebuildTabs(); draw()
+    end})
+  end
+  local e = T.cand[t.key]
+  if e and e.win and BROWSERS[e.bid] and not e.site and #windowDomains(e) >= 1 then
+    table.insert(items, {title = "-"})
+    table.insert(items, {title = "Mostra la scheda come:", disabled = true})
+    local wid = e.win:id()
+    for _, d in ipairs(windowDomains(e)) do
+      local img = favicon(d)
+      table.insert(items, {title = siteName(nil, d) .. "   " .. d, image = img and img:setSize({w = 16, h = 16}) or nil,
+        checked = (T.showSite[wid] == d) or nil,
+        fn = function() T.showSite[wid] = d; rebuildTabs(); draw() end})
+    end
+    if T.showSite[wid] then
+      table.insert(items, {title = BROWSERS[e.bid].short .. " (come prima)", fn = function() T.showSite[wid] = nil; rebuildTabs(); draw() end})
+    end
+  end
+  popup(items, pos)
+end
+
+-- La scheda sotto un punto dello schermo (nil se non c'è)
+function tabAtPoint(p)
+  local bf, L = T.bf, T.L
+  if not bf or not L or not T.visible then return nil end
+  local x, y = p.x - bf.x, p.y - bf.y
+  for _, tv in ipairs(L.tabs) do
+    local r = tv.r
+    if x >= r.x and x <= r.x + r.w and y >= r.y and y <= r.y + r.h then return tv.i end
+  end
+  return nil
 end
 
 -- Clic sull'icona di una finestra di browser con più siti: l'elenco dei siti
@@ -180,7 +223,8 @@ function snapForApp(bid)
   local s = T.activeSnap
   if s and s.bids[bid] then return s end
   local p = T.prevSnap
-  if p and p.bids[bid] and hs.timer.secondsSinceEpoch() - (T.prevSnapAt or 0) < 1.5 then return p end
+  -- (un'app ci può mettere qualche secondo a chiudersi: si guarda più indietro)
+  if p and p.bids[bid] and hs.timer.secondsSinceEpoch() - (T.prevSnapAt or 0) < 5 then return p end
   return nil
 end
 
@@ -189,7 +233,12 @@ function snapStillVisible(snap)
   local open = {}
   if T.allWins then
     for _, w in ipairs(T.allWins:getWindows()) do
-      if not w:isMinimized() and not w:isFullScreen() then open[w:id()] = true end
+      local a = w:application()
+      -- (un'app che si sta chiudendo non conta)
+      local q = T.quitting and T.quitting[a and a:bundleID() or ""]
+      if q and hs.timer.secondsSinceEpoch() - q > 6 then q = nil end
+      if a and a:isRunning() and not q
+         and not w:isMinimized() and not w:isFullScreen() then open[w:id()] = true end
     end
   end
   for id in pairs(snap.wins) do if open[id] then return true end end
@@ -198,14 +247,22 @@ end
 
 -- Dopo un attimo (le app ci mettono un po' a chiudere), se della scheda non resta
 -- niente in vista, passa alla scheda accanto
+-- (un'app può metterci qualche secondo a chiudersi, es. Spotify: si riprova fino a
+-- 4 s, finché la sua finestra non sparisce; se nel frattempo scegli tu un'altra
+-- scheda, Tabby non ti sposta — 23/10/2026)
 function goNeighborSoon(snap, why)
   if not snap then return end
   T.neighborSeq = (T.neighborSeq or 0) + 1
-  local seq = T.neighborSeq
-  hs.timer.doAfter(0.35, function()
+  local seq, focus = T.neighborSeq, T.focusSeq
+  local tries = {0.35, 0.8, 1.5, 2.5, 4}
+  local function attempt(n)
     if seq ~= T.neighborSeq or T.desktopMode then return end
+    if T.focusSeq ~= focus then return end   -- hai scelto tu un'altra scheda
     rebuildTabs()
-    if snapStillVisible(snap) then draw(); return end
+    if snapStillVisible(snap) then
+      if tries[n + 1] then hs.timer.doAfter(tries[n + 1] - tries[n], function() attempt(n + 1) end) end
+      draw(); return
+    end
     local target
     for i, t in ipairs(T.tabs) do if t.key == snap.neighbor then target = i end end
     if not target and #T.tabs > 0 then target = math.max(1, math.min(snap.idx - 1, #T.tabs)) end
@@ -213,7 +270,8 @@ function goNeighborSoon(snap, why)
     print(string.format("Tabby · %s «%s»: passo alla scheda accanto «%s»",
       tostring(why), tostring(snap.name), tostring(T.tabs[target].name)))
     switchTo(target)
-  end)
+  end
+  hs.timer.doAfter(tries[1], function() attempt(1) end)
 end
 
 

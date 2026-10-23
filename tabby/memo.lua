@@ -129,7 +129,9 @@ function memoTakeKeyboard()
   local m = T.memo
   if not m then return end
   hs.focus()
-  pcall(function() m:bringToFront(true) end)
+  -- (davanti alle finestre, ma non "sopra a tutto": i menu di Tabby e i riquadri
+  -- della vista divisa devono restare sopra il Memo — 23/10/2026)
+  pcall(function() m:bringToFront(false); m:level(hs.canvas.windowLevels.floating) end)
   local w = m:hswindow()
   if w then w:focus() end
   m:evaluateJavaScript("typeof focusEnd === 'function' && focusEnd()")

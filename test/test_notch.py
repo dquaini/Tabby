@@ -21,8 +21,8 @@ def make(menu_hidden, notch, fy, push_down=False, extra=3):
         mock = mock.replace('function c:level() return self end', 'function c:level(v) if v then self._level = v end return self end')
         mock = mock.replace('function c:frame(f) if f then self._frame = f; return self end return self._frame end',
             'function c:frame(f) if f then local y = f.y; if (self._level or 0) < 25 and y < 32 then y = 32 end; self._frame = {x=f.x, y=y, w=f.w, h=f.h}; return self end return self._frame end')
-        mock = mock.replace('windowLevels = {floating = 3, dragging = 500}',
-                            'windowLevels = {floating = 3, dock = 20, mainMenu = 24, status = 25, popUpMenu = 101, dragging = 500}')
+        mock = mock.replace('windowLevels = {floating = 3, modalPanel = 8, dragging = 500}',
+                            'windowLevels = {floating = 3, modalPanel = 8, dock = 20, mainMenu = 24, status = 25, popUpMenu = 101, dragging = 500}')
     L = l.LuaRuntime(); L.execute(mock)
     L.execute('print = function() end')
     L.execute('ADDAPP("com.apple.finder","Finder"); ADDAPP("com.tinyspeck.slackmacgap","Slack"); '
