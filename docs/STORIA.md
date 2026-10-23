@@ -142,4 +142,7 @@ v9.47: tolta la colonna riservata ai Lampi (troppo limitante): i Lampi stanno so
     finiscono sotto la finestra che usi, compaiono sul ripiano nella barra di Tabby (icone
     + «Tutti»): un clic e tornano davanti. "C'è posto" = dentro lo schermo e non sopra un
     altro Lampo.
+v9.48: niente ripiano a parte: è il tasto ⚡︎ che si allarga con le icone dei Lampi coperti e
+    «Tutti» (di lato diventa una riga sopra ⊞ ⚙︎); cambiando posizione i Lampi si rimettono
+    in fila.
 ```

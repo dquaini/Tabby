@@ -403,6 +403,7 @@ function positionMenu()
         T.revealed = false
         draw()
         refit()
+        layoutFloaters()   -- i Lampi si rimettono in fila nello spazio nuovo
       end,
     })
   end

@@ -591,10 +591,13 @@ scorciatoia (allora si nascondono e tornano app normali). **Il ripiano dei Lampi
 limitante): macOS non permette di tenere la finestra di un'altra app sopra quella che usi
 (provato su macOS 26), quindi Calcolatrice, Calendario e Terminale possono finire sotto.
 Quando un Lampo è **coperto** (una finestra che non è un Lampo gli sta sopra e lo
-sovrappone), nella **barra di Tabby** compare il ripiano: ⚡︎, le icone dei Lampi coperti
-e, se sono due o più, **«Tutti»**. Clic su un'icona → quel Lampo torna davanti; «Tutti» →
-tutti, uno dopo l'altro. Così si vede che non sono stati chiusi. Con Tabby in alto o in
-basso il ripiano sta prima della batteria; di lato è una riga sopra la batteria. Si
+sovrappone), **il tasto ⚡︎ si allarga** (v9.48: un solo ⚡︎ in Tabby) e accanto al fulmine
+mostra le icone dei Lampi coperti e, se sono due o più, **«Tutti»**, su uno sfondo
+arancione chiaro. Clic sul fulmine → il menu ⚡︎ di sempre; su un'icona → quel Lampo torna
+davanti; «Tutti» → tutti, uno dopo l'altro. Così si vede che non sono stati chiusi. Con
+Tabby in alto o in basso il tasto si allarga verso sinistra; di lato il ⚡︎ diventa una
+riga larga quanto Tabby sopra ⊞ e ⚙︎ (che si dividono la fila sotto). Cambiando la
+posizione di Tabby i Lampi si rimettono in fila. Si
 aggiorna a ogni cambio di app o di finestra e dopo ogni clic. Il Memo, che è di Tabby,
 sta sempre sopra e non va sul ripiano. La scorciatoia su un'app veloce
 in vista ma senza tastiera le dà la tastiera. Se un'app rifiuta la misura, si rilegge

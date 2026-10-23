@@ -143,22 +143,29 @@ function layout(bf, activeIdx)
     local deskH   = catFullImage(false) and 92 or BTN_W
     local top     = menuPad()   -- fascia nera sotto la barra dei menu, se scende
     L.desk     = {x = 0, y = top, w = w, h = deskH}
-    L.split    = {x = 0, y = bottomY, w = third, h = BTN_W}
-    L.quick    = {x = third, y = bottomY, w = third, h = BTN_W}
-    L.settings = {x = third * 2, y = bottomY, w = third, h = BTN_W}
-    if bat then L.battery = {x = 0, y = bottomY - batH, w = w, h = batH} end
-    -- il ripiano dei Lampi coperti, una riga sopra la batteria
-    local lampH = (#T.coveredLamps > 0) and 34 or 0
+    -- Lampi coperti: il tasto ⚡︎ diventa una riga intera sopra ⊞ ⚙︎, con le icone dei
+    -- Lampi da riportare davanti e «Tutti» (un solo ⚡︎ in Tabby, 23/10/2026)
+    local lampH = (#T.coveredLamps > 0) and 36 or 0
     if lampH > 0 then
-      L.lamps = {x = 0, y = bottomY - batH - lampH, w = w, h = lampH}
-      table.insert(L.dividers, {x = 8, y = bottomY - batH - lampH, w = w - 16, h = 1})
-      batH = batH + lampH   -- (per lo spazio delle schede qui sotto)
+      L.split    = {x = 0, y = bottomY, w = w / 2, h = BTN_W}
+      L.settings = {x = w / 2, y = bottomY, w = w / 2, h = BTN_W}
+      L.quick    = {x = 0, y = bottomY - lampH, w = w, h = lampH}
+      L.quickWide = true
+      table.insert(L.dividers, {x = w / 2, y = bottomY + 8, w = 1, h = BTN_W - 16})
+    else
+      L.split    = {x = 0, y = bottomY, w = third, h = BTN_W}
+      L.quick    = {x = third, y = bottomY, w = third, h = BTN_W}
+      L.quickWide = false
+      L.settings = {x = third * 2, y = bottomY, w = third, h = BTN_W}
+      table.insert(L.dividers, {x = third, y = bottomY + 8, w = 1, h = BTN_W - 16})
+      table.insert(L.dividers, {x = third * 2, y = bottomY + 8, w = 1, h = BTN_W - 16})
     end
+    if bat then L.battery = {x = 0, y = bottomY - lampH - batH, w = w, h = batH} end
     table.insert(L.dividers, {x = 8, y = top + deskH, w = w - 16, h = 1})
-    table.insert(L.dividers, {x = 8, y = bottomY - (bat and 30 or 0), w = w - 16, h = 1})
+    if bat then table.insert(L.dividers, {x = 8, y = bottomY - lampH - batH, w = w - 16, h = 1}) end
+    if lampH > 0 then table.insert(L.dividers, {x = 8, y = bottomY - lampH, w = w - 16, h = 1}) end
     table.insert(L.dividers, {x = 8, y = bottomY, w = w - 16, h = 1})
-    table.insert(L.dividers, {x = third, y = bottomY + 8, w = 1, h = BTN_W - 16})
-    table.insert(L.dividers, {x = third * 2, y = bottomY + 8, w = 1, h = BTN_W - 16})
+    batH = batH + lampH   -- (per lo spazio delle schede qui sotto)
 
     local start  = top + deskH + 6
     -- vista cartella: in cima "← Tutte le schede" e il nome della cartella
@@ -195,25 +202,22 @@ function layout(bf, activeIdx)
   else
     -- a sinistra la scrivania; a destra batteria, ⊞ ⚡︎ ⚙︎; in mezzo le schede
     local batW   = bat and BAT_W or 0
-    local baseR  = BTN_W * 3 + batW
-    -- il ripiano dei Lampi coperti, prima della batteria
+    -- Lampi coperti: il tasto ⚡︎ si allarga e accanto al fulmine mostra le loro icone
+    -- e «Tutti» (un solo ⚡︎ in Tabby, 23/10/2026)
     local nl     = #T.coveredLamps
-    local lampW  = (nl > 0) and (30 + nl * 26 + (nl >= 2 and 44 or 0)) or 0
-    local rightW = baseR + lampW
+    local quickW = BTN_W + ((nl > 0) and (nl * 26 + (nl >= 2 and 44 or 0) + 6) or 0)
+    local rightW = BTN_W * 2 + quickW + batW
     L.desk     = {x = 0, y = 0, w = BTN_W, h = h}
-    L.split    = {x = w - BTN_W * 3, y = 0, w = BTN_W, h = h}
-    L.quick    = {x = w - BTN_W * 2, y = 0, w = BTN_W, h = h}
     L.settings = {x = w - BTN_W, y = 0, w = BTN_W, h = h}
-    if bat then L.battery = {x = w - baseR, y = 0, w = batW, h = h} end
-    if lampW > 0 then
-      L.lamps = {x = w - rightW, y = 0, w = lampW, h = h}
-      table.insert(L.dividers, {x = w - rightW, y = 8, w = 1, h = h - 16})
-    end
+    L.quick    = {x = w - BTN_W - quickW, y = 0, w = quickW, h = h}
+    L.quickWide = nl > 0
+    L.split    = {x = w - BTN_W * 2 - quickW, y = 0, w = BTN_W, h = h}
+    if bat then L.battery = {x = w - rightW, y = 0, w = batW, h = h} end
     table.insert(L.dividers, {x = BTN_W, y = 8, w = 1, h = h - 16})
-    if bat then table.insert(L.dividers, {x = w - baseR, y = 8, w = 1, h = h - 16}) end
-    table.insert(L.dividers, {x = w - BTN_W * 3, y = 8, w = 1, h = h - 16})
-    table.insert(L.dividers, {x = w - BTN_W * 2, y = 8, w = 1, h = h - 16})
-    table.insert(L.dividers, {x = w - BTN_W, y = 8, w = 1, h = h - 16})
+    if bat then table.insert(L.dividers, {x = w - rightW, y = 8, w = 1, h = h - 16}) end
+    table.insert(L.dividers, {x = L.split.x, y = 8, w = 1, h = h - 16})
+    table.insert(L.dividers, {x = L.quick.x, y = 8, w = 1, h = h - 16})
+    table.insert(L.dividers, {x = L.settings.x, y = 8, w = 1, h = h - 16})
 
     local start = BTN_W + 6
     local PLUS_W = 36   -- la scheda "+" in fondo alle schede
@@ -337,25 +341,27 @@ function barBackground(bf)
   return els
 end
 
--- Il ripiano dei Lampi coperti: ⚡︎, le loro icone (clic = davanti) e «Tutti»
-function drawLampShelf(els, r)
+-- Il tasto ⚡︎ allargato quando ci sono Lampi coperti: il fulmine (clic = menu, come
+-- sempre), le icone dei Lampi coperti (clic = davanti) e «Tutti»
+function drawQuickWide(els, r)
   local list = T.coveredLamps
   local n = #list
-  local tw = 30 + n * 26 + (n >= 2 and 44 or 0)
-  local x0 = r.x + (r.w - tw) / 2
   local cy = r.y + r.h / 2
+  local tw = BTN_W + n * 26 + (n >= 2 and 44 or 0)
+  local x0 = r.x + (r.w - tw) / 2
   table.insert(els, {type = "rectangle", action = "fill", fillColor = {hex = "#F2A541", alpha = 0.16},
-    roundedRectRadii = {xRadius = 8, yRadius = 8}, frame = {x = x0 + 2, y = cy - 13, w = tw - 4, h = 26}})
-  table.insert(els, {type = "text", text = "⚡︎", textSize = 13, textColor = {hex = "#F2A541"},
-    textAlignment = "center", frame = {x = x0 + 4, y = cy - 9, w = 22, h = 18}})
+    roundedRectRadii = {xRadius = 8, yRadius = 8}, frame = {x = x0 + 3, y = cy - 14, w = tw - 6, h = 28}})
+  local g = {x = x0, y = r.y, w = BTN_W, h = r.h}
+  table.insert(els, centeredGlyph("⚡︎", 16, g, {hex = "#F2A541"}))
+  table.insert(els, hitArea("quick", g))
   for k, key in ipairs(list) do
-    local ix = x0 + 28 + (k - 1) * 26
+    local ix = x0 + BTN_W - 4 + (k - 1) * 26
     local img = keyIcon(key)
     if img then table.insert(els, {type = "image", image = img, frame = {x = ix, y = cy - 10, w = 20, h = 20}}) end
     table.insert(els, hitArea("lampshelf:" .. key, {x = ix - 3, y = cy - 13, w = 26, h = 26}))
   end
   if n >= 2 then
-    local ax = x0 + 28 + n * 26
+    local ax = x0 + BTN_W - 4 + n * 26
     table.insert(els, {type = "text", text = "Tutti", textSize = 11.5, textColor = COL.text,
       textAlignment = "center", frame = {x = ax, y = cy - 8, w = 40, h = 16}})
     table.insert(els, hitArea("lampshelfall", {x = ax, y = cy - 13, w = 40, h = 26}))
@@ -642,7 +648,6 @@ draw = function()
 
   -- batteria
   if L.battery then drawBattery(els, L.battery) end
-  if L.lamps then drawLampShelf(els, L.lamps) end
 
   -- tasti ⊞ (dividi), ⚡︎ (app veloci) e ⚙︎ (impostazioni)
   if T.split then
@@ -652,8 +657,11 @@ draw = function()
   end
   table.insert(els, centeredGlyph("⊞", 18, L.split, T.split and COL.accent or nil))
   table.insert(els, hitArea("split", L.split))
-  table.insert(els, centeredGlyph("⚡︎", 16, L.quick))
-  table.insert(els, hitArea("quick", L.quick))
+  if L.quickWide then drawQuickWide(els, L.quick)
+  else
+    table.insert(els, centeredGlyph("⚡︎", 16, L.quick))
+    table.insert(els, hitArea("quick", L.quick))
+  end
   table.insert(els, centeredGlyph("⚙︎", 17, L.settings))
   table.insert(els, hitArea("settings", L.settings))
 
