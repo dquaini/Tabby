@@ -22,7 +22,7 @@ function onMouse(_, msg, id)
   if id == "quick" then openQuick(); return end
   if id == "split" then openSplitMenu(); return end
   if id == "more" then openOverflow(); return end
-  if id == "desktop" then toggleDesktop(); return end
+  if id == "desktop" then openDesktopFolder(); return end
   if id == "plus" then openSpotlight(); return end
   if id == "fback" then FD.leaveFolderView(); return end
   if id == "fhead" then
@@ -296,6 +296,23 @@ function drawBattery(els, r)
     textColor = col, frame = {x = bx + 30, y = by - 1, w = 34, h = 14}})
 end
 
+-- Lo sfondo nero di Tabby, con gli angoli smussati dalla parte delle app (verso lo
+-- schermo) e dritti contro il bordo dello schermo (idea di Daniele, 23/10/2026)
+BAR_RADIUS = 12
+function barBackground(bf)
+  local w, h, R = bf.w, bf.h, BAR_RADIUS
+  local els = {{type = "rectangle", action = "fill", fillColor = COL.bar,
+                roundedRectRadii = {xRadius = R, yRadius = R}, frame = {x = 0, y = 0, w = w, h = h}}}
+  -- metà verso il bordo dello schermo: angoli dritti
+  local p, sq = S.position
+  if p == "bottom" then sq = {x = 0, y = h / 2, w = w, h = h / 2}
+  elseif p == "left" then sq = {x = 0, y = 0, w = w / 2, h = h}
+  elseif p == "right" then sq = {x = w / 2, y = 0, w = w / 2, h = h}
+  else sq = {x = 0, y = 0, w = w, h = h / 2} end
+  table.insert(els, {type = "rectangle", action = "fill", fillColor = COL.bar, frame = sq})
+  return els
+end
+
 function centeredGlyph(text, size, r, color)
   return {type = "text", text = text, textSize = size, textColor = color or COL.textDim,
           textAlignment = "center",
@@ -352,17 +369,13 @@ draw = function()
 
   local vertical  = isVertical()
   local activeIdx = activeIndex()
-  -- la scheda accanto a quella attiva (a sinistra, o a destra se è la prima):
-  -- se chiudi l'ultima finestra della scheda attiva, in qualsiasi modo, si va lì
-  local nb = activeIdx and (T.tabs[activeIdx - 1] or T.tabs[activeIdx + 1])
-  T.activeNeighborKey = nb and nb.key or nil
+  -- la scheda attiva, le sue finestre e quella accanto (a sinistra, o a destra se
+  -- è la prima): se chiudi o riduci la scheda attiva, in qualsiasi modo, si va lì
+  snapActive(activeIdx)
   local L = layout(bf, activeIdx)
   T.bf, T.L = bf, L
 
-  local els = {
-    {type = "rectangle", action = "fill", fillColor = COL.bar,
-     frame = {x = 0, y = 0, w = bf.w, h = bf.h}},
-  }
+  local els = barBackground(bf)
   for _, d in ipairs(L.dividers) do table.insert(els, divider(d)) end
 
   -- tasto scrivania: il gatto di Tabby (se manca l'immagine, uno schermo)

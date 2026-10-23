@@ -15,7 +15,7 @@ _G.Tabby = { tabs = {}, icons = {}, hotkeys = {}, fsApps = {}, memberOf = {},
           visible = nil, desktopMode = false, lastKey = nil,
           cand = {}, keyWin = {}, winKey = {}, keyBid = {},
           badges = {}, favicons = {}, binfo = {}, lastFire = {},
-          tabFolder = {}, allTabs = {}, folderStart = {}, folderLast = {} }
+          tabFolder = {}, allTabs = {}, folderStart = {}, folderLast = {}, selfMin = {} }
 T = Tabby
 
 -- Le righe di diagnosi ("Tabby · …") non devono mai bloccare Tabby: se il

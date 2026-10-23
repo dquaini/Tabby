@@ -102,11 +102,37 @@ function openMemo()
   m:html(memoHTML(readMemo()))
   m:frame(memoRect())
   m:show()
+  T.memoOpen = true
+  memoTakeKeyboard()
+  -- La tastiera deve arrivare davvero al Memo: Hammerspoon diventa l'app attiva
+  -- con un attimo di ritardo, e fino ad allora la finestra non riceve i tasti
+  -- (23/10/2026: "devo cliccare più volte prima di scrivere"). Si ricontrolla
+  -- tre volte e, se serve, si ridà l'attenzione.
+  T.memoSeq = (T.memoSeq or 0) + 1
+  local seq = T.memoSeq
+  for _, d in ipairs({0.08, 0.25, 0.6}) do
+    hs.timer.doAfter(d, function()
+      if seq ~= T.memoSeq or not T.memoOpen then return end
+      local f, mw = hs.window.focusedWindow(), m:hswindow()
+      local ok, same = pcall(function() return f:id() == mw:id() end)
+      if not (ok and same) then
+        print("Tabby · Memo: la tastiera non era sul Memo, gliela ridò")
+        memoTakeKeyboard()
+      else
+        m:evaluateJavaScript("typeof focusEnd === 'function' && focusEnd()")
+      end
+    end)
+  end
+end
+
+function memoTakeKeyboard()
+  local m = T.memo
+  if not m then return end
   hs.focus()
+  pcall(function() m:bringToFront(true) end)
   local w = m:hswindow()
   if w then w:focus() end
   m:evaluateJavaScript("typeof focusEnd === 'function' && focusEnd()")
-  T.memoOpen = true
 end
 
 closeMemo = function()
@@ -403,7 +429,19 @@ function openSpotlight()
   hs.timer.doAfter(0.15, function() hs.eventtap.keyStroke({"cmd"}, "space", 0) end)
 end
 
--- Scrivania: nasconde tutto. Ripremendo, torna all'ultima scheda.
+-- Clic sul gatto (23/10/2026, Daniele): si apre il Finder sulla cartella
+-- Scrivania (se c'è già una sua finestra, macOS riusa quella) e diventa una
+-- scheda come le altre. ⌃⌥0 resta la "scrivania" che nasconde tutto.
+function openDesktopFolder()
+  T.desktopMode = false
+  T.focusSeq = (T.focusSeq or 0) + 1
+  print("Tabby · clic sul gatto: apro il Finder sulla Scrivania")
+  local t = hs.task.new("/usr/bin/open", nil, {os.getenv("HOME") .. "/Desktop"})
+  if t then t:start() end
+  afterFocus()
+end
+
+-- Scrivania (⌃⌥0): nasconde tutto. Ripremendo, torna all'ultima scheda.
 function toggleDesktop()
   T.focusSeq = (T.focusSeq or 0) + 1
   if T.desktopMode then
@@ -424,7 +462,7 @@ function toggleDesktop()
     hs.timer.doAfter(0.2, function()
       if not T.desktopMode then return end
       for _, w in ipairs(standardWindows(f)) do
-        if not w:isMinimized() then w:minimize() end
+        if not w:isMinimized() then T.selfMin[w:id()] = hs.timer.secondsSinceEpoch(); w:minimize() end
       end
       draw()
     end)

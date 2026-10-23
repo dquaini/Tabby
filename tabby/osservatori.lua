@@ -26,6 +26,10 @@ T.appWatcher = W.new(function(_, event, app)
     if app then hs.timer.doAfter(3, function() scanMenuBarApps(app) end) end
   elseif event == W.terminated then
     scheduleRebuild()
+    -- chiusa l'app della scheda attiva (⌘Q, ✕ → Chiudi app): scheda accanto
+    local b = app and app:bundleID()
+    local snap = b and snapForApp(b)
+    if snap then goNeighborSoon(snap, "chiusa l'app") end
   end
 end)
 T.appWatcher:start()
@@ -75,9 +79,9 @@ T.allWins:subscribe(WF.windowCreated, function(w)
   scheduleRebuild()
 end)
 
--- Chiusa una finestra: se dell'app in primo piano restano solo finestre ridotte
--- a icona (una scheda alla volta), riapri l'ultima usata invece di lasciare il
--- desktop (es. finita una finestrella di accesso, o ⌘W su una finestra)
+-- Chiusa una finestrella (accesso con Google, pagamento…: non è una scheda): se
+-- dell'app in primo piano restano solo finestre ridotte a icona (una scheda alla
+-- volta), riapri l'ultima usata invece di lasciare il desktop
 function T.restoreAfterClose()
   if not S.oneAtATime then return end
   local app = hs.application.frontmostApplication()
@@ -101,17 +105,36 @@ function T.restoreAfterClose()
     for _, w in ipairs(wins) do if not pick and w:isMinimized() then pick = w end end
   end
   if not pick then return end
-  print("Tabby · chiusa una finestra di " .. tostring(app:name()) .. ": riapro «" .. tostring(pick:title()) .. "»")
-  T.restoredAt = hs.timer.secondsSinceEpoch()   -- (così non scatta anche "scheda accanto")
+  print("Tabby · chiusa una finestrella di " .. tostring(app:name()) .. ": riapro «" .. tostring(pick:title()) .. "»")
   pick:unminimize()
   pick:focus()
 end
-T.allWins:subscribe(WF.windowDestroyed, function()
-  local neighbor = T.activeNeighborKey   -- (presa prima che le schede cambino)
+
+-- Chiusa una finestra: se era della scheda attiva → scheda accanto (in qualsiasi
+-- modo l'hai chiusa: pallino rosso, ⌘W, ✕, ⌃⌥W); se era una finestrella → si
+-- torna alla finestra di prima
+T.allWins:subscribe(WF.windowDestroyed, function(w)
+  local ok, id = pcall(function() return w:id() end)
+  -- una finestrella (accesso con Google…) non conta come scheda: si torna a quella di prima
+  local popup = ok and id and T.popups and T.popups[id]
+  local snap = ok and id and not popup and snapForWin(id)
+  if popup then T.popups[id] = nil end
   scheduleRebuild()
-  hs.timer.doAfter(0.3, T.restoreAfterClose)
-  -- chiusa l'ultima finestra (anche col pallino rosso): si passa alla scheda accanto
-  afterCloseGoTo(neighbor)
+  if snap then goNeighborSoon(snap, "chiusa la finestra")
+  else hs.timer.doAfter(0.3, T.restoreAfterClose) end
+end)
+
+-- Ridotta a icona col pallino giallo (o ⌘M): come chiuderla, si passa alla scheda
+-- accanto; la scheda resta sulla barra e cliccandola la finestra torna. Le
+-- riduzioni fatte da Tabby stessa (una scheda alla volta, scrivania) non contano.
+T.allWins:subscribe(WF.windowMinimized, function(w)
+  local ok, id = pcall(function() return w:id() end)
+  if not ok or not id then return end
+  local mine = T.selfMin[id]
+  T.selfMin[id] = nil
+  if mine and hs.timer.secondsSinceEpoch() - mine < 3 then return end
+  local snap = snapForWin(id)
+  if snap then goNeighborSoon(snap, "ridotta col giallo") end
 end)
 
 -- Cambio di finestra dentro la stessa app (es. da un documento all'altro,

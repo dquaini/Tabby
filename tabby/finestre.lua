@@ -95,6 +95,7 @@ function minimizeSiblings(apps, keepIds)
              and not T.isFloating(w) then
             print(string.format("Tabby · una scheda alla volta: riduco «%s» di %s",
               tostring(w:title()), tostring(app:name())))
+            T.selfMin[w:id()] = hs.timer.secondsSinceEpoch()   -- (non è il pallino giallo)
             w:minimize()
           end
         end
@@ -105,8 +106,16 @@ end
 
 -- Mette ogni scheda del gruppo nella sua zona e nasconde le altre app.
 -- Una scheda può essere un'app intera o una singola finestra di un browser.
-layoutGroup = function(g)
+-- bring = porta davanti le finestre (solo quando scegli la vista divisa: farlo
+-- a ogni cambio di finestra innescava un ping-pong con due finestre dello stesso
+-- browser, che "vibravano" — 23/10/2026, due finestre di Tally)
+-- Ritorna true se ha dovuto spostare qualcosa.
+function sameFrame(a, b)
+  return math.abs(a.x - b.x) < 2 and math.abs(a.y - b.y) < 2 and math.abs(a.w - b.w) < 2 and math.abs(a.h - b.h) < 2
+end
+layoutGroup = function(g, bring)
   local keep, winApps, keepIds = {}, {}, {}
+  local moved = false
   for k, key in ipairs(g.members) do
     local bid = T.keyBid[key] or key
     keep[bid] = true
@@ -123,8 +132,9 @@ layoutGroup = function(g)
       local wins = w and {w} or standardWindows(app)
       for _, x in ipairs(wins) do
         if not x:isFullScreen() and not x:isMinimized() then
-          x:setFrame(r)
-          if w then x:raise() end   -- davanti alle altre finestre dello stesso browser
+          -- già al suo posto? Niente richieste a macOS
+          if not sameFrame(x:frame(), r) then x:setFrame(r); moved = true end
+          if w and bring then x:raise() end   -- davanti alle altre finestre dello stesso browser
         end
       end
     end
@@ -132,6 +142,10 @@ layoutGroup = function(g)
   hideOthers(keep)
   -- le altre finestre delle stesse app (es. le altre finestre di Chrome) si riducono
   minimizeSiblings(winApps, keepIds)
+  if moved then
+    T.layoutCount = (T.layoutCount or 0) + 1   -- (per i test: quante volte ha spostato)
+  end
+  return moved
 end
 
 
@@ -374,7 +388,7 @@ end
 
 function showGroup(g)
   T.desktopMode = false
-  layoutGroup(g)
+  layoutGroup(g, true)
   focusKey(g.focus or g.members[1])
   hs.timer.doAfter(0.35, function() layoutGroup(g); draw() end)
 end

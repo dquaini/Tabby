@@ -253,17 +253,20 @@ si può chiudere" (disattivato).
 finestra intera (⌘W chiuderebbe solo la scheda del browser). Mai app veloci,
 Hammerspoon, finestre non standard.
 
-**C-3 Dopo una chiusura resta un'altra finestra ridotta della stessa app** (una
-scheda alla volta acceso): 0,3 s dopo si riapre **l'ultima usata** tra le ridotte
-(o la prima), invece di lasciare il desktop vuoto.
+**C-3 Chiusa una finestrella** (accesso con Google, pagamento: non è una scheda):
+se dell'app in primo piano restano solo finestre ridotte, 0,3 s dopo si riapre
+**l'ultima usata** tra le ridotte, invece di lasciare il desktop vuoto.
 
-**C-4 Chiusa l'ultima finestra della scheda attiva**, in qualsiasi modo (✕, ⌃⌥W,
-pallino rosso, ⌘W): 0,6 s dopo, se non è tornata un'altra finestra della stessa app
-(C-3, entro 1,5 s), se non c'è una finestra vera in primo piano e se l'app in primo
-piano non ha finestre in vista, si passa alla **scheda accanto**: quella a sinistra,
-o a destra se era la prima. Non succede con "Mostra app senza finestre" acceso o in
-modalità scrivania. La scheda accanto si annota a ogni disegno (prima che le schede
-cambino).
+**C-4 Chiusa o ridotta la scheda attiva → scheda accanto, sempre** (v9.38, Daniele:
+"indipendentemente dal comportamento selezionato"). In qualsiasi modo: ✕ di Tabby,
+⌃⌥W, pallino rosso, ⌘W, ⌘Q, pallino **giallo** / ⌘M. 0,35 s dopo, se nessuna finestra
+della scheda è ancora aperta e non ridotta, si passa alla **scheda accanto**: quella a
+sinistra, o a destra se era la prima (se non c'è più, quella nella stessa posizione).
+Una scheda ridotta resta sulla barra: cliccandola la finestra torna. Non vale in
+modalità scrivania, né per le riduzioni fatte da Tabby stessa (una scheda alla volta,
+scrivania). A ogni disegno Tabby annota la scheda attiva (chiave, posizione, scheda
+accanto, finestre, app) e tiene anche quella di prima per 1,5 s: macOS a volte attiva
+un'altra app un istante prima di dire che la finestra è chiusa.
 
 **C-5 ⚙︎ → Chiudi tutte le app…** chiede conferma; chiude tutte le app (le app con
 documenti non salvati chiedono loro); del Finder chiude solo le finestre.
@@ -299,8 +302,11 @@ e le cartelle non si mettono in una zona.
 "Gmail + Slack". Icone affiancate (fino a 4). Tasti: **⇄ Scambia** e **Scomponi**.
 
 **D-4 Mostrare una vista**: ogni app/finestra nella sua zona (si mostra, si riapre
-se ridotta, si porta davanti alle altre finestre dello stesso browser), le altre app
-si nascondono, le altre finestre delle stesse app si riducono. Attenzione sulla
+se ridotta; si porta davanti alle altre finestre dello stesso browser **solo quando
+scegli la vista**), le altre app si nascondono, le altre finestre delle stesse app si
+riducono. Una finestra già al suo posto (±2 punti) non si tocca. *Perché:* portare
+davanti una finestra la rende "attiva" per macOS, che lo annuncia, e Tabby ridisponeva
+la vista: con due finestre dello stesso browser (due Tally) vibravano all'infinito. Attenzione sulla
 scheda della vista usata per ultima. Ridisposta dopo 0,35 s (o 0,6 s se ci si
 arriva da macOS). Una finestra nuova di un'app della vista (con finestre in una
 scheda sola) va nella sua zona se la vista è attiva.
@@ -412,7 +418,8 @@ schede compatte un puntino rosso.
 
 ## 10. La barra: disegno e misure
 
-Colori: barra **nero pieno** (`#000000`); scheda attiva `#2C2F36`; accento `#4C8DFF`;
+Sfondo con gli **angoli smussati** (raggio 12) dalla parte delle app e dritti contro il
+bordo dello schermo (v9.38). Colori: barra **nero pieno** (`#000000`); scheda attiva `#2C2F36`; accento `#4C8DFF`;
 divisori `#2A2D33`; testo `#E8E9EC` / medio `#B9BDC6` / tenue `#7D828C`; batteria
 piena `#34C27A`, scarica `#FF6B57`; notifica `#FF453A`.
 
@@ -508,7 +515,10 @@ vengono nascoste dalla scrivania.
 
 ## 13. Scrivania
 
-**W-1 Tasto scrivania** (gatto) o **⌃⌥0**: nasconde tutte le app (tranne il Finder
+**W-0 Clic sul gatto** (v9.38): apre il Finder sulla cartella **Scrivania** (macOS
+riusa la sua finestra se c'è già), che diventa una scheda come le altre.
+
+**W-1 Scrivania, ⌃⌥0**: nasconde tutte le app (tranne il Finder
 e quelle a schermo intero); il Finder resta in primo piano (*perché:* nascondendolo
 macOS riattiverebbe un'altra app) e le sue finestre si riducono. Il tasto si
 accende. Ripremuto: torna all'ultima scheda.
@@ -531,7 +541,8 @@ quella vera e la si riporta dentro lo schermo. Riprova a sistemarle dopo 0,3, 0,
 **file vero**: `~/Documents/Tabby Memo.txt` (si apre anche con TextEdit, si trova con
 Spotlight); si salva da solo 0,3 s dopo che smetti di scrivere e alla chiusura; si
 ricarica dal file a ogni apertura. Esc o ⌃⌥M lo chiudono e riportano all'app di
-prima. Cursore in fondo al testo all'apertura. ⚡︎ → "Mostra il file del Memo nel
+prima. Cursore in fondo al testo all'apertura. La tastiera deve arrivare davvero al
+Memo: Tabby ricontrolla dopo 0,08, 0,25 e 0,6 s e, se serve, gliela ridà (v9.38). ⚡︎ → "Mostra il file del Memo nel
 Finder". **Da fare** (roadmap): righe che iniziano con "- " = elenco puntato;
 "[ ] " = casella da spuntare (spuntata: riga barrata); "> " = sezione apribile
 (▸/▾). Il file resta testo semplice.
@@ -737,6 +748,7 @@ Ogni regola ha un test in `test/`; nell'app Swift diventano test di accettazione
 | `test_correzioni.py` | S-6, B-6, D-7 |
 | `test_una_scheda.py` | U-1, U-2, C-3 |
 | `test_chiudi.py` | C-1, C-2, C-4 |
+| `test_finestre_fluide.py` | C-4 (giallo, ⌘Q, macOS che cambia app prima), D-4, L (angoli), W-0, Q-2 |
 | `test_cartelle.py`, `test_cartelle_casi.py`, `test_cartelle_pagine.py` | F-1…F-10 |
 | `test_notch.py` | A-2, L-6 |
 | `test_rifiniture.py` | Q-3, D-5, F-5, U-3 |

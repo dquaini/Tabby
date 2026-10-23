@@ -112,7 +112,7 @@ Prima di lavorare leggi:
 4. Esegui `test/run_all.sh` per controllare che tutto sia verde.
 
 **Stato (20/10/2026, Mac di casa, 1440×900 senza notch):** fatto. La cartella è
-`~/Desktop/Tabby 2`; `init.lua` la carica (vecchio in `~/.hammerspoon/init.lua.backup-2026-10-20`).
+`~/Desktop/pErsoNal/Projects/Tabby/Tabby 2` (spostata lì il 23/10/2026); `init.lua` la carica (vecchio in `~/.hammerspoon/init.lua.backup-2026-10-20`).
 Il comando `hs` è in `~/.local/bin` (in `PATH` da `~/.zshrc`); se non si trova, usa
 `/Applications/Hammerspoon.app/Contents/Frameworks/hs/hs`. A volte la prima chiamata
 dà "receive timeout": ripeterla. Collegato a GitHub il 22/10/2026 (chiave "Mac di casa").
@@ -121,5 +121,5 @@ GitHub, poi `git clone git@github.com:dquaini/Tabby.git` e `init.lua` che punta 
 
 ## Versione attuale
 
-**v9.37** (storia in `docs/STORIA.md`). Prossimo obiettivo: **Tabby v1** (A fatta; B Cartelle: base fatta in v9.8, restano "Apri all'avvio" e rifiniture)
+**v9.38** (storia in `docs/STORIA.md`). Prossimo obiettivo: **Tabby v1** (A fatta; B Cartelle: base fatta in v9.8, restano "Apri all'avvio" e rifiniture)
 (`docs/ROADMAP-v1.md`).

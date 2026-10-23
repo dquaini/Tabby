@@ -106,4 +106,8 @@ v9.35: schermo intero: Tabby chiede a macOS il tipo di scrivania e sparisce subi
 v9.36: schermo intero: Tabby sparisce al gesto (clic sul pallino verde, ⌃⌘F), prima
     dell'animazione; console con l'ora al millesimo di ogni passaggio.
 v9.37: con Tabby a destra o a sinistra, in cima il gatto intero (disegni di Daniele).
+v9.38: chiusa o ridotta (anche col pallino giallo) la scheda attiva, in qualsiasi modo, si
+    passa sempre alla scheda accanto; vista divisa con due finestre dello stesso browser
+    senza vibrazioni; angoli smussati verso le app; clic sul gatto = Finder sulla
+    Scrivania (⌃⌥0 resta la scrivania); il Memo si riprende la tastiera.
 ```

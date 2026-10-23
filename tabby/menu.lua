@@ -32,12 +32,12 @@ function openCloseMenu(i)
 
   local items = {}
   -- se è la scheda attiva, dopo la chiusura si passa a quella accanto
-  local neighbor = (activeIndex() == i) and neighborOfActive() or nil
+  local snap = (activeIndex() == i) and T.activeSnap or nil
   if main then
     local title = shorten(main:title(), 40)
     table.insert(items, {
       title = title and ("Chiudi finestra  “" .. title .. "”") or "Chiudi finestra",
-      fn = function() main:close(); scheduleRebuild(); afterCloseGoTo(neighbor) end,
+      fn = function() main:close(); scheduleRebuild(); goNeighborSoon(snap, "chiusa la finestra") end,
     })
   end
   if t.bid == FINDER then
@@ -45,7 +45,7 @@ function openCloseMenu(i)
   else
     table.insert(items, {
       title = "Chiudi " .. appName(t.bid, app),   -- l'app intera (es. Chrome, non Gmail)
-      fn = function() app:kill(); scheduleRebuild(); afterCloseGoTo(neighbor) end,
+      fn = function() app:kill(); scheduleRebuild(); goNeighborSoon(snap, "chiusa l'app") end,
     })
   end
   popup(items, T.closePos[i])
@@ -54,53 +54,120 @@ end
 
 -- ⌃⌥W: chiude la finestra che stai guardando senza chiudere l'app (come ✕ →
 -- "Chiudi finestra"). In un browser chiude la finestra intera (⌘W chiude solo
--- la scheda del browser). Mai le app veloci né Hammerspoon. Se dell'app resta
--- una finestra ridotta, torna lei (T.restoreAfterClose).
+-- la scheda del browser). Mai le app veloci né Hammerspoon.
 function closeActiveWindow()
   local w = hs.window.focusedWindow()
   local a = w and w:application()
   local b = a and a:bundleID()
   if not w or not b or IGNORE[b] or FLOATER[b] or not w:isStandard() then return end
   print(string.format("Tabby · ⌃⌥W: chiudo la finestra «%s» di %s", tostring(w:title()), tostring(a:name())))
-  local neighbor = neighborOfActive()
+  local snap = T.activeSnap
   w:close()
   scheduleRebuild()
-  afterCloseGoTo(neighbor)
+  goNeighborSoon(snap, "⌃⌥W")
 end
 
--- La scheda accanto a quella attiva: a sinistra, o a destra se è la prima
-function neighborOfActive()
-  local ai = activeIndex()
-  local t = ai and (T.tabs[ai - 1] or T.tabs[ai + 1])
-  return t and t.key
+-- ---------------------------------------------------------------------
+--  CHIUDERE O RIDURRE LA SCHEDA ATTIVA → SI PASSA ALLA SCHEDA ACCANTO
+--  (23/10/2026, Daniele: "sempre, indipendentemente dal comportamento").
+--  Vale per ogni modo: ✕ di Tabby, ⌃⌥W, pallino rosso, ⌘W, ⌘Q, pallino giallo
+--  (ridurre a icona). La scheda accanto è quella a sinistra, o a destra se era
+--  la prima. Non vale per le finestrelle (accesso con Google, miniatura di Meet),
+--  che non sono schede: lì si torna alla finestra di prima (T.restoreAfterClose).
+-- ---------------------------------------------------------------------
+
+-- Le finestre della scheda attiva (per riconoscerle quando si chiudono)
+function tabWins(t)
+  local out = {}
+  local function addApp(app)
+    if app then for _, w in ipairs(standardWindows(app)) do out[w:id()] = w end end
+  end
+  local function addKey(k)
+    local w = T.keyWin[k]
+    if w then out[w:id()] = w else addApp(appFor(T.keyBid[k] or k)) end
+  end
+  if t.group then
+    for _, k in ipairs(t.group.members) do addKey(k) end
+  elseif t.folder then
+    local k = currentKey()
+    if k then addKey(k) end
+  elseif t.win then
+    out[t.win:id()] = t.win
+  else
+    addApp(t.app or appFor(t.bid))
+  end
+  return out
 end
 
--- Dopo aver chiuso la scheda attiva: se dell'app non resta nessuna finestra in
--- vista (e "Mostra anche app aperte senza finestre" è spento), passa alla scheda
--- accanto invece di lasciare il desktop vuoto. Se resta una finestra della
--- stessa app (anche ridotta: la riapre T.restoreAfterClose), resta lei.
-function afterCloseGoTo(neighborKey)
-  if not neighborKey or S.showWindowless or T.desktopMode then return end
-  hs.timer.doAfter(0.6, function()
-    -- è appena tornata un'altra finestra della stessa app: si resta lì
-    if T.restoredAt and hs.timer.secondsSinceEpoch() - T.restoredAt < 1.5 then return end
-    local fw = hs.window.focusedWindow()
-    if fw and fw:isStandard() and not fw:isMinimized() and not T.isFloating(fw) then return end
-    -- resta in vista un'altra finestra dell'app in primo piano? Allora si resta lì
-    local front = hs.application.frontmostApplication()
-    if front then
-      for _, w in ipairs(standardWindows(front)) do
-        if not w:isMinimized() and not T.isFloating(w) then return end
-      end
+-- Si ricorda la scheda attiva a ogni disegno: chiave, posizione, scheda accanto,
+-- le sue finestre e le sue app. Si tiene anche quella di prima per un attimo:
+-- macOS a volte attiva un'altra app un istante PRIMA di dire che la finestra è chiusa.
+function snapActive(activeIdx)
+  local t = activeIdx and T.tabs[activeIdx]
+  local snap
+  if t then
+    local nb = T.tabs[activeIdx - 1] or T.tabs[activeIdx + 1]
+    local wins, bids = tabWins(t), {}
+    for _, w in pairs(wins) do
+      local a = w:application()
+      if a and a:bundleID() then bids[a:bundleID()] = true end
     end
+    if t.bid then bids[t.bid] = true end
+    snap = {key = t.key, idx = activeIdx, neighbor = nb and nb.key, wins = wins, bids = bids, name = t.name}
+  end
+  local cur = T.activeSnap
+  if cur and (not snap or cur.key ~= snap.key) then
+    T.prevSnap, T.prevSnapAt = cur, hs.timer.secondsSinceEpoch()
+  end
+  T.activeSnap = snap
+  T.activeNeighborKey = snap and snap.neighbor or nil
+end
+
+-- La scheda attiva (o quella di un attimo fa) a cui apparteneva questa finestra / app
+function snapForWin(id)
+  local s = T.activeSnap
+  if s and s.wins[id] then return s end
+  local p = T.prevSnap
+  if p and p.wins[id] and hs.timer.secondsSinceEpoch() - (T.prevSnapAt or 0) < 1.5 then return p end
+  return nil
+end
+function snapForApp(bid)
+  local s = T.activeSnap
+  if s and s.bids[bid] then return s end
+  local p = T.prevSnap
+  if p and p.bids[bid] and hs.timer.secondsSinceEpoch() - (T.prevSnapAt or 0) < 1.5 then return p end
+  return nil
+end
+
+-- Una delle finestre della scheda è ancora aperta e non ridotta?
+function snapStillVisible(snap)
+  local open = {}
+  if T.allWins then
+    for _, w in ipairs(T.allWins:getWindows()) do
+      if not w:isMinimized() and not w:isFullScreen() then open[w:id()] = true end
+    end
+  end
+  for id in pairs(snap.wins) do if open[id] then return true end end
+  return false
+end
+
+-- Dopo un attimo (le app ci mettono un po' a chiudere), se della scheda non resta
+-- niente in vista, passa alla scheda accanto
+function goNeighborSoon(snap, why)
+  if not snap then return end
+  T.neighborSeq = (T.neighborSeq or 0) + 1
+  local seq = T.neighborSeq
+  hs.timer.doAfter(0.35, function()
+    if seq ~= T.neighborSeq or T.desktopMode then return end
     rebuildTabs()
-    for i, t in ipairs(T.tabs) do
-      if t.key == neighborKey then
-        print("Tabby · chiusa l'ultima finestra: passo alla scheda «" .. tostring(t.name) .. "»")
-        switchTo(i)
-        return
-      end
-    end
+    if snapStillVisible(snap) then draw(); return end
+    local target
+    for i, t in ipairs(T.tabs) do if t.key == snap.neighbor then target = i end end
+    if not target and #T.tabs > 0 then target = math.max(1, math.min(snap.idx - 1, #T.tabs)) end
+    if not target then draw(); return end
+    print(string.format("Tabby · %s «%s»: passo alla scheda accanto «%s»",
+      tostring(why), tostring(snap.name), tostring(T.tabs[target].name)))
+    switchTo(target)
   end)
 end
 

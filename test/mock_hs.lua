@@ -27,7 +27,15 @@ function newWindow(app, title, urls)
   local w = {_frame = {x = 50, y = 80, w = 800, h = 600}, _app = app, _title = title,
              _fs = false, _min = false, _id = WID, _urls = urls or {}}
   function w:id() return self._id end
-  function w:raise() end
+  -- sul Mac vero portare davanti una finestra la rende anche quella attiva della sua
+  -- app, e macOS lo annuncia (RAISE_FOCUS = true per simularlo)
+  function w:raise()
+    RAISES = (RAISES or 0) + 1
+    if RAISE_FOCUS and self._app._focused ~= self then
+      self._app._focused = self
+      if WINFILTER and WINFILTER.subs["focused"] then WINFILTER.subs["focused"](self) end
+    end
+  end
   function w:unminimize() self._min = false end
   function w:isStandard() return true end
   function w:subrole() return "AXStandardWindow" end
@@ -35,7 +43,7 @@ function newWindow(app, title, urls)
   function w:isFullScreen() return self._fs end
   function w:isMinimized() return self._min end
   function w:screen() return SCREEN end
-  function w:setFrame(r) self._frame = {x = r.x, y = r.y, w = r.w, h = r.h} end
+  function w:setFrame(r) SETFRAMES_ALL = (SETFRAMES_ALL or 0) + 1; self._frame = {x = r.x, y = r.y, w = r.w, h = r.h} end
   function w:frame() return self._frame end
   function w:setTopLeft(p) self._frame.x, self._frame.y = p.x, p.y end
   function w:application() return self._app end
@@ -103,7 +111,7 @@ hs = {
     filter = {
       windowCreated = "created", windowDestroyed = "destroyed",
       windowFullscreened = "fs", windowUnfullscreened = "unfs", windowFocused = "focused", windowTitleChanged = "title",
-      windowVisible = "visible", windowNotVisible = "notvisible",
+      windowVisible = "visible", windowNotVisible = "notvisible", windowMinimized = "minimized",
       new = function(which)
         local f = {subs = {}}
         function f:setDefaultFilter() return self end
