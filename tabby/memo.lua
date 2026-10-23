@@ -35,7 +35,7 @@ window.addEventListener('load', focusEnd);
 end
 
 function memoRect()
-  local A = appArea()
+  local A = baseAppArea()
   return {x = A.x + A.w - MEMO_W - 12, y = A.y + 12, w = MEMO_W, h = MEMO_H}
 end
 
@@ -429,17 +429,25 @@ function toggleQuick(q)
       return
     end
   end
-  -- c'è già un'altra app veloce aperta? Scegli dove mettere questa: 1 accanto, 2 sotto
+  -- dove va? Se ci sono già altri Lampi: posto in entrambi i modi → si sceglie (1 accanto,
+  -- 2 sotto); in un modo solo → va lì; da nessuna parte → non si apre (lo dice al centro)
+  local base = {}
   for _, it in ipairs(T.floatStack) do
-    if it.key ~= key and floatItemOpen(it.key) then chooseFloatPlace(q); return end
+    if it.key ~= key and floatItemOpen(it.key) then table.insert(base, it) end
   end
-  openQuickApp(q, "side")
+  local side, below = floatFits(base, key, "side"), (#base > 0) and floatFits(base, key, "below")
+  if side and below then chooseFloatPlace(q); return end
+  if side then openQuickApp(q, "side"); return end
+  if below then openQuickApp(q, "below"); return end
+  local name = q.name or "il Lampo"
+  print("Tabby · non c'è spazio per mettere " .. name)
+  hs.alert.show("Non c'è spazio per mettere " .. name, 2.5)
 end
 
-function openQuickApp(q, place, force)
+function openQuickApp(q, place)
   local key = q.memo and "memo" or q.bid
   for i = #T.floatStack, 1, -1 do if T.floatStack[i].key == key then table.remove(T.floatStack, i) end end
-  table.insert(T.floatStack, {key = key, place = place or "side", force = force})
+  table.insert(T.floatStack, {key = key, place = place or "side"})
   if q.memo then openMemo(); return end
   local bid = q.bid
   -- (anche se era aperta come app normale: diventa piccola, in alto a destra)
@@ -467,11 +475,8 @@ function chooseFloatPlace(q)
     return pos[#pos]
   end
   local r1, r2 = lastRect("side"), lastRect("below")
-  local fits = {floatFits(base, key, "side"), floatFits(base, key, "below")}
-  -- nessun posto libero: si può scegliere lo stesso, ma si sovrappone in parte
-  local overlap = not fits[1] and not fits[2]
-  if overlap then fits = {true, true} end
-  T.fchoose = {q = q, fits = fits, overlap = overlap}
+  local fits = {true, true}   -- (si sceglie solo quando c'è posto in tutti e due i modi)
+  T.fchoose = {q = q, fits = fits}
   local ff = screen():fullFrame()
   if not T.fcCanvas then
     T.fcCanvas = hs.canvas.new(ff)
@@ -487,7 +492,7 @@ function chooseFloatPlace(q)
     T.fcCanvas:frame(ff)
   end
   local name = q.name or "Lampo"
-  local A = appArea()
+  local A = baseAppArea()
   local els = {{type = "rectangle", action = "fill", fillColor = {white = 0, alpha = 0.25},
                 trackMouseUp = true, id = "fcbg", frame = {x = 0, y = 0, w = ff.w, h = ff.h}}}
   -- (se sotto non c'è posto, il riquadro 2 si mostra comunque, grigio: sai perché)
@@ -509,7 +514,7 @@ function chooseFloatPlace(q)
     table.insert(els, {type = "text", text = tostring(n), textSize = math.min(54, fr.h * 0.5),
       textColor = ok and COL.text or COL.textDim, textAlignment = "center",
       frame = {x = fr.x, y = fr.y + fr.h / 2 - math.min(50, fr.h * 0.45), w = fr.w, h = math.min(64, fr.h * 0.6)}})
-    table.insert(els, {type = "text", text = ok and (name .. " " .. (n == 1 and "accanto" or "sotto") .. (T.fchoose.overlap and " (in parte sopra)" or ""))
+    table.insert(els, {type = "text", text = ok and (name .. " " .. (n == 1 and "accanto" or "sotto"))
                                               or ((n == 1 and "accanto" or "sotto") .. ": non c'è spazio"),
       textSize = 14, textColor = ok and COL.text or COL.textDim, textAlignment = "center",
       frame = {x = fr.x, y = math.min(fr.y + fr.h / 2 + 16, fr.y + fr.h - 20), w = fr.w, h = 18}})
@@ -533,7 +538,7 @@ function chooseFloat(place)
   end
   T.fchoose = nil
   if T.fcCanvas then T.fcCanvas:hide() end
-  openQuickApp(fc.q, place, fc.overlap)
+  openQuickApp(fc.q, place)
 end
 
 function cancelFloatChoice()

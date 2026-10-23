@@ -54,7 +54,7 @@ T.allWins:subscribe(WF.windowCreated, function(w)
   end
   -- diagnosi: che finestra ha aperto un browser (es. le finestrelle di Meet)
   if b and BROWSERS[b] then
-    local f, A = w:frame(), appArea()
+    local f, A = w:frame(), baseAppArea()
     -- una finestra di browser che nasce stretta è una finestrella aperta dal sito
     -- (accesso con Google, pagamento…): non riduce le altre e non si ingrandisce
     local popup = f.w < A.w * 0.6

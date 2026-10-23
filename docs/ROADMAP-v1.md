@@ -50,6 +50,14 @@ Come condividerla oggi e domani: `docs/CONDIVIDERE.md`.
 **Direttamente nell'app Swift**: animazione d'avvio, pallino sulla scrivania, icona di Tabby
 nelle finestre (cartelle), redesign, colori a scelta, configurazione guidata, Dock.
 
+**Lampi di Tabby** (deciso il 23/10/2026): nell'app Swift Tabby avrà **una decina di Lampi
+suoi**, piccole "smart app" semplicissime fatte da Tabby (sempre davanti, stesso stile, in
+fila nella colonna dei Lampi): per esempio Calcolatrice, Note/Memo, Timer e Pomodoro,
+Cronometro, Convertitore (valute e unità), Appunti (ultime cose copiate), Agenda del giorno,
+Traduttore rapido, Meteo, Lista veloce di cose da fare. *Perché:* macOS non permette di
+tenere sopra le finestre di un'altra app (Calcolatrice, Calendario di Apple…); con Lampi
+propri il problema sparisce.
+
 ## ▶ Prossimi passi, in ordine
 
 ### 1. Stabilità e velocità *(adesso)*

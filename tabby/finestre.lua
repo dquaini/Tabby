@@ -271,14 +271,14 @@ end
 
 -- Dove va ogni voce della fila (rettangoli in coordinate dello schermo)
 function floatPositions(stack)
-  local A, G = appArea(), FLOAT_GAP
+  local A, G = baseAppArea(), FLOAT_GAP
   local out, colRight, colLeft, colBottom = {}, A.x + A.w - G, nil, nil
   for i, it in ipairs(stack) do
     local w, h = floatItemSize(it.key)
     local y
-    local below = i > 1 and it.place == "below" and (colBottom + G + h <= A.y + A.h or it.force)
+    local below = i > 1 and it.place == "below" and colBottom + G + h <= A.y + A.h
     if below then
-      y = math.min(colBottom + G, A.y + A.h - h)   -- (se non c'è spazio: in parte sopra)
+      y = colBottom + G
       colLeft = math.min(colLeft, colRight - w)
     else
       if i > 1 then colRight = colLeft - G end
@@ -315,6 +315,19 @@ function layoutFloaters()
   local pos = floatPositions(keep)
   for i, it in ipairs(keep) do placeFloatItem(it.key, pos[i]) end
   updateLampKeeper()
+  -- la colonna riservata ai Lampi: l'app che usi si stringe (o torna a tutto spazio)
+  local B = baseAppArea()
+  local reserve = 0
+  if #pos > 0 then
+    local left = pos[1].x
+    for _, r in ipairs(pos) do left = math.min(left, r.x) end
+    reserve = (B.x + B.w) - left + FLOAT_GAP
+  end
+  if reserve ~= (T.lampReserve or 0) then
+    T.lampReserve = reserve
+    print(string.format("Tabby · spazio riservato ai Lampi: %d punti", reserve))
+    refitMain()
+  end
   local names = {}
   for _, it in ipairs(keep) do table.insert(names, it.key == "memo" and "Memo" or appName(it.key, appFor(it.key))) end
   local msg = "Tabby · app veloci in fila: " .. table.concat(names, ", ")
@@ -322,16 +335,25 @@ function layoutFloaters()
 end
 
 -- C'è posto per una nuova voce "accanto" (colonna nuova) o "sotto" (stessa colonna)?
+-- C'è posto se il Lampo sta dentro lo schermo e all'app che usi resta almeno il 40%
+-- della larghezza (la colonna dei Lampi è riservata, vedi appArea)
+LAMP_MIN_APP = 0.4
 function floatFits(stack, key, place)
-  local A, G = appArea(), FLOAT_GAP
-  local pos = floatPositions(stack)
-  local w, h = floatItemSize(key)
-  if #pos == 0 then return true end
-  local last = pos[#pos]
-  if place == "below" then return last.y + last.h + G + h <= A.y + A.h end
-  local left = last.x
+  local A, G = baseAppArea(), FLOAT_GAP
+  local st = {}
+  for _, it in ipairs(stack) do table.insert(st, it) end
+  table.insert(st, {key = key, place = place})
+  local pos = floatPositions(st)
+  local new = pos[#pos]
+  if #pos >= 2 and place == "below" then
+    local prev = pos[#pos - 1]
+    if new.y <= prev.y then return false end   -- sotto non c'era posto: è finito accanto
+  end
+  if #pos >= 2 and place == "side" and new.y > A.y + G then return false end
+  local left = new.x
   for _, r in ipairs(pos) do left = math.min(left, r.x) end
-  return left - G - w >= A.x + G
+  if new.y + new.h > A.y + A.h then return false end
+  return left - G >= A.x + A.w * LAMP_MIN_APP
 end
 
 function placeFloatItem(key, r)
@@ -363,6 +385,19 @@ function placeFloatItem(key, r)
     elseif math.abs(cur.x - (r.x + r.w - cur.w - off)) > 1 or math.abs(cur.y - (r.y + off)) > 1 then
       w:setTopLeft({x = r.x + r.w - cur.w - off, y = r.y + off})
     end
+  end
+end
+
+-- Rimette a misura l'app che stai usando (o la vista divisa) dopo che lo spazio dei
+-- Lampi è cambiato
+function refitMain()
+  local fb = frontBid()
+  local key = (fb and not floating(fb) and not IGNORE[fb]) and currentKey() or T.lastKey
+  local g = key and T.memberOf[key]
+  if g then layoutGroup(g); return end
+  local app = key and appFor(T.keyBid[key] or key)
+  if app and not floating(app:bundleID()) then
+    for _, w in ipairs(app:allWindows()) do fitWindow(w) end
   end
 end
 

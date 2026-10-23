@@ -587,25 +587,25 @@ aperte con la loro scorciatoia o dal menu ⚡︎** (v9.39); aperte in un altro m
 nasconderlo**; più finestre a cascata (26 punti); non sono schede; **restano in vista e
 sopra** anche cambiando scheda (Tabby le riporta davanti a ogni cambio di scheda e dopo
 ogni clic, solo se sono coperte) **finché non premi Esc** su di loro o di nuovo la
-scorciatoia (allora si nascondono e tornano app normali). **Limite di macOS** (provato il
-23/10/2026 su macOS 26): la finestra di un'altra app non si può tenere sopra l'app che
-stai usando (riportarla davanti non ha effetto se quell'app non è attiva): Calcolatrice,
-Calendario e Terminale restano davanti finché non clicchi l'app sotto; il Memo, che è di
-Tabby, resta sempre davanti. Da decidere con Daniele come risolvere (nell'app Swift i
-Lampi possono essere finestre di Tabby). La scorciatoia su un'app veloce
+scorciatoia (allora si nascondono e tornano app normali). **Colonna riservata ai Lampi** (v9.46): macOS non permette di tenere la finestra di
+un'altra app sopra quella che usi (provato su macOS 26: riportarla davanti non ha effetto
+se quell'app non è attiva). Quindi, **finché c'è almeno un Lampo aperto, la sua colonna è
+riservata**: lo spazio delle app finisce 12 punti prima del Lampo più a sinistra, l'app
+che usi (o la vista divisa) si stringe e niente copre i Lampi. Chiusi tutti, torna a tutto
+spazio. Il Memo conta come gli altri. La scorciatoia su un'app veloce
 in vista ma senza tastiera le dà la tastiera. Se un'app rifiuta la misura, si rilegge
 quella vera e la si riporta dentro lo schermo. Riprova a sistemarle dopo 0,3, 0,8, 1,6 s.
 Si ricordano anche dopo un ricaricamento (`floatMode`).
 
-**Q-1b In fila** (v9.44): più app veloci aperte insieme (Memo compreso) stanno in fila in
-alto a destra, a 12 punti l'una dall'altra: in colonne da destra verso sinistra, o una
-sotto l'altra nella stessa colonna. Aprendone una mentre un'altra è aperta compaiono **due
-riquadri tratteggiati** dove andrebbe: **1** accanto (colonna nuova a sinistra), **2**
-sotto l'ultima. Un posto senza spazio si vede lo stesso, **grigio, con scritto «non c'è
-spazio»** (premendo il suo numero si usa l'altro); se non c'è spazio da nessuna parte si
-può scegliere lo stesso e il Lampo va «in parte sopra» (scritto nei riquadri). Tasto 1/2
-o clic, Invio = 1, Esc annulla (non si apre niente). I Lampi già al loro posto non si
-spostano; una colonna nuova non esce mai dal bordo sinistro. Chiudendone una, **le altre si spostano** a riempire il posto.
+**Q-1b In fila** (v9.44, regole della v9.46): più Lampi aperti insieme (Memo compreso)
+stanno in fila in alto a destra, a 12 punti l'uno dall'altro: in colonne da destra verso
+sinistra, o uno sotto l'altro nella stessa colonna. "C'è posto" vuol dire: il Lampo sta
+dentro lo schermo e all'app che usi resta almeno il **40% della larghezza**. Aprendo un
+Lampo con altri già aperti: **posto sia accanto sia sotto → due riquadri tratteggiati**
+(1 accanto, 2 sotto; tasto o clic, Invio = 1, Esc annulla); **posto in un modo solo → va
+lì**, senza domande; **nessun posto → non si apre** e al centro compare «Non c'è spazio per
+mettere …». Chiudendone uno, **gli altri si spostano** a riempire il posto. I Lampi già al
+loro posto non si spostano.
 
 **Q-2 Memo**: blocco note 340×280 in alto a destra, scuro, testo 14. Il testo è un
 **file vero**: `~/Documents/Tabby Memo.txt` (si apre anche con TextEdit, si trova con

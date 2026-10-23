@@ -265,7 +265,8 @@ function barFrame()
 end
 
 -- Spazio dove stanno le app (tutto lo schermo meno Tabby)
-function appArea()
+-- Lo spazio delle app senza contare i Lampi (dove stanno i Lampi stessi)
+function baseAppArea()
   local f = screen():frame()
   if S.autohide then return f end
   local p = S.position
@@ -275,6 +276,16 @@ function appArea()
   -- in alto: le app partono subito sotto Tabby (anche se Tabby sta nella fascia del notch)
   local top = baseRect().y + BAR_H
   return hs.geometry.rect(f.x, top, f.w, f.y + f.h - top)
+end
+
+-- Spazio delle app: meno la colonna riservata ai Lampi aperti, a destra (23/10/2026,
+-- Daniele: macOS non lascia tenere sopra le finestre di un'altra app, quindi l'app che
+-- usi si stringe e i Lampi non vengono mai coperti). Lampi chiusi: tutto lo spazio.
+function appArea()
+  local A = baseAppArea()
+  local r = T.lampReserve or 0
+  if r > 0 then return hs.geometry.rect(A.x, A.y, A.w - r, A.h) end
+  return A
 end
 
 -- Finestra piccola: meno di metà larghezza e del 60% dell'altezza dello spazio

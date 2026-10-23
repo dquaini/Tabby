@@ -134,4 +134,8 @@ v9.45: "Lampi" = le app del menu ⚡︎. Vista divisa: fila dei Lampi aperti da 
     regole nascoste (posto senza spazio grigio con «non c'è spazio», «in parte sopra»,
     niente spostamenti inutili, mai fuori dallo schermo); il sito da mostrare solo col
     tasto destro; con Tabby di lato una fascia nera in cima sotto la barra dei menu.
+v9.46: colonna riservata ai Lampi: finché ce n'è uno aperto l'app che usi si stringe e
+    non li copre (macOS non permette di tenerli sopra); dove va un Lampo: posto in due modi →
+    si sceglie, in uno → va lì, in nessuno → «Non c'è spazio per mettere …». In roadmap: una
+    decina di Lampi propri di Tabby nell'app Swift.
 ```

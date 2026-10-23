@@ -554,7 +554,7 @@ function browserTabs(app, b, B, wins, add)
   for i, w in ipairs(wins) do
     -- una finestra nata stretta (presa per finestrella) che poi hai allargato è una
     -- finestra normale: si adatta e si riduce come le altre
-    if T.popups and T.popups[w:id()] and w:frame().w >= appArea().w * 0.6 then T.popups[w:id()] = nil end
+    if T.popups and T.popups[w:id()] and w:frame().w >= baseAppArea().w * 0.6 then T.popups[w:id()] = nil end
     local found = matched[i]
     if not found and oldKnown[w:id()] then found, how[i] = oldKnown[w:id()], "memoria" end
     if found then known[w:id()] = found end
