@@ -59,7 +59,7 @@ function closeActiveWindow()
   local w = hs.window.focusedWindow()
   local a = w and w:application()
   local b = a and a:bundleID()
-  if not w or not b or IGNORE[b] or FLOATER[b] or not w:isStandard() then return end
+  if not w or not b or IGNORE[b] or floating(b) or not w:isStandard() then return end
   print(string.format("Tabby · ⌃⌥W: chiudo la finestra «%s» di %s", tostring(w:title()), tostring(a:name())))
   local snap = T.activeSnap
   w:close()

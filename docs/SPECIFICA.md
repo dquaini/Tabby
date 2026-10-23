@@ -295,6 +295,8 @@ guardando: la scheda attiva nella zona 1 (o le schede della vista divisa attiva)
 - tutte le zone piene → 0,35 s dopo la vista nasce da sola;
 - Fatto/Invio con zone vuote → vista con le app messe, schema adattato al numero;
   una sola app → nessuna vista, si va su quell'app; Esc/Annulla → niente.
+Le **app veloci aperte** (Terminale, Calcolatrice…) entrano già nelle zone libere (un
+clic sulla zona le toglie); nella vista diventano app normali (v9.39).
 Una scheda entra in una vista sola (togliendola da un'altra vista). Le viste divise
 e le cartelle non si mettono in una zona.
 
@@ -530,12 +532,17 @@ in basso a destra; cliccato riapre l'ultima app.
 ## 14. Azioni veloci e Memo (tasto ⚡︎)
 
 **Q-1 App veloci**: Memo (⌃⌥M), Calcolatrice (⌃⌥C), Calendario (⌃⌥A, 680×520),
-Terminale (⌃⌥T, 760×480). Si aprono **in alto a destra** dello spazio delle app
-(margine 12), sopra quello che fai, **senza nasconderlo**; più finestre a cascata
-(26 punti). Stessa scorciatoia per aprire e chiudere (chiudere = nasconderla e
-tornare all'app di prima); **Esc** le chiude. Se un'app rifiuta la misura, si rilegge
-quella vera e la si riporta dentro lo schermo. Riprova a sistemarle dopo 0,3, 0,8,
-1,6 s.
+Terminale (⌃⌥T, 760×480). Calcolatrice, Calendario e Terminale sono "veloci" **solo se
+aperte con la loro scorciatoia o dal menu ⚡︎** (v9.39); aperte in un altro modo
+(Spotlight, Dock) sono app normali: una scheda, a tutto spazio. Da veloci: si aprono
+**in alto a destra** dello spazio delle app (margine 12), sopra quello che fai, **senza
+nasconderlo**; più finestre a cascata (26 punti); non sono schede; **restano in vista e
+sopra** anche cambiando scheda (Tabby le riporta davanti a ogni cambio di scheda e dopo
+ogni clic, solo se sono coperte) **finché non premi Esc** su di loro o di nuovo la
+scorciatoia (allora si nascondono e tornano app normali). La scorciatoia su un'app veloce
+in vista ma senza tastiera le dà la tastiera. Se un'app rifiuta la misura, si rilegge
+quella vera e la si riporta dentro lo schermo. Riprova a sistemarle dopo 0,3, 0,8, 1,6 s.
+Si ricordano anche dopo un ricaricamento (`floatMode`).
 
 **Q-2 Memo**: blocco note 340×280 in alto a destra, scuro, testo 14. Il testo è un
 **file vero**: `~/Documents/Tabby Memo.txt` (si apre anche con TextEdit, si trova con
@@ -748,6 +755,7 @@ Ogni regola ha un test in `test/`; nell'app Swift diventano test di accettazione
 | `test_correzioni.py` | S-6, B-6, D-7 |
 | `test_una_scheda.py` | U-1, U-2, C-3 |
 | `test_chiudi.py` | C-1, C-2, C-4 |
+| `test_app_veloci.py` | Q-1, D-2 (app veloci nelle zone) |
 | `test_finestre_fluide.py` | C-4 (giallo, ⌘Q, macOS che cambia app prima), D-4, L (angoli), W-0, Q-2 |
 | `test_cartelle.py`, `test_cartelle_casi.py`, `test_cartelle_pagine.py` | F-1…F-10 |
 | `test_notch.py` | A-2, L-6 |

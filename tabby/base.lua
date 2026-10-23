@@ -29,6 +29,18 @@ end
 
 hs.window.animationDuration = 0
 
+-- Le estensioni di Hammerspoon si caricano al primo uso e lo scrivono in console
+-- ("-- Loading extension"). Se succede durante un clic mentre un comando "hs" dal
+-- Terminale è stato interrotto, la scrittura va in errore e il clic si perde (visto
+-- il 23/10/2026: il menu ⚙︎ non si apriva). Si caricano tutte subito, all'avvio.
+for _, m in ipairs({"menubar", "dialog", "webview", "axuielement", "osascript", "task",
+                    "image", "eventtap", "mouse", "spaces", "battery", "keycodes",
+                    "geometry", "canvas", "window", "application", "alert", "settings",
+                    "timer", "screen", "hotkey", "execute", "host", "console"}) do
+  pcall(function() local _ = hs[m] end)
+end
+pcall(function() local _ = hs.webview.usercontent end)
+
 -- La cartella di Tabby (per le immagini in assets/) e l'icona del gatto del
 -- tasto scrivania: grigia a riposo, chiara quando la scrivania è attiva
 T.dir = TABBY_DIR   -- la cartella di Tabby (la passa tabby.lua)
@@ -54,8 +66,22 @@ for k, v in pairs(DEFAULTS) do
 end
 function save(k) hs.settings.set("tabbar." .. k, S[k]) end
 
+-- App che possono essere "app veloci" (Calcolatrice, Calendario, Terminale)
 FLOATER = {}
 for _, q in ipairs(QUICK) do if q.bid then FLOATER[q.bid] = true end end
+
+-- …ma lo sono solo quando le apri con la loro scorciatoia o dal menu ⚡︎ (23/10/2026):
+-- allora stanno piccole in alto a destra, sopra tutto, finché non premi Esc. Aperte in
+-- un altro modo (Spotlight, Dock) sono app normali, con la loro scheda, a tutto spazio.
+T.floatMode = hs.settings.get("tabbar.floatMode") or {}
+function floating(bid)
+  return bid ~= nil and FLOATER[bid] == true and T.floatMode[bid] == true
+end
+function setFloatMode(bid, on)
+  if not FLOATER[bid] then return end
+  T.floatMode[bid] = on and true or nil
+  hs.settings.set("tabbar.floatMode", T.floatMode)
+end
 
 function isPinned(bid)
   for _, p in ipairs(S.pinned) do if p == bid then return true end end
@@ -65,7 +91,7 @@ end
 -- Ogni finestra dell'app è una scheda? Sì, salvo le app scelte in
 -- ⚙︎ → Finestre separate (i browser sono sempre a finestre separate)
 function perWindow(bid)
-  return not S.joinWins[bid] and not FLOATER[bid]
+  return not S.joinWins[bid] and not floating(bid)
 end
 
 -- L'app aperta con questo bundle ID (nil se non è aperta). Molto più veloce

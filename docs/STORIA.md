@@ -110,4 +110,8 @@ v9.38: chiusa o ridotta (anche col pallino giallo) la scheda attiva, in qualsias
     passa sempre alla scheda accanto; vista divisa con due finestre dello stesso browser
     senza vibrazioni; angoli smussati verso le app; clic sul gatto = Finder sulla
     Scrivania (⌃⌥0 resta la scrivania); il Memo si riprende la tastiera.
+v9.39: Calcolatrice, Calendario e Terminale sono "veloci" solo se aperti con la scorciatoia
+    o da ⚡︎ (da Spotlight/Dock: app normali a tutto spazio); restano sopra anche cambiando
+    scheda finché non premi Esc; nella vista divisa entrano già nelle zone. Le estensioni di
+    Hammerspoon si caricano all'avvio (un comando "hs" interrotto bloccava il menu ⚙︎).
 ```

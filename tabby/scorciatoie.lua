@@ -96,8 +96,8 @@ T.keyTap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(e)
     if T.memoOpen and fb == "org.hammerspoon.Hammerspoon" then
       later(closeMemo); return true
     end
-    if fb and FLOATER[fb] then
-      later(function() front:hide() end); return true
+    if fb and floating(fb) then
+      later(function() hideFloater(fb) end); return true
     end
   end
 
@@ -122,6 +122,7 @@ T.keyTapGuard = hs.timer.doEvery(5, function()
   if not T.keyTap:isEnabled() then T.keyTap:start() end
   if T.gestureTap and not T.gestureTap:isEnabled() then T.gestureTap:start() end
   if T.fsClickTap and not T.fsClickTap:isEnabled() then T.fsClickTap:start() end
+  if T.floatTap and not T.floatTap:isEnabled() then T.floatTap:start() end
 end)
 
 -- Riserva: le stesse scorciatoie registrate anche come scorciatoie di sistema

@@ -13,6 +13,8 @@ function createGroup(layoutId, zones, nz)
   local members = {}
   for k = 1, nz do if zones[k] then table.insert(members, zones[k]) end end
   if #members == 0 then return end
+  -- un'app veloce messa in una zona diventa un'app normale della vista
+  for _, key in ipairs(members) do if floating(key) then setFloatMode(key, false) end end
   for _, key in ipairs(members) do removeFromGroups(key) end
   if #members == 1 then
     saveGroups(); rebuildTabs(); focusKey(members[1])
@@ -179,6 +181,19 @@ function enterSplit(layoutId)
     for k, b in ipairs(t.group.members) do if k <= nz then sp.zones[k] = b end end
   elseif t then
     sp.zones[1] = t.key
+  end
+  -- le app veloci aperte (Terminale, Calcolatrice…) entrano già nelle zone libere;
+  -- un clic sulla zona le toglie (23/10/2026)
+  local fl = {}
+  for bid in pairs(T.floatMode) do
+    local a = appFor(bid)
+    if a and not a:isHidden() then table.insert(fl, bid) end
+  end
+  table.sort(fl)
+  for _, bid in ipairs(fl) do
+    for k = 1, nz do
+      if not sp.zones[k] then sp.zones[k] = bid; break end
+    end
   end
   T.split = sp
   T.revealed = true

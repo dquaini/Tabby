@@ -26,6 +26,7 @@ T.appWatcher = W.new(function(_, event, app)
     if app then hs.timer.doAfter(3, function() scanMenuBarApps(app) end) end
   elseif event == W.terminated then
     scheduleRebuild()
+    if app and app:bundleID() and floating(app:bundleID()) then setFloatMode(app:bundleID(), false) end
     -- chiusa l'app della scheda attiva (⌘Q, ✕ → Chiudi app): scheda accanto
     local b = app and app:bundleID()
     local snap = b and snapForApp(b)
@@ -63,7 +64,7 @@ T.allWins:subscribe(WF.windowCreated, function(w)
   -- (con le finestre separate ogni finestra nuova è una scheda nuova:
   -- non entra nel gruppo)
   local g = b and not BROWSERS[b] and not perWindow(b) and T.memberOf[b]
-  if b and FLOATER[b] then
+  if b and floating(b) then
     placeFloater(a)
   elseif g then
     -- nuova finestra di un'app in un gruppo: nella sua zona (se il gruppo è attivo)
@@ -86,7 +87,7 @@ function T.restoreAfterClose()
   if not S.oneAtATime then return end
   local app = hs.application.frontmostApplication()
   local bid = app and app:bundleID()
-  if not bid or not (BROWSERS[bid] or perWindow(bid)) or FLOATER[bid] then return end
+  if not bid or not (BROWSERS[bid] or perWindow(bid)) or floating(bid) then return end
   local wins = standardWindows(app)
   if #wins == 0 then return end
   for _, w in ipairs(wins) do
@@ -213,6 +214,13 @@ T.fsClickTap = hs.eventtap.new({hs.eventtap.event.types.leftMouseDown}, function
   return false
 end)
 T.fsClickTap:start()
+
+-- Un clic può portare una finestra sopra un'app veloce: Tabby la rimette sopra
+T.floatTap = hs.eventtap.new({hs.eventtap.event.types.leftMouseUp}, function()
+  if next(T.floatMode) then hs.timer.doAfter(0.08, raiseFloaters) end
+  return false
+end)
+T.floatTap:start()
 T.spaceWatcher:start()
 
 -- Cambio di monitor o risoluzione

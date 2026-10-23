@@ -414,15 +414,27 @@ function toggleQuick(q)
   if q.memo then toggleMemo(); return end
   local bid = q.bid
   local app = appFor(bid)
-  if app and frontBid() == bid then
-    app:hide()   -- torni all'app di prima
+  if app and floating(bid) and not app:isHidden() then
+    if frontBid() == bid then hideFloater(bid); return end   -- torni all'app di prima
+    app:activate()   -- è in vista ma la tastiera è altrove: gliela dai
     return
   end
+  -- (anche se era aperta come app normale: diventa piccola, in alto a destra)
+  setFloatMode(bid, true)
+  scheduleRebuild()   -- non è più una scheda
   hs.application.launchOrFocusByBundleID(bid)
   -- l'app può metterci un po' ad aprire le finestre: riprova più volte
   for _, delay in ipairs({0.3, 0.8, 1.6}) do
     hs.timer.doAfter(delay, function() placeFloater(appFor(bid)) end)
   end
+end
+
+-- Esc (o di nuovo la scorciatoia): l'app veloce si nasconde e torna un'app normale
+function hideFloater(bid)
+  local app = appFor(bid)
+  setFloatMode(bid, false)
+  if app then app:hide() end
+  scheduleRebuild()
 end
 
 function openSpotlight()

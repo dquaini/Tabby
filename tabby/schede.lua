@@ -270,7 +270,7 @@ function rebuildTabs()
   end
   for _, app in ipairs(list) do
     local b = app:bundleID()
-    if not FLOATER[b] then
+    if not floating(b) then
       local B = BROWSERS[b]
       local wins = (B or perWindow(b)) and standardWindows(app) or {}
       if B and #wins > 0 then

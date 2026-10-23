@@ -43,7 +43,7 @@ function fitWindow(w, force)
   local a = w:application()
   local b = a and a:bundleID()
   -- mai toccare app veloci e finestre di Hammerspoon (console, memo)
-  if b and (FLOATER[b] or IGNORE[b]) then return end
+  if b and (floating(b) or IGNORE[b]) then return end
   local s = w:screen()
   if not s or s:id() ~= screen():id() then return end
   -- già della misura giusta? Allora niente: ogni ridimensionamento è una
@@ -73,8 +73,9 @@ function hideOthers(keep)
     local b = app:bundleID()
     -- un browser con una finestrella aperta (video in miniatura di Meet) non si
     -- nasconde, se no sparirebbe anche lei
+    -- (le app veloci aperte restano in vista, sopra, finché non premi Esc)
     if not keep[b] and not app:isHidden() and not hasFullscreen(app)
-       and not (T.minisOf and T.minisOf[b]) then
+       and not (T.minisOf and T.minisOf[b]) and not floating(b) then
       app:hide()
     end
   end
@@ -87,7 +88,7 @@ end
 function minimizeSiblings(apps, keepIds)
   if not S.oneAtATime then return end
   for bid in pairs(apps) do
-    if not FLOATER[bid] and (BROWSERS[bid] or perWindow(bid)) then
+    if not floating(bid) and (BROWSERS[bid] or perWindow(bid)) then
       local app = appFor(bid)
       if app then
         for _, w in ipairs(standardWindows(app)) do
@@ -204,6 +205,36 @@ function updateFullscreen()
   end
 end
 
+-- Le app veloci aperte stanno sopra le altre finestre (macOS non lo permette a
+-- un'app di un altro: Tabby le riporta davanti a ogni cambio di scheda e a ogni
+-- clic). Solo se sono davvero coperte, così macOS non annuncia cambi di finestra
+-- a vuoto.
+function floaterCovered(w)
+  local ok, res = pcall(function()
+    local fw = hs.window.focusedWindow()
+    for _, x in ipairs(hs.window.orderedWindows()) do
+      if x:id() == w:id() then return false end      -- viene prima: è sopra
+      if fw and x:id() == fw:id() then return true end
+    end
+    return true
+  end)
+  return not ok or res
+end
+function raiseFloaters()
+  local fb = frontBid()
+  for bid in pairs(T.floatMode) do
+    local app = appFor(bid)
+    if app and not app:isHidden() and bid ~= fb then
+      for _, w in ipairs(app:allWindows()) do
+        if not w:isMinimized() and floaterCovered(w) then w:raise() end
+      end
+    end
+  end
+end
+function raiseFloatersSoon()
+  if next(T.floatMode) then hs.timer.doAfter(0.15, raiseFloaters) end
+end
+
 -- App veloci: piccole, in alto a destra
 -- (con più finestre, es. più post-it, si dispongono a cascata)
 function placeFloater(app)
@@ -246,7 +277,7 @@ end
 handleActive = timed("cambio di scheda", function(app)
   local bid = app and app:bundleID()
   local drawn = false
-  if bid and FLOATER[bid] then
+  if bid and floating(bid) then
     -- app veloce: non nasconde niente, si mette in alto a destra
     placeFloater(app)
     draw()
@@ -329,7 +360,8 @@ handleActive = timed("cambio di scheda", function(app)
       fitApp(app)
       T.step("adatta finestre")
       -- alcune app creano le finestre con un attimo di ritardo
-      hs.timer.doAfter(0.6, function() fitApp(app) end)
+      hs.timer.doAfter(0.6, function() fitApp(app); raiseFloaters() end)
+      raiseFloatersSoon()
     end
   end
   if not drawn then
