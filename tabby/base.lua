@@ -244,6 +244,14 @@ function edgeWatch()
   return next(w) and w or nil
 end
 
+-- Con Tabby di lato e la barra dei menu nascosta, in cima resta una fascia nera alta
+-- come la barra dei menu: quando la barra scende copre solo quella, niente sparisce e
+-- niente si sposta (23/10/2026). Col notch non serve: macOS lascia già quello spazio.
+function menuPad()
+  if not isVertical() or not T.menuHidden or S.autohide or T.notch then return 0 end
+  return realMenuH()
+end
+
 function barFrame()
   local R = baseRect()
   local p = S.position

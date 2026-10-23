@@ -49,6 +49,12 @@ check("puntatore ancora sul Dock: resta fuori", ev('Tabby.bar._shown') is False)
 tick(900, 400); slide()
 check("il Dock se ne va: Tabby rientra", ev('Tabby.edgeHidden') is None and ev('Tabby.bar._shown') is True)
 
+check("Tabby di lato con la barra dei menu nascosta: in cima una fascia nera alta come la barra",
+      ev('Tabby.L.desk.y') == ev('Tabby._env.realMenuH()') and ev('Tabby.L.tabs[1].r.y') > ev('Tabby.L.desk.y + Tabby.L.desk.h'))
+run('Tabby.menuHidden = false; Tabby._env.draw()')
+check("barra dei menu sempre visibile: niente fascia (Tabby parte già sotto)", ev('Tabby.L.desk.y') == 0)
+run('Tabby.menuHidden = true; Tabby._env.draw()')
+
 print("== Dock in basso, Tabby a destra: non cambia nulla")
 run('Tabby.dockPrefs = {autohide = true, side = "bottom", size = 68}; Tabby._env.draw()')
 tick(700, 899); slide()

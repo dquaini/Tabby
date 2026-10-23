@@ -436,10 +436,10 @@ function toggleQuick(q)
   openQuickApp(q, "side")
 end
 
-function openQuickApp(q, place)
+function openQuickApp(q, place, force)
   local key = q.memo and "memo" or q.bid
   for i = #T.floatStack, 1, -1 do if T.floatStack[i].key == key then table.remove(T.floatStack, i) end end
-  table.insert(T.floatStack, {key = key, place = place or "side"})
+  table.insert(T.floatStack, {key = key, place = place or "side", force = force})
   if q.memo then openMemo(); return end
   local bid = q.bid
   -- (anche se era aperta come app normale: diventa piccola, in alto a destra)
@@ -467,7 +467,11 @@ function chooseFloatPlace(q)
     return pos[#pos]
   end
   local r1, r2 = lastRect("side"), lastRect("below")
-  T.fchoose = {q = q, rects = {r1, r2}}
+  local fits = {floatFits(base, key, "side"), floatFits(base, key, "below")}
+  -- nessun posto libero: si può scegliere lo stesso, ma si sovrappone in parte
+  local overlap = not fits[1] and not fits[2]
+  if overlap then fits = {true, true} end
+  T.fchoose = {q = q, fits = fits, overlap = overlap}
   local ff = screen():fullFrame()
   if not T.fcCanvas then
     T.fcCanvas = hs.canvas.new(ff)
@@ -482,21 +486,37 @@ function chooseFloatPlace(q)
   else
     T.fcCanvas:frame(ff)
   end
-  local name = q.name or "App"
+  local name = q.name or "Lampo"
+  local A = appArea()
   local els = {{type = "rectangle", action = "fill", fillColor = {white = 0, alpha = 0.25},
                 trackMouseUp = true, id = "fcbg", frame = {x = 0, y = 0, w = ff.w, h = ff.h}}}
+  -- (se sotto non c'è posto, il riquadro 2 si mostra comunque, grigio: sai perché)
+  local last = floatPositions(base)
+  last = last[#last]
+  local fallback = {
+    {x = A.x + FLOAT_GAP, y = A.y + FLOAT_GAP, w = r1.w, h = r1.h},
+    last and {x = last.x, y = last.y + last.h + FLOAT_GAP, w = last.w,
+              h = math.max(60, A.y + A.h - (last.y + last.h + FLOAT_GAP) - 4)} or r2,
+  }
   for n, r in ipairs({r1, r2}) do
+    local ok = fits[n]
+    if not ok then r = fallback[n] end
     local fr = {x = r.x - ff.x, y = r.y - ff.y, w = r.w, h = r.h}
-    if n == 2 and r1.x == r2.x and r1.y == r2.y then break end   -- sotto non c'è posto
-    table.insert(els, {type = "rectangle", action = "strokeAndFill", fillColor = {hex = "#4C8DFF", alpha = 0.18},
-      strokeColor = COL.accent, strokeWidth = 2, strokeDashPattern = {10, 6},
+    table.insert(els, {type = "rectangle", action = "strokeAndFill",
+      fillColor = ok and {hex = "#4C8DFF", alpha = 0.18} or {white = 0.5, alpha = 0.12},
+      strokeColor = ok and COL.accent or COL.textDim, strokeWidth = 2, strokeDashPattern = {10, 6},
       roundedRectRadii = {xRadius = 12, yRadius = 12}, frame = fr})
-    table.insert(els, {type = "text", text = tostring(n), textSize = 54, textColor = COL.text, textAlignment = "center",
-      frame = {x = fr.x, y = fr.y + fr.h / 2 - 50, w = fr.w, h = 64}})
-    table.insert(els, {type = "text", text = name .. " " .. (n == 1 and "accanto" or "sotto"), textSize = 15,
-      textColor = COL.text, textAlignment = "center", frame = {x = fr.x, y = fr.y + fr.h / 2 + 16, w = fr.w, h = 20}})
-    table.insert(els, {type = "rectangle", action = "fill", fillColor = {white = 1, alpha = 0.01},
-      trackMouseUp = true, id = "fc" .. n, frame = fr})
+    table.insert(els, {type = "text", text = tostring(n), textSize = math.min(54, fr.h * 0.5),
+      textColor = ok and COL.text or COL.textDim, textAlignment = "center",
+      frame = {x = fr.x, y = fr.y + fr.h / 2 - math.min(50, fr.h * 0.45), w = fr.w, h = math.min(64, fr.h * 0.6)}})
+    table.insert(els, {type = "text", text = ok and (name .. " " .. (n == 1 and "accanto" or "sotto") .. (T.fchoose.overlap and " (in parte sopra)" or ""))
+                                              or ((n == 1 and "accanto" or "sotto") .. ": non c'è spazio"),
+      textSize = 14, textColor = ok and COL.text or COL.textDim, textAlignment = "center",
+      frame = {x = fr.x, y = math.min(fr.y + fr.h / 2 + 16, fr.y + fr.h - 20), w = fr.w, h = 18}})
+    if ok then
+      table.insert(els, {type = "rectangle", action = "fill", fillColor = {white = 1, alpha = 0.01},
+        trackMouseUp = true, id = "fc" .. n, frame = fr})
+    end
   end
   T.fcCanvas:replaceElements(els)
   T.fcCanvas:show()
@@ -506,9 +526,14 @@ end
 function chooseFloat(place)
   local fc = T.fchoose
   if not fc then return end
+  if fc.fits and fc.fits[place == "below" and 2 or 1] == false then
+    -- quel posto non c'è: se c'è l'altro si usa quello, altrimenti accanto comunque
+    local other = place == "below" and "side" or "below"
+    if fc.fits[other == "below" and 2 or 1] then place = other else place = "side" end
+  end
   T.fchoose = nil
   if T.fcCanvas then T.fcCanvas:hide() end
-  openQuickApp(fc.q, place)
+  openQuickApp(fc.q, place, fc.overlap)
 end
 
 function cancelFloatChoice()

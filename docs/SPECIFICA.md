@@ -157,7 +157,8 @@ Nome (`siteName`): si toglie un "(3) " iniziale; si divide il titolo sui separat
 4. il nome del dominio con l'iniziale maiuscola ("Youtube").
 Icona: il logo del sito (vedi B-6).
 
-**B-8 Rinominare**: **tasto destro sulla scheda** (v9.42; prima era nel menu della ✕) →
+**B-8 Rinominare**: **tasto destro sulla scheda** (v9.42; prima era nel menu della ✕;
+dalla v9.45 anche la scelta del sito è solo qui, non più col clic sull'icona) →
 «Rinomina la scheda…»; vale per ogni scheda tranne viste divise e cartelle; il nome resta
 finché la finestra (o l'app, se è in una scheda sola) è aperta, anche dopo un
 ricaricamento di Tabby; «Torna al nome di prima». Nello stesso menu, per le finestre di
@@ -313,7 +314,9 @@ guardando: la scheda attiva nella zona 1 (o le schede della vista divisa attiva)
 - tutte le zone piene → 0,35 s dopo la vista nasce da sola;
 - Fatto/Invio con zone vuote → vista con le app messe, schema adattato al numero;
   una sola app → nessuna vista, si va su quell'app; Esc/Annulla → niente.
-Il velo e le zone stanno **sopra tutte le finestre** (anche le app veloci e il Memo) e
+Sopra il pannello in basso compare la **fila dei Lampi aperti** che non sono in una
+zona (v9.45): si trascinano su una zona o si cliccano (prima zona libera); un Lampo tolto
+da una zona per sbaglio torna nella fila. Il velo e le zone stanno **sopra tutte le finestre** (anche le app veloci e il Memo) e
 Tabby sopra di loro, per trascinarci le schede (v9.42; stesso per il riquadro delle
 cartelle). Le **app veloci aperte** (Terminale, Calcolatrice…) entrano già nelle zone libere (un
 clic sulla zona le toglie); nella vista diventano app normali (v9.39). Anche il **Memo**
@@ -532,6 +535,11 @@ l'angolo del gatto). Tabby non vede direttamente barra e Dock: lo deduce dal pun
 menu, 30 punti su macOS 26, o lo spessore del Dock + 10 → se ne vanno). Lato, "nascondi"
 e dimensione del Dock si leggono dalle preferenze di macOS all'avvio e ogni 30 s.
 
+**A-7 Fascia nera in cima con Tabby di lato** (v9.45): con Tabby a destra o a sinistra e la
+barra dei menu su "nascondi sempre" (senza notch), in cima alla colonna resta una fascia
+nera alta come la barra dei menu; gatto e schede partono sotto. Quando la barra scende
+copre solo la fascia: niente sparisce e niente si sposta.
+
 **A-5 Cambio di monitor o risoluzione**: si rileva di nuovo il notch e si ridisegna.
 Tabby usa sempre lo **schermo principale**.
 
@@ -570,7 +578,8 @@ in basso a destra; cliccato riapre l'ultima app.
 
 ## 14. Azioni veloci e Memo (tasto ⚡︎)
 
-**Q-1 App veloci**: Memo (⌃⌥M), Calcolatrice (⌃⌥C), Calendario (⌃⌥A, 680×520),
+**Q-1 Lampi** (nel codice "app veloci"; nome deciso il 23/10/2026): Memo (⌃⌥M),
+Calcolatrice (⌃⌥C), Calendario (⌃⌥A, 680×520),
 Terminale (⌃⌥T, 760×480). Calcolatrice, Calendario e Terminale sono "veloci" **solo se
 aperte con la loro scorciatoia o dal menu ⚡︎** (v9.39); aperte in un altro modo
 (Spotlight, Dock) sono app normali: una scheda, a tutto spazio. Da veloci: si aprono
@@ -578,7 +587,12 @@ aperte con la loro scorciatoia o dal menu ⚡︎** (v9.39); aperte in un altro m
 nasconderlo**; più finestre a cascata (26 punti); non sono schede; **restano in vista e
 sopra** anche cambiando scheda (Tabby le riporta davanti a ogni cambio di scheda e dopo
 ogni clic, solo se sono coperte) **finché non premi Esc** su di loro o di nuovo la
-scorciatoia (allora si nascondono e tornano app normali). La scorciatoia su un'app veloce
+scorciatoia (allora si nascondono e tornano app normali). **Limite di macOS** (provato il
+23/10/2026 su macOS 26): la finestra di un'altra app non si può tenere sopra l'app che
+stai usando (riportarla davanti non ha effetto se quell'app non è attiva): Calcolatrice,
+Calendario e Terminale restano davanti finché non clicchi l'app sotto; il Memo, che è di
+Tabby, resta sempre davanti. Da decidere con Daniele come risolvere (nell'app Swift i
+Lampi possono essere finestre di Tabby). La scorciatoia su un'app veloce
 in vista ma senza tastiera le dà la tastiera. Se un'app rifiuta la misura, si rilegge
 quella vera e la si riporta dentro lo schermo. Riprova a sistemarle dopo 0,3, 0,8, 1,6 s.
 Si ricordano anche dopo un ricaricamento (`floatMode`).
@@ -587,8 +601,11 @@ Si ricordano anche dopo un ricaricamento (`floatMode`).
 alto a destra, a 12 punti l'una dall'altra: in colonne da destra verso sinistra, o una
 sotto l'altra nella stessa colonna. Aprendone una mentre un'altra è aperta compaiono **due
 riquadri tratteggiati** dove andrebbe: **1** accanto (colonna nuova a sinistra), **2**
-sotto l'ultima (se c'è spazio; altrimenti c'è solo l'1). Tasto 1/2 o clic; Esc annulla
-(non si apre niente). Chiudendone una, **le altre si spostano** a riempire il posto.
+sotto l'ultima. Un posto senza spazio si vede lo stesso, **grigio, con scritto «non c'è
+spazio»** (premendo il suo numero si usa l'altro); se non c'è spazio da nessuna parte si
+può scegliere lo stesso e il Lampo va «in parte sopra» (scritto nei riquadri). Tasto 1/2
+o clic, Invio = 1, Esc annulla (non si apre niente). I Lampi già al loro posto non si
+spostano; una colonna nuova non esce mai dal bordo sinistro. Chiudendone una, **le altre si spostano** a riempire il posto.
 
 **Q-2 Memo**: blocco note 340×280 in alto a destra, scuro, testo 14. Il testo è un
 **file vero**: `~/Documents/Tabby Memo.txt` (si apre anche con TextEdit, si trova con
@@ -802,10 +819,10 @@ Ogni regola ha un test in `test/`; nell'app Swift diventano test di accettazione
 | `test_correzioni.py` | S-6, B-6, D-7 |
 | `test_una_scheda.py` | U-1, U-2, C-3 |
 | `test_chiudi.py` | C-1, C-2, C-4 |
-| `test_barra_menu_notifiche.py` | A-4, A-6 (barra dei menu e Dock), N-5 |
+| `test_barra_menu_notifiche.py` | A-4, A-6 (barra dei menu e Dock), A-7, N-5 |
 | `test_browser_nomi.py` | B-3 (passaggio 0), B-8 |
 | `test_app_veloci.py` | Q-1, D-2 (app veloci nelle zone) |
-| `test_app_veloci_fila.py` | Q-1b, D-2 (Memo nelle zone) |
+| `test_app_veloci_fila.py` | Q-1b (anche «non c'è spazio»), D-2 (Memo e fila dei Lampi nelle zone) |
 | `test_finestre_fluide.py` | C-4 (giallo, ⌘Q, macOS che cambia app prima), D-4, L (angoli), W-0, Q-2 |
 | `test_cartelle.py`, `test_cartelle_casi.py`, `test_cartelle_pagine.py` | F-1…F-10 |
 | `test_notch.py` | A-2, L-6 |

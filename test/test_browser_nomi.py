@@ -67,9 +67,11 @@ run('PROMPT_TEXT = "File"; for _, it in ipairs(MENU) do if it.title == "Rinomina
 check("il Finder ora si chiama «File»", "File" in names())
 check("«Torna al nome di prima»: di nuovo «Chrome»", "Chrome" in names())
 
-print("== Clic sull'icona di una finestra con più siti: scegli quale mostrare")
+print("== Tasto destro su una finestra con più siti: scegli quale mostrare")
 i = idx("Chrome")
 run(f'CLICK("ticon{i}")')
+check("il clic sull'icona non apre più niente (tutto col tasto destro)", ev('MENU') is None or ev('(function() for _, it in ipairs(MENU) do if tostring(it.title):find("repubblica", 1, true) then return true end end return false end)()') is False)
+rclick(i)
 sites = ev('(function() local o = {} for _, it in ipairs(MENU) do o[#o+1] = it.title end return table.concat(o, " | ") end)()')
 print("   menu:", sites)
 check("il menu elenca i tre siti aperti", "repubblica.it" in sites and "corriere.it" in sites and "ansa.it" in sites)

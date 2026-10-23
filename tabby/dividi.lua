@@ -81,9 +81,42 @@ function zoneAt(p)
   return nil
 end
 
+-- Il nome da mostrare per una chiave (anche il Memo e i Lampi, che non sono schede)
+function keyName(key)
+  if key == "memo" then return "Memo" end
+  local e = T.cand[key]
+  return (e and e.name) or appName(T.keyBid[key] or key, appFor(T.keyBid[key] or key))
+end
+
+-- I Lampi aperti che non sono già in una zona (si trascinano o si cliccano)
+function splitLamps()
+  local sp, out = T.split, {}
+  if not sp then return out end
+  local used = {}
+  for _, k in pairs(sp.zones) do used[k] = true end
+  local list = {}
+  for bid in pairs(T.floatMode) do
+    local a = appFor(bid)
+    if a and not a:isHidden() and not used[bid] then table.insert(list, bid) end
+  end
+  table.sort(list)
+  if T.memoOpen and not T.memberOf["memo"] and not used.memo then table.insert(list, "memo") end
+  return list
+end
+
 function onOverlayMouse(_, msg, id)
-  if msg ~= "mouseUp" then return end
   id = tostring(id)
+  local lamp = id:match("^lamp:(.+)$")
+  if msg == "mouseDown" then
+    if lamp then startPressKey(lamp) end
+    return
+  end
+  if msg ~= "mouseUp" then return end
+  if lamp then
+    if T.suppressClick then return end   -- era un trascinamento
+    assignKeyFirstEmpty(lamp)
+    return
+  end
   if id == "cancel" then exitSplit(); return end
   if id == "done" then finishSplit(); return end
   local k = tonumber(id:match("^zone(%d+)$"))
@@ -142,7 +175,7 @@ drawSplit = function()
           frame = {x = cx - 32, y = cy - 52, w = 64, h = 64}})
       end
       local e = T.cand[bid]
-      table.insert(els, {type = "text", text = (bid == "memo" and "Memo") or (e and e.name) or appName(bid, appFor(bid)),
+      table.insert(els, {type = "text", text = keyName(bid),
         textSize = 16, textColor = COL.text, textAlignment = "center",
         frame = {x = r.x, y = cy + 18, w = r.w, h = 22}})
       table.insert(els, {type = "text", text = "clic per svuotare",
@@ -160,6 +193,29 @@ drawSplit = function()
   -- istruzioni e tasti, in basso al centro
   local pw, ph = 600, 52
   local px, py = (A.w - pw) / 2, A.h - ph - 28
+  -- sopra, i Lampi aperti da trascinare o cliccare nelle zone
+  local lamps = splitLamps()
+  if #lamps > 0 then
+    local cw, ch, g = 150, 38, 8
+    local lw = 110 + #lamps * (cw + g)
+    local lx, ly = (A.w - lw) / 2, py - ch - 14
+    table.insert(els, {type = "rectangle", action = "fill", fillColor = {hex = "#15171B", alpha = 0.97},
+      roundedRectRadii = {xRadius = 12, yRadius = 12}, frame = {x = lx - 10, y = ly - 8, w = lw + 20, h = ch + 16}})
+    table.insert(els, {type = "text", text = "Lampi aperti:", textSize = 13, textColor = COL.textMid,
+      frame = {x = lx, y = ly + ch / 2 - 9, w = 104, h = 18}})
+    for n, key in ipairs(lamps) do
+      local cx = lx + 110 + (n - 1) * (cw + g)
+      local r = {x = cx, y = ly, w = cw, h = ch}
+      table.insert(els, {type = "rectangle", action = "strokeAndFill", fillColor = COL.active, strokeColor = COL.accent,
+        strokeWidth = 1, roundedRectRadii = {xRadius = 8, yRadius = 8}, frame = r})
+      local img = keyIcon(key)
+      if img then table.insert(els, {type = "image", image = img, frame = {x = cx + 8, y = ly + ch / 2 - 10, w = 20, h = 20}}) end
+      table.insert(els, {type = "text", text = keyName(key), textSize = 13, textColor = COL.text, textLineBreak = "truncateTail",
+        frame = {x = cx + 34, y = ly + ch / 2 - 9, w = cw - 40, h = 18}})
+      table.insert(els, {type = "rectangle", action = "fill", fillColor = {white = 1, alpha = 0.01},
+        trackMouseDown = true, trackMouseUp = true, id = "lamp:" .. key, frame = r})
+    end
+  end
   table.insert(els, {type = "rectangle", action = "strokeAndFill",
     fillColor = {hex = "#15171B", alpha = 0.97}, strokeColor = COL.divider, strokeWidth = 1,
     roundedRectRadii = {xRadius = 12, yRadius = 12}, frame = {x = px, y = py, w = pw, h = ph}})
@@ -232,12 +288,26 @@ finishSplit = function()
 end
 
 function assignToZone(k, i)
-  local sp, t = T.split, T.tabs[i]
-  if not sp or not t or t.group then return end
-  for kk, b in pairs(sp.zones) do
-    if b == t.key then sp.zones[kk] = nil end
+  local t = T.tabs[i]
+  if not t or t.group then return end
+  assignKeyToZone(k, t.key)
+end
+
+function assignKeyFirstEmpty(key)
+  local sp = T.split
+  if not sp then return end
+  for k = 1, zoneCount(sp) do
+    if not sp.zones[k] then assignKeyToZone(k, key); return end
   end
-  sp.zones[k] = t.key
+end
+
+function assignKeyToZone(k, key)
+  local sp = T.split
+  if not sp or not key then return end
+  for kk, b in pairs(sp.zones) do
+    if b == key then sp.zones[kk] = nil end
+  end
+  sp.zones[k] = key
   sp.hover = nil
   drawSplit()
   -- tutte le zone piene: fatto, senza bisogno di altri clic

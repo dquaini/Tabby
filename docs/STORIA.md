@@ -129,4 +129,9 @@ v9.43: barra dei menu e Dock che si nascondono da soli: quando compaiono dalla p
 v9.44: app veloci in fila: aprendone una con un'altra già aperta si sceglie dove (1 accanto,
     2 sotto); chiudendone una le altre si spostano; il Memo entra nelle zone della vista
     divisa.
+v9.45: "Lampi" = le app del menu ⚡︎. Vista divisa: fila dei Lampi aperti da trascinare o
+    cliccare nelle zone (anche dopo averne tolto uno per sbaglio); fila dei Lampi senza
+    regole nascoste (posto senza spazio grigio con «non c'è spazio», «in parte sopra»,
+    niente spostamenti inutili, mai fuori dallo schermo); il sito da mostrare solo col
+    tasto destro; con Tabby di lato una fascia nera in cima sotto la barra dei menu.
 ```

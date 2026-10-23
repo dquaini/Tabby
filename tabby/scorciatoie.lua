@@ -77,6 +77,7 @@ T.keyTap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(e)
     if code == K["1"] or code == K.pad1 then later(function() chooseFloat("side") end); return true end
     if code == K["2"] or code == K.pad2 then later(function() chooseFloat("below") end); return true end
     if code == K.escape then later(cancelFloatChoice); return true end
+    if code == K["return"] or code == K.padenter then later(function() chooseFloat("side") end); return true end
   end
 
   -- Creazione di una cartella: Invio = fatto, Esc = annulla

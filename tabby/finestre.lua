@@ -242,6 +242,11 @@ function raiseFloatersSoon()
   if next(T.floatMode) then hs.timer.doAfter(0.15, raiseFloaters) end
 end
 
+-- (23/10/2026: un "guardiano" che ogni mezzo secondo riportava davanti i Lampi è
+-- stato tolto: su macOS 26 riportare davanti la finestra di un'altra app non ha effetto
+-- se quell'app non è attiva — provato sul Mac. Il Memo resta davanti perché è di Tabby.)
+function updateLampKeeper() end
+
 -- App veloci: piccole, in alto a destra
 -- (con più finestre, es. più post-it, si dispongono a cascata)
 -- ---------------------------------------------------------------------
@@ -271,12 +276,14 @@ function floatPositions(stack)
   for i, it in ipairs(stack) do
     local w, h = floatItemSize(it.key)
     local y
-    local below = i > 1 and it.place == "below" and colBottom + G + h <= A.y + A.h
+    local below = i > 1 and it.place == "below" and (colBottom + G + h <= A.y + A.h or it.force)
     if below then
-      y = colBottom + G
+      y = math.min(colBottom + G, A.y + A.h - h)   -- (se non c'è spazio: in parte sopra)
       colLeft = math.min(colLeft, colRight - w)
     else
       if i > 1 then colRight = colLeft - G end
+      -- non oltre il bordo sinistro dello spazio delle app
+      if colRight - w < A.x + G then colRight = A.x + G + w end
       y = A.y + G
       colLeft = colRight - w
     end
@@ -307,15 +314,29 @@ function layoutFloaters()
   T.floatStack = keep
   local pos = floatPositions(keep)
   for i, it in ipairs(keep) do placeFloatItem(it.key, pos[i]) end
+  updateLampKeeper()
   local names = {}
   for _, it in ipairs(keep) do table.insert(names, it.key == "memo" and "Memo" or appName(it.key, appFor(it.key))) end
   local msg = "Tabby · app veloci in fila: " .. table.concat(names, ", ")
   if T.floaterDiag ~= msg then T.floaterDiag = msg; print(msg) end
 end
 
+-- C'è posto per una nuova voce "accanto" (colonna nuova) o "sotto" (stessa colonna)?
+function floatFits(stack, key, place)
+  local A, G = appArea(), FLOAT_GAP
+  local pos = floatPositions(stack)
+  local w, h = floatItemSize(key)
+  if #pos == 0 then return true end
+  local last = pos[#pos]
+  if place == "below" then return last.y + last.h + G + h <= A.y + A.h end
+  local left = last.x
+  for _, r in ipairs(pos) do left = math.min(left, r.x) end
+  return left - G - w >= A.x + G
+end
+
 function placeFloatItem(key, r)
   if key == "memo" then
-    if T.memo then T.memo:frame(r) end
+    if T.memo and not sameFrame(T.memo:frame(), r) then T.memo:frame(r) end
     return
   end
   local app = appFor(key)
@@ -329,16 +350,18 @@ function placeFloatItem(key, r)
   for _, q in ipairs(QUICK) do if q.bid == key and q.w then size = q end end
   for n, w in ipairs(wins) do
     local off = (n - 1) * 26   -- più finestre della stessa app: a cascata
-    if size then
+    local cur = w:frame()
+    if size and sameFrame(cur, {x = r.x + r.w - size.w - off, y = r.y + off, w = size.w, h = size.h}) then
+      -- già al suo posto: niente (ogni spostamento si vede)
+    elseif size then
       w:setFrame({x = r.x + r.w - size.w - off, y = r.y + off, w = size.w, h = size.h})
       -- l'app può rifiutare una misura troppo piccola: si rilegge quella vera
       local got = w:frame()
       if math.abs(got.w - size.w) > 1 or math.abs(got.h - size.h) > 1 then
         w:setTopLeft({x = r.x + r.w - got.w - off, y = r.y + off})
       end
-    else
-      local fr = w:frame()
-      w:setTopLeft({x = r.x + r.w - fr.w - off, y = r.y + off})
+    elseif math.abs(cur.x - (r.x + r.w - cur.w - off)) > 1 or math.abs(cur.y - (r.y + off)) > 1 then
+      w:setTopLeft({x = r.x + r.w - cur.w - off, y = r.y + off})
     end
   end
 end

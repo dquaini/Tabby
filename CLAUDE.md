@@ -22,6 +22,10 @@ Prima di lavorare leggi:
 - Itera veloce e dà feedback dall'uso reale. Quando una richiesta è ambigua, proponi
   un'interpretazione chiara e dilla esplicitamente (o chiedi, se cambia molto).
 - Tiene molto alla qualità: "o fatto bene o meglio non averlo".
+- **Come ci intendiamo** (nomi decisi con Daniele): **Lampi** = le app del menu ⚡︎ (Memo,
+  Calcolatrice, Calendario, Terminale), piccole in alto a destra; nel codice "app veloci"
+  (`QUICK`, `FLOATER`, `floating()`, `T.floatStack`). **Vista divisa** = schermo diviso in
+  zone (nel codice "gruppo"). **Cartella** = spazio di lavoro salvato.
 
 ## Come è fatto il progetto
 
@@ -121,5 +125,5 @@ GitHub, poi `git clone git@github.com:dquaini/Tabby.git` e `init.lua` che punta 
 
 ## Versione attuale
 
-**v9.44** (storia in `docs/STORIA.md`). Prossimo obiettivo: **Tabby v1** (A fatta; B Cartelle: base fatta in v9.8, restano "Apri all'avvio" e rifiniture)
+**v9.45** (storia in `docs/STORIA.md`). Prossimo obiettivo: **Tabby v1** (A fatta; B Cartelle: base fatta in v9.8, restano "Apri all'avvio" e rifiniture)
 (`docs/ROADMAP-v1.md`).

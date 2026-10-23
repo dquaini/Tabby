@@ -14,7 +14,8 @@ FINDER = ADDAPP("com.apple.finder", "Finder")
 SLACK = ADDAPP("com.tinyspeck.slackmacgap", "Slack")
 CALC = ADDAPP("com.apple.calculator", "Calcolatrice")
 TERM = ADDAPP("com.apple.Terminal", "Terminale")
-CALC._hidden = true; TERM._hidden = true
+CAL = ADDAPP("com.apple.iCal", "Calendario")
+CALC._hidden = true; TERM._hidden = true; CAL._hidden = true
 CALC._wins[1]._frame = {x = 100, y = 100, w = 230, h = 330}
 FRONT = SLACK
 ''')
@@ -56,11 +57,57 @@ col_left = ev('math.min(CALC._wins[1]._frame.x, TERM._wins[1]._frame.x)')
 print("   Memo:", fr('MEMO._frame'))
 check("Memo accanto, a sinistra della colonna", memo_right == col_left - 12 and ev('MEMO._frame.y') == top)
 
-print("== Esc sulla Calcolatrice: le altre si spostano, niente buchi")
-run('CALC:activate(); KEY("escape")')
-print("   Terminale:", fr('TERM._wins[1]._frame'), "· Memo:", fr('MEMO._frame'))
-check("il Terminale sale nell'angolo in alto a destra", ev('TERM._wins[1]._frame.y') == top and ev('TERM._wins[1]._frame.x + TERM._wins[1]._frame.w') == right)
-check("il Memo si avvicina, accanto al Terminale", ev('MEMO._frame.x + MEMO._frame.w') == ev('TERM._wins[1]._frame.x') - 12)
+print("== Rimettere in fila")
+L.execute('SETFRAMES_ALL = 0'); run('Tabby._env.layoutFloaters()')
+check("rimettere in fila Lampi già al loro posto non sposta niente", ev('SETFRAMES_ALL') == 0)
+
+print("== Vista divisa: i Lampi aperti si trascinano o si cliccano nelle zone")
+run(f'CLICK("tab{idx("Slack")}")')
+run('CLICK("split"); MENU[1].fn()')
+z = [ev('Tabby.split.zones[1]'), ev('Tabby.split.zones[2]')]
+print("   zone:", z, "· Lampi nella fila:", list(ev('Tabby._env.splitLamps()').values()))
+run('OVERLAY_CLICK("zone2")')
+check("tolto per sbaglio il Lampo dalla zona 2: torna nella fila", ev('Tabby.split.zones[2]') is None and len(list(ev('Tabby._env.splitLamps()').values())) >= 1)
+lamp = list(ev('Tabby._env.splitLamps()').values())[-1]
+L.execute(f'''MOUSE = {{x = 700, y = 800}}
+for _, c in ipairs(CANVASES) do if c == Tabby.overlay then c._cb(c, "mouseDown", "lamp:{lamp}") end end
+local tap = DRAGTAP()
+for s = 1, 5 do MOUSE = {{x = 700 + s * 80, y = 800 - s * 80}}; tap.fn({{getType = function() return 6 end}}) end
+tap.fn({{getType = function() return 2 end}})
+FLUSH()''')
+check(f"trascinato «{lamp}» sulla zona di destra: nasce la vista con lui", ev('(function() for _, g in ipairs(hs.settings.get("tabbar.groups")) do for _, m in ipairs(g.members) do if m == "' + lamp + '" then return true end end end return false end)()') is True)
+gi = ev('(function() for i, t in ipairs(Tabby.tabs) do if t.group then return i end end end)()')
+run(f'CLICK("ungroup{gi}")')
+run(f'CLICK("tab{idx("Slack")}")')
+run('CLICK("split"); MENU[1].fn(); OVERLAY_CLICK("zone2")')
+lamp = list(ev('Tabby._env.splitLamps()').values())[0]
+run(f'for _, c in ipairs(CANVASES) do if c == Tabby.overlay then c._cb(c, "mouseUp", "lamp:{lamp}") end end')
+check(f"cliccato «{lamp}» nella fila: va nella zona libera (e la vista nasce)", ev('(function() for _, g in ipairs(hs.settings.get("tabbar.groups")) do for _, m in ipairs(g.members) do if m == "' + lamp + '" then return true end end end return false end)()') is True)
+gi = ev('(function() for i, t in ipairs(Tabby.tabs) do if t.group then return i end end end)()')
+run(f'CLICK("ungroup{gi}")')
+
+print("== Sotto non c'è spazio: il riquadro 2 si vede, grigio")
+run('Tabby._env.hideFloater("com.apple.calculator"); Tabby._env.hideFloater("com.apple.Terminal"); if Tabby.memoOpen then Tabby._env.closeMemo() end')
+run('KEY("t", {"ctrl","alt"})')
+run('KEY("a", {"ctrl","alt"})')
+fits = ev('Tabby.fchoose and Tabby.fchoose.fits')
+print("   Calendario dopo il Terminale: nessun posto libero → si può scegliere, in parte sopra:", ev('Tabby.fchoose and Tabby.fchoose.overlap'))
+check("nessun posto libero: Tabby lo dice («in parte sopra») e lascia scegliere", ev('Tabby.fchoose.overlap') is True and ev('(function() for _, e in ipairs(Tabby.fcCanvas._els) do if tostring(e.text):find("in parte sopra", 1, true) then return true end end return false end)()') is True)
+run('KEY("2")')
+check("premuto 2: il Calendario va sotto il Terminale (in parte sopra), dentro lo schermo",
+      ev('CAL._wins[1]._frame.x + CAL._wins[1]._frame.w') == ev('TERM._wins[1]._frame.x + TERM._wins[1]._frame.w')
+      and ev('CAL._wins[1]._frame.y + CAL._wins[1]._frame.h') <= ev('(function() local a = Tabby._env.appArea(); return a.y + a.h end)()'))
+run('Tabby._env.hideFloater("com.apple.iCal")')
+run('CALC._wins[1]._frame.h = 408; KEY("c", {"ctrl","alt"})')
+check("Calcolatrice (alta 408, come sul Mac) dopo il Terminale: sotto non ci sta, accanto sì", ev('Tabby.fchoose and Tabby.fchoose.fits[2]') is False and ev('Tabby.fchoose.fits[1]') is True)
+check("il riquadro «sotto: non c'è spazio» è disegnato, grigio", ev('(function() for _, e in ipairs(Tabby.fcCanvas._els) do if tostring(e.text):find("non c\'è spazio") then return true end end return false end)()') is True)
+run('KEY("escape")')
+run('Tabby._env.hideFloater("com.apple.Terminal")')
+run('KEY("c", {"ctrl","alt"})')
+run('KEY("m", {"ctrl","alt"})')
+check("con spazio (Calcolatrice + Memo) tutti e due i riquadri sono validi", ev('Tabby.fchoose and Tabby.fchoose.fits[2]') is True)
+run('KEY("escape")')
+run('Tabby._env.hideFloater("com.apple.calculator")')
 
 print("== Esc nei riquadri: non apre niente")
 run('KEY("c", {"ctrl","alt"})')
@@ -68,7 +115,8 @@ run('KEY("escape")')
 check("Calcolatrice non aperta", ev('Tabby._env.floating("com.apple.calculator")') is not True and ev('Tabby.fchoose') is None)
 
 print("== Vista divisa con il Memo aperto: entra già in una zona")
-run('TERM:activate(); KEY("escape")')
+run(f'CLICK("tab{idx("Slack")}")')
+run('KEY("m", {"ctrl","alt"})')
 run('HS_APP._wins = {}; FRONT = HS_APP')
 run('CLICK("split"); MENU[1].fn()')
 check("zona 1: Slack (la scheda di prima), zona 2: Memo", ev('Tabby.split.zones[1]') == "com.tinyspeck.slackmacgap" and ev('Tabby.split.zones[2]') == "memo")

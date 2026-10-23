@@ -95,10 +95,22 @@ function startPress(i)
   T.dragTap:start()
 end
 
+-- Trascinare un Lampo (dalla fila della vista divisa) invece di una scheda
+function startPressKey(key)
+  local p = hs.mouse.absolutePosition()
+  T.press = {key = key, x = p.x, y = p.y, dragging = false}
+  T.dragTap:start()
+end
+
+function pressedItem(pr)
+  if pr.key then return {key = pr.key, name = keyName(pr.key)} end
+  return T.tabs[pr.i]
+end
+
 function onDragMove(p)
   local pr = T.press
   if not pr then return end
-  local t = T.tabs[pr.i]
+  local t = pressedItem(pr)
   if not t then return end
   if not pr.dragging then
     if math.abs(p.x - pr.x) + math.abs(p.y - pr.y) < 8 then return end
@@ -135,10 +147,13 @@ function onDragEnd(p)
     if T.split then
       local k = zoneAt(p)
       T.split.hover = nil
-      if k then assignToZone(k, pr.i) else drawSplit() end
+      if k and pr.key then assignKeyToZone(k, pr.key)
+      elseif k then assignToZone(k, pr.i) else drawSplit() end
+    elseif T.fedit and pr.key then
+      FD.drawFolderEdit()
     elseif T.fedit then
       if T.fedit.hover then FD.feditAdd(T.tabs[pr.i]) else FD.drawFolderEdit() end
-    else
+    elseif pr.i then
       local pos = dropSlot(p)
       T.dropKey, T.dropMarker = nil, nil
       if pos then reorderTab(pr.i, pos) else draw() end

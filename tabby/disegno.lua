@@ -36,8 +36,6 @@ function onMouse(_, msg, id)
     if t and t.folder then FD.openFolderMenu(t.folder, T.closePos[fm]) end
     return
   end
-  local tic = tonumber(id:match("^ticon(%d+)$"))
-  if tic then openSiteChooser(tic); return end
   local c = tonumber(id:match("^close(%d+)$"))
   if c then openCloseMenu(c); return end
   local ro = tonumber(id:match("^rotate(%d+)$"))
@@ -135,24 +133,25 @@ function layout(bf, activeIdx)
     local third   = w / 3
     -- in cima il gatto intero (se c'è l'immagine): un po' più di spazio
     local deskH   = catFullImage(false) and 92 or BTN_W
-    L.desk     = {x = 0, y = 0, w = w, h = deskH}
+    local top     = menuPad()   -- fascia nera sotto la barra dei menu, se scende
+    L.desk     = {x = 0, y = top, w = w, h = deskH}
     L.split    = {x = 0, y = bottomY, w = third, h = BTN_W}
     L.quick    = {x = third, y = bottomY, w = third, h = BTN_W}
     L.settings = {x = third * 2, y = bottomY, w = third, h = BTN_W}
     if bat then L.battery = {x = 0, y = bottomY - batH, w = w, h = batH} end
-    table.insert(L.dividers, {x = 8, y = deskH, w = w - 16, h = 1})
+    table.insert(L.dividers, {x = 8, y = top + deskH, w = w - 16, h = 1})
     table.insert(L.dividers, {x = 8, y = bottomY - batH, w = w - 16, h = 1})
     table.insert(L.dividers, {x = 8, y = bottomY, w = w - 16, h = 1})
     table.insert(L.dividers, {x = third, y = bottomY + 8, w = 1, h = BTN_W - 16})
     table.insert(L.dividers, {x = third * 2, y = bottomY + 8, w = 1, h = BTN_W - 16})
 
-    local start  = deskH + 6
+    local start  = top + deskH + 6
     -- vista cartella: in cima "← Tutte le schede" e il nome della cartella
     if T.viewFolder and FD.folderById(T.viewFolder) then
-      L.fback = {x = 0, y = deskH + 2, w = w, h = 26}
-      L.fhead = {x = 0, y = deskH + 28, w = w, h = 30}
-      table.insert(L.dividers, {x = 8, y = deskH + 60, w = w - 16, h = 1})
-      start = deskH + 66
+      L.fback = {x = 0, y = top + deskH + 2, w = w, h = 26}
+      L.fhead = {x = 0, y = top + deskH + 28, w = w, h = 30}
+      table.insert(L.dividers, {x = 8, y = top + deskH + 60, w = w - 16, h = 1})
+      start = top + deskH + 66
     end
     -- in fondo alle schede, la scheda "+" (apre Spotlight)
     local availH = bottomY - batH - 6 - start - MIN_ROW_H
@@ -565,12 +564,6 @@ draw = function()
           frame = {x = closeX, y = my - 7, w = closeW, h = 14}})
         T.closePos[i] = popPos(btnR)
         table.insert(els, hitArea("tab" .. i, tr, true))
-        -- finestra di browser con più siti: clic sull'icona = scegli il sito da mostrare
-        local e = T.cand[t.key]
-        if e and e.win and BROWSERS[e.bid] and not e.site
-           and (#windowDomains(e) >= 2 or T.showSite[e.win:id()] or BROWSERS[e.bid].kind == "ax") then
-          table.insert(els, hitArea("ticon" .. i, {x = ix - 6, y = my - 14, w = 32, h = 28}))
-        end
         table.insert(els, hitArea("close" .. i, btnR))
       end
     end

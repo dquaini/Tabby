@@ -119,27 +119,6 @@ function tabAtPoint(p)
   return nil
 end
 
--- Clic sull'icona di una finestra di browser con più siti: l'elenco dei siti
--- aperti; scelto uno, la scheda prende nome e logo di quel sito (finché c'è)
-function openSiteChooser(i)
-  local t = T.tabs[i]
-  local e = t and T.cand[t.key]
-  if not e or not e.win then switchTo(i); return end
-  local id = e.win:id()
-  local items = {{title = "Mostra la scheda come:", disabled = true}}
-  for _, d in ipairs(windowDomains(e)) do
-    local img = favicon(d)
-    table.insert(items, {title = siteName(nil, d) .. "   " .. d, image = img and img:setSize({w = 16, h = 16}) or nil,
-      checked = (T.showSite[id] == d) or nil,
-      fn = function() T.showSite[id] = d; rebuildTabs(); switchTo(i); draw() end})
-  end
-  table.insert(items, {title = "-"})
-  table.insert(items, {title = BROWSERS[e.bid].short .. " (come prima)", checked = (T.showSite[id] == nil) or nil,
-    fn = function() T.showSite[id] = nil; rebuildTabs(); draw() end})
-  table.insert(items, {title = "Rinomina la scheda…", fn = function() renameTab(t) end})
-  popup(items, T.closePos[i])
-end
-
 -- ⌃⌥W: chiude la finestra che stai guardando senza chiudere l'app (come ✕ →
 -- "Chiudi finestra"). In un browser chiude la finestra intera (⌘W chiude solo
 -- la scheda del browser). Mai le app veloci né Hammerspoon.
