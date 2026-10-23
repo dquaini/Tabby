@@ -46,7 +46,8 @@ Prima di lavorare leggi:
 - `test/` — il **Mac simulato**: `mock_hs.lua` è un finto Hammerspoon (app, finestre,
   canvas, timer, tastiera, AppleScript, Accessibilità, webview) in cui gira il vero
   `tabby.lua`; i `test_*.py` simulano l'uso (clic, trascinamenti, scorciatoie…).
-  Eseguili con `test/run_all.sh` (serve `pip3 install lupa`). I test caricano Tabby con
+  Eseguili con `test/run_all.sh` (serve `pip3 install lupa`; il Memo, che è una pagina web
+  in `tabby/memo.html`, si prova anche in Chrome con `test/test_memo_browser.mjs`). I test caricano Tabby con
   `test/aiuto.py` (`carica`, e `codice` per i controlli sul testo).
 - Installazione sul Mac: `~/.hammerspoon/init.lua` deve caricare `tabby.lua` di questa
   cartella (vedi "Messa in funzione" sotto).
@@ -125,5 +126,5 @@ GitHub, poi `git clone git@github.com:dquaini/Tabby.git` e `init.lua` che punta 
 
 ## Versione attuale
 
-**v9.49** (storia in `docs/STORIA.md`). Prossimo obiettivo: **Tabby v1** (A fatta; B Cartelle: base fatta in v9.8, restano "Apri all'avvio" e rifiniture)
+**v9.50** (storia in `docs/STORIA.md`). Prossimo obiettivo: **Tabby v1** (A fatta; B Cartelle: base fatta in v9.8, restano "Apri all'avvio" e rifiniture)
 (`docs/ROADMAP-v1.md`).

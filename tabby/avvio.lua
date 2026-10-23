@@ -21,4 +21,6 @@ draw()
 handleActive(hs.application.frontmostApplication())
 -- app con un'icona nella barra dei menu: si cercano dopo l'avvio e ogni 10 minuti
 hs.timer.doAfter(5, function() scanMenuBarApps() end)
+-- il Memo si prepara (nascosto) subito: aprirlo con ⌃⌥M è immediato anche la prima volta
+hs.timer.doAfter(2, function() ensureMemo() end)
 T.menuAppsTimer = hs.timer.doEvery(600, function() scanMenuBarApps() end)

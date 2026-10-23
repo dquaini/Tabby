@@ -148,4 +148,7 @@ v9.48: niente ripiano a parte: è il tasto ⚡︎ che si allarga con le icone de
 v9.49: cambiando la posizione di Tabby si rimette a misura l'app in uso (anche con un Lampo
     davanti, anche una vista divisa di finestre del browser) e i Lampi; batteria solo icona,
     la percentuale in un fumetto passandoci sopra.
+v9.50: Memo con elenchi puntati («- »), cose da fare («[ ] », casella che barra la riga) e
+    sezioni apribili («> », ▸/▾, righe rientrate); il file resta testo semplice; più veloce
+    (pagina preparata all'avvio, testo ricaricato solo se il file è cambiato).
 ```

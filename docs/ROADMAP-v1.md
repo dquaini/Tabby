@@ -37,10 +37,10 @@ come **app Swift** (installabile e condivisibile, senza Hammerspoon) con design,
 configurazione guidata e Dock fatti direttamente lì.
 
 **Ancora in Hammerspoon** (lista di Daniele):
-- **Memo** con elenchi puntati, cose da fare (to do) e sezioni apribili (toggle): è una pagina
-  web, riusabile tale e quale nell'app Swift.
-- **Batteria senza percentuale** (la percentuale al passaggio del puntatore).
-- **Gatto intero** al posto della testa quando Tabby è a destra o a sinistra.
+- ✅ **Memo** con elenchi puntati, cose da fare (to do) e sezioni apribili (toggle): fatto in
+  v9.50 (`tabby/memo.html`, pagina web riusabile tale e quale nell'app Swift).
+- ✅ **Batteria senza percentuale** (la percentuale al passaggio del puntatore): v9.49.
+- ✅ **Gatto intero** al posto della testa quando Tabby è a destra o a sinistra: v9.37.
 
 **Piano accettato da Daniele il 23/10/2026**: 1-2 settimane di uso vero sui due Mac (con
 correzioni qui), intanto la specifica completa — fatta: `docs/SPECIFICA.md` — poi l'app Swift

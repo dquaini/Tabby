@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<!--
+  Il Memo di Tabby (v9.50): un piccolo editor a righe. Il file resta testo semplice
+  (~/Documents/Tabby Memo.txt), con queste convenzioni a inizio riga:
+    "- testo"    elenco puntato (•)
+    "[ ] testo"  cosa da fare (casella); "[x] testo" fatta (barrata)
+    "> testo"    sezione apribile (▸ / ▾): contiene le righe rientrate sotto di lei
+    due spazi    = un rientro (Tab / Maiusc+Tab)
+  Tabby parla con la pagina così: setDoc(testo, sezioniChiuse), focusLast(), serialize().
+  La pagina risponde con send({text}), send({fold}), send({close: true}).
+-->
+<style>
+html, body { margin: 0; height: 100%; background: #1B1D22; }
+body { font: 14px/1.55 -apple-system, system-ui, sans-serif; color: #E8E9EC; }
+#ed { padding: 12px 14px 40px; min-height: calc(100% - 52px); outline: none; }
+.row { display: flex; align-items: flex-start; gap: 6px; min-height: 22px; }
+.row.hidden { display: none; }
+.mk { flex: none; width: 16px; text-align: center; color: #9AA0AA; user-select: none; -webkit-user-select: none; cursor: default; }
+.mk.none { width: 0; }
+.mk.click { cursor: pointer; }
+.mk.check { width: 16px; height: 16px; margin-top: 3px; border: 1.5px solid #7D828C; border-radius: 4px; box-sizing: border-box; font-size: 11px; line-height: 13px; color: #1B1D22; }
+.row.done .mk.check { background: #4C8DFF; border-color: #4C8DFF; color: #fff; }
+.row.done .tx { text-decoration: line-through; color: #7D828C; }
+.row.toggle .tx { font-weight: 600; }
+.row.toggle .mk { color: #4C8DFF; font-size: 11px; }
+.tx { flex: 1; min-width: 0; outline: none; white-space: pre-wrap; word-break: break-word; caret-color: #4C8DFF; }
+.tx:empty::before { content: attr(data-ph); color: #5F646E; }
+</style></head>
+<body><div id="ed"></div>
+<script>
+var lines = [];          // {indent, kind: p|bullet|todo|done|toggle, text}
+var folded = {};         // testo della sezione → true se chiusa
+var saveTimer = null, last = {i: 0, off: 0};
+var ed = document.getElementById('ed');
+
+function send(o) { try { window.webkit.messageHandlers.tabbymemo.postMessage(o) } catch (e) {} }
+
+// ---- testo <-> righe ----
+function parseLine(s) {
+  s = s.replace(/\t/g, '  ');
+  var m = s.match(/^( *)/), sp = m[1].length, rest = s.slice(sp), kind = 'p';
+  var indent = Math.floor(sp / 2);
+  if (/^[-*] /.test(rest)) { kind = 'bullet'; rest = rest.slice(2); }
+  else if (/^\[ \] /.test(rest)) { kind = 'todo'; rest = rest.slice(4); }
+  else if (/^\[[xX]\] /.test(rest)) { kind = 'done'; rest = rest.slice(4); }
+  else if (/^> /.test(rest)) { kind = 'toggle'; rest = rest.slice(2); }
+  else rest = s.slice(indent * 2);
+  return {indent: indent, kind: kind, text: rest};
+}
+var PREFIX = {p: '', bullet: '- ', todo: '[ ] ', done: '[x] ', toggle: '> '};
+function serialize() {
+  return lines.map(function (l) { return '  '.repeat(l.indent) + PREFIX[l.kind] + l.text; }).join('\n');
+}
+function setDoc(text, fold) {
+  folded = {};
+  (fold || []).forEach(function (t) { folded[t] = true; });
+  lines = (text || '').split('\n').map(parseLine);
+  if (!lines.length) lines = [{indent: 0, kind: 'p', text: ''}];
+  render();
+  focusLast();
+}
+
+// ---- disegno ----
+function hiddenFlags() {
+  var hide = [], closedAt = null;
+  lines.forEach(function (l, i) {
+    if (closedAt !== null && l.indent > closedAt) { hide[i] = true; return; }
+    closedAt = null;
+    hide[i] = false;
+    if (l.kind === 'toggle' && folded[l.text]) closedAt = l.indent;
+  });
+  return hide;
+}
+function render() {
+  var hide = hiddenFlags();
+  ed.innerHTML = '';
+  lines.forEach(function (l, i) {
+    var row = document.createElement('div');
+    row.className = 'row ' + l.kind + (hide[i] ? ' hidden' : '');
+    row.style.paddingLeft = (l.indent * 18) + 'px';
+    var mk = document.createElement('span');
+    mk.className = 'mk';
+    if (l.kind === 'bullet') mk.textContent = '•';
+    else if (l.kind === 'todo' || l.kind === 'done') { mk.className += ' check click'; mk.textContent = l.kind === 'done' ? '✓' : ''; }
+    else if (l.kind === 'toggle') { mk.className += ' click'; mk.textContent = folded[l.text] ? '▸' : '▾'; }
+    else mk.className += ' none';
+    mk.addEventListener('mousedown', function (e) { e.preventDefault(); clickMarker(i); });
+    var tx = document.createElement('span');
+    tx.className = 'tx';
+    tx.setAttribute('contenteditable', 'plaintext-only');
+    tx.textContent = l.text;
+    if (lines.length === 1 && i === 0) tx.setAttribute('data-ph', 'Scrivi qui… «- » elenco, «[] » da fare, «> » sezione. Esc chiude.');
+    tx.addEventListener('keydown', function (e) { onKey(e, i, tx); });
+    tx.addEventListener('input', function () { onInput(i, tx); });
+    tx.addEventListener('paste', function (e) { onPaste(e, i, tx); });
+    tx.addEventListener('focus', function () { last.i = i; });
+    row.appendChild(mk); row.appendChild(tx);
+    ed.appendChild(row);
+  });
+}
+function txAt(i) { var r = ed.children[i]; return r && r.querySelector('.tx'); }
+
+// ---- cursore ----
+function caret(el) {
+  var s = window.getSelection();
+  if (!s.rangeCount || !el.contains(s.anchorNode)) return 0;
+  var r = s.getRangeAt(0), pre = r.cloneRange();
+  pre.selectNodeContents(el); pre.setEnd(r.startContainer, r.startOffset);
+  return pre.toString().length;
+}
+function hasSelection() { var s = window.getSelection(); return s.rangeCount && !s.getRangeAt(0).collapsed; }
+function place(i, off) {
+  var el = txAt(i); if (!el) return;
+  el.focus();
+  var n = el.firstChild, s = window.getSelection(), r = document.createRange();
+  if (!n) { r.setStart(el, 0); }
+  else { r.setStart(n, Math.max(0, Math.min(off, n.textContent.length))); }
+  r.collapse(true); s.removeAllRanges(); s.addRange(r);
+  last = {i: i, off: off};
+}
+function focusLast() {
+  var hide = hiddenFlags(), i = Math.min(last.i, lines.length - 1);
+  while (i > 0 && hide[i]) i--;
+  if (last.i >= lines.length || (last.i === 0 && last.off === 0)) { i = lines.length - 1; while (i > 0 && hide[i]) i--; place(i, lines[i].text.length); }
+  else place(i, Math.min(last.off, lines[i].text.length));
+}
+function visualEdge(el, top) {
+  var s = window.getSelection(); if (!s.rangeCount) return true;
+  var rects = s.getRangeAt(0).getClientRects(), box = el.getBoundingClientRect();
+  if (!rects.length) return true;
+  var c = rects[0];
+  return top ? (c.top - box.top < 10) : (box.bottom - c.bottom < 10);
+}
+function prevVisible(i) { var h = hiddenFlags(); i--; while (i >= 0 && h[i]) i--; return i; }
+function nextVisible(i) { var h = hiddenFlags(); i++; while (i < lines.length && h[i]) i++; return i < lines.length ? i : -1; }
+
+// ---- salvataggio ----
+function changed() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(function () { send({text: serialize()}); }, 300);
+}
+function sendFold() {
+  var list = []; for (var k in folded) if (folded[k]) list.push(k);
+  send({fold: list});
+}
+
+// ---- azioni ----
+function clickMarker(i) {
+  var l = lines[i];
+  if (l.kind === 'todo') l.kind = 'done';
+  else if (l.kind === 'done') l.kind = 'todo';
+  else if (l.kind === 'toggle') { folded[l.text] = !folded[l.text]; sendFold(); }
+  else return;
+  render(); changed(); place(i, l.text.length);
+}
+function onInput(i, el) {
+  var l = lines[i];
+  l.text = el.textContent;
+  // scorciatoie a inizio riga: "- " elenco, "[] " / "[ ] " da fare, "[x] " fatta, "> " sezione
+  if (l.kind === 'p') {
+    var m, k = null;
+    if ((m = l.text.match(/^[-*] /))) k = 'bullet';
+    else if ((m = l.text.match(/^\[ ?\] /))) k = 'todo';
+    else if ((m = l.text.match(/^\[[xX]\] /))) k = 'done';
+    else if ((m = l.text.match(/^> /))) k = 'toggle';
+    if (k) {
+      var at = Math.max(0, caret(el) - m[0].length);   // il cursore resta dopo quello che hai scritto
+      l.kind = k; l.text = l.text.slice(m[0].length); render(); place(i, at); changed(); return;
+    }
+  }
+  last = {i: i, off: caret(el)};
+  changed();
+}
+function onKey(e, i, el) {
+  var l = lines[i], off = caret(el);
+  if (e.key === 'Escape') { e.preventDefault(); clearTimeout(saveTimer); send({text: serialize(), close: true}); return; }
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && (l.kind === 'todo' || l.kind === 'done')) {
+    e.preventDefault(); clickMarker(i); return;
+  }
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    l.text = el.textContent;
+    if (l.kind !== 'p' && l.kind !== 'toggle' && l.text === '') { l.kind = 'p'; render(); place(i, 0); changed(); return; }
+    var before = l.text.slice(0, off), after = l.text.slice(off);
+    var nk = (l.kind === 'bullet') ? 'bullet' : (l.kind === 'todo' || l.kind === 'done') ? 'todo' : 'p';
+    var ni = l.indent;
+    if (l.kind === 'toggle' && off === l.text.length) { ni = l.indent + 1; folded[l.text] = false; }
+    l.text = before;
+    lines.splice(i + 1, 0, {indent: ni, kind: nk, text: after});
+    render(); place(i + 1, 0); changed(); return;
+  }
+  if (e.key === 'Backspace' && off === 0 && !hasSelection()) {
+    if (l.kind !== 'p') { e.preventDefault(); l.kind = 'p'; render(); place(i, 0); changed(); return; }
+    if (l.indent > 0) { e.preventDefault(); l.indent--; render(); place(i, 0); changed(); return; }
+    var p = prevVisible(i);
+    if (p >= 0) {
+      e.preventDefault();
+      var pl = lines[p], at = pl.text.length;
+      pl.text += el.textContent;
+      lines.splice(i, 1);
+      render(); place(p, at); changed();
+    }
+    return;
+  }
+  if (e.key === 'Delete' && off === el.textContent.length && !hasSelection() && i + 1 < lines.length) {
+    e.preventDefault();
+    l.text = el.textContent + lines[i + 1].text;
+    lines.splice(i + 1, 1);
+    render(); place(i, off); changed(); return;
+  }
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    if (e.shiftKey) { if (l.indent > 0) l.indent--; }
+    else { var pv = prevVisible(i); var max = pv >= 0 ? lines[pv].indent + 1 : 0; if (l.indent < max) l.indent++; }
+    render(); place(i, off); changed(); return;
+  }
+  if (e.key === 'ArrowUp' && !e.shiftKey && visualEdge(el, true)) {
+    var u = prevVisible(i); if (u >= 0) { e.preventDefault(); place(u, Math.min(off, lines[u].text.length)); }
+    return;
+  }
+  if (e.key === 'ArrowDown' && !e.shiftKey && visualEdge(el, false)) {
+    var d = nextVisible(i); if (d >= 0) { e.preventDefault(); place(d, Math.min(off, lines[d].text.length)); }
+    return;
+  }
+}
+function onPaste(e, i, el) {
+  e.preventDefault();
+  var t = (e.clipboardData || window.clipboardData).getData('text/plain') || '';
+  t = t.replace(/\r\n?/g, '\n');
+  var l = lines[i], off = caret(el);
+  l.text = el.textContent;
+  var before = l.text.slice(0, off), after = l.text.slice(off), parts = t.split('\n');
+  if (parts.length === 1) {
+    l.text = before + t + after;
+    render(); place(i, off + t.length); changed(); return;
+  }
+  l.text = before + parts[0];
+  var added = parts.slice(1).map(parseLine);
+  var lastL = added[added.length - 1], endOff = lastL.text.length;
+  lastL.text += after;
+  Array.prototype.splice.apply(lines, [i + 1, 0].concat(added));
+  render(); place(i + added.length, endOff); changed();
+}
+lines = [{indent: 0, kind: 'p', text: ''}];
+render();
+send({ready: true});
+</script></body></html>

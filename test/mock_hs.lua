@@ -349,7 +349,14 @@ hs = {
     new = function(r)
       local wv = {_frame = r, _shown = false, _js = {}}
       for _, m in ipairs({"windowStyle","windowTitle","allowTextEntry","deleteOnClose","level","behaviorAsLabels","windowCallback","html"}) do
-        wv[m] = function(self, v) if m == "html" then self._html = v end; return self end
+        wv[m] = function(self, v)
+          if m == "html" then
+            self._html = v
+            -- come la pagina vera: appena caricata dice "pronta"
+            table.insert(timers, function() if MEMO_CB then MEMO_CB({body = {ready = true}}) end end)
+          end
+          return self
+        end
       end
       function wv:frame(f) if f then self._frame = f end return self._frame end
       function wv:show() self._shown = true; return self end

@@ -617,16 +617,29 @@ lì**, senza domande; **nessun posto → non si apre** e al centro compare «Non
 mettere …». Chiudendone uno, **gli altri si spostano** a riempire il posto. I Lampi già al
 loro posto non si spostano.
 
-**Q-2 Memo**: blocco note 340×280 in alto a destra, scuro, testo 14. Il testo è un
-**file vero**: `~/Documents/Tabby Memo.txt` (si apre anche con TextEdit, si trova con
-Spotlight); si salva da solo 0,3 s dopo che smetti di scrivere e alla chiusura; si
-ricarica dal file a ogni apertura. Esc o ⌃⌥M lo chiudono e riportano all'app di
-prima. Cursore in fondo al testo all'apertura. La tastiera deve arrivare davvero al
-Memo: Tabby ricontrolla dopo 0,08, 0,25 e 0,6 s e, se serve, gliela ridà (v9.38). Il
-Memo sta davanti alle finestre ma sotto i menu di Tabby (v9.42). ⚡︎ → "Mostra il file del Memo nel
-Finder". **Da fare** (roadmap): righe che iniziano con "- " = elenco puntato;
-"[ ] " = casella da spuntare (spuntata: riga barrata); "> " = sezione apribile
-(▸/▾). Il file resta testo semplice.
+**Q-2 Memo**: blocco note 340×280 in alto a destra (in fila con gli altri Lampi), scuro,
+testo 14. Il testo è un **file vero**: `~/Documents/Tabby Memo.txt` (si apre con
+TextEdit, si trova con Spotlight). **Editor a righe** (v9.50, `tabby/memo.html`), con
+convenzioni di testo semplice a inizio riga:
+- `- testo` → **elenco puntato** (•); `[ ] testo` → **cosa da fare** con casella (clic, o
+  ⌘Invio, la spunta: `[x] testo`, riga barrata); `> testo` → **sezione apribile** (▸/▾):
+  contiene le righe **rientrate** sotto di lei (due spazi = un rientro); chiusa, le
+  nasconde. Le sezioni chiuse si ricordano (`memoFold`).
+- Scrivendo `- `, `* `, `[] `, `[ ] `, `[x] ` o `> ` a inizio riga, la riga si trasforma (il
+  cursore resta dopo quello che hai scritto). Invio continua l'elenco o la lista di cose
+  da fare; Invio su una voce vuota la fa tornare riga normale; Invio in fondo a una
+  sezione crea una riga dentro di lei. Cancella a inizio riga: toglie pallino/casella,
+  poi il rientro, poi unisce alla riga sopra. Tab / Maiusc+Tab: rientro (al massimo uno
+  più della riga sopra). Frecce su/giù passano alla riga accanto. Incolla: solo testo.
+- Si salva da solo 0,3 s dopo che smetti di scrivere e alla chiusura. Esc o ⌃⌥M lo
+  chiudono e riportano all'app di prima.
+- **Velocità** (v9.50): la pagina si prepara (nascosta) 2 s dopo l'avvio di Tabby e si
+  carica una volta sola; aprendo il Memo il testo si ricarica dal file **solo se è
+  cambiato** (es. modificato con TextEdit), così ritrovi il cursore dov'era. Misurato:
+  prima apertura ~0,3 s (il tempo che macOS dà la tastiera a Tabby), poi ~0,05 s. La
+  tastiera deve arrivare davvero al Memo: Tabby ricontrolla dopo 0,08, 0,25, 0,6 s.
+- ⚡︎ → "Mostra il file del Memo nel Finder". Il Memo sta davanti alle finestre ma sotto i
+  menu di Tabby.
 
 **Q-3 Spotlight**: scheda **+** sulla barra (⌘Spazio).
 
@@ -824,7 +837,8 @@ Ogni regola ha un test in `test/`; nell'app Swift diventano test di accettazione
 | `test_finestre.py` | S-2, S-3, P-1, D-2, chiusura finestre, posizioni |
 | `test_browser_shortcuts.py` | B-1 (permesso negato), B-4, B-5, N-1, K-1 |
 | `test_chrome_profili.py`, `test_chrome_due_finestre.py`, `test_chrome_stabile.py` | B-3, B-4 |
-| `test_duckduckgo_memo.py` | B-2, B-4 (nomi), B-6, Q-2 |
+| `test_duckduckgo_memo.py` | B-2, B-4 (nomi), B-6, Q-2 (file) |
+| `test_memo_browser.mjs` | Q-2 (editor: elenchi, cose da fare, sezioni, tasti) in Chrome |
 | `test_meet.py` | B-7, U-1 |
 | `test_correzioni.py` | S-6, B-6, D-7 |
 | `test_una_scheda.py` | U-1, U-2, C-3 |

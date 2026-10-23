@@ -11,27 +11,33 @@
 
 MEMO_W, MEMO_H = 340, 280
 
-function memoHTML(text)
-  local esc = (text or ""):gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;")
-  return [[<!doctype html><html><head><meta charset="utf-8"><style>
-html,body{margin:0;height:100%;background:#1B1D22}
-textarea{box-sizing:border-box;width:100%;height:100%;border:0;outline:0;resize:none;
-padding:14px 16px;background:#1B1D22;color:#E8E9EC;font:14px/1.5 -apple-system,system-ui,sans-serif}
-textarea::placeholder{color:#7D828C}
-</style></head><body><textarea id="t" spellcheck="true"
-placeholder="Scrivi qui… si salva da solo. Esc per chiudere.">]] .. esc .. [[</textarea>
-<script>
-var t = document.getElementById('t'), h;
-function send(o) { try { window.webkit.messageHandlers.tabbymemo.postMessage(o) } catch (e) {} }
-t.addEventListener('input', function () {
-  clearTimeout(h); h = setTimeout(function () { send({text: t.value}) }, 300)
-});
-document.addEventListener('keydown', function (e) {
-  if (e.key === 'Escape') { e.preventDefault(); send({text: t.value, close: true}) }
-});
-function focusEnd() { t.focus(); t.selectionStart = t.selectionEnd = t.value.length }
-window.addEventListener('load', focusEnd);
-</script></body></html>]]
+-- La pagina del Memo (un piccolo editor a righe: elenchi, cose da fare, sezioni
+-- apribili) sta in tabby/memo.html; si carica una volta sola
+function memoHTML()
+  if T.memoPage then return T.memoPage end
+  local f = io.open((T.dir or ".") .. "/tabby/memo.html", "r")
+  T.memoPage = f and f:read("a") or "<html><body>Memo non trovato</body></html>"
+  if f then f:close() end
+  return T.memoPage
+end
+
+-- Un testo come stringa JavaScript (per passarlo alla pagina del Memo)
+function jsString(s)
+  s = tostring(s or "")
+  s = s:gsub("\\", "\\\\"):gsub('"', '\\"'):gsub("\n", "\\n"):gsub("\r", "\\r"):gsub("\t", "\\t")
+  s = s:gsub("\226\128\168", "\\u2028"):gsub("\226\128\169", "\\u2029")
+  return '"' .. s .. '"'
+end
+function jsList(list)
+  local out = {}
+  for _, x in ipairs(list or {}) do table.insert(out, jsString(x)) end
+  return "[" .. table.concat(out, ",") .. "]"
+end
+
+-- Quando è stato cambiato il file del Memo (per non ricaricarlo se non serve)
+function memoMtime()
+  local ok, t = pcall(function() return hs.fs.attributes(MEMO_FILE, "modification") end)
+  return ok and t or nil
 end
 
 function memoRect()
@@ -61,6 +67,7 @@ function writeMemo(txt)
   if f then
     f:write(txt)
     f:close()
+    T.memoLoadedAt = memoMtime()   -- l'abbiamo scritto noi: niente da ricaricare
   else
     print("Tabby · Memo: impossibile salvare in " .. MEMO_FILE)
   end
@@ -74,7 +81,12 @@ function ensureMemo()
   T.memoUCC:setCallback(function(msg)
     local b = msg and msg.body
     if type(b) == "table" then
+      if b.ready then
+        T.memoReady = true
+        if T.memoPending then memoSetDoc() end
+      end
       if b.text ~= nil then writeMemo(b.text) end
+      if b.fold ~= nil then hs.settings.set("tabbar.memoFold", b.fold) end
       if b.close then closeMemo() end
     end
   end)
@@ -91,15 +103,33 @@ function ensureMemo()
       backToPrev()
     end
   end)
+  T.memoReady = false
+  T.memo:html(memoHTML())   -- la pagina si carica una volta sola (poi si aggiorna il testo)
   return T.memo
+end
+
+-- Passa alla pagina il testo del file (se la pagina è pronta; se no appena lo è)
+function memoSetDoc()
+  if not T.memo then return end
+  if not T.memoReady then T.memoPending = true; return end
+  T.memoPending = false
+  T.memoLoadedAt = memoMtime()
+  local fold = hs.settings.get("tabbar.memoFold") or {}
+  T.memo:evaluateJavaScript("setDoc(" .. jsString(readMemo()) .. "," .. jsList(fold) .. ")")
 end
 
 function openMemo()
   local fb = frontBid()
   if fb and not IGNORE[fb] then T.memoPrev = fb end
+  local t0 = hs.timer.absoluteTime()
   local m = ensureMemo()
-  -- ricarica sempre dal file: così vedi anche le modifiche fatte con TextEdit
-  m:html(memoHTML(readMemo()))
+  -- il testo si ricarica dal file solo se è cambiato (es. modificato con TextEdit):
+  -- così l'apertura è immediata e ritrovi il cursore dov'era
+  local mt = memoMtime()
+  if not T.memoHasDoc or mt == nil or mt ~= T.memoLoadedAt then
+    T.memoHasDoc = true
+    memoSetDoc()
+  end
   m:frame(memoRect())
   m:show()
   T.memoOpen = true
@@ -120,10 +150,12 @@ function openMemo()
         print("Tabby · Memo: la tastiera non era sul Memo, gliela ridò")
         memoTakeKeyboard()
       else
-        m:evaluateJavaScript("typeof focusEnd === 'function' && focusEnd()")
+        m:evaluateJavaScript("typeof focusLast === 'function' && focusLast()")
       end
     end)
   end
+  local ms = (hs.timer.absoluteTime() - t0) / 1e6
+  if ms > 150 then print(string.format("Tabby · Memo aperto in %.0f ms", ms)) end
 end
 
 function memoTakeKeyboard()
@@ -135,7 +167,7 @@ function memoTakeKeyboard()
   pcall(function() m:bringToFront(false); m:level(hs.canvas.windowLevels.floating) end)
   local w = m:hswindow()
   if w then w:focus() end
-  m:evaluateJavaScript("typeof focusEnd === 'function' && focusEnd()")
+  m:evaluateJavaScript("typeof focusLast === 'function' && focusLast()")
 end
 
 closeMemo = function()
@@ -145,7 +177,7 @@ closeMemo = function()
     layoutFloaters()   -- le altre app veloci si spostano a riempire il posto
     if T.memberOf["memo"] then scheduleRebuild() end   -- era in una vista divisa
   end)
-  T.memo:evaluateJavaScript("send({text: t.value})")   -- salva l'ultima cosa scritta
+  T.memo:evaluateJavaScript("typeof serialize === 'function' && send({text: serialize()})")   -- salva l'ultima cosa scritta
   T.memo:hide()
   backToPrev()
 end

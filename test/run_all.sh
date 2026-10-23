@@ -9,5 +9,11 @@ for t in test_*.py; do
   echo "$out" | tail -25
   if [ $code -ne 0 ] || ! echo "$out" | grep -q "TUTTO OK"; then fail=1; echo ">>> FALLITO: $t"; fi
 done
+# il Memo in un browser vero (se ci sono Node e Google Chrome)
+if command -v node >/dev/null 2>&1 && [ -x "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" ]; then
+  printf '\n### test_memo_browser.mjs\n'
+  out=$(node test_memo_browser.mjs 2>&1); echo "$out" | tail -25
+  echo "$out" | grep -q "TUTTO OK" || { fail=1; echo ">>> FALLITO: test_memo_browser.mjs"; }
+fi
 [ $fail -eq 0 ] && printf '\nTUTTI I TEST OK\n' || printf '\nALCUNI TEST FALLITI\n'
 exit $fail
