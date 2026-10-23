@@ -55,7 +55,7 @@ check("diagnosi in console: come è stata abbinata ogni finestra",
       "abbinata per posizione" in out and "abbinata per NIENTE" not in out)
 # senza la posizione (es. Safari vecchio) vale l'inizio del titolo
 L.execute('NO_BOUNDS = true; Tabby.rebuildTimer:start(); FLUSH()')   # arriva la risposta senza posizione
-L.execute('Tabby.bwKnown = {}; Tabby.bwDiag = {}; PRINTS = {}; Tabby.rebuildTimer:start(); FLUSH()')
+L.execute('Tabby.bwKnown = {}; Tabby.bwAs = {}; Tabby.bwDiag = {}; PRINTS = {}; Tabby.rebuildTimer:start(); FLUSH()')
 check("senza posizione: Gmail riconosciuta per inizio del titolo (profilo)",
       ev('Tabby.cand["site:mail.google.com"] ~= nil') is True and "abbinata per inizio del titolo" in prints())
 L.execute('NO_BOUNDS = nil; Tabby.rebuildTimer:start(); FLUSH()')

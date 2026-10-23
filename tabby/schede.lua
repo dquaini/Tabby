@@ -284,6 +284,7 @@ function rebuildTabs()
     end
   end
   local oldWinKey = T.winKey or {}
+  applyTabNames(cand)   -- nomi scelti da te, sito scelto per le finestre con più siti
   T.cand, T.keyWin, T.winKey, T.keyBid = cand, keyWin, winKey, keyBid
 
   -- 2. gruppi: togli le schede che non esistono più

@@ -350,11 +350,54 @@ function favicon(domain)
   return nil
 end
 
+-- Nomi scelti da te (✕ → Rinomina la scheda) e sito scelto per una finestra con
+-- più siti (clic sulla sua icona). Valgono finché la finestra esiste.
+T.tabNames = hs.settings.get("tabbar.tabNames") or {}   -- [numero finestra, come testo] = nome
+T.showSite = T.showSite or {}                           -- [numero finestra] = dominio
+function windowDomains(e)
+  local out, seen = {}, {}
+  local function add(u)
+    local d = domainOf(u)
+    if d and not seen[d] then seen[d] = true; table.insert(out, d) end
+  end
+  for _, u in ipairs(e.urls or {}) do add(u) end
+  if e.active then add(e.active) end
+  return out
+end
+function applyTabNames(cand)
+  local alive = {}
+  for _, e in pairs(cand) do
+    if e.win then
+      local id = e.win:id()
+      alive[tostring(id)] = true
+      local dom = T.showSite[id]
+      if dom and not e.site then
+        local B = BROWSERS[e.bid]
+        local present = false
+        for _, d in ipairs(windowDomains(e)) do if d == dom then present = true end end
+        -- DuckDuckGo dice solo il sito della scheda in vista: la scelta resta finché
+        -- la finestra è aperta
+        if present or (B and B.kind == "ax") then
+          e.name, e.iconSite = siteName(nil, dom), dom
+        else
+          T.showSite[id] = nil   -- hai chiuso quel sito: torna "Chrome"
+        end
+      end
+      local n = T.tabNames[tostring(id)]
+      if n then e.name, e.customName = n, true end
+    end
+  end
+  local changed = false
+  for id in pairs(T.tabNames) do if not alive[id] then T.tabNames[id] = nil; changed = true end end
+  if changed then hs.settings.set("tabbar.tabNames", T.tabNames) end
+end
+
 -- Icona di una scheda: logo del sito per le webapp, altrimenti icona dell'app
 function keyIcon(key)
   local e = T.cand[key]
-  if e and e.site then
-    local f = favicon(e.site)
+  local s = e and (e.site or e.iconSite)
+  if s then
+    local f = favicon(s)
     if f then return f end
   end
   return icon((e and e.bid) or T.keyBid[key] or key)
@@ -415,9 +458,22 @@ end
 --  5) solo posizione, ma solo se è unica: Tabby adatta le finestre tutte allo
 --     stesso spazio, quindi di solito la posizione da sola NON le distingue
 --     (difetto della v9.10: Sofascore e Google scambiate)
-function matchBrowserWindows(wins, info)
+function matchBrowserWindows(wins, info, b)
   local found, how, used = {}, {}, {}
   info = info or {}
+  -- 0) il numero che il browser dà a ogni finestra (non cambia mai), ricordato da un
+  --    abbinamento sicuro: con più finestre con lo stesso titolo e la stessa misura
+  --    (es. due "Meet") era l'unico modo per non scambiarle (23/10/2026)
+  T.bwAs = T.bwAs or {}
+  local mem = b and T.bwAs[b] or {}
+  for i, w in ipairs(wins) do
+    local want = mem[w:id()]
+    if want then
+      for k, e in ipairs(info) do
+        if not used[k] and e.asId == want then used[k], found[i], how[i] = true, e, "numero della finestra"; break end
+      end
+    end
+  end
   local small = T.isSmall
   local function samePlace(w, e)
     local f, r = w:frame(), e.bounds
@@ -456,6 +512,21 @@ function matchBrowserWindows(wins, info)
     end
     return true
   end)
+  -- si ricorda il numero solo per gli abbinamenti sicuri: titolo che nessun'altra
+  -- finestra di questo browser ha in questo momento
+  if b then
+    local count, newMem = {}, {}
+    for _, w in ipairs(wins) do local t = w:title() or ""; count[t] = (count[t] or 0) + 1 end
+    for i, w in ipairs(wins) do
+      local e = found[i]
+      if e and e.asId then
+        if how[i] == "numero della finestra" or (how[i] ~= "posizione (unica)" and count[w:title() or ""] == 1) then
+          newMem[w:id()] = e.asId
+        end
+      end
+    end
+    T.bwAs[b] = newMem
+  end
   return found, how
 end
 
@@ -464,7 +535,7 @@ end
 function browserTabs(app, b, B, wins, add)
   table.sort(wins, function(x, y) return x:id() < y:id() end)
   local info = T.binfo[b]
-  local matched, how = matchBrowserWindows(wins, info)
+  local matched, how = matchBrowserWindows(wins, info, b)
   local plain, names, infoOf = {}, {}, {}
   -- Memoria per finestra: l'ultima descrizione riconosciuta. La risposta del
   -- browser arriva in parallelo e può essere vecchia di qualche secondo: se nel
@@ -475,6 +546,9 @@ function browserTabs(app, b, B, wins, add)
   T.bwDiag = T.bwDiag or {}
   local minis = {}
   for i, w in ipairs(wins) do
+    -- una finestra nata stretta (presa per finestrella) che poi hai allargato è una
+    -- finestra normale: si adatta e si riduce come le altre
+    if T.popups and T.popups[w:id()] and w:frame().w >= appArea().w * 0.6 then T.popups[w:id()] = nil end
     local found = matched[i]
     if not found and oldKnown[w:id()] then found, how[i] = oldKnown[w:id()], "memoria" end
     if found then known[w:id()] = found end

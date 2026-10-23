@@ -114,4 +114,7 @@ v9.39: Calcolatrice, Calendario e Terminale sono "veloci" solo se aperti con la 
     o da ⚡︎ (da Spotlight/Dock: app normali a tutto spazio); restano sopra anche cambiando
     scheda finché non premi Esc; nella vista divisa entrano già nelle zone. Le estensioni di
     Hammerspoon si caricano all'avvio (un comando "hs" interrotto bloccava il menu ⚙︎).
+v9.40: browser: più finestre con lo stesso titolo (due "Meet") non si scambiano più
+    (Tabby ricorda il numero di ogni finestra); rinominare una scheda (✕ → Rinomina);
+    clic sull'icona di una finestra con più siti = scegli quale sito mostrare.
 ```

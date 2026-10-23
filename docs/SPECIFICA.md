@@ -136,6 +136,11 @@ descritte dal browser, dal modo più sicuro al meno sicuro:
 3. stesso titolo; 4. inizio del titolo — questi due **solo per finestre grandi**
    (la miniatura di Meet ha lo stesso titolo della pagina);
 5. solo posizione, **solo se è unica** da entrambe le parti.
+Prima di tutto (passaggio 0, v9.40) vale il **numero che il browser dà alla finestra**
+(non cambia mai), ricordato dall'ultimo abbinamento sicuro (titolo che nessun'altra
+finestra ha): così più finestre con lo stesso titolo e la stessa misura (due "Meet")
+non si scambiano più nomi e siti. Una finestra nata stretta (presa per finestrella) che
+poi allarghi torna una finestra normale.
 *Perché:* Tabby adatta tutte le finestre allo stesso spazio, quindi la posizione da
 sola di solito non distingue (v9.10 scambiava Sofascore e Google).
 Memoria: se una finestra non si abbina ma era abbinata prima, si usa l'ultima
@@ -151,6 +156,14 @@ Nome (`siteName`): si toglie un "(3) " iniziale; si divide il titolo sui separat
 3. l'ultimo pezzo, se i pezzi sono almeno 2 e l'ultimo è lungo 2–24 ("… - Gmail");
 4. il nome del dominio con l'iniziale maiuscola ("Youtube").
 Icona: il logo del sito (vedi B-6).
+
+**B-8 Rinominare** (v9.40): ✕ → «Rinomina la scheda…» su ogni scheda-finestra; il nome
+resta finché la finestra è aperta (anche dopo un ricaricamento di Tabby); «Torna al nome
+di prima». **Scegliere il sito**: clic sull'icona di una finestra di browser con più
+siti → l'elenco dei siti aperti (con i loghi); scelto uno, la scheda prende nome e logo
+di quel sito finché quel sito è aperto nella finestra, poi torna «Chrome». Con
+DuckDuckGo (che dice solo il sito della scheda in vista) la scelta resta finché la
+finestra è aperta.
 
 **B-5 Finestre di browser non webapp.** Come S-2, con il nome breve del browser
 ("Chrome") al posto del nome dell'app; il titolo usato è quello dato dal browser
@@ -755,6 +768,7 @@ Ogni regola ha un test in `test/`; nell'app Swift diventano test di accettazione
 | `test_correzioni.py` | S-6, B-6, D-7 |
 | `test_una_scheda.py` | U-1, U-2, C-3 |
 | `test_chiudi.py` | C-1, C-2, C-4 |
+| `test_browser_nomi.py` | B-3 (passaggio 0), B-8 |
 | `test_app_veloci.py` | Q-1, D-2 (app veloci nelle zone) |
 | `test_finestre_fluide.py` | C-4 (giallo, ⌘Q, macOS che cambia app prima), D-4, L (angoli), W-0, Q-2 |
 | `test_cartelle.py`, `test_cartelle_casi.py`, `test_cartelle_pagine.py` | F-1…F-10 |

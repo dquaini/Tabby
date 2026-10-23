@@ -36,6 +36,8 @@ function onMouse(_, msg, id)
     if t and t.folder then FD.openFolderMenu(t.folder, T.closePos[fm]) end
     return
   end
+  local tic = tonumber(id:match("^ticon(%d+)$"))
+  if tic then openSiteChooser(tic); return end
   local c = tonumber(id:match("^close(%d+)$"))
   if c then openCloseMenu(c); return end
   local ro = tonumber(id:match("^rotate(%d+)$"))
@@ -563,6 +565,12 @@ draw = function()
           frame = {x = closeX, y = my - 7, w = closeW, h = 14}})
         T.closePos[i] = popPos(btnR)
         table.insert(els, hitArea("tab" .. i, tr, true))
+        -- finestra di browser con più siti: clic sull'icona = scegli il sito da mostrare
+        local e = T.cand[t.key]
+        if e and e.win and BROWSERS[e.bid] and not e.site
+           and (#windowDomains(e) >= 2 or T.showSite[e.win:id()] or BROWSERS[e.bid].kind == "ax") then
+          table.insert(els, hitArea("ticon" .. i, {x = ix - 6, y = my - 14, w = 32, h = 28}))
+        end
         table.insert(els, hitArea("close" .. i, btnR))
       end
     end

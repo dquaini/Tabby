@@ -40,6 +40,16 @@ function openCloseMenu(i)
       fn = function() main:close(); scheduleRebuild(); goNeighborSoon(snap, "chiusa la finestra") end,
     })
   end
+  if t.win then
+    local id = tostring(t.win:id())
+    table.insert(items, {title = "Rinomina la scheda…", fn = function() renameTab(t) end})
+    if T.tabNames[id] then
+      table.insert(items, {title = "Torna al nome di prima", fn = function()
+        T.tabNames[id] = nil; hs.settings.set("tabbar.tabNames", T.tabNames); rebuildTabs(); draw()
+      end})
+    end
+    table.insert(items, {title = "-"})
+  end
   if t.bid == FINDER then
     table.insert(items, {title = "Il Finder non si può chiudere", disabled = true})
   else
@@ -51,6 +61,41 @@ function openCloseMenu(i)
   popup(items, T.closePos[i])
 end
 
+
+-- Rinomina una scheda (una finestra): il nome resta finché la finestra è aperta
+function renameTab(t)
+  if not t or not t.win then return end
+  local id = tostring(t.win:id())
+  local btn, txt = FD.ask(function()
+    return hs.dialog.textPrompt("Rinomina la scheda", "Nuovo nome (vuoto = quello di prima):", t.name or "", "Rinomina", "Annulla")
+  end)
+  if btn ~= "Rinomina" then return end
+  txt = txt and txt:match("^%s*(.-)%s*$") or ""
+  T.tabNames[id] = (txt ~= "") and txt or nil
+  hs.settings.set("tabbar.tabNames", T.tabNames)
+  rebuildTabs(); draw()
+end
+
+-- Clic sull'icona di una finestra di browser con più siti: l'elenco dei siti
+-- aperti; scelto uno, la scheda prende nome e logo di quel sito (finché c'è)
+function openSiteChooser(i)
+  local t = T.tabs[i]
+  local e = t and T.cand[t.key]
+  if not e or not e.win then switchTo(i); return end
+  local id = e.win:id()
+  local items = {{title = "Mostra la scheda come:", disabled = true}}
+  for _, d in ipairs(windowDomains(e)) do
+    local img = favicon(d)
+    table.insert(items, {title = siteName(nil, d) .. "   " .. d, image = img and img:setSize({w = 16, h = 16}) or nil,
+      checked = (T.showSite[id] == d) or nil,
+      fn = function() T.showSite[id] = d; rebuildTabs(); switchTo(i); draw() end})
+  end
+  table.insert(items, {title = "-"})
+  table.insert(items, {title = BROWSERS[e.bid].short .. " (come prima)", checked = (T.showSite[id] == nil) or nil,
+    fn = function() T.showSite[id] = nil; rebuildTabs(); draw() end})
+  table.insert(items, {title = "Rinomina la scheda…", fn = function() renameTab(t) end})
+  popup(items, T.closePos[i])
+end
 
 -- ⌃⌥W: chiude la finestra che stai guardando senza chiudere l'app (come ✕ →
 -- "Chiudi finestra"). In un browser chiude la finestra intera (⌘W chiude solo
