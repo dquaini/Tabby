@@ -108,7 +108,7 @@ SIDE_W = 190         -- larghezza di Tabby (a sinistra / a destra)
 ROW_H = 36          -- altezza di una scheda quando Tabby è laterale
 TAB_MAX_W = 210         -- larghezza massima di una scheda
 BTN_W = 44          -- dimensione dei tasti scrivania / ⊞ / ⚡︎ / ⚙︎
-BAT_W = 76          -- spazio per l'indicatore della batteria
+BAT_W = 44          -- spazio per l'icona della batteria (la percentuale al passaggio del puntatore)
 -- Con tante app aperte:
 COMPACT_BELOW = 120     -- sotto questa larghezza le schede diventano solo icona
 ICON_W = 44          -- larghezza di una scheda "solo icona"

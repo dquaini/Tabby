@@ -364,10 +364,38 @@ function toggle(key, after)
   end
 end
 
+-- Rimette a misura quello che stai guardando (dopo un cambio di posizione di Tabby,
+-- della fascia del notch, di "Nascondi Tabby"…): l'app in uso o la sua vista divisa,
+-- le altre app in vista, e i Lampi in fila. Se in primo piano c'è un Lampo o il Memo,
+-- vale l'app che stavi usando sotto. Ricontrolla dopo un attimo (macOS a volte è lento).
 function refit()
-  local f = hs.application.frontmostApplication()
-  local g = f and T.memberOf[f:bundleID()]
-  if g then layoutGroup(g) else fitApp(f) end
+  local function once()
+    local fb = frontBid()
+    local key = (fb and not floating(fb) and not IGNORE[fb]) and currentKey() or T.lastKey
+    local g = key and T.memberOf[key]
+    local app
+    if g then
+      layoutGroup(g)
+    else
+      app = key and appFor(T.keyBid[key] or key)
+      if app and not floating(app:bundleID()) then
+        for _, w in ipairs(app:allWindows()) do fitWindow(w) end
+      end
+    end
+    -- le altre app in vista (con "una scheda alla volta" spento possono essercene più d'una)
+    local inGroup = {}
+    if g then for _, k in ipairs(g.members) do inGroup[T.keyBid[k] or k] = true end end
+    local _, list = runningApps()
+    for _, a in ipairs(list) do
+      local b = a:bundleID()
+      if not a:isHidden() and not floating(b) and not inGroup[b] and a ~= app then
+        for _, w in ipairs(a:allWindows()) do if not w:isMinimized() then fitWindow(w) end end
+      end
+    end
+    layoutFloaters()
+  end
+  once()
+  hs.timer.doAfter(0.4, once)
 end
 
 function behaviourMenu()
@@ -402,8 +430,7 @@ function positionMenu()
         save("position")
         T.revealed = false
         draw()
-        refit()
-        layoutFloaters()   -- i Lampi si rimettono in fila nello spazio nuovo
+        refit()   -- (rimette a misura anche i Lampi)
       end,
     })
   end

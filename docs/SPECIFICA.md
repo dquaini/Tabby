@@ -485,11 +485,11 @@ sinistra il contrario (`gatto-intero-<destra|sinistra>-<spento|acceso>.png`), il
 più grande possibile nello spazio in cima (margini 14 ai lati, 8 sopra e sotto).
 Senza immagini: un piccolo schermo disegnato.
 
-**L-5 Batteria**: pila con riempimento proporzionale, verde da 80% in su, rossa
-sotto il 35% se non è in carica, normale altrimenti; ⚡︎ dentro se in carica;
-percentuale accanto. Solo sui Mac con batteria. Si rilegge solo quando macOS avvisa
-di un cambio (leggere costa ~16 ms). **Da fare** (roadmap): solo l'icona, la
-percentuale al passaggio del puntatore.
+**L-5 Batteria** (v9.49): **solo l'icona** (pila con riempimento proporzionale, verde da
+80% in su, rossa sotto il 35% se non è in carica, normale altrimenti; ⚡︎ dentro se in
+carica), in uno spazio di 44 punti. **Passandoci sopra col puntatore** compare un fumetto
+con la percentuale («72%», «72% · in carica»), accanto alla batteria dalla parte delle app.
+Solo sui Mac con batteria. Si rilegge solo quando macOS avvisa di un cambio.
 
 **L-6 Livello della finestra di Tabby**: sopra le finestre normali, sotto la barra
 dei menu quando scende; su tutte le scrivanie; i clic non le danno l'attenzione (non
@@ -500,7 +500,10 @@ scrive in console.
 ## 11. Posizione, notch, Nascondi Tabby
 
 **A-1 Posizione** (⚙︎ → Posizione): in alto (di serie), in basso, a sinistra, a
-destra. Lo spazio delle app è lo schermo utile (senza barra dei menu e Dock) meno la
+destra. Cambiandola (e cambiando fascia del notch o Nascondi Tabby) si rimette a misura
+quello che stai guardando: l'app in uso (anche se in primo piano c'è un Lampo o il Memo)
+o la sua vista divisa, le altre app in vista, e i Lampi in fila nello spazio nuovo; poi si
+ricontrolla dopo 0,4 s (v9.49). Lo spazio delle app è lo schermo utile (senza barra dei menu e Dock) meno la
 barra di Tabby da quel lato.
 
 **A-2 Notch.** Tabby chiede a macOS dove sono le parti di schermo ai lati della
@@ -826,6 +829,7 @@ Ogni regola ha un test in `test/`; nell'app Swift diventano test di accettazione
 | `test_correzioni.py` | S-6, B-6, D-7 |
 | `test_una_scheda.py` | U-1, U-2, C-3 |
 | `test_chiudi.py` | C-1, C-2, C-4 |
+| `test_posizione.py` | A-1 (cambio di posizione), L-5 |
 | `test_barra_menu_notifiche.py` | A-4, A-6 (barra dei menu e Dock), A-7, N-5 |
 | `test_browser_nomi.py` | B-3 (passaggio 0), B-8 |
 | `test_app_veloci.py` | Q-1, D-2 (app veloci nelle zone) |

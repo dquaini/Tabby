@@ -10,6 +10,10 @@
 
 function onMouse(_, msg, id)
   id = tostring(id)
+  if id == "battery" then
+    if msg == "mouseEnter" then showBatteryTip(true) elseif msg == "mouseExit" then showBatteryTip(false) end
+    return
+  end
   local ti = tonumber(id:match("^tab(%d+)$"))
   if msg == "mouseDown" then
     if ti then startPress(ti) end
@@ -304,7 +308,8 @@ function drawBattery(els, r)
   elseif pct < 35 and not charging then col = COL.batLow
   else col = COL.textMid end
 
-  local groupW = 26 + 4 + 34
+  -- solo l'icona (v9.49): la percentuale compare passandoci sopra col puntatore
+  local groupW = 26
   local bx = r.x + (r.w - groupW) / 2
   local by = r.y + r.h / 2 - 6
   table.insert(els, {type = "rectangle", action = "stroke", strokeColor = COL.textDim,
@@ -320,8 +325,40 @@ function drawBattery(els, r)
     table.insert(els, {type = "text", text = "⚡︎", textSize = 9, textColor = COL.text,
       textAlignment = "center", frame = {x = bx, y = by - 0.5, w = 22, h = 12}})
   end
-  table.insert(els, {type = "text", text = pct .. "%", textSize = 11,
-    textColor = col, frame = {x = bx + 30, y = by - 1, w = 34, h = 14}})
+  table.insert(els, {type = "rectangle", action = "fill", fillColor = {white = 1, alpha = 0.01},
+    trackMouseEnterExit = true, id = "battery", frame = r})
+end
+
+-- Il fumetto con la percentuale, accanto alla batteria (dalla parte delle app)
+function showBatteryTip(on)
+  if not on or not hasBattery() or not T.L or not T.L.battery then
+    if T.batTip then T.batTip:hide() end
+    return
+  end
+  local r, bf = T.L.battery, T.bf
+  local txt = T.bat.pct .. "%" .. (T.bat.charging and "  ·  in carica" or "")
+  local tw, th = (T.bat.charging and 118 or 52), 26
+  local p, x, y = S.position
+  if p == "top" then x, y = bf.x + r.x + r.w / 2 - tw / 2, bf.y + bf.h + 6
+  elseif p == "bottom" then x, y = bf.x + r.x + r.w / 2 - tw / 2, bf.y - th - 6
+  elseif p == "right" then x, y = bf.x - tw - 6, bf.y + r.y + r.h / 2 - th / 2
+  else x, y = bf.x + bf.w + 6, bf.y + r.y + r.h / 2 - th / 2 end
+  local sf = screen():fullFrame()
+  x = math.max(sf.x + 4, math.min(x, sf.x + sf.w - tw - 4))
+  if not T.batTip then
+    T.batTip = hs.canvas.new({x = x, y = y, w = tw, h = th})
+    T.batTip:level(hs.canvas.windowLevels.floating)
+    T.batTip:behavior({"canJoinAllSpaces", "stationary", "fullScreenAuxiliary"})
+    T.batTip:clickActivating(false)
+  end
+  T.batTip:frame({x = x, y = y, w = tw, h = th})
+  T.batTip:replaceElements({
+    {type = "rectangle", action = "fill", fillColor = {hex = "#2C2F36", alpha = 0.98},
+     roundedRectRadii = {xRadius = 7, yRadius = 7}, frame = {x = 0, y = 0, w = tw, h = th}},
+    {type = "text", text = txt, textSize = 12.5, textColor = COL.text, textAlignment = "center",
+     frame = {x = 0, y = th / 2 - 8, w = tw, h = 17}},
+  })
+  T.batTip:show()
 end
 
 -- Lo sfondo nero di Tabby, con gli angoli smussati dalla parte delle app (verso lo

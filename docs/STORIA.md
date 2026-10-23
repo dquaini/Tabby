@@ -145,4 +145,7 @@ v9.47: tolta la colonna riservata ai Lampi (troppo limitante): i Lampi stanno so
 v9.48: niente ripiano a parte: è il tasto ⚡︎ che si allarga con le icone dei Lampi coperti e
     «Tutti» (di lato diventa una riga sopra ⊞ ⚙︎); cambiando posizione i Lampi si rimettono
     in fila.
+v9.49: cambiando la posizione di Tabby si rimette a misura l'app in uso (anche con un Lampo
+    davanti, anche una vista divisa di finestre del browser) e i Lampi; batteria solo icona,
+    la percentuale in un fumetto passandoci sopra.
 ```
