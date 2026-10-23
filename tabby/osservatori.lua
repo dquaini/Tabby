@@ -223,6 +223,34 @@ end)
 T.floatTap:start()
 T.spaceWatcher:start()
 
+-- Notifiche di macOS (23/10/2026, Daniele): non sopra Tabby. macOS le disegna in una
+-- finestra trasparente grande come lo schermo (visto su macOS 26), che si può spostare:
+-- con Tabby in alto scende sotto Tabby, con Tabby a destra va alla sua sinistra.
+function notificationOffset()
+  if T.fullscreen or S.autohide or T.visible == false then return 0, 0 end
+  local bf, ff = barFrame(), screen():fullFrame()
+  if S.position == "top" then return 0, math.max(0, bf.y + bf.h - ff.y) end
+  if S.position == "right" then return -bf.w, 0 end
+  return 0, 0
+end
+function placeNotifications(w)
+  pcall(function()
+    local ff = screen():fullFrame()
+    local f = w:frame()
+    if f.w < ff.w * 0.9 then return end   -- solo la finestra grande delle notifiche
+    local dx, dy = notificationOffset()
+    local el = hs.axuielement.windowElement(w)
+    local want = {x = ff.x + dx, y = ff.y + dy}
+    local p = el:attributeValue("AXPosition")
+    if p and math.abs(p.x - want.x) < 1 and math.abs(p.y - want.y) < 1 then return end
+    el:setAttributeValue("AXPosition", want)
+    local msg = string.format("Tabby · notifiche spostate di %d, %d (accanto a Tabby)", dx, dy)
+    if T.ncDiag ~= msg then T.ncDiag = msg; print(msg) end
+  end)
+end
+T.ncFilter = WF.new(false):setAppFilter("Notification Center", {}):setAppFilter("Centro Notifiche", {})
+T.ncFilter:subscribe({WF.windowCreated, WF.windowVisible}, placeNotifications)
+
 -- Cambio di monitor o risoluzione
 T.screenWatcher = hs.screen.watcher.new(function()
   T.notch = detectNotch()

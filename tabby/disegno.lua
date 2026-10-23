@@ -620,7 +620,7 @@ draw = function()
   T.updateMouseTimer()
   local fsHint = T.fsHintUntil and hs.timer.secondsSinceEpoch() < T.fsHintUntil
   if T.fullscreen or fsHint then setVisible(false)   -- a schermo intero Tabby si fa da parte
-  elseif S.autohide then setVisible(T.revealed) else setVisible(not T.menuPeek) end
+  elseif S.autohide then setVisible(T.revealed) else setVisible(true) end
 end
 
 
@@ -632,16 +632,17 @@ T.diag = {draw = draw, layout = layout, activeIndex = activeIndex, badgeFor = ba
 --  "NASCONDI TABBY": APPARE PORTANDO IL MOUSE SUL BORDO DELLO SCHERMO
 -- ---------------------------------------------------------------------
 
--- Il controllo del mouse (12 volte al secondo) serve solo con "Nascondi Tabby"
--- o con la fascia del notch: altrimenti è spento (consumo, 23/10/2026)
+-- Il controllo del mouse (12 volte al secondo) serve solo con "Nascondi Tabby" o
+-- con la barra dei menu di macOS nascosta (Tabby le scende sotto quando appare):
+-- altrimenti è spento (consumo, 23/10/2026)
 function T.updateMouseTimer()
   if not T.mouseTimer then return end
-  local need = S.autohide or useNotchBand()
+  local need = S.autohide or menuFollow()
   if need and not T.mouseTimer:running() then
     T.mouseTimer:start()
   elseif not need and T.mouseTimer:running() then
     T.mouseTimer:stop()
-    if T.menuPeek then T.menuPeek = false end
+    if T.menuDown then T.menuDown = false end
   end
 end
 
@@ -649,22 +650,29 @@ T.mouseTimer = hs.timer.doEvery(0.08, function()
   if not T.bar then return end
   if T.press or T.split or T.fedit then return end   -- mentre trascini, dividi o crei una cartella, resta visibile
 
-  -- Tabby nella fascia del notch: quando porti il mouse in cima scende la
-  -- barra dei menu di macOS, e Tabby si fa da parte per non coprirla.
-  if not S.autohide and useNotchBand() and not T.fullscreen then
+  -- Barra dei menu di macOS nascosta: quando porti il puntatore in cima, la barra
+  -- scende e Tabby scende sotto di lei (in alto e di lato, anche nella fascia del
+  -- notch). Risale quando il puntatore torna giù oltre Tabby; finché il puntatore è
+  -- sopra Tabby resta giù, così le schede non ti scappano da sotto il dito.
+  if menuFollow() and not T.fullscreen then
     local ff = screen():fullFrame()
     local p  = hs.mouse.absolutePosition()
-    if not T.menuPeek and p.y <= ff.y + 1 then
-      T.menuPeek = true
-      setVisible(false)
-    elseif T.menuPeek and p.y > ff.y + BAR_H + 8 then
-      T.menuPeek = false
-      setVisible(true)
+    if not T.menuDown and p.y <= ff.y + 1 then
+      T.menuDown = true
+      draw()
+    elseif T.menuDown then
+      local bf = T.bf or barFrame()
+      local inside = p.x >= bf.x and p.x <= bf.x + bf.w and p.y >= bf.y and p.y <= bf.y + bf.h
+      local limit = isVertical() and (ff.y + realMenuH() + 8) or (bf.y + bf.h + 8)
+      if p.y > limit and not inside then
+        T.menuDown = false
+        draw()
+      end
     end
     return
-  elseif T.menuPeek then
-    T.menuPeek = false
-    setVisible(true)
+  elseif T.menuDown then
+    T.menuDown = false
+    draw()
   end
 
   if not S.autohide or T.fullscreen then return end

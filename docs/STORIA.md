@@ -117,4 +117,7 @@ v9.39: Calcolatrice, Calendario e Terminale sono "veloci" solo se aperti con la 
 v9.40: browser: più finestre con lo stesso titolo (due "Meet") non si scambiano più
     (Tabby ricorda il numero di ogni finestra); rinominare una scheda (✕ → Rinomina);
     clic sull'icona di una finestra con più siti = scegli quale sito mostrare.
+v9.41: con la barra dei menu nascosta, quando scende Tabby le scende sotto (in alto e di
+    lato) e risale quando il puntatore torna giù; le notifiche di macOS compaiono sotto
+    Tabby (in alto) o alla sua sinistra (a destra), non più sopra.
 ```

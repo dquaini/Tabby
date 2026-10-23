@@ -114,7 +114,8 @@ hs = {
       windowVisible = "visible", windowNotVisible = "notvisible", windowMinimized = "minimized",
       new = function(which)
         local f = {subs = {}}
-        function f:setDefaultFilter() return self end
+        function f:setDefaultFilter() WINFILTER = self; return self end
+        function f:setAppFilter(name) self._apps = self._apps or {}; self._apps[name] = true; NCFILTER = self; return self end
         function f:subscribe(ev, fn)
           if type(ev) == "table" then for _, e in ipairs(ev) do self.subs[e] = fn end else self.subs[ev] = fn end
           return self
@@ -125,7 +126,7 @@ hs = {
           return out
         end
         -- il filtro di Spotlight è a parte (SPOTFILTER), quello di tutte le finestre è WINFILTER
-        if which == "Spotlight" then SPOTFILTER = f else WINFILTER = f end
+        if which == "Spotlight" then SPOTFILTER = f elseif which ~= false then WINFILTER = f end
         return f
       end,
     },
@@ -274,8 +275,11 @@ hs = {
     -- il pallino verde: 16x16, a 48 punti dal bordo sinistro, in alto
     local f = w._frame or {x = 0, y = 0}
     local green = el("AXButton", {AXPosition = {x = f.x + 48, y = f.y + 6}, AXSize = {w = 16, h = 16}})
-    return el("AXWindow", {AXFullScreenButton = green}, {el("AXGroup", nil, tabs),
+    local win = el("AXWindow", {AXFullScreenButton = green, AXPosition = w._axpos}, {el("AXGroup", nil, tabs),
       el("AXWebArea", {AXURL = {url = w._page}}, {el("AXTextField", {AXValue = "non-deve-leggermi.com"})})})
+    -- spostare la finestra (es. quella delle notifiche di macOS)
+    win.setAttributeValue = function(_, k, v) if k == "AXPosition" then w._axpos = v end end
+    return win
   end,
   applicationElement = function(app)
     if app and app._extras then   -- un'app con l'icona nella barra dei menu

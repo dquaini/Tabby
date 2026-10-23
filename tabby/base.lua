@@ -204,13 +204,38 @@ function baseRect()
 end
 
 -- Dove sta Tabby in questo momento
+-- Barra dei menu di macOS nascosta ("nascondi sempre"): quando scende (puntatore in
+-- cima allo schermo) Tabby scende sotto di lei, come attaccata (23/10/2026, Daniele).
+-- Vale con Tabby in alto e di lato; in basso non serve.
+function menuFollow()
+  return T.menuHidden == true and S.position ~= "bottom" and not S.autohide
+end
+-- L'altezza vera della barra dei menu (chiesta a macOS una volta)
+function realMenuH()
+  if T.realMenuH then return T.realMenuH end
+  local h
+  pcall(function()
+    local a = hs.application.frontmostApplication()
+    local mb = a and hs.axuielement.applicationElement(a):attributeValue("AXMenuBar")
+    local s = mb and mb:attributeValue("AXSize")
+    h = s and s.h
+  end)
+  if h and h > 10 and h < 60 then T.realMenuH = h; return h end
+  return menuBarH()
+end
+function menuDownOffset()
+  if T.menuDown and menuFollow() and not T.fullscreen then return realMenuH() end
+  return 0
+end
+
 function barFrame()
   local R = baseRect()
   local p = S.position
+  local off = menuDownOffset()
   if p == "bottom" then return {x = R.x, y = R.y + R.h - BAR_H, w = R.w, h = BAR_H} end
-  if p == "left"   then return {x = R.x, y = R.y, w = SIDE_W, h = R.h} end
-  if p == "right"  then return {x = R.x + R.w - SIDE_W, y = R.y, w = SIDE_W, h = R.h} end
-  local y = R.y
+  if p == "left"   then return {x = R.x, y = R.y + off, w = SIDE_W, h = R.h - off} end
+  if p == "right"  then return {x = R.x + R.w - SIDE_W, y = R.y + off, w = SIDE_W, h = R.h - off} end
+  local y = R.y + off
   -- se appare col mouse e la barra dei menu scende anche lei, mettiti sotto
   if S.autohide and y == screen():fullFrame().y then y = y + menuBarH() end
   return {x = R.x, y = y, w = R.w, h = BAR_H}

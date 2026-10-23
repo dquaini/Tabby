@@ -428,6 +428,12 @@ dal percorso dell'app (o dal nome). Vanno sulla **prima** scheda dell'app.
 **N-3 Somma**: vista divisa e scheda-cartella mostrano la somma; se ci sono solo
 pallini senza numero, un pallino "•".
 
+**N-5 Notifiche di macOS** (v9.41): non compaiono sopra Tabby. macOS (26) le disegna in
+una finestra trasparente grande come lo schermo, che si può spostare con
+l'Accessibilità: con Tabby in alto la si abbassa di quanto è alta Tabby (anche quando è
+scesa sotto la barra dei menu), con Tabby a destra la si sposta a sinistra della sua
+larghezza; in basso, a sinistra, a schermo intero o con Nascondi Tabby resta dov'è.
+
 **N-4 Disegno**: pallino rosso col numero prima della ✕ (oltre 99: "99+"); sulle
 schede compatte un puntino rosso.
 
@@ -493,9 +499,8 @@ barra dei menu è impostata su "nascondi sempre" (letto dalle preferenze di sist
 ricontrollato ogni 30 s); oppure forzata accesa/spenta a mano (⚙︎ → Posizione → Usa
 la fascia del notch; "torna automatico"). Con la fascia: Tabby sale in cima, nella
 striscia accanto al notch, e **le schede saltano il notch** (nessuna scheda sotto la
-tacca, margine 6); le app partono subito sotto Tabby. Se il mouse arriva in cima allo
-schermo (scende la barra dei menu di macOS) Tabby si fa da parte; torna quando il
-mouse scende sotto Tabby di 8 punti.
+tacca, margine 6); le app partono subito sotto Tabby. Quando scende la barra dei menu di
+macOS, Tabby le scende sotto (A-6; fino alla v9.40 si faceva da parte).
 
 **A-3 Nascondi Tabby** (⚙︎ → Comportamento): Tabby è nascosta e le app usano tutto
 lo schermo; appare portando il mouse sul **bordo** dalla sua parte (entro 2 punti) e
@@ -504,7 +509,16 @@ sopra Tabby). In alto con la barra dei menu che scende: Tabby si mette sotto di 
 Durante trascinamenti, divisione o creazione di cartelle resta visibile.
 
 **A-4 Controllo del mouse** (12 volte al secondo): **acceso solo** con Nascondi
-Tabby o con la fascia del notch; spento negli altri casi (consumo).
+Tabby o con la barra dei menu di macOS nascosta; spento negli altri casi (consumo).
+
+**A-6 Attaccata sotto la barra dei menu** (v9.41, al posto di "si fa da parte"): con la
+barra dei menu di macOS su "nascondi sempre" e Tabby in alto o di lato, quando il
+puntatore tocca il bordo in alto dello schermo (la barra scende) Tabby **scende sotto di
+lei** dell'altezza vera della barra (chiesta a macOS: 30 punti su macOS 26 senza notch).
+Risale quando il puntatore torna giù oltre Tabby; **finché il puntatore è sopra Tabby
+resta giù**, così le schede non scappano da sotto il dito. Non con Nascondi Tabby né a
+schermo intero. (Tabby non può sapere direttamente se la barra è giù: lo deduce dal
+puntatore.)
 
 **A-5 Cambio di monitor o risoluzione**: si rileva di nuovo il notch e si ridisegna.
 Tabby usa sempre lo **schermo principale**.
@@ -768,6 +782,7 @@ Ogni regola ha un test in `test/`; nell'app Swift diventano test di accettazione
 | `test_correzioni.py` | S-6, B-6, D-7 |
 | `test_una_scheda.py` | U-1, U-2, C-3 |
 | `test_chiudi.py` | C-1, C-2, C-4 |
+| `test_barra_menu_notifiche.py` | A-4, A-6, N-5 |
 | `test_browser_nomi.py` | B-3 (passaggio 0), B-8 |
 | `test_app_veloci.py` | Q-1, D-2 (app veloci nelle zone) |
 | `test_finestre_fluide.py` | C-4 (giallo, ⌘Q, macOS che cambia app prima), D-4, L (angoli), W-0, Q-2 |
