@@ -152,7 +152,7 @@ T.focusTimer = hs.timer.delayed.new(0.15, function()
     draw()
   end
 end)
-T.allWins:subscribe(WF.windowFocused, function() T.focusTimer:start() end)
+T.allWins:subscribe(WF.windowFocused, function() T.focusTimer:start(); checkCoveredSoon() end)
 
 -- Il nome di una finestra-scheda è il suo titolo: se cambia, ridisegna
 T.allWins:subscribe(WF.windowTitleChanged, function() scheduleRebuild() end)
@@ -232,6 +232,7 @@ T.rightTap:start()
 -- Un clic può portare una finestra sopra un'app veloce: Tabby la rimette sopra
 T.floatTap = hs.eventtap.new({hs.eventtap.event.types.leftMouseUp}, function()
   if next(T.floatMode) then hs.timer.doAfter(0.08, raiseFloaters) end
+  checkCoveredSoon()
   return false
 end)
 T.floatTap:start()

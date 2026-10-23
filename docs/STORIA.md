@@ -138,4 +138,8 @@ v9.46: colonna riservata ai Lampi: finché ce n'è uno aperto l'app che usi si s
     non li copre (macOS non permette di tenerli sopra); dove va un Lampo: posto in due modi →
     si sceglie, in uno → va lì, in nessuno → «Non c'è spazio per mettere …». In roadmap: una
     decina di Lampi propri di Tabby nell'app Swift.
+v9.47: tolta la colonna riservata ai Lampi (troppo limitante): i Lampi stanno sopra e, se
+    finiscono sotto la finestra che usi, compaiono sul ripiano nella barra di Tabby (icone
+    + «Tutti»): un clic e tornano davanti. "C'è posto" = dentro lo schermo e non sopra un
+    altro Lampo.
 ```

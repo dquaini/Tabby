@@ -587,12 +587,16 @@ aperte con la loro scorciatoia o dal menu ⚡︎** (v9.39); aperte in un altro m
 nasconderlo**; più finestre a cascata (26 punti); non sono schede; **restano in vista e
 sopra** anche cambiando scheda (Tabby le riporta davanti a ogni cambio di scheda e dopo
 ogni clic, solo se sono coperte) **finché non premi Esc** su di loro o di nuovo la
-scorciatoia (allora si nascondono e tornano app normali). **Colonna riservata ai Lampi** (v9.46): macOS non permette di tenere la finestra di
-un'altra app sopra quella che usi (provato su macOS 26: riportarla davanti non ha effetto
-se quell'app non è attiva). Quindi, **finché c'è almeno un Lampo aperto, la sua colonna è
-riservata**: lo spazio delle app finisce 12 punti prima del Lampo più a sinistra, l'app
-che usi (o la vista divisa) si stringe e niente copre i Lampi. Chiusi tutti, torna a tutto
-spazio. Il Memo conta come gli altri. La scorciatoia su un'app veloce
+scorciatoia (allora si nascondono e tornano app normali). **Il ripiano dei Lampi** (v9.47; la colonna riservata della v9.46 è stata tolta: troppo
+limitante): macOS non permette di tenere la finestra di un'altra app sopra quella che usi
+(provato su macOS 26), quindi Calcolatrice, Calendario e Terminale possono finire sotto.
+Quando un Lampo è **coperto** (una finestra che non è un Lampo gli sta sopra e lo
+sovrappone), nella **barra di Tabby** compare il ripiano: ⚡︎, le icone dei Lampi coperti
+e, se sono due o più, **«Tutti»**. Clic su un'icona → quel Lampo torna davanti; «Tutti» →
+tutti, uno dopo l'altro. Così si vede che non sono stati chiusi. Con Tabby in alto o in
+basso il ripiano sta prima della batteria; di lato è una riga sopra la batteria. Si
+aggiorna a ogni cambio di app o di finestra e dopo ogni clic. Il Memo, che è di Tabby,
+sta sempre sopra e non va sul ripiano. La scorciatoia su un'app veloce
 in vista ma senza tastiera le dà la tastiera. Se un'app rifiuta la misura, si rilegge
 quella vera e la si riporta dentro lo schermo. Riprova a sistemarle dopo 0,3, 0,8, 1,6 s.
 Si ricordano anche dopo un ricaricamento (`floatMode`).
@@ -600,7 +604,7 @@ Si ricordano anche dopo un ricaricamento (`floatMode`).
 **Q-1b In fila** (v9.44, regole della v9.46): più Lampi aperti insieme (Memo compreso)
 stanno in fila in alto a destra, a 12 punti l'uno dall'altro: in colonne da destra verso
 sinistra, o uno sotto l'altro nella stessa colonna. "C'è posto" vuol dire: il Lampo sta
-dentro lo schermo e all'app che usi resta almeno il **40% della larghezza**. Aprendo un
+tutto dentro lo spazio delle app e non finisce sopra un altro Lampo. Aprendo un
 Lampo con altri già aperti: **posto sia accanto sia sotto → due riquadri tratteggiati**
 (1 accanto, 2 sotto; tasto o clic, Invio = 1, Esc annulla); **posto in un modo solo → va
 lì**, senza domande; **nessun posto → non si apre** e al centro compare «Non c'è spazio per
@@ -822,7 +826,7 @@ Ogni regola ha un test in `test/`; nell'app Swift diventano test di accettazione
 | `test_barra_menu_notifiche.py` | A-4, A-6 (barra dei menu e Dock), A-7, N-5 |
 | `test_browser_nomi.py` | B-3 (passaggio 0), B-8 |
 | `test_app_veloci.py` | Q-1, D-2 (app veloci nelle zone) |
-| `test_app_veloci_fila.py` | Q-1b (anche «non c'è spazio»), D-2 (Memo e fila dei Lampi nelle zone) |
+| `test_app_veloci_fila.py` | Q-1b (anche «non c'è spazio»), ripiano dei Lampi, D-2 (Memo e fila dei Lampi nelle zone) |
 | `test_finestre_fluide.py` | C-4 (giallo, ⌘Q, macOS che cambia app prima), D-4, L (angoli), W-0, Q-2 |
 | `test_cartelle.py`, `test_cartelle_casi.py`, `test_cartelle_pagine.py` | F-1…F-10 |
 | `test_notch.py` | A-2, L-6 |

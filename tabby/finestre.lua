@@ -216,17 +216,64 @@ end
 -- un'app di un altro: Tabby le riporta davanti a ogni cambio di scheda e a ogni
 -- clic). Solo se sono davvero coperte, così macOS non annuncia cambi di finestra
 -- a vuoto.
+-- Il Lampo w è coperto? Sì se una finestra che non è un Lampo gli sta sopra e lo
+-- sovrappone (le finestre si guardano da quella davanti a quella più dietro)
 function floaterCovered(w)
   local ok, res = pcall(function()
-    local fw = hs.window.focusedWindow()
+    local b = w:frame()
     for _, x in ipairs(hs.window.orderedWindows()) do
-      if x:id() == w:id() then return false end      -- viene prima: è sopra
-      if fw and x:id() == fw:id() then return true end
+      if x:id() == w:id() then return false end      -- arrivati a lui: niente sopra
+      local xa = x:application()
+      local xb = xa and xa:bundleID()
+      if xb and not floating(xb) and not IGNORE[xb] then
+        local a = x:frame()
+        if a.x < b.x + b.w and b.x < a.x + a.w and a.y < b.y + b.h and b.y < a.y + a.h then return true end
+      end
     end
-    return true
+    return false
   end)
-  return not ok or res
+  return ok and res
 end
+
+-- ---------------------------------------------------------------------
+--  IL RIPIANO DEI LAMPI (23/10/2026, Daniele)
+--  macOS non lascia tenere sopra la finestra di un'altra app: se un Lampo
+--  (Calcolatrice, Calendario, Terminale) finisce sotto la finestra che usi, nella
+--  barra di Tabby compare il ripiano con le sue icone e «Tutti»: un clic e torna
+--  davanti. Così si vede che non è stato chiuso. (Il Memo è di Tabby: sempre sopra.)
+-- ---------------------------------------------------------------------
+function updateCoveredLamps()
+  local list, fb = {}, frontBid()
+  for _, it in ipairs(T.floatStack) do
+    if it.key ~= "memo" and it.key ~= fb and floatItemOpen(it.key) then
+      local app = appFor(it.key)
+      local w
+      for _, x in ipairs(app and app:allWindows() or {}) do if not x:isMinimized() then w = w or x end end
+      if w and floaterCovered(w) then table.insert(list, it.key) end
+    end
+  end
+  local sig = table.concat(list, ",")
+  if sig ~= (T.coveredSig or "") then
+    T.coveredSig, T.coveredLamps = sig, list
+    if #list > 0 then print("Tabby · Lampi coperti (sul ripiano): " .. sig) end
+    draw()
+  end
+end
+function checkCoveredSoon()
+  if next(T.floatMode) or #T.coveredLamps > 0 then hs.timer.doAfter(0.25, updateCoveredLamps) end
+end
+
+-- Riporta davanti dei Lampi (clic sul ripiano): uno, o tutti uno dopo l'altro
+function bringLamps(keys)
+  for n, key in ipairs(keys) do
+    hs.timer.doAfter((n - 1) * 0.15, function()
+      local app = appFor(key)
+      if app then app:activate() end
+    end)
+  end
+  hs.timer.doAfter(#keys * 0.15 + 0.3, updateCoveredLamps)
+end
+
 function raiseFloaters()
   local fb = frontBid()
   for bid in pairs(T.floatMode) do
@@ -240,6 +287,7 @@ function raiseFloaters()
 end
 function raiseFloatersSoon()
   if next(T.floatMode) then hs.timer.doAfter(0.15, raiseFloaters) end
+  checkCoveredSoon()
 end
 
 -- (23/10/2026: un "guardiano" che ogni mezzo secondo riportava davanti i Lampi è
@@ -315,19 +363,7 @@ function layoutFloaters()
   local pos = floatPositions(keep)
   for i, it in ipairs(keep) do placeFloatItem(it.key, pos[i]) end
   updateLampKeeper()
-  -- la colonna riservata ai Lampi: l'app che usi si stringe (o torna a tutto spazio)
-  local B = baseAppArea()
-  local reserve = 0
-  if #pos > 0 then
-    local left = pos[1].x
-    for _, r in ipairs(pos) do left = math.min(left, r.x) end
-    reserve = (B.x + B.w) - left + FLOAT_GAP
-  end
-  if reserve ~= (T.lampReserve or 0) then
-    T.lampReserve = reserve
-    print(string.format("Tabby · spazio riservato ai Lampi: %d punti", reserve))
-    refitMain()
-  end
+  checkCoveredSoon()
   local names = {}
   for _, it in ipairs(keep) do table.insert(names, it.key == "memo" and "Memo" or appName(it.key, appFor(it.key))) end
   local msg = "Tabby · app veloci in fila: " .. table.concat(names, ", ")
@@ -335,9 +371,7 @@ function layoutFloaters()
 end
 
 -- C'è posto per una nuova voce "accanto" (colonna nuova) o "sotto" (stessa colonna)?
--- C'è posto se il Lampo sta dentro lo schermo e all'app che usi resta almeno il 40%
--- della larghezza (la colonna dei Lampi è riservata, vedi appArea)
-LAMP_MIN_APP = 0.4
+-- C'è posto se il Lampo sta tutto dentro lo spazio delle app
 function floatFits(stack, key, place)
   local A, G = baseAppArea(), FLOAT_GAP
   local st = {}
@@ -353,7 +387,12 @@ function floatFits(stack, key, place)
   local left = new.x
   for _, r in ipairs(pos) do left = math.min(left, r.x) end
   if new.y + new.h > A.y + A.h then return false end
-  return left - G >= A.x + A.w * LAMP_MIN_APP
+  -- non deve finire sopra un altro Lampo (succede se è stato spinto dentro lo schermo)
+  for i = 1, #pos - 1 do
+    local r = pos[i]
+    if new.x < r.x + r.w and r.x < new.x + new.w and new.y < r.y + r.h and r.y < new.y + new.h then return false end
+  end
+  return left >= A.x + G
 end
 
 function placeFloatItem(key, r)
@@ -385,19 +424,6 @@ function placeFloatItem(key, r)
     elseif math.abs(cur.x - (r.x + r.w - cur.w - off)) > 1 or math.abs(cur.y - (r.y + off)) > 1 then
       w:setTopLeft({x = r.x + r.w - cur.w - off, y = r.y + off})
     end
-  end
-end
-
--- Rimette a misura l'app che stai usando (o la vista divisa) dopo che lo spazio dei
--- Lampi è cambiato
-function refitMain()
-  local fb = frontBid()
-  local key = (fb and not floating(fb) and not IGNORE[fb]) and currentKey() or T.lastKey
-  local g = key and T.memberOf[key]
-  if g then layoutGroup(g); return end
-  local app = key and appFor(T.keyBid[key] or key)
-  if app and not floating(app:bundleID()) then
-    for _, w in ipairs(app:allWindows()) do fitWindow(w) end
   end
 end
 

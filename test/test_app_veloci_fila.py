@@ -1,8 +1,9 @@
-"""Lampi in fila (v9.44 → v9.46, feedback del 23/10/2026): più Lampi aperti stanno in fila in
+"""Lampi in fila (v9.44 → v9.47, feedback del 23/10/2026): più Lampi aperti stanno in fila in
 alto a destra; aprendone uno nuovo: posto in tutti e due i modi → si sceglie (1 accanto, 2
-sotto); in un modo solo → va lì; da nessuna parte → non si apre e lo dice. Finché ci sono
-Lampi aperti la loro colonna è riservata: l'app che usi si stringe e non li copre.
-Chiudendone uno gli altri riempiono il posto; il Memo e i Lampi entrano nella vista divisa."""
+sotto); in un modo solo → va lì; da nessuna parte → non si apre e lo dice. Se finiscono
+sotto la finestra che usi, il ripiano nella barra di Tabby li riporta davanti (uno o
+«Tutti»). Chiudendone uno gli altri riempiono il posto; il Memo e i Lampi entrano nella
+vista divisa."""
 import os
 import lupa.lua54 as l
 from aiuto import carica
@@ -45,8 +46,7 @@ check("senza Lampi Slack usa tutto lo spazio", slack_w() == full_w)
 print("== ⌃⌥C: la Calcolatrice in alto a destra, e Slack si stringe")
 run('KEY("c", {"ctrl","alt"})')
 check("Calcolatrice attaccata all'angolo in alto a destra", ev('CALC._wins[1]._frame.x + CALC._wins[1]._frame.w') == right and ev('CALC._wins[1]._frame.y') == top)
-print("   Slack:", fr('SLACK._wins[1]._frame'))
-check("Slack finisce prima della Calcolatrice (la colonna dei Lampi è riservata)", ev('SLACK._wins[1]._frame.x + SLACK._wins[1]._frame.w') <= ev('CALC._wins[1]._frame.x') - 12 + 1)
+check("Slack resta a tutto spazio (i Lampi stanno sopra)", slack_w() == full_w)
 
 print("== ⌃⌥M: posto sia accanto sia sotto → i due riquadri, scelgo 2")
 run('KEY("m", {"ctrl","alt"})')
@@ -54,32 +54,42 @@ check("Tabby chiede dove metterlo", ev('Tabby.fchoose ~= nil') is True and ev('T
 run('KEY("2")')
 print("   Memo:", fr('MEMO._frame'))
 check("Memo sotto la Calcolatrice, allineato a destra", ev('MEMO._frame.x + MEMO._frame.w') == right and ev('MEMO._frame.y') == ev('CALC._wins[1]._frame.y + CALC._wins[1]._frame.h') + 12)
-check("Slack si stringe ancora (il Memo è più largo della Calcolatrice)", ev('SLACK._wins[1]._frame.x + SLACK._wins[1]._frame.w') <= ev('MEMO._frame.x') - 12 + 1)
 
-print("== ⌃⌥T: niente posto né accanto né sotto → non si apre e lo dice")
+print("== ⌃⌥T: posto solo accanto → ci va diretto, senza riquadri")
+run('KEY("t", {"ctrl","alt"})')
+check("nessun riquadro", ev('Tabby.fchoose') is None)
+print("   Terminale:", fr('TERM._wins[1]._frame'))
+check("il Terminale è accanto alla colonna Calcolatrice + Memo", ev('Tabby._env.floating("com.apple.Terminal")') is True and ev('TERM._wins[1]._frame.x + TERM._wins[1]._frame.w') == ev('MEMO._frame.x') - 12)
+
+print("== ⌃⌥A: nessun posto → non si apre e lo dice")
 L.execute('LOG = {}')
-run('KEY("t", {"ctrl","alt"})')
+run('KEY("a", {"ctrl","alt"})')
 check("nessun riquadro", ev('Tabby.fchoose') is None)
-check("il Terminale non si apre", ev('Tabby._env.floating("com.apple.Terminal")') is not True)
-check("al centro: «Non c'è spazio per mettere Terminale»", "Non c'è spazio per mettere Terminale" in alerts())
+check("il Calendario non si apre", ev('Tabby._env.floating("com.apple.iCal")') is not True)
+check("al centro: «Non c'è spazio per mettere Calendario»", "Non c'è spazio per mettere Calendario" in alerts())
 
-print("== Chiuso il Memo, ⌃⌥T: posto solo sotto → ci va diretto, senza riquadri")
-run('KEY("m", {"ctrl","alt"})')
-run('KEY("t", {"ctrl","alt"})')
-check("nessun riquadro", ev('Tabby.fchoose') is None)
-print("   Calcolatrice:", fr('CALC._wins[1]._frame'), "· Terminale:", fr('TERM._wins[1]._frame'))
-check("il Terminale è sotto la Calcolatrice", ev('Tabby._env.floating("com.apple.Terminal")') is True and ev('TERM._wins[1]._frame.y') == ev('CALC._wins[1]._frame.y + CALC._wins[1]._frame.h') + 12)
+print("== Il ripiano: torni su Slack, i Lampi finiscono sotto → nella barra di Tabby")
+run(f'CLICK("tab{idx("Slack")}")')
+cov = list(ev('Tabby.coveredLamps').values())
+print("   sul ripiano:", cov)
+check("Calcolatrice e Terminale sul ripiano (il Memo è di Tabby: resta sopra)", sorted(cov) == ["com.apple.Terminal", "com.apple.calculator"])
+check("il ripiano è disegnato nella barra", ev('Tabby.L.lamps ~= nil') is True)
+run('CLICK("lampshelf:com.apple.calculator")')
+check("clic sull'icona: la Calcolatrice torna davanti", ev('FRONT == CALC') is True)
+check("sul ripiano resta il Terminale (ancora sotto Slack)", list(ev('Tabby.coveredLamps').values()) == ["com.apple.Terminal"])
+run(f'CLICK("tab{idx("Slack")}")')
+run('CLICK("lampshelfall")')
+check("«Tutti»: ripiano vuoto, i Lampi sono davanti", len(list(ev('Tabby.coveredLamps').values())) == 0 and ev('Tabby.L.lamps') is None)
 
-print("== Esc sulla Calcolatrice: il Terminale sale, Slack si allarga di nuovo")
+print("== Esc sulla Calcolatrice: gli altri si spostano a riempire il posto")
 run('CALC:activate(); KEY("escape")')
-check("il Terminale sale nell'angolo in alto a destra", ev('TERM._wins[1]._frame.y') == top and ev('TERM._wins[1]._frame.x + TERM._wins[1]._frame.w') == right)
+print("   Memo:", fr('MEMO._frame'), "· Terminale:", fr('TERM._wins[1]._frame'))
+check("il Memo sale nell'angolo in alto a destra", ev('MEMO._frame.y') == top and ev('MEMO._frame.x + MEMO._frame.w') == right)
+check("il Terminale si avvicina, accanto al Memo", ev('TERM._wins[1]._frame.x + TERM._wins[1]._frame.w') == ev('MEMO._frame.x') - 12)
 L.execute('SETFRAMES_ALL = 0'); run('Tabby._env.layoutFloaters()')
 check("rimettere in fila Lampi già al loro posto non sposta niente", ev('SETFRAMES_ALL') == 0)
-run(f'CLICK("tab{idx("Slack")}")')
-check("Slack arriva fino al Terminale", ev('SLACK._wins[1]._frame.x + SLACK._wins[1]._frame.w') == ev('TERM._wins[1]._frame.x') - 12)
 run('TERM:activate(); KEY("escape")')
-run(f'CLICK("tab{idx("Slack")}")')
-check("Lampi tutti chiusi: Slack di nuovo a tutto spazio", slack_w() == full_w and ev('Tabby.lampReserve or 0') == 0)
+run('Tabby._env.closeMemo()')
 
 print("== Vista divisa: i Lampi aperti si trascinano o si cliccano nelle zone")
 run('KEY("c", {"ctrl","alt"})')

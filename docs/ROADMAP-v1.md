@@ -56,7 +56,8 @@ fila nella colonna dei Lampi): per esempio Calcolatrice, Note/Memo, Timer e Pomo
 Cronometro, Convertitore (valute e unità), Appunti (ultime cose copiate), Agenda del giorno,
 Traduttore rapido, Meteo, Lista veloce di cose da fare. *Perché:* macOS non permette di
 tenere sopra le finestre di un'altra app (Calcolatrice, Calendario di Apple…); con Lampi
-propri il problema sparisce.
+propri il problema sparisce (oggi in Hammerspoon c'è il ripiano dei Lampi coperti nella
+barra, v9.47).
 
 ## ▶ Prossimi passi, in ordine
 

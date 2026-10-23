@@ -19,6 +19,16 @@ local SCREEN = {
 }
 
 APPS, FRONT, MOUSE = {}, nil, {x = 100, y = 10}
+ZORDER = {}
+function TOFRONT(app, win)
+  local mine = {}
+  if win then mine[1] = win end
+  for _, w in ipairs(app._wins) do if w ~= win then table.insert(mine, w) end end
+  local rest = {}
+  for _, w in ipairs(ZORDER) do if w._app ~= app then table.insert(rest, w) end end
+  ZORDER = mine
+  for _, w in ipairs(rest) do table.insert(ZORDER, w) end
+end
 HS_APP = nil
 
 WID = 100
@@ -50,7 +60,7 @@ function newWindow(app, title, urls)
   function w:title() return self._title end
   function w:close() for i, x in ipairs(self._app._wins) do if x == self then table.remove(self._app._wins, i); break end end; LOGW = (LOGW or 0) + 1 end
   function w:minimize() self._min = true end
-  function w:focus() FRONT = self._app; self._app._hidden = false; self._app._focused = self end
+  function w:focus() FRONT = self._app; self._app._hidden = false; self._app._focused = self; TOFRONT(self._app, self) end
   function w:setFullScreen(v) self._fs = v end
   return w
 end
@@ -68,7 +78,7 @@ function ADDAPP(bid, name)
   function a:focusedWindow() return self._focused or self._wins[1] end
   function a:isRunning() return self._running end
   function a:pid() return #self._bid end
-  function a:activate() FRONT = self; self._hidden = false end
+  function a:activate() FRONT = self; self._hidden = false; TOFRONT(self, self._focused) end
   function a:kill() self._running = false; for i, x in ipairs(APPS) do if x == self then table.remove(APPS, i) end end; log("kill", self._bid) end
   table.insert(a._wins, newWindow(a, name .. " – finestra"))
   table.insert(APPS, a)
@@ -108,6 +118,25 @@ hs = {
   window = {
     animationDuration = 0,
     focusedWindow = function() return FRONT and (FRONT._focused or FRONT._wins[1]) end,
+    -- finestre visibili, da quella davanti a quella più dietro: prima la finestra
+    -- attiva, poi le altre
+    -- finestre visibili, da quella davanti a quella più dietro (ZORDER: ogni app
+    -- attivata porta davanti le sue finestre, la finestra attiva per prima)
+    orderedWindows = function()
+      local out, seen = {}, {}
+      local fw = FRONT and (FRONT._focused or FRONT._wins[1])
+      local function add(w)
+        if w and not seen[w] and not w._min and not w._app._hidden and w._app._running ~= false then
+          local alive = false
+          for _, x in ipairs(w._app._wins) do if x == w then alive = true end end
+          if alive then seen[w] = true; table.insert(out, w) end
+        end
+      end
+      add(fw)
+      for _, w in ipairs(ZORDER) do add(w) end
+      for _, a in ipairs(APPS) do for _, w in ipairs(a._wins) do add(w) end end
+      return out
+    end,
     filter = {
       windowCreated = "created", windowDestroyed = "destroyed",
       windowFullscreened = "fs", windowUnfullscreened = "unfs", windowFocused = "focused", windowTitleChanged = "title",

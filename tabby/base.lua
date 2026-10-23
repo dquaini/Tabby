@@ -15,7 +15,7 @@ _G.Tabby = { tabs = {}, icons = {}, hotkeys = {}, fsApps = {}, memberOf = {},
           visible = nil, desktopMode = false, lastKey = nil,
           cand = {}, keyWin = {}, winKey = {}, keyBid = {},
           badges = {}, favicons = {}, binfo = {}, lastFire = {},
-          tabFolder = {}, allTabs = {}, folderStart = {}, folderLast = {}, selfMin = {} }
+          tabFolder = {}, allTabs = {}, folderStart = {}, folderLast = {}, selfMin = {}, coveredLamps = {} }
 T = Tabby
 
 -- Le righe di diagnosi ("Tabby · …") non devono mai bloccare Tabby: se il
@@ -278,15 +278,9 @@ function baseAppArea()
   return hs.geometry.rect(f.x, top, f.w, f.y + f.h - top)
 end
 
--- Spazio delle app: meno la colonna riservata ai Lampi aperti, a destra (23/10/2026,
--- Daniele: macOS non lascia tenere sopra le finestre di un'altra app, quindi l'app che
--- usi si stringe e i Lampi non vengono mai coperti). Lampi chiusi: tutto lo spazio.
-function appArea()
-  local A = baseAppArea()
-  local r = T.lampReserve or 0
-  if r > 0 then return hs.geometry.rect(A.x, A.y, A.w - r, A.h) end
-  return A
-end
+-- Spazio delle app (la colonna riservata ai Lampi della v9.46 è stata tolta: i Lampi
+-- stanno sopra, e se vengono coperti c'è il ripiano nella barra per riportarli davanti)
+function appArea() return baseAppArea() end
 
 -- Finestra piccola: meno di metà larghezza e del 60% dell'altezza dello spazio
 -- delle app. Per un browser è quasi sempre una finestrella (video in miniatura).
