@@ -571,14 +571,21 @@ vengono nascoste dalla scrivania.
 si torna all'**ultima finestra che stavi guardando** (dalla barra: quella prima della
 scheda in cui sei, come ⌃⌥Tab; dal cerchio: quella di prima della scrivania). Tabby
 ricorda le ultime 20 schede usate e salta quelle che non esistono più. Se non c'è nessuna
-finestra a cui tornare compare un menu: **«+ Nuova app…»** (apre Spotlight) e, se ci sono,
-le **cartelle** (clic = attivala).
+finestra a cui tornare compaiono le scelte: **«+ Nuova app…»** (apre Spotlight) e, se ci
+sono, le **cartelle** (clic = attivala). Dal cerchio le scelte si aprono **a ventaglio**
+intorno a lui (v9.52): bolle da 44 punti su giri di raggio 92, 150, 208 (3, 4, 5 posti),
+da sinistra verso l'alto; il «+» ambra per primo, poi una bolla per cartella con le icone
+delle sue prime due app; il nome compare passandoci sopra (a sinistra della bolla, o sopra
+se a sinistra c'è un'altra bolla). Si apre in ~0,1 s; si chiude con un clic fuori, Esc o un
+altro clic sul cerchio. Dalla barra resta un menu accanto al gatto.
 
 **W-3 Il cerchio sulla scrivania** (v9.51): quando non c'è **nessuna finestra in vista**
 (app tutte nascoste, ridotte o chiuse, o ⌃⌥0; Lampi, Memo e Hammerspoon non contano) per
 0,4 s, la barra sparisce e Tabby diventa un **cerchio nero di 56 punti col muso del gatto**,
-sempre **in basso a destra** (22 punti dai bordi). Passandoci sopra il bordo diventa
-arancione e il gatto un po' più grande. Clic = W-0. Appena compare una finestra torna la
+sempre **in basso a destra** (22 punti dai bordi). Disegno "Eclissi" (v9.52, prototipo D
+in `docs/prototipo-cerchio.html`): disco nero con una **luce ambra sul bordo in alto a
+sinistra**, che passandoci sopra si accende di più (e il gatto si ingrandisce un poco);
+nessuna animazione continua. Clic = W-0. Appena compare una finestra torna la
 barra. Non a schermo intero, né durante la divisione o la creazione di una cartella.
 
 **W-1 Scrivania, ⌃⌥0**: nasconde tutte le app (tranne il Finder

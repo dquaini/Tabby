@@ -72,6 +72,9 @@ T.keyTap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(e)
   local code = e:getKeyCode()
   local noMods = not (f.ctrl or f.alt or f.cmd or f.shift)
 
+  -- Ventaglio del cerchio aperto: Esc lo chiude
+  if T.fanOpen and noMods and code == K.escape then later(closeFan); return true end
+
   -- Dove mettere una nuova app veloce: 1 accanto, 2 sotto, Esc annulla
   if T.fchoose and noMods then
     if code == K["1"] or code == K.pad1 then later(function() chooseFloat("side") end); return true end

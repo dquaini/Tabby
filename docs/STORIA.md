@@ -154,4 +154,6 @@ v9.50: Memo con elenchi puntati («- »), cose da fare («[ ] », casella che ba
 v9.51: senza finestre in vista Tabby diventa un cerchio col muso del gatto in basso a
     destra; clic sul gatto (cerchio o barra) = l'ultima finestra guardata, o un menu con
     «+ Nuova app…» e le cartelle; freccia delle sezioni del Memo più grande e bianca.
+v9.52: il cerchio diventa "Eclissi" (luce ambra sul bordo, scelta tra 4 prototipi) e senza
+    finestre le scelte si aprono a ventaglio intorno al cerchio, attaccate a lui.
 ```

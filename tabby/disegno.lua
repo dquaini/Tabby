@@ -776,33 +776,50 @@ function orbFrame()
   return {x = f.x + f.w - ORB_SIZE - ORB_MARGIN, y = f.y + f.h - ORB_SIZE - ORB_MARGIN, w = ORB_SIZE, h = ORB_SIZE}
 end
 
+-- Il cerchio "Eclissi" (scelto da Daniele il 24/10/2026, prototipo D in
+-- docs/prototipo-cerchio.html): nero, con una luce ambra sul bordo in alto a sinistra
+-- che si accende passandoci sopra
+ORB_PAD = 16   -- spazio intorno al cerchio per la luce
 function drawOrb(hot)
-  local s = ORB_SIZE
+  local s, p = ORB_SIZE, ORB_PAD
+  local cx, cy, r = p + s / 2, p + s / 2, s / 2 - 1
   local els = {
-    {type = "circle", action = "fill", fillColor = {white = 0, alpha = 0.35},
-     center = {x = s / 2, y = s / 2 + 1}, radius = s / 2 - 1},
-    {type = "circle", action = "strokeAndFill", fillColor = {hex = "#000000"},
-     strokeColor = hot and {hex = "#F2A541"} or {white = 1, alpha = 0.18}, strokeWidth = hot and 2 or 1,
-     center = {x = s / 2, y = s / 2}, radius = s / 2 - 3},
+    -- l'alone ambra dietro, spostato verso l'alto a sinistra
+    {type = "circle", action = "fill", fillColor = {hex = "#F2A541", alpha = hot and 0.55 or 0.32},
+     center = {x = cx - 3, y = cy - 3}, radius = r,
+     withShadow = true, shadow = {blurRadius = hot and 18 or 11, color = {hex = "#F2A541", alpha = hot and 0.9 or 0.6}, offset = {h = 0, v = 0}}},
+    -- il bordo acceso (una falce ambra) e il disco nero sopra
+    {type = "circle", action = "fill", fillColor = {hex = "#F2A541", alpha = hot and 0.95 or 0.75},
+     center = {x = cx - 1.2, y = cy - 1.2}, radius = r},
+    {type = "circle", action = "fill", fillColor = {hex = "#000000"},
+     center = {x = cx + 0.8, y = cy + 0.8}, radius = r - 0.6},
+    {type = "circle", action = "stroke", strokeColor = {white = 1, alpha = 0.06}, strokeWidth = 1,
+     center = {x = cx, y = cy}, radius = r},
   }
   local cat = T.catOn
   if cat then
-    local c = hot and 34 or 30
+    local c = hot and 33 or 30
     table.insert(els, {type = "image", image = cat, imageScaling = "scaleProportionally",
-      frame = {x = s / 2 - c / 2, y = s / 2 - c / 2, w = c, h = c}})
+      frame = {x = cx - c / 2, y = cy - c / 2, w = c, h = c}})
   end
   table.insert(els, {type = "circle", action = "fill", fillColor = {white = 1, alpha = 0.01},
-    trackMouseUp = true, trackMouseEnterExit = true, id = "orb", center = {x = s / 2, y = s / 2}, radius = s / 2})
+    trackMouseUp = true, trackMouseEnterExit = true, id = "orb", center = {x = cx, y = cy}, radius = s / 2})
   T.orb:replaceElements(els)
+end
+
+function orbCanvasFrame()
+  local o = orbFrame()
+  return {x = o.x - ORB_PAD, y = o.y - ORB_PAD, w = o.w + 2 * ORB_PAD, h = o.h + 2 * ORB_PAD}
 end
 
 function showOrb(on)
   if not on then
+    closeFan()
     if T.orb then T.orb:hide(0.12) end
     return
   end
   if not T.orb then
-    T.orb = hs.canvas.new(orbFrame())
+    T.orb = hs.canvas.new(orbCanvasFrame())
     T.orb:level(hs.canvas.windowLevels.floating)
     T.orb:behavior({"canJoinAllSpaces", "stationary"})
     T.orb:clickActivating(false)
@@ -810,17 +827,20 @@ function showOrb(on)
       if tostring(id) ~= "orb" then return end
       if msg == "mouseEnter" then drawOrb(true)
       elseif msg == "mouseExit" then drawOrb(false)
-      elseif msg == "mouseUp" then catClick(true) end
+      elseif msg == "mouseUp" then
+        if T.fanOpen then closeFan() else catClick(true) end
+      end
     end)
   end
-  T.orb:frame(orbFrame())
+  T.orb:frame(orbCanvasFrame())
   drawOrb(false)
   T.orb:show(0.15)
 end
 
 -- Clic sul muso del gatto: l'ultima finestra che stavi guardando (dal cerchio: quella
 -- di prima di finire sulla scrivania; dalla barra: quella prima della scheda in cui sei,
--- come ⌃⌥Tab); se non c'è nessuna finestra a cui tornare, il menu
+-- come ⌃⌥Tab); se non c'è nessuna finestra a cui tornare, le scelte (dal cerchio: a
+-- ventaglio intorno a lui; dalla barra: un menu accanto al gatto)
 function catClick(fromOrb)
   local cur = (not fromOrb) and currentKey() or nil
   for _, k in ipairs(T.recent or {}) do
@@ -832,10 +852,19 @@ function catClick(fromOrb)
       return
     end
   end
-  openCatMenu(fromOrb)
+  if fromOrb then openFan() else openCatMenu() end
 end
 
-function openCatMenu(fromOrb)
+-- Le scelte quando non c'è nessuna finestra: «+ Nuova app…» e le cartelle
+function catChoices()
+  local list = {{id = "new", name = "Nuova app", fn = function() openSpotlight() end}}
+  for i, f in ipairs(S.folders) do
+    table.insert(list, {id = "f" .. i, name = f.name, folder = f, fn = function() FD.activateFolder(f) end})
+  end
+  return list
+end
+
+function openCatMenu()
   local items = {{title = "+  Nuova app…", fn = openSpotlight}}
   if #S.folders > 0 then
     table.insert(items, {title = "-"})
@@ -844,14 +873,147 @@ function openCatMenu(fromOrb)
       table.insert(items, {title = f.name, image = FD.folderImage(f), fn = function() FD.activateFolder(f) end})
     end
   end
-  local pos
-  if fromOrb then
-    local o = orbFrame()
-    pos = {x = o.x - 180, y = o.y - 12 - (#items * 22)}
-  else
-    pos = popPos(T.L.desk)
+  popup(items, popPos(T.L.desk))
+end
+
+-- ---- Il ventaglio intorno al cerchio ----
+FAN_PETAL, FAN_RINGS = 44, {{r = 92, n = 3}, {r = 150, n = 4}, {r = 208, n = 5}}
+
+-- Dove va ogni scelta: giri intorno al cerchio, da sinistra verso l'alto (l'angolo è in
+-- basso a destra), il primo giro vicino al cerchio
+function fanSpots(count)
+  local spots = {}
+  for _, ring in ipairs(FAN_RINGS) do
+    for k = 0, ring.n - 1 do
+      local a = math.rad(180 - 90 * k / (ring.n - 1))   -- 180° = a sinistra, 90° = sopra
+      table.insert(spots, {dx = math.cos(a) * ring.r, dy = -math.sin(a) * ring.r})
+      if #spots >= count then return spots end
+    end
   end
-  popup(items, pos)
+  return spots
+end
+
+FAN_W = 400   -- la tela del ventaglio (quadrata, nell'angolo in basso a destra)
+function drawFan(progress, hover)
+  local W = FAN_W
+  local o = orbFrame()
+  local ocx, ocy = W - (o.w / 2), W - (o.h / 2)   -- centro del cerchio dentro la tela
+  local els, labelEls = {}, nil
+  local choices = T.fanChoices or {}
+  local spots = fanSpots(#choices)
+  for i, ch in ipairs(choices) do
+    local sp = spots[i]
+    local x, y = ocx + sp.dx * progress, ocy + sp.dy * progress
+    local hot = hover == ch.id
+    local P = FAN_PETAL
+    if ch.id == "new" then
+      table.insert(els, {type = "circle", action = "fill", fillColor = {hex = "#F2A541"},
+        center = {x = x, y = y}, radius = P / 2,
+        withShadow = true, shadow = {blurRadius = 10, color = {white = 0, alpha = 0.5}, offset = {h = 0, v = -3}}})
+      table.insert(els, {type = "text", text = "+", textSize = 24, textColor = {hex = "#1A1206"},
+        textAlignment = "center", frame = {x = x - P / 2, y = y - 16, w = P, h = 30}})
+    else
+      table.insert(els, {type = "circle", action = "strokeAndFill", fillColor = {hex = "#0B0C10"},
+        strokeColor = hot and {hex = "#F2A541"} or {white = 1, alpha = 0.16}, strokeWidth = 1,
+        center = {x = x, y = y}, radius = P / 2,
+        withShadow = true, shadow = {blurRadius = 10, color = {white = 0, alpha = 0.5}, offset = {h = 0, v = -3}}})
+      local items = ch.folder and ch.folder.items or {}
+      local n = math.min(#items, 2)
+      for k = n, 1, -1 do
+        local im = FD.itemIcon(items[k])
+        if im then
+          local ix = x - 8 - (n - 1) * 5 + (k - 1) * 10
+          table.insert(els, {type = "image", image = im, frame = {x = ix, y = y - 8, w = 16, h = 16}})
+        end
+      end
+    end
+    table.insert(els, {type = "circle", action = "fill", fillColor = {white = 1, alpha = 0.01},
+      trackMouseUp = true, trackMouseEnterExit = true, id = "fan:" .. ch.id, center = {x = x, y = y}, radius = P / 2})
+    -- il nome, accanto alla scelta su cui sei
+    if hot and progress >= 1 then
+      local label = (ch.id == "new") and "Nuova app" or ch.name
+      local lw = math.min(200, 24 + (utf8.len(label) or 8) * 7.2)
+      -- a sinistra della bolla (lì non c'è niente); per quella più in alto, sopra
+      -- a sinistra se lì non c'è un'altra bolla; altrimenti sopra
+      local leftBusy = false
+      for j, o in ipairs(spots) do
+        if j ~= i and j <= #choices and math.abs(o.dy - sp.dy) < 30 and o.dx < sp.dx then leftBusy = true end
+      end
+      local lx, ly
+      if sp.dx < -30 and not leftBusy then lx, ly = x - P / 2 - 8 - lw, y - 12
+      else lx, ly = x - lw / 2, y - P / 2 - 32 end
+      -- sempre dentro la tela (se no si taglia)
+      lx = math.max(4, math.min(lx, W - lw - 4))
+      ly = math.max(4, ly)
+      labelEls = {
+        {type = "rectangle", action = "fill", fillColor = {white = 0, alpha = 0.85},
+         roundedRectRadii = {xRadius = 7, yRadius = 7}, frame = {x = lx, y = ly, w = lw, h = 24}},
+        {type = "text", text = label, textSize = 12.5, textColor = COL.text, textAlignment = "center",
+         frame = {x = lx, y = ly + 4, w = lw, h = 18}},
+      }
+    end
+  end
+  -- il nome si disegna per ultimo: sta sopra alle bolle
+  for _, e in ipairs(labelEls or {}) do table.insert(els, e) end
+  T.fan:replaceElements(els)
+end
+
+function openFan()
+  local o = orbFrame()
+  local W = FAN_W
+  T.fanChoices = catChoices()
+  if not T.fan then
+    T.fan = hs.canvas.new({x = o.x + o.w - W, y = o.y + o.h - W, w = W, h = W})
+    T.fan:level(hs.canvas.windowLevels.floating)
+    T.fan:behavior({"canJoinAllSpaces", "stationary"})
+    T.fan:clickActivating(false)
+    T.fan:mouseCallback(function(_, msg, id)
+      local cid = tostring(id):match("^fan:(.+)$")
+      if not cid then return end
+      if msg == "mouseEnter" then T.fanHover = cid; drawFan(1, cid)
+      elseif msg == "mouseExit" then T.fanHover = nil; drawFan(1, nil)
+      elseif msg == "mouseUp" then
+        for _, ch in ipairs(T.fanChoices or {}) do
+          if ch.id == cid then closeFan(); ch.fn(); return end
+        end
+      end
+    end)
+  end
+  T.fan:frame({x = o.x + o.w - W, y = o.y + o.h - W, w = W, h = W})
+  T.fanOpen = true
+  print("Tabby · nessuna finestra: le scelte a ventaglio intorno al cerchio")
+  -- si apre a ventaglio, in pochi passi
+  if T.fanTimer then T.fanTimer:stop() end
+  local step = 0
+  drawFan(0.2, nil)
+  T.fan:show()
+  if T.orb then T.orb:orderAbove(T.fan) end
+  T.fanTimer = hs.timer.doEvery(0.02, function()
+    step = step + 1
+    drawFan(math.min(1, 0.2 + step * 0.16), nil)
+    if step >= 5 and T.fanTimer then T.fanTimer:stop(); T.fanTimer = nil end
+  end)
+  -- un clic fuori dal ventaglio lo chiude
+  if not T.fanTap then
+    T.fanTap = hs.eventtap.new({hs.eventtap.event.types.leftMouseDown}, function(e)
+      if not T.fanOpen then return false end
+      local p = e:location()
+      local f = T.fan:frame()
+      local inside = p.x >= f.x and p.x <= f.x + f.w and p.y >= f.y and p.y <= f.y + f.h
+      if not inside then later(closeFan) end
+      return false
+    end)
+  end
+  T.fanTap:start()
+end
+
+function closeFan()
+  if not T.fanOpen then return end
+  T.fanOpen = false
+  T.fanHover = nil
+  if T.fanTimer then T.fanTimer:stop(); T.fanTimer = nil end
+  if T.fan then T.fan:hide(0.1) end
+  if T.fanTap then T.fanTap:stop() end
 end
 
 -- Tabby scivola fuori dallo schermo dal suo lato (out = true) o rientra
