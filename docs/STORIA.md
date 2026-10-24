@@ -151,4 +151,7 @@ v9.49: cambiando la posizione di Tabby si rimette a misura l'app in uso (anche c
 v9.50: Memo con elenchi puntati («- »), cose da fare («[ ] », casella che barra la riga) e
     sezioni apribili («> », ▸/▾, righe rientrate); il file resta testo semplice; più veloce
     (pagina preparata all'avvio, testo ricaricato solo se il file è cambiato).
+v9.51: senza finestre in vista Tabby diventa un cerchio col muso del gatto in basso a
+    destra; clic sul gatto (cerchio o barra) = l'ultima finestra guardata, o un menu con
+    «+ Nuova app…» e le cartelle; freccia delle sezioni del Memo più grande e bianca.
 ```

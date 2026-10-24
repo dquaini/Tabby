@@ -47,7 +47,7 @@ correzioni qui), intanto la specifica completa — fatta: `docs/SPECIFICA.md` �
 (prima il motore con lo stesso comportamento, poi design, avvio, configurazione guidata, Dock).
 Come condividerla oggi e domani: `docs/CONDIVIDERE.md`.
 
-**Direttamente nell'app Swift**: animazione d'avvio, pallino sulla scrivania, icona di Tabby
+**Direttamente nell'app Swift**: animazione d'avvio, icona di Tabby
 nelle finestre (cartelle), redesign, colori a scelta, configurazione guidata, Dock.
 
 **Lampi di Tabby** (deciso il 23/10/2026): nell'app Swift Tabby avrà **una decina di Lampi
@@ -89,8 +89,8 @@ barra, v9.47).
 7. Proposte da confermare: compare solo all'avvio (non ai ricaricamenti); Esc salta.
 
 **Design**:
-- **Scrivania**: sul desktop Tabby diventa un **pallino in basso a destra** col gatto; cliccato
-  riapre l'ultima app.
+- ✅ **Scrivania**: sul desktop Tabby diventa un **cerchio in basso a destra** col gatto;
+  cliccato riapre l'ultima finestra o propone «+ Nuova app» e le cartelle (v9.51).
 - **Finestre di dialogo di Tabby** con l'icona del gatto (bianco su quadrato nero con angoli
   morbidi), al posto di quelle di Hammerspoon col martello. La stessa icona sarà l'icona
   dell'app.

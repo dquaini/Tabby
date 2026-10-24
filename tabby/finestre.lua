@@ -475,6 +475,11 @@ handleActive = timed("cambio di scheda", function(app)
       T.prevKey = T.lastKey   -- per ⌃⌥Tab (torna alla scheda di prima)
       T.lastKey = key
     end
+    -- le schede usate, dalla più recente (per il clic sul gatto)
+    T.recent = T.recent or {}
+    for i = #T.recent, 1, -1 do if T.recent[i] == key then table.remove(T.recent, i) end end
+    table.insert(T.recent, 1, key)
+    while #T.recent > 20 do table.remove(T.recent) end
     -- per ogni cartella, l'ultima scheda usata (ci si torna entrando)
     local gk = T.memberOf[key]
     local cf = T.tabFolder[key] or (gk and T.tabFolder["g:" .. gk.id])

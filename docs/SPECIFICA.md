@@ -567,8 +567,19 @@ vengono nascoste dalla scrivania.
 
 ## 13. Scrivania
 
-**W-0 Clic sul gatto** (v9.38): apre il Finder sulla cartella **Scrivania** (macOS
-riusa la sua finestra se c'è già), che diventa una scheda come le altre.
+**W-0 Clic sul muso del gatto** (v9.51; nella v9.38 apriva il Finder sulla Scrivania):
+si torna all'**ultima finestra che stavi guardando** (dalla barra: quella prima della
+scheda in cui sei, come ⌃⌥Tab; dal cerchio: quella di prima della scrivania). Tabby
+ricorda le ultime 20 schede usate e salta quelle che non esistono più. Se non c'è nessuna
+finestra a cui tornare compare un menu: **«+ Nuova app…»** (apre Spotlight) e, se ci sono,
+le **cartelle** (clic = attivala).
+
+**W-3 Il cerchio sulla scrivania** (v9.51): quando non c'è **nessuna finestra in vista**
+(app tutte nascoste, ridotte o chiuse, o ⌃⌥0; Lampi, Memo e Hammerspoon non contano) per
+0,4 s, la barra sparisce e Tabby diventa un **cerchio nero di 56 punti col muso del gatto**,
+sempre **in basso a destra** (22 punti dai bordi). Passandoci sopra il bordo diventa
+arancione e il gatto un po' più grande. Clic = W-0. Appena compare una finestra torna la
+barra. Non a schermo intero, né durante la divisione o la creazione di una cartella.
 
 **W-1 Scrivania, ⌃⌥0**: nasconde tutte le app (tranne il Finder
 e quelle a schermo intero); il Finder resta in primo piano (*perché:* nascondendolo
@@ -576,8 +587,7 @@ macOS riattiverebbe un'altra app) e le sue finestre si riducono. Il tasto si
 accende. Ripremuto: torna all'ultima scheda.
 **W-2** Se entro 1,2 s macOS "rimbalza" su un'altra app, la si rinasconde; un'app
 scelta dopo fa finire la scrivania.
-**Da fare in Swift** (roadmap): sulla scrivania Tabby diventa un pallino col gatto
-in basso a destra; cliccato riapre l'ultima app.
+
 
 ## 14. Azioni veloci e Memo (tasto ⚡︎)
 
@@ -624,7 +634,8 @@ convenzioni di testo semplice a inizio riga:
 - `- testo` → **elenco puntato** (•); `[ ] testo` → **cosa da fare** con casella (clic, o
   ⌘Invio, la spunta: `[x] testo`, riga barrata); `> testo` → **sezione apribile** (▸/▾):
   contiene le righe **rientrate** sotto di lei (due spazi = un rientro); chiusa, le
-  nasconde. Le sezioni chiuse si ricordano (`memoFold`).
+  nasconde. La freccia ▸/▾ è bianca e grande quanto il testo (v9.51). Le sezioni chiuse
+  si ricordano (`memoFold`).
 - Scrivendo `- `, `* `, `[] `, `[ ] `, `[x] ` o `> ` a inizio riga, la riga si trasforma (il
   cursore resta dopo quello che hai scritto). Invio continua l'elenco o la lista di cose
   da fare; Invio su una voce vuota la fa tornare riga normale; Invio in fondo a una
@@ -848,6 +859,7 @@ Ogni regola ha un test in `test/`; nell'app Swift diventano test di accettazione
 | `test_browser_nomi.py` | B-3 (passaggio 0), B-8 |
 | `test_app_veloci.py` | Q-1, D-2 (app veloci nelle zone) |
 | `test_app_veloci_fila.py` | Q-1b (anche «non c'è spazio»), ripiano dei Lampi, D-2 (Memo e fila dei Lampi nelle zone) |
+| `test_cerchio.py` | W-0, W-3 |
 | `test_finestre_fluide.py` | C-4 (giallo, ⌘Q, macOS che cambia app prima), D-4, L (angoli), W-0, Q-2 |
 | `test_cartelle.py`, `test_cartelle_casi.py`, `test_cartelle_pagine.py` | F-1…F-10 |
 | `test_notch.py` | A-2, L-6 |

@@ -24,6 +24,8 @@ T.appWatcher = W.new(function(_, event, app)
     scheduleRebuild()
     -- un'app appena aperta (anche appena installata) ha un'icona nella barra dei menu?
     if app then hs.timer.doAfter(3, function() scanMenuBarApps(app) end) end
+  elseif event == W.hidden or event == W.unhidden then
+    scheduleRebuild()   -- (può comparire o sparire il cerchio sulla scrivania)
   elseif event == W.terminated then
     scheduleRebuild()
     if app and app:bundleID() and floating(app:bundleID()) then
@@ -139,7 +141,9 @@ T.allWins:subscribe(WF.windowMinimized, function(w)
   if mine and hs.timer.secondsSinceEpoch() - mine < 3 then return end
   local snap = snapForWin(id)
   if snap then goNeighborSoon(snap, "ridotta col giallo") end
+  scheduleRebuild()
 end)
+T.allWins:subscribe(WF.windowUnminimized, function() scheduleRebuild() end)
 
 -- Cambio di finestra dentro la stessa app (es. da un documento all'altro,
 -- o da una webapp all'altra con ⌘`): aggiorna la scheda attiva

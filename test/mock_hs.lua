@@ -140,7 +140,7 @@ hs = {
     filter = {
       windowCreated = "created", windowDestroyed = "destroyed",
       windowFullscreened = "fs", windowUnfullscreened = "unfs", windowFocused = "focused", windowTitleChanged = "title",
-      windowVisible = "visible", windowNotVisible = "notvisible", windowMinimized = "minimized",
+      windowVisible = "visible", windowNotVisible = "notvisible", windowMinimized = "minimized", windowUnminimized = "unminimized",
       new = function(which)
         local f = {subs = {}}
         function f:setDefaultFilter() WINFILTER = self; return self end
@@ -181,12 +181,17 @@ hs = {
     pathForBundleID = function(b) return "/Applications/" .. b end,
     infoForBundlePath = function(p) local b = p:match("/Applications/(.+)%.app$"); return b and {CFBundleIdentifier = b} or nil end,
     watcher = {
-      activated = "act", launched = "launch", terminated = "term",
+      activated = "act", launched = "launch", terminated = "term", hidden = "hide", unhidden = "unhide",
       new = function(fn) APPWATCH = fn; return {start = function(s) return s end} end,
     },
   },
   timer = {
-    doAfter = function(_, fn) table.insert(timers, fn); return {} end,
+    doAfter = function(_, fn)
+      local t = {cancelled = false}
+      function t:stop() self.cancelled = true; return self end
+      table.insert(timers, function() if not t.cancelled then fn() end end)
+      return t
+    end,
     doEvery = function(_, fn)
       local t = {fn = fn, on = true}
       function t:stop() self.on = false; return self end

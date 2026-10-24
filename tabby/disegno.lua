@@ -34,7 +34,7 @@ function onMouse(_, msg, id)
   if id == "quick" then openQuick(); return end
   if id == "split" then openSplitMenu(); return end
   if id == "more" then openOverflow(); return end
-  if id == "desktop" then openDesktopFolder(); return end
+  if id == "desktop" then catClick(false); return end
   if id == "plus" then openSpotlight(); return end
   if id == "fback" then FD.leaveFolderView(); return end
   if id == "fhead" then
@@ -706,7 +706,8 @@ draw = function()
 
   T.updateMouseTimer()
   local fsHint = T.fsHintUntil and hs.timer.secondsSinceEpoch() < T.fsHintUntil
-  if T.fullscreen or fsHint then setVisible(false)   -- a schermo intero Tabby si fa da parte
+  updateCollapse(fsHint)
+  if T.fullscreen or fsHint or T.collapsed then setVisible(false)   -- a schermo intero (o col cerchio) la barra non c'è
   elseif T.edgeHidden or T.slideTimer then -- (fuori dallo schermo o mentre scivola)
   elseif S.autohide then setVisible(T.revealed) else setVisible(true) end
 end
@@ -719,6 +720,139 @@ T.diag = {draw = draw, layout = layout, activeIndex = activeIndex, badgeFor = ba
 -- ---------------------------------------------------------------------
 --  "NASCONDI TABBY": APPARE PORTANDO IL MOUSE SUL BORDO DELLO SCHERMO
 -- ---------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------
+--  IL CERCHIO SULLA SCRIVANIA (24/10/2026, Daniele)
+--  Quando non c'è nessuna finestra in vista (tutto nascosto, ridotto o chiuso,
+--  o ⌃⌥0), la barra di Tabby si ritira in un cerchio nero col muso del gatto, in
+--  basso a destra. Appena compare una finestra torna la barra.
+--  Clic sul gatto (nel cerchio o nella barra): si torna all'ultima finestra che
+--  stavi guardando; se non ce n'è nessuna, un menu: «+ Nuova app…» e le cartelle.
+-- ---------------------------------------------------------------------
+ORB_SIZE, ORB_MARGIN = 56, 22
+
+-- C'è almeno una finestra in vista? (i Lampi, il Memo e Hammerspoon non contano)
+function anyWindowShown()
+  if T.desktopMode then return false end
+  if not T.allWins then return true end
+  for _, w in ipairs(T.allWins:getWindows()) do
+    local a = w:application()
+    local b = a and a:bundleID()
+    if b and not IGNORE[b] and not floating(b) and not a:isHidden() and w:isStandard()
+       and not w:isMinimized() and not w:isFullScreen() then
+      return true
+    end
+  end
+  return false
+end
+
+-- Si ritira solo se la scrivania resta vuota per un attimo (mentre passi da un'app
+-- all'altra può esserci un istante senza finestre); torna barra subito
+function updateCollapse(fsHint)
+  local want = not T.fullscreen and not fsHint and not T.split and not T.fedit and not anyWindowShown()
+  if want and not T.collapsed then
+    if not T.collapseTimer then
+      T.collapseTimer = hs.timer.doAfter(0.4, function()
+        T.collapseTimer = nil
+        if not T.fullscreen and not anyWindowShown() and not T.collapsed then
+          T.collapsed = true
+          print("Tabby · nessuna finestra in vista: Tabby diventa il cerchio")
+          showOrb(true)
+          draw()
+        end
+      end)
+    end
+  elseif not want then
+    if T.collapseTimer then T.collapseTimer:stop(); T.collapseTimer = nil end
+    if T.collapsed then
+      T.collapsed = false
+      showOrb(false)
+    end
+  end
+end
+
+function orbFrame()
+  local f = screen():frame()
+  return {x = f.x + f.w - ORB_SIZE - ORB_MARGIN, y = f.y + f.h - ORB_SIZE - ORB_MARGIN, w = ORB_SIZE, h = ORB_SIZE}
+end
+
+function drawOrb(hot)
+  local s = ORB_SIZE
+  local els = {
+    {type = "circle", action = "fill", fillColor = {white = 0, alpha = 0.35},
+     center = {x = s / 2, y = s / 2 + 1}, radius = s / 2 - 1},
+    {type = "circle", action = "strokeAndFill", fillColor = {hex = "#000000"},
+     strokeColor = hot and {hex = "#F2A541"} or {white = 1, alpha = 0.18}, strokeWidth = hot and 2 or 1,
+     center = {x = s / 2, y = s / 2}, radius = s / 2 - 3},
+  }
+  local cat = T.catOn
+  if cat then
+    local c = hot and 34 or 30
+    table.insert(els, {type = "image", image = cat, imageScaling = "scaleProportionally",
+      frame = {x = s / 2 - c / 2, y = s / 2 - c / 2, w = c, h = c}})
+  end
+  table.insert(els, {type = "circle", action = "fill", fillColor = {white = 1, alpha = 0.01},
+    trackMouseUp = true, trackMouseEnterExit = true, id = "orb", center = {x = s / 2, y = s / 2}, radius = s / 2})
+  T.orb:replaceElements(els)
+end
+
+function showOrb(on)
+  if not on then
+    if T.orb then T.orb:hide(0.12) end
+    return
+  end
+  if not T.orb then
+    T.orb = hs.canvas.new(orbFrame())
+    T.orb:level(hs.canvas.windowLevels.floating)
+    T.orb:behavior({"canJoinAllSpaces", "stationary"})
+    T.orb:clickActivating(false)
+    T.orb:mouseCallback(function(_, msg, id)
+      if tostring(id) ~= "orb" then return end
+      if msg == "mouseEnter" then drawOrb(true)
+      elseif msg == "mouseExit" then drawOrb(false)
+      elseif msg == "mouseUp" then catClick(true) end
+    end)
+  end
+  T.orb:frame(orbFrame())
+  drawOrb(false)
+  T.orb:show(0.15)
+end
+
+-- Clic sul muso del gatto: l'ultima finestra che stavi guardando (dal cerchio: quella
+-- di prima di finire sulla scrivania; dalla barra: quella prima della scheda in cui sei,
+-- come ⌃⌥Tab); se non c'è nessuna finestra a cui tornare, il menu
+function catClick(fromOrb)
+  local cur = (not fromOrb) and currentKey() or nil
+  for _, k in ipairs(T.recent or {}) do
+    if k ~= cur and (T.cand[k] or T.memberOf[k]) then
+      print("Tabby · clic sul gatto: torno a «" .. tostring((T.cand[k] or {}).name or k) .. "»")
+      if T.desktopMode then T.desktopMode = false end
+      local g = T.memberOf[k]
+      if g then showGroup(g) else focusKey(k) end
+      return
+    end
+  end
+  openCatMenu(fromOrb)
+end
+
+function openCatMenu(fromOrb)
+  local items = {{title = "+  Nuova app…", fn = openSpotlight}}
+  if #S.folders > 0 then
+    table.insert(items, {title = "-"})
+    table.insert(items, {title = "Cartelle", disabled = true})
+    for _, f in ipairs(S.folders) do
+      table.insert(items, {title = f.name, image = FD.folderImage(f), fn = function() FD.activateFolder(f) end})
+    end
+  end
+  local pos
+  if fromOrb then
+    local o = orbFrame()
+    pos = {x = o.x - 180, y = o.y - 12 - (#items * 22)}
+  else
+    pos = popPos(T.L.desk)
+  end
+  popup(items, pos)
+end
 
 -- Tabby scivola fuori dallo schermo dal suo lato (out = true) o rientra
 function slideBar(out)
