@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="it"><head><meta charset="utf-8">
 <!--
-  La finestra della Concentrazione (v9.55), in centro sopra lo sfondo oscurato.
+  La finestra della Concentrazione (v9.55; stile standard di macOS dalla v9.56), in centro sopra lo sfondo oscurato.
   Tre momenti: la scelta (minuti e schede), la domanda quando provi ad aprire un'altra
   app, la fine (cosa è arrivato nel frattempo e cosa fare adesso).
   Le schede si scelgono cliccandole nella barra di Tabby (diventano gialle): qui si
@@ -14,90 +14,89 @@
                   send({ask: "open"|"stay"}) · send({finish: "reopen"|"more"|"stay"})
 -->
 <style>
-html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; user-select: none; -webkit-user-select: none; }
-body { font: 14px/1.35 -apple-system, system-ui, sans-serif; color: #EDEBE6; display: flex; align-items: center; justify-content: center; }
-.card { width: 400px; box-sizing: border-box; padding: 24px 24px 20px; border-radius: 18px; background: #121317;
-  box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 24px 60px rgba(0,0,0,.55); display: none; }
-.card.on { display: block; animation: pop .22s cubic-bezier(.3,1.3,.5,1); }
-@keyframes pop { from { transform: scale(.94); opacity: 0; } }
-h1 { margin: 0 0 4px; font-size: 19px; font-weight: 650; display: flex; align-items: center; gap: 10px; }
-h1 .dot { width: 10px; height: 10px; border-radius: 50%; background: #F4C443; box-shadow: 0 0 12px rgba(244,196,67,.7); }
-.sub { color: #9DA1AA; font-size: 13px; margin: 0 0 18px; }
-.sec { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: #7D828C; margin: 16px 0 8px; font-weight: 600; }
-.time { display: flex; align-items: center; gap: 10px; }
-.step { width: 34px; height: 34px; border-radius: 10px; border: 0; background: #23252C; color: #EDEBE6; font-size: 19px; cursor: pointer; }
-.step:hover { background: #2E3139; }
-.val { min-width: 92px; text-align: center; font-size: 26px; font-weight: 650; font-variant-numeric: tabular-nums; }
-.val small { font-size: 14px; font-weight: 500; color: #9DA1AA; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
-.chip { padding: 6px 11px; border-radius: 999px; background: #1E2026; color: #C9CCD3; font-size: 12.5px; cursor: pointer; border: 1px solid transparent; }
-.chip:hover { background: #262931; }
-.chip.on { background: #F4C443; color: #16130A; font-weight: 600; }
-.pick { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; background: #1A1B21; }
-.pick .n { font-size: 22px; font-weight: 650; color: #F4C443; min-width: 22px; text-align: center; }
-.pick p { margin: 0; color: #C9CCD3; font-size: 13px; }
-.pick.warn { box-shadow: 0 0 0 1.5px #F4C443; animation: shake .3s; }
+/* stile standard di macOS (fogli di Impostazioni), chiaro o scuro come il sistema:
+   lo stile personalizzato di Tabby si decide nell'app Swift, per tutto insieme */
+:root { --bg: #ECECEC; --group: #FFFFFF; --line: rgba(0,0,0,.09); --text: #1D1D1F; --sub: #6E6E73;
+  --btn: #FFFFFF; --btnText: #1D1D1F; --accent: #0A84FF; --seg: rgba(0,0,0,.06); --segOn: #FFFFFF; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #2A2A2C; --group: #353537; --line: rgba(255,255,255,.08); --text: #F5F5F7; --sub: #98989D;
+    --btn: #4A4A4D; --btnText: #F5F5F7; --seg: rgba(255,255,255,.08); --segOn: #636366; }
+}
+html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; user-select: none; -webkit-user-select: none; cursor: default; }
+body { font: 13px/1.35 -apple-system, system-ui, sans-serif; color: var(--text); display: flex; align-items: center; justify-content: center; }
+.card { width: 380px; box-sizing: border-box; padding: 20px; border-radius: 16px; background: var(--bg);
+  box-shadow: 0 0 0 .5px rgba(0,0,0,.25), 0 20px 50px rgba(0,0,0,.35); display: none; }
+.card.on { display: block; }
+h1 { margin: 0 0 2px; font-size: 13px; font-weight: 700; }
+.sub { color: var(--sub); font-size: 11.5px; margin: 0 0 14px; }
+.group { background: var(--group); border-radius: 10px; box-shadow: 0 0 0 .5px var(--line); margin-bottom: 12px; }
+.item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; min-height: 22px; }
+.item + .item { border-top: .5px solid var(--line); }
+.item .lab { flex: 1; white-space: nowrap; }
+.item .note { color: var(--sub); }
+.seg { display: inline-flex; background: var(--seg); border-radius: 7px; padding: 2px; }
+.seg span { padding: 2px 10px; border-radius: 5px; font-size: 12px; }
+.seg span.on { background: var(--segOn); box-shadow: 0 .5px 2px rgba(0,0,0,.2); }
+.stepper { display: inline-flex; flex-direction: column; border-radius: 5px; overflow: hidden; box-shadow: 0 0 0 .5px var(--line); background: var(--btn); }
+.stepper button { border: 0; background: transparent; color: var(--btnText); width: 18px; height: 11px; font-size: 8px; line-height: 11px; padding: 0; }
+.stepper button + button { border-top: .5px solid var(--line); }
+.val { min-width: 54px; text-align: right; font-variant-numeric: tabular-nums; }
+.check { display: inline-block; width: 14px; height: 14px; border-radius: 4px; box-shadow: inset 0 0 0 .5px rgba(0,0,0,.3); background: var(--btn);
+  text-align: center; line-height: 14px; font-size: 10px; color: #fff; }
+.check.on { background: var(--accent); box-shadow: none; }
+.check.on::after { content: "✓"; }
+.pick.warn { animation: shake .3s; }
 @keyframes shake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
-.folders { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
-.dnd { margin-top: 14px; font-size: 12.5px; color: #9DA1AA; display: flex; gap: 8px; align-items: center; }
-.dnd b { color: #C9CCD3; font-weight: 600; }
-.row { display: flex; gap: 10px; margin-top: 20px; }
-.btn { flex: 1; padding: 11px 12px; border-radius: 11px; border: 0; font: inherit; font-weight: 600; cursor: pointer; background: #23252C; color: #EDEBE6; }
-.btn:hover { background: #2E3139; }
-.btn.main { background: #F4C443; color: #16130A; }
-.btn.main:hover { background: #FFD45A; }
-.btn kbd { font: inherit; font-weight: 500; opacity: .55; margin-left: 4px; }
+.row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.btn { min-width: 84px; padding: 4px 14px; border-radius: 6px; border: 0; font: inherit; color: var(--btnText); background: var(--btn);
+  box-shadow: 0 0 0 .5px rgba(0,0,0,.15), 0 .5px 1.5px rgba(0,0,0,.15); }
+.btn.main { background: var(--accent); color: #fff; }
+.btn:active { filter: brightness(.92); }
+.app { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
+.app img { width: 56px; height: 56px; }
+.app .q { font-size: 13px; font-weight: 700; }
+.app .t { color: var(--text); font-size: 11.5px; }
+#ask .row, #finish .row { justify-content: stretch; }
+#ask .btn, #finish .btn { flex: 1; }
 .col { flex-direction: column; }
-.app { display: flex; align-items: center; gap: 14px; margin: 4px 0 2px; }
-.app img { width: 44px; height: 44px; }
-.app .q { font-size: 17px; font-weight: 600; }
-.app .t { color: #9DA1AA; font-size: 13px; margin-top: 2px; }
-.sum { margin: 6px 0 0; padding: 12px 14px; border-radius: 12px; background: #1A1B21; color: #C9CCD3; font-size: 13.5px; }
-.sum b { color: #EDEBE6; }
 </style></head>
 <body>
 
 <!-- 1. la scelta -->
 <div class="card" id="setup">
-  <h1><span class="dot"></span>Concentrazione</h1>
-  <p class="sub">Le altre app spariscono (restano aperte) e tornano alla fine.</p>
-  <div class="sec">Quanto tempo</div>
-  <div class="time">
-    <button class="step" data-d="-5">−</button>
-    <div class="val"><span id="min">25</span> <small>min</small></div>
-    <button class="step" data-d="5">+</button>
-    <div class="chips" id="quick"></div>
+  <h1>Concentrazione</h1>
+  <p class="sub">Le altre app si nascondono (restano aperte) e tornano alla fine.</p>
+  <div class="group">
+    <div class="item"><span class="lab">Durata</span>
+      <span class="seg" id="quick"></span>
+      <span class="val"><span id="min">25</span> min</span>
+      <span class="stepper"><button data-d="5">▲</button><button data-d="-5">▼</button></span></div>
+    <div class="item pick" id="pick"><span class="lab">Schede da tenere</span><span class="note" id="pickText"></span></div>
   </div>
-  <div class="sec">Cosa tieni</div>
-  <div class="pick" id="pick"><div class="n" id="count">0</div>
-    <p id="pickText">Clicca nella barra le schede che ti servono: diventano gialle.</p></div>
-  <div class="folders" id="folders"></div>
-  <div class="dnd" id="dnd"></div>
+  <div class="group" id="foldersBox"><div id="folders"></div></div>
+  <div class="group"><div class="item"><span class="lab">Non disturbare</span><span class="note" id="dnd"></span></div></div>
   <div class="row">
-    <button class="btn" id="cancel">Annulla <kbd>esc</kbd></button>
-    <button class="btn main" id="start">Inizia <kbd>↵</kbd></button>
+    <button class="btn" id="cancel">Annulla</button>
+    <button class="btn main" id="start">Inizia</button>
   </div>
 </div>
 
 <!-- 2. un'altra app vuole venire davanti -->
 <div class="card" id="ask">
-  <div class="app"><img id="askIcon" alt=""><div><div class="q" id="askQ"></div><div class="t" id="askT"></div></div></div>
-  <div class="row">
-    <button class="btn" id="askOpen">Aprila lo stesso</button>
-    <button class="btn main" id="askStay">Resto concentrato <kbd>↵</kbd></button>
+  <div class="app"><img id="askIcon" alt=""><div class="q" id="askQ"></div><div class="t" id="askT"></div></div>
+  <div class="row col">
+    <button class="btn main" id="askStay">Resto concentrato</button>
+    <button class="btn" id="askOpen">Apri lo stesso</button>
   </div>
 </div>
 
 <!-- 3. la fine -->
 <div class="card" id="finish">
-  <h1><span class="dot"></span><span id="finTitle">Fatto!</span></h1>
-  <div class="sum" id="finSum"></div>
+  <div class="app"><div class="q" id="finTitle">Fatto!</div><div class="t" id="finSum"></div></div>
   <div class="row col">
-    <button class="btn main" id="finReopen">Riapri tutto <kbd>↵</kbd></button>
-    <div class="row" style="margin-top:0">
-      <button class="btn" id="finMore">Altri 10 minuti</button>
-      <button class="btn" id="finStay">Resta così</button>
-    </div>
+    <button class="btn main" id="finReopen">Riapri tutto</button>
+    <button class="btn" id="finMore">Altri 10 minuti</button>
+    <button class="btn" id="finStay">Resta così</button>
   </div>
 </div>
 
@@ -114,29 +113,30 @@ function setup(s) {
   var q = $('quick'); q.innerHTML = '';
   [25, 50, 90].forEach(function (m) {
     var c = document.createElement('span');
-    c.className = 'chip' + (m === s.minutes ? ' on' : '');
+    c.className = m === s.minutes ? 'on' : '';
     c.textContent = m;
     c.onclick = function () { send({minutes: m}); };
     q.appendChild(c);
   });
-  $('count').textContent = s.count;
-  $('pickText').textContent = s.count === 0 ? 'Clicca nella barra le schede che ti servono: diventano gialle.'
-    : (s.count === 1 ? 'scheda scelta' : 'schede scelte') + ' · clicca nella barra per aggiungerne o toglierne';
+  $('pickText').textContent = s.count === 0 ? 'Cliccale nella barra'
+    : s.count + (s.count === 1 ? ' scelta' : ' scelte') + ' (clic nella barra)';
   var f = $('folders'); f.innerHTML = '';
   (s.folders || []).forEach(function (x) {
-    var c = document.createElement('span');
-    c.className = 'chip' + (x.on ? ' on' : '');
-    c.textContent = '▣ ' + x.name;
+    var c = document.createElement('div');
+    c.className = 'item';
+    c.innerHTML = '<span class="check' + (x.on ? ' on' : '') + '"></span><span class="lab"></span>';
+    c.querySelector('.lab').textContent = 'Cartella «' + x.name + '»';
     c.onclick = function () { send({folder: x.id}); };
     f.appendChild(c);
   });
-  $('dnd').innerHTML = s.dnd === true ? '🌙 <b>Non disturbare</b> si accende da solo'
-    : s.dnd === false ? '🌙 Non disturbare: manca un passo (i comandi rapidi «Concentrazione on/off»)' : '';
+  $('foldersBox').style.display = (s.folders || []).length ? '' : 'none';
+  $('dnd').textContent = s.dnd === true ? 'Si attiva da solo'
+    : s.dnd === false ? 'Mancano i comandi rapidi «Concentrazione on/off»' : '…';
   $('pick').classList.remove('warn');
   if (first) only('setup');
 }
 function hint() { var p = $('pick'); p.classList.remove('warn'); void p.offsetWidth; p.classList.add('warn'); }
-document.querySelectorAll('.step').forEach(function (b) {
+document.querySelectorAll('.stepper button').forEach(function (b) {
   b.onclick = function () { send({minutes: Math.max(5, minutes + Number(b.dataset.d))}); };
 });
 $('cancel').onclick = function () { send({cancel: true}); };
@@ -144,8 +144,8 @@ $('start').onclick = function () { send({start: true}); };
 
 function ask(a) {
   $('askIcon').src = a.icon || ''; $('askIcon').style.display = a.icon ? '' : 'none';
-  $('askQ').textContent = 'Aprire ' + a.name + '?';
-  $('askT').textContent = 'Sei in concentrazione' + (a.left && a.left !== '∞' ? ' · mancano ' + a.left : '');
+  $('askQ').textContent = 'Vuoi aprire «' + a.name + '»?';
+  $('askT').textContent = 'Sei in concentrazione' + (a.left && a.left !== '∞' ? ': mancano ' + a.left + '.' : '.');
   only('ask');
 }
 $('askOpen').onclick = function () { send({ask: 'open'}); };
@@ -153,7 +153,7 @@ $('askStay').onclick = function () { send({ask: 'stay'}); };
 
 function finish(r) {
   $('finTitle').textContent = r.early ? r.minutes + ' minuti di concentrazione' : 'Fatto! ' + r.minutes + ' minuti';
-  $('finSum').innerHTML = r.summary ? '<b>Intanto:</b> ' + r.summary.replace(/</g, '&lt;') : 'Nessuna notifica nel frattempo.';
+  $('finSum').textContent = r.summary ? 'Intanto: ' + r.summary : 'Nessuna notifica nel frattempo.';
   only('finish');
 }
 $('finReopen').onclick = function () { send({finish: 'reopen'}); };

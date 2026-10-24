@@ -399,14 +399,14 @@ function drawFocusTimer(els, r)
   local vertical = isVertical()
   local label, p = focusLabel(), focusProgress()
   local ty = r.y + r.h / 2 - (vertical and 10 or 11)
-  table.insert(els, {type = "text", text = label, textSize = 12, textColor = FOCUS_YELLOW,
+  table.insert(els, {type = "text", text = label, textSize = 12, textColor = COL.text,
     textAlignment = "center", frame = {x = r.x, y = ty, w = r.w, h = 16}})
   if T.focus and T.focus.endAt then
     local bw = math.min(r.w - 16, 44)
     local bx, by = r.x + (r.w - bw) / 2, ty + 18
     table.insert(els, {type = "rectangle", action = "fill", fillColor = {white = 1, alpha = 0.14},
       roundedRectRadii = {xRadius = 1.5, yRadius = 1.5}, frame = {x = bx, y = by, w = bw, h = 3}})
-    table.insert(els, {type = "rectangle", action = "fill", fillColor = FOCUS_YELLOW,
+    table.insert(els, {type = "rectangle", action = "fill", fillColor = COL.accent,
       roundedRectRadii = {xRadius = 1.5, yRadius = 1.5}, frame = {x = bx, y = by, w = math.max(2, bw * p), h = 3}})
   end
   table.insert(els, hitArea("focustimer", r))

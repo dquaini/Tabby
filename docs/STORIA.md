@@ -168,4 +168,7 @@ v9.55: Concentrazione (⚡︎ → Concentrazione…): sfondo scuro, in centro mi
     giallo sulla sfera), le altre app nascoste (non chiuse), nella barra solo le schede
     scelte, un'altra app → Tabby chiede. Alla fine: suono, notifiche arrivate, Riapri
     tutto / Altri 10 minuti / Resta così. Sopravvive al riavvio.
+v9.56: la finestra della Concentrazione in stile standard di macOS (come Impostazioni,
+    chiara o scura come il sistema); il tempo nella barra nei colori normali di Tabby. Lo
+    stile personalizzato si decide nell'app Swift, per tutto insieme (Daniele).
 ```

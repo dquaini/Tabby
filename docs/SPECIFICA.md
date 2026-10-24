@@ -722,7 +722,10 @@ rapide" (acceso di serie).
 no**: resta sopra. In centro una finestra (pagina `tabby/concentrazione.html`, non prende
 la tastiera): minuti (− / + di 5, scelte rapide 25 · 50 · 90; da 5 a 240), quante
 schede hai scelto, le cartelle con schede aperte (un clic le sceglie tutte), lo stato di
-Non disturbare. Le schede si scelgono **cliccandole nella barra**: diventano gialle
+Non disturbare. Stile standard di macOS (foglio come Impostazioni: righe raggruppate,
+controllo a segmenti, frecce su/giù, caselle, bottone blu; chiaro o scuro come il
+sistema) — *perché:* niente stile proprio su un solo comando; lo stile di Tabby si
+decide nell'app Swift per tutto insieme. Le schede si scelgono **cliccandole nella barra**: diventano gialle
 (`#F4C443`, testo scuro); un clic su una scheda (anche sulla ✕) la sceglie o la toglie
 e non ci si sposta. Già gialle: la scheda in cui sei e quelle dell'ultima volta.
 Ricorda anche i minuti. Invio = Inizia, Esc = Annulla. Senza schede non parte (la
@@ -737,7 +740,7 @@ comando rapido «Concentrazione on» (app Comandi), se c'è. **[Swift]** usare l
 Focus se disponibile.
 
 **C-3 Durante.** Al posto della batteria il **tempo che manca** («24 min»; nell'ultimo
-minuto «0:45») in giallo con una barretta che si riempie; largo 64 punti in orizzontale,
+minuto «0:45») con una barretta blu (accento di Tabby) che si riempie; largo 64 punti in orizzontale,
 alto 38 di lato. Clic: +5 minuti, +15 minuti, Termina adesso. Col cerchio sulla
 scrivania, un **anello giallo** intorno alla sfera. Un'app non scelta che viene davanti
 (Dock, Spotlight, ⌘Tab) torna nascosta, si torna all'ultima scheda permessa e Tabby
