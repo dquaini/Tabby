@@ -89,7 +89,7 @@ end)
 -- dell'app in primo piano restano solo finestre ridotte a icona (una scheda alla
 -- volta), riapri l'ultima usata invece di lasciare il desktop
 function T.restoreAfterClose()
-  if not S.oneAtATime then return end
+  if T.paused or not S.oneAtATime then return end
   local app = hs.application.frontmostApplication()
   local bid = app and app:bundleID()
   if not bid or not (BROWSERS[bid] or perWindow(bid)) or floating(bid) then return end
@@ -165,6 +165,7 @@ T.allWins:subscribe(WF.windowTitleChanged, function() scheduleRebuild() end)
 -- se ne stai usando uno, ogni 15 se sono in secondo piano (consumo: era la voce
 -- più pesante di Tabby da ferma, misurato il 23/10/2026)
 T.browserTimer = hs.timer.doEvery(3, timed("controllo browser", function()
+  if T.paused then return end
   if T.press or T.split or T.fedit then return end
   local now = hs.timer.secondsSinceEpoch()
   if not BROWSERS[frontBid() or ""] and now - (T.lastBrowserCheck or 0) < 15 then return end
@@ -181,6 +182,7 @@ function badgeSig(b)
   return table.concat(parts, ",")
 end
 T.badgeTimer = hs.timer.doEvery(5, timed("notifiche del Dock", function()
+  if T.paused then return end
   local b = readDockBadges()
   local sig = badgeSig(b)
   if sig ~= T.badgeSig then
@@ -224,6 +226,7 @@ T.fsClickTap:start()
 
 -- Tasto destro su una scheda di Tabby: menu con «Rinomina la scheda…»
 T.rightTap = hs.eventtap.new({hs.eventtap.event.types.rightMouseDown}, function(e)
+  if T.paused then return false end
   local ok, p = pcall(function() return e:location() end)
   if not ok or not p then p = hs.mouse.absolutePosition() end
   local i = tabAtPoint(p)
@@ -235,6 +238,7 @@ T.rightTap:start()
 
 -- Un clic può portare una finestra sopra un'app veloce: Tabby la rimette sopra
 T.floatTap = hs.eventtap.new({hs.eventtap.event.types.leftMouseUp}, function()
+  if T.paused then return false end
   if next(T.floatMode) then hs.timer.doAfter(0.08, raiseFloaters) end
   checkCoveredSoon()
   return false
@@ -253,6 +257,7 @@ function notificationOffset()
   return 0, 0
 end
 function placeNotifications(w)
+  if T.paused then return end
   pcall(function()
     local ff = screen():fullFrame()
     local f = w:frame()
@@ -382,7 +387,7 @@ function touchesX(touches)
 end
 
 T.gestureTap = hs.eventtap.new({hs.eventtap.event.types.gesture}, function(e)
-  if not S.gestures then return false end
+  if not S.gestures or T.paused then return false end
   local ok, touches = pcall(function() return e:getTouches() end)
   if not ok or type(touches) ~= "table" then return false end
   local x, n = touchesX(touches)

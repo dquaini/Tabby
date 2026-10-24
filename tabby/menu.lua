@@ -231,7 +231,7 @@ end
 -- 4 s, finché la sua finestra non sparisce; se nel frattempo scegli tu un'altra
 -- scheda, Tabby non ti sposta — 23/10/2026)
 function goNeighborSoon(snap, why)
-  if not snap then return end
+  if not snap or T.paused then return end
   T.neighborSeq = (T.neighborSeq or 0) + 1
   local seq, focus = T.neighborSeq, T.focusSeq
   local tries = {0.35, 0.8, 1.5, 2.5, 4}
@@ -471,6 +471,7 @@ function openSettings()
     {title = "Comportamento", menu = behaviourMenu()},
     {title = "-"},
     {title = "Chiudi tutte le app…", fn = closeAllApps},
+    {title = "Chiudi Tabby (resta solo il cerchio)", fn = pauseTabby},
     {title = "-"},
     {title = "Ricarica Tabby", fn = function() hs.reload() end},
     {title = "Apri la console di Hammerspoon", fn = function() hs.openConsole() end},

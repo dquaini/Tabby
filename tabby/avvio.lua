@@ -19,6 +19,7 @@ T.badgeSig = badgeSig(T.badges)
 rebuildTabs()
 draw()
 handleActive(hs.application.frontmostApplication())
+if T.paused then pauseTabby() end   -- era stata chiusa: resta solo la sfera
 -- app con un'icona nella barra dei menu: si cercano dopo l'avvio e ogni 10 minuti
 hs.timer.doAfter(5, function() scanMenuBarApps() end)
 -- il Memo si prepara (nascosto) subito: aprirlo con ⌃⌥M è immediato anche la prima volta

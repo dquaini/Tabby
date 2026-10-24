@@ -444,6 +444,11 @@ function placeBar(bf)
 end
 
 draw = function()
+  if T.paused then
+    if T.bar then T.bar:hide(); T.visible = false end
+    if not (T.orbView and T.orbView:isVisible()) then showOrb(true) end
+    return
+  end
   local bf = barFrame()
   if not T.bar then
     T.bar = hs.canvas.new(bf)
@@ -786,14 +791,25 @@ function orbViewFrame()
   return {x = o.x - d, y = o.y - d, w = ORB_VIEW, h = ORB_VIEW}
 end
 
-function catDataURI()
-  if T.catURI then return T.catURI end
+-- Un'immagine come indirizzo "data:" (per passarla alla pagina della sfera)
+function fileDataURI(path)
   local ok, uri = pcall(function()
-    local f = io.open((T.dir or ".") .. "/assets/gatto-acceso.png", "rb")
+    local f = io.open(path, "rb")
     local data = f and f:read("a"); if f then f:close() end
     return data and ("data:image/png;base64," .. hs.base64.encode(data)) or nil
   end)
-  T.catURI = ok and uri or nil
+  return ok and uri or nil
+end
+function imageDataURI(img)
+  if not img then return nil end
+  local ok, uri = pcall(function() return img:encodeAsURLString() end)
+  return ok and uri or nil
+end
+
+-- il gatto dentro la sfera (disegno di Daniele del 24/10/2026: il bianco resta, i
+-- tratti neri lasciano vedere i colori)
+function catDataURI()
+  if not T.catURI then T.catURI = fileDataURI((T.dir or ".") .. "/assets/gatto-sfera.png") end
   return T.catURI
 end
 
@@ -806,10 +822,20 @@ function ensureOrbView()
     if b.ready then
       local uri = catDataURI()
       if uri then T.orbView:evaluateJavaScript("setCat(" .. jsString(uri) .. ")") end
+      if T.paused then T.orbView:evaluateJavaScript("setPaused(true)") end
     end
     if b.click then
-      if T.fanOpen then closeFan() else catClick(true) end
+      if T.paused then resumeTabby()
+      elseif T.fanOpen then closeFan()
+      else catClick(true) end
     end
+    if b.choose then
+      local id = tostring(b.choose)
+      for _, ch in ipairs(T.fanChoices or {}) do
+        if ch.id == id then closeFan(); ch.fn(); return end
+      end
+    end
+    if b.outside then closeFan() end
   end)
   local page = ""
   local f = io.open((T.dir or ".") .. "/tabby/cerchio.html", "r")
@@ -828,11 +854,30 @@ function showOrb(on)
   if not on then
     closeFan()
     if T.orbView then T.orbView:hide() end
+    if T.orbPoll then T.orbPoll:stop() end
     return
   end
   local v = ensureOrbView()
-  v:frame(orbViewFrame())
+  if not T.fanOpen then v:frame(orbViewFrame()) end
   v:show()
+  -- la sfera reagisce al puntatore: Tabby guarda dov'è solo mentre la sfera c'è
+  if not T.orbPoll then T.orbPoll = hs.timer.new(0.05, orbPointer) end
+  T.orbPoll:start()
+end
+
+-- Dove sta il puntatore rispetto alla sfera: verso dove (dx, dy) e quanto è vicino
+function orbPointer()
+  if not T.orbView then return end
+  local o, p = orbFrame(), hs.mouse.absolutePosition()
+  local vx, vy = p.x - (o.x + o.w / 2), p.y - (o.y + o.h / 2)
+  local d = math.sqrt(vx * vx + vy * vy)
+  local near = math.max(0, math.min(1, 1 - (d - 30) / 170))
+  local dx = near > 0 and math.max(-1, math.min(1, vx / 120)) or 0
+  local dy = near > 0 and math.max(-1, math.min(1, vy / 120)) or 0
+  local last = T.orbLast or {0, 0, 0}
+  if math.abs(near - last[3]) < 0.02 and math.abs(dx - last[1]) < 0.03 and math.abs(dy - last[2]) < 0.03 then return end
+  T.orbLast = {dx, dy, near}
+  T.orbView:evaluateJavaScript(string.format("pointer(%.3f,%.3f,%.3f)", dx, dy, near))
 end
 
 -- Clic sul muso del gatto: l'ultima finestra che stavi guardando (dal cerchio: quella
@@ -874,132 +919,40 @@ function openCatMenu()
   popup(items, popPos(T.L.desk))
 end
 
--- ---- Il ventaglio intorno al cerchio ----
-FAN_PETAL, FAN_RINGS = 44, {{r = 92, n = 3}, {r = 150, n = 4}, {r = 208, n = 5}}
-
--- Dove va ogni scelta: giri intorno al cerchio, da sinistra verso l'alto (l'angolo è in
--- basso a destra), il primo giro vicino al cerchio
-function fanSpots(count)
-  local spots = {}
-  for _, ring in ipairs(FAN_RINGS) do
-    for k = 0, ring.n - 1 do
-      local a = math.rad(180 - 90 * k / (ring.n - 1))   -- 180° = a sinistra, 90° = sopra
-      table.insert(spots, {dx = math.cos(a) * ring.r, dy = -math.sin(a) * ring.r})
-      if #spots >= count then return spots end
-    end
-  end
-  return spots
-end
-
-FAN_W = 400   -- la tela del ventaglio (quadrata, nell'angolo in basso a destra)
-function drawFan(progress, hover)
-  local W = FAN_W
+-- ---- Il ventaglio intorno al cerchio (piccole sfere, disegnate nella pagina della
+-- sfera): la finestrella si allarga per contenerlo e torna piccola quando si chiude,
+-- così non intralcia i clic sulla scrivania ----
+FAN_W = 420
+function fanFrame()
   local o = orbFrame()
-  local ocx, ocy = W - (o.w / 2), W - (o.h / 2)   -- centro del cerchio dentro la tela
-  local els, labelEls = {}, nil
-  local choices = T.fanChoices or {}
-  local spots = fanSpots(#choices)
-  for i, ch in ipairs(choices) do
-    local sp = spots[i]
-    local x, y = ocx + sp.dx * progress, ocy + sp.dy * progress
-    local hot = hover == ch.id
-    local P = FAN_PETAL
-    if ch.id == "new" then
-      table.insert(els, {type = "circle", action = "fill", fillColor = {hex = "#F2A541"},
-        center = {x = x, y = y}, radius = P / 2,
-        withShadow = true, shadow = {blurRadius = 10, color = {white = 0, alpha = 0.5}, offset = {h = 0, v = -3}}})
-      table.insert(els, {type = "text", text = "+", textSize = 24, textColor = {hex = "#1A1206"},
-        textAlignment = "center", frame = {x = x - P / 2, y = y - 16, w = P, h = 30}})
-    else
-      table.insert(els, {type = "circle", action = "strokeAndFill", fillColor = {hex = "#0B0C10"},
-        strokeColor = hot and {hex = "#F2A541"} or {white = 1, alpha = 0.16}, strokeWidth = 1,
-        center = {x = x, y = y}, radius = P / 2,
-        withShadow = true, shadow = {blurRadius = 10, color = {white = 0, alpha = 0.5}, offset = {h = 0, v = -3}}})
-      local items = ch.folder and ch.folder.items or {}
-      local n = math.min(#items, 2)
-      for k = n, 1, -1 do
-        local im = FD.itemIcon(items[k])
-        if im then
-          local ix = x - 8 - (n - 1) * 5 + (k - 1) * 10
-          table.insert(els, {type = "image", image = im, frame = {x = ix, y = y - 8, w = 16, h = 16}})
-        end
-      end
-    end
-    table.insert(els, {type = "circle", action = "fill", fillColor = {white = 1, alpha = 0.01},
-      trackMouseUp = true, trackMouseEnterExit = true, id = "fan:" .. ch.id, center = {x = x, y = y}, radius = P / 2})
-    -- il nome, accanto alla scelta su cui sei
-    if hot and progress >= 1 then
-      local label = (ch.id == "new") and "Nuova app" or ch.name
-      local lw = math.min(200, 24 + (utf8.len(label) or 8) * 7.2)
-      -- a sinistra della bolla (lì non c'è niente); per quella più in alto, sopra
-      -- a sinistra se lì non c'è un'altra bolla; altrimenti sopra
-      local leftBusy = false
-      for j, o in ipairs(spots) do
-        if j ~= i and j <= #choices and math.abs(o.dy - sp.dy) < 30 and o.dx < sp.dx then leftBusy = true end
-      end
-      local lx, ly
-      if sp.dx < -30 and not leftBusy then lx, ly = x - P / 2 - 8 - lw, y - 12
-      else lx, ly = x - lw / 2, y - P / 2 - 32 end
-      -- sempre dentro la tela (se no si taglia)
-      lx = math.max(4, math.min(lx, W - lw - 4))
-      ly = math.max(4, ly)
-      labelEls = {
-        {type = "rectangle", action = "fill", fillColor = {white = 0, alpha = 0.85},
-         roundedRectRadii = {xRadius = 7, yRadius = 7}, frame = {x = lx, y = ly, w = lw, h = 24}},
-        {type = "text", text = label, textSize = 12.5, textColor = COL.text, textAlignment = "center",
-         frame = {x = lx, y = ly + 4, w = lw, h = 18}},
-      }
-    end
-  end
-  -- il nome si disegna per ultimo: sta sopra alle bolle
-  for _, e in ipairs(labelEls or {}) do table.insert(els, e) end
-  T.fan:replaceElements(els)
+  local pad = (ORB_VIEW - o.w) / 2
+  return {x = o.x + o.w + pad - FAN_W, y = o.y + o.h + pad - FAN_W, w = FAN_W, h = FAN_W}
 end
 
 function openFan()
-  local o = orbFrame()
-  local W = FAN_W
+  local v = ensureOrbView()
   T.fanChoices = catChoices()
-  if not T.fan then
-    T.fan = hs.canvas.new({x = o.x + o.w - W, y = o.y + o.h - W, w = W, h = W})
-    T.fan:level(hs.canvas.windowLevels.floating)
-    T.fan:behavior({"canJoinAllSpaces", "stationary"})
-    T.fan:clickActivating(false)
-    T.fan:mouseCallback(function(_, msg, id)
-      local cid = tostring(id):match("^fan:(.+)$")
-      if not cid then return end
-      if msg == "mouseEnter" then T.fanHover = cid; drawFan(1, cid)
-      elseif msg == "mouseExit" then T.fanHover = nil; drawFan(1, nil)
-      elseif msg == "mouseUp" then
-        for _, ch in ipairs(T.fanChoices or {}) do
-          if ch.id == cid then closeFan(); ch.fn(); return end
-        end
-      end
-    end)
+  local parts = {}
+  for _, ch in ipairs(T.fanChoices) do
+    local icons = {}
+    for k, it in ipairs(ch.folder and ch.folder.items or {}) do
+      if k > 2 then break end
+      local uri = imageDataURI(FD.itemIcon(it))
+      if uri then table.insert(icons, jsString(uri)) end
+    end
+    table.insert(parts, "{id:" .. jsString(ch.id) .. ",name:" .. jsString(ch.name) .. ",icons:[" .. table.concat(icons, ",") .. "]}")
   end
-  T.fan:frame({x = o.x + o.w - W, y = o.y + o.h - W, w = W, h = W})
   T.fanOpen = true
+  v:frame(fanFrame())
+  v:evaluateJavaScript("openFan([" .. table.concat(parts, ",") .. "])")
   print("Tabby · nessuna finestra: le scelte a ventaglio intorno al cerchio")
-  -- si apre a ventaglio, in pochi passi
-  if T.fanTimer then T.fanTimer:stop() end
-  local step = 0
-  drawFan(0.2, nil)
-  T.fan:show()
-  -- la sfera sopra il ventaglio
-  if T.orbView then pcall(function() T.orbView:bringToFront(false); T.orbView:level(hs.canvas.windowLevels.floating) end) end
-  T.fanTimer = hs.timer.doEvery(0.02, function()
-    step = step + 1
-    drawFan(math.min(1, 0.2 + step * 0.16), nil)
-    if step >= 5 and T.fanTimer then T.fanTimer:stop(); T.fanTimer = nil end
-  end)
-  -- un clic fuori dal ventaglio lo chiude
+  -- un clic fuori dalla finestrella lo chiude (dentro, lo dice la pagina)
   if not T.fanTap then
     T.fanTap = hs.eventtap.new({hs.eventtap.event.types.leftMouseDown}, function(e)
       if not T.fanOpen then return false end
       local p = e:location()
-      local f = T.fan:frame()
-      local inside = p.x >= f.x and p.x <= f.x + f.w and p.y >= f.y and p.y <= f.y + f.h
-      if not inside then later(closeFan) end
+      local f = fanFrame()
+      if not (p.x >= f.x and p.x <= f.x + f.w and p.y >= f.y and p.y <= f.y + f.h) then later(closeFan) end
       return false
     end)
   end
@@ -1009,10 +962,51 @@ end
 function closeFan()
   if not T.fanOpen then return end
   T.fanOpen = false
-  T.fanHover = nil
-  if T.fanTimer then T.fanTimer:stop(); T.fanTimer = nil end
-  if T.fan then T.fan:hide(0.1) end
   if T.fanTap then T.fanTap:stop() end
+  if T.orbView then
+    T.orbView:evaluateJavaScript("closeFan()")
+    T.orbView:frame(orbViewFrame())
+  end
+end
+
+-- ---------------------------------------------------------------------
+--  CHIUDI TABBY (24/10/2026, Daniele): ⚙︎ → «Chiudi Tabby». La barra sparisce, resta
+--  solo la sfera, e Tabby si ferma del tutto (non nasconde né ridimensiona app, niente
+--  scorciatoie, niente controlli di browser e notifiche). Le app restano come sono.
+--  Un clic sulla sfera e Tabby riparte. Si ricorda anche dopo un riavvio.
+-- ---------------------------------------------------------------------
+T.paused = hs.settings.get("tabbar.paused") == true
+
+function pauseTabby()
+  T.paused = true
+  hs.settings.set("tabbar.paused", true)
+  print("Tabby · chiusa: resta solo la sfera (clic per riattivarla)")
+  closeFan()
+  if T.bar then T.bar:hide(); T.visible = false end
+  if T.batTip then T.batTip:hide() end
+  for _, hk in ipairs(T.hotkeys or {}) do pcall(function() hk:disable() end) end
+  for _, t in ipairs({T.browserTimer, T.badgeTimer, T.menuWatch, T.mouseTimer}) do
+    if t then pcall(function() t:stop() end) end
+  end
+  showOrb(true)
+  if T.orbView then T.orbView:evaluateJavaScript("typeof setPaused === 'function' && setPaused(true)") end
+end
+
+function resumeTabby()
+  T.paused = false
+  hs.settings.set("tabbar.paused", false)
+  print("Tabby · riattivata")
+  for _, hk in ipairs(T.hotkeys or {}) do pcall(function() hk:enable() end) end
+  for _, t in ipairs({T.browserTimer, T.badgeTimer, T.menuWatch}) do
+    if t then pcall(function() t:start() end) end
+  end
+  if T.orbView then T.orbView:evaluateJavaScript("typeof setPaused === 'function' && setPaused(false)") end
+  T.collapsed = false
+  showOrb(false)
+  T.visible = nil
+  rebuildTabs()
+  draw()
+  handleActive(hs.application.frontmostApplication())
 end
 
 -- Tabby scivola fuori dallo schermo dal suo lato (out = true) o rientra
@@ -1057,7 +1051,7 @@ function T.updateMouseTimer()
 end
 
 T.mouseTimer = hs.timer.doEvery(0.08, function()
-  if not T.bar then return end
+  if not T.bar or T.paused then return end
   if T.press or T.split or T.fedit then return end   -- mentre trascini, dividi o crei una cartella, resta visibile
 
   -- Barra dei menu o Dock che si nascondono da soli: quando arrivano dalla parte di

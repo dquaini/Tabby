@@ -200,6 +200,14 @@ hs = {
       return t
     end,
     delayed = {new = function(_, fn) return {start = function() table.insert(timers, fn) end} end},
+    -- timer ripetuto, fermo finché non lo avvii (es. il puntatore vicino alla sfera)
+    new = function(_, fn)
+      local t = {fn = fn, on = false}
+      function t:start() self.on = true; return self end
+      function t:stop() self.on = false; return self end
+      function t:running() return self.on end
+      return t
+    end,
     secondsSinceEpoch = function() return CLOCK or 1000 end,
     absoluteTime = function() return 0 end,
   },
@@ -365,6 +373,7 @@ hs = {
       end
       function wv:frame(f) if f then self._frame = f end return self._frame end
       function wv:show() self._shown = true; return self end
+      function wv:isVisible() return self._shown end
       function wv:hide() self._shown = false; return self end
       function wv:hswindow() return {focus = function() end} end
       function wv:evaluateJavaScript(js) table.insert(self._js, js) end

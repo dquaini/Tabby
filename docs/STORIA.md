@@ -159,4 +159,7 @@ v9.52: il cerchio diventa "Eclissi" (luce ambra sul bordo, scelta tra 4 prototip
 v9.53: il cerchio diventa una sfera viva in stile "orb" AI (colori che ruotano dentro,
     riflesso, alone che respira, quasi zero consumo), un po' più verso il centro; il clic
     sul gatto nella barra torna ad aprire il Finder sulla Scrivania.
+v9.54: dentro la sfera il gatto di Daniele; la sfera reagisce al puntatore; il ventaglio
+    diventa di piccole sfere dello stesso stile; ⚙︎ → «Chiudi Tabby»: resta solo la sfera e
+    Tabby si ferma finché non la clicchi.
 ```

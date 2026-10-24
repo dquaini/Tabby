@@ -574,25 +574,37 @@ stavi guardando** (quella di prima della scrivania). Tabby
 ricorda le ultime 20 schede usate e salta quelle che non esistono più. Se non c'è nessuna
 finestra a cui tornare compaiono le scelte: **«+ Nuova app…»** (apre Spotlight) e, se ci
 sono, le **cartelle** (clic = attivala). Dal cerchio le scelte si aprono **a ventaglio**
-intorno a lui (v9.52): bolle da 44 punti su giri di raggio 92, 150, 208 (3, 4, 5 posti),
-da sinistra verso l'alto; il «+» ambra per primo, poi una bolla per cartella con le icone
-delle sue prime due app; il nome compare passandoci sopra (a sinistra della bolla, o sopra
-se a sinistra c'è un'altra bolla). Si apre in ~0,1 s; si chiude con un clic fuori, Esc o un
-altro clic sul cerchio. Dalla barra resta un menu accanto al gatto.
+intorno a lui (v9.52; dalla v9.54 come **piccole sfere dello stesso stile**, di vetro
+colorato, che si accendono al passaggio): da 44 punti su giri di raggio 92, 150, 208 (3, 4,
+5 posti), da sinistra verso l'alto, una dopo l'altra; il «+» per primo, poi una per
+cartella con le icone delle sue prime due app; il nome compare passandoci sopra (a
+sinistra, o sopra se a sinistra c'è un'altra sfera). Sono nella stessa pagina della
+sfera: la finestrella si allarga (420 punti) mentre il ventaglio è aperto e torna piccola
+quando si chiude (clic fuori, Esc, o di nuovo la sfera).
 
 **W-3 Il cerchio sulla scrivania** (v9.51): quando non c'è **nessuna finestra in vista**
 (app tutte nascoste, ridotte o chiuse, o ⌃⌥0; Lampi, Memo e Hammerspoon non contano) per
 0,4 s, la barra sparisce e Tabby diventa un **cerchio nero di 56 punti col muso del gatto**,
 sempre **in basso a destra**, a 60 punti dai bordi (v9.53, un po' verso il centro).
-Disegno (v9.53, stile "orb" degli assistenti AI come ElevenLabs): una **sfera viva** di 60
-punti, con macchie di colore sfumate (ambra, viola, blu, un tocco di rosa) che ruotano
-lente dentro, un riflesso in alto a sinistra, bordo più scuro e un alone che respira; il
-muso del gatto bianco al centro. Passandoci sopra la sfera si gonfia un poco e i colori
-accelerano. È una pagina web trasparente (`tabby/cerchio.html`) in una finestrella che
-non ruba la tastiera; fatta solo di strati che ruotano, consuma quasi niente (misurato:
-Hammerspoon ~0,7% con la sfera in vista). (Una versione disegnata dalla scheda grafica
-costava ~10%: scartata.) Clic = W-0. Appena compare una finestra torna la
+Disegno (v9.53–v9.54, stile "orb" degli assistenti AI come ElevenLabs): una **sfera viva** di
+60 punti, con macchie di colore sfumate (ambra, viola, blu, un tocco di rosa) che ruotano
+lente dentro, un riflesso, bordo più scuro e un alone che respira; dentro, **il gatto di
+Daniele** (`assets/gatto-sfera.png`, ricavato dal suo disegno: il bianco resta, i tratti
+neri diventano trasparenti e lasciano vedere i colori). **Reagisce al puntatore**:
+avvicinandosi (entro ~200 punti) colori, gatto e riflesso si spostano verso di lui, la
+sfera si gonfia e l'alone si accende; sopra, i colori girano più veloci. (Tabby legge la
+posizione del puntatore 20 volte al secondo solo mentre la sfera c'è.) È una pagina web
+trasparente (`tabby/cerchio.html`) in una finestrella che non ruba la tastiera; fatta solo
+di strati che ruotano e si spostano, consuma quasi niente (misurato: Hammerspoon ~0,7%).
+(Una versione disegnata dalla scheda grafica costava ~10%: scartata.) Clic = W-0. Appena compare una finestra torna la
 barra. Non a schermo intero, né durante la divisione o la creazione di una cartella.
+
+**W-4 Chiudi Tabby** (v9.54): ⚙︎ → «Chiudi Tabby (resta solo il cerchio)». La barra
+sparisce e resta **solo la sfera** (con i colori più spenti); Tabby si ferma del tutto: non
+nasconde né ridimensiona app, le scorciatoie ⌃⌥ e i gesti passano alle app, niente
+controlli di browser e notifiche, niente scheda accanto né notifiche spostate. Le app
+restano come sono (diverso da «Chiudi tutte le app»). **Un clic sulla sfera** e Tabby
+riparte. Si ricorda anche dopo un riavvio (`paused`).
 
 **W-1 Scrivania, ⌃⌥0**: nasconde tutte le app (tranne il Finder
 e quelle a schermo intero); il Finder resta in primo piano (*perché:* nascondendolo
@@ -872,7 +884,7 @@ Ogni regola ha un test in `test/`; nell'app Swift diventano test di accettazione
 | `test_browser_nomi.py` | B-3 (passaggio 0), B-8 |
 | `test_app_veloci.py` | Q-1, D-2 (app veloci nelle zone) |
 | `test_app_veloci_fila.py` | Q-1b (anche «non c'è spazio»), ripiano dei Lampi, D-2 (Memo e fila dei Lampi nelle zone) |
-| `test_cerchio.py` | W-0, W-3 |
+| `test_cerchio.py` | W-0, W-3 (ventaglio, puntatore), W-4 |
 | `test_finestre_fluide.py` | C-4 (giallo, ⌘Q, macOS che cambia app prima), D-4, L (angoli), W-0, Q-2 |
 | `test_cartelle.py`, `test_cartelle_casi.py`, `test_cartelle_pagine.py` | F-1…F-10 |
 | `test_notch.py` | A-2, L-6 |

@@ -68,6 +68,7 @@ function modsMatch(f, shift)
 end
 
 T.keyTap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(e)
+  if T.paused then return false end   -- Tabby chiusa: tutti i tasti alle app
   local f    = e:getFlags()
   local code = e:getKeyCode()
   local noMods = not (f.ctrl or f.alt or f.cmd or f.shift)

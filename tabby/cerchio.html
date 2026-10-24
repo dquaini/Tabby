@@ -1,62 +1,163 @@
 <!doctype html>
 <html lang="it"><head><meta charset="utf-8">
 <!--
-  Il cerchio di Tabby sulla scrivania (v9.53): una sfera viva, nello stile degli
-  "orb" degli assistenti AI (ElevenLabs): colori che scorrono dentro (ambra, viola,
-  blu), luce e riflesso come un oggetto vero, un alone che respira, il muso del gatto
-  al centro. Fatta con tre macchie di colore sfumate che ruotano dentro la sfera: il
-  Mac sposta solo strati già pronti (animazioni di sola rotazione), quindi consuma
-  pochissimo; si ferma quando la finestrella è nascosta.
-  Tabby → pagina: setCat(dataURI).  Pagina → Tabby: send({click: true}).
+  Il cerchio di Tabby sulla scrivania (v9.54): una sfera viva in stile "orb" degli
+  assistenti AI. Dentro: colori che ruotano lenti (ambra, viola, blu, rosa) e il gatto
+  di Daniele (assets/gatto-sfera.png: il bianco resta, i tratti neri lasciano vedere i
+  colori). Reagisce al puntatore: avvicinandosi, colori e riflesso si spostano verso di
+  lui, la sfera si gonfia e l'alone si accende. Al clic, se non ci sono finestre, le
+  scelte si aprono a ventaglio come piccole sfere dello stesso stile.
+  Animazioni di sola rotazione e spostamento: il Mac sposta strati già pronti, consumo
+  quasi zero; si ferma quando la finestrella è nascosta.
+
+  Tabby → pagina: setCat(uri) · pointer(dx, dy, vicino 0..1) · openFan(scelte) · closeFan()
+                  setPaused(sì/no)
+  Pagina → Tabby: send({click}) · send({choose: id}) · send({outside: true})
 -->
 <style>
-html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
-#wrap { position: absolute; inset: 0; display: grid; place-items: center; cursor: pointer; }
-#glow { position: absolute; width: 76px; height: 76px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(242,165,65,.55), rgba(139,124,255,.38) 45%, rgba(76,141,255,0) 70%);
-  filter: blur(9px); animation: breathe 5s ease-in-out infinite; }
-#ball { position: relative; width: 60px; height: 60px; border-radius: 50%; overflow: hidden; isolation: isolate;
+html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; user-select: none; -webkit-user-select: none; }
+body { font: 500 12.5px/1.2 -apple-system, system-ui, sans-serif; }
+#hit { position: absolute; inset: 0; }   /* clic fuori dalle sfere (col ventaglio aperto) */
+/* la sfera grande: sempre a 18 punti dall'angolo in basso a destra della finestrella */
+#orb { position: absolute; right: 18px; bottom: 18px; width: 60px; height: 60px; cursor: pointer;
+  --px: 0; --py: 0; --near: 0; }
+#glow { position: absolute; left: -8px; top: -8px; width: 76px; height: 76px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(242,165,65,.6), rgba(139,124,255,.4) 45%, rgba(76,141,255,0) 70%);
+  filter: blur(9px); animation: breathe 5s ease-in-out infinite;
+  transform: translate(calc(var(--px) * 5px), calc(var(--py) * 5px)) scale(calc(1 + var(--near) * .25)); transition: transform .25s; }
+#ball { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; isolation: isolate;
   background: radial-gradient(circle at 50% 60%, #2B2F6E, #0B0C1C 75%);
-  box-shadow: 0 6px 18px rgba(0,0,0,.5); transition: transform .35s cubic-bezier(.3,1.4,.5,1); }
-/* le macchie di colore: ognuna gira intorno al centro a una velocità diversa */
+  box-shadow: 0 6px 18px rgba(0,0,0,.5), 0 0 calc(var(--near) * 22px) rgba(242,165,65, calc(var(--near) * .6));
+  transform: scale(calc(1 + var(--near) * .1)); transition: transform .25s cubic-bezier(.3,1.4,.5,1), box-shadow .25s; }
+#orb:active #ball { transform: scale(.95); }
+/* i colori dentro, che seguono un poco il puntatore */
+#colors { position: absolute; inset: 0; transform: translate(calc(var(--px) * 8px), calc(var(--py) * 8px)); transition: transform .3s; }
 .blob { position: absolute; left: 50%; top: 50%; width: 38px; height: 38px; margin: -19px 0 0 -19px; border-radius: 50%;
-  filter: blur(8px); will-change: transform; opacity: .82; }
+  filter: blur(8px); will-change: transform; opacity: .85; }
 .b1 { background: #F2A541; animation: orbit1 9s linear infinite; }
 .b2 { background: #8B7CFF; animation: orbit2 12s linear infinite; }
 .b3 { background: #3E86FF; animation: orbit3 15s linear infinite; }
-.b4 { background: #FF7AB6; width: 28px; height: 28px; margin: -14px 0 0 -14px; opacity: .5; animation: orbit4 7s linear infinite; }
-#wrap:hover .b1 { animation-duration: 3.5s; } #wrap:hover .b2 { animation-duration: 4.5s; }
-#wrap:hover .b3 { animation-duration: 5.5s; } #wrap:hover .b4 { animation-duration: 2.8s; }
-/* luce e ombra fisse sopra: riflesso in alto a sinistra, bordo più scuro, sfera vera */
+.b4 { background: #FF7AB6; width: 28px; height: 28px; margin: -14px 0 0 -14px; opacity: .55; animation: orbit4 7s linear infinite; }
+#orb.near .b1 { animation-duration: 3.5s; } #orb.near .b2 { animation-duration: 4.5s; }
+#orb.near .b3 { animation-duration: 5.5s; } #orb.near .b4 { animation-duration: 2.8s; }
+/* il gatto: il bianco resta, i tratti lasciano vedere i colori; si muove appena (profondità) */
+#cat { position: absolute; left: -2%; top: -2%; width: 104%; height: 104%; object-fit: cover; display: none;
+  transform: translate(calc(var(--px) * -2px), calc(var(--py) * -2px)); transition: transform .3s;
+  filter: drop-shadow(0 1px 1.5px rgba(0,0,0,.35)); opacity: .96; }
+/* luce e ombra: riflesso che va verso il puntatore, bordo più scuro */
 #shade { position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
   background:
-    radial-gradient(circle at 32% 24%, rgba(255,255,255,.5), rgba(255,255,255,0) 18%),
-    radial-gradient(circle at 50% 50%, rgba(0,0,0,.18) 30%, rgba(0,0,0,0) 45%, rgba(0,0,0,.5) 100%);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), inset 0 -6px 12px rgba(242,165,65,.25); }
-#cat { position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; transform: translate(-50%, -50%);
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,.75)) drop-shadow(0 0 6px rgba(0,0,0,.35)); pointer-events: none; display: none; transition: transform .35s; }
-#wrap:hover #ball { transform: scale(1.08); }
-#wrap:hover #cat { transform: translate(-50%, -50%) scale(1.06); }
-#wrap:active #ball { transform: scale(.96); }
+    radial-gradient(circle at calc(32% + var(--px) * 14%) calc(24% + var(--py) * 14%), rgba(255,255,255,.55), rgba(255,255,255,0) 20%),
+    radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,.5) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.14), inset 0 -6px 12px rgba(242,165,65,.28); }
+#orb.paused #ball { filter: saturate(.55) brightness(.8); }
+/* ---- il ventaglio: piccole sfere dello stesso stile ---- */
+.petal { position: absolute; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; cursor: pointer;
+  transform: translate(0, 0) scale(.3); opacity: 0; transition: transform .32s cubic-bezier(.3,1.35,.5,1), opacity .2s; }
+.petal.on { opacity: 1; }
+.petal .pb { position: absolute; inset: 0; border-radius: 50%; overflow: hidden;
+  background: var(--tint); box-shadow: 0 6px 16px rgba(0,0,0,.45); transition: transform .2s, box-shadow .2s; }
+.petal .pb::before { content: ""; position: absolute; inset: -30%; background: conic-gradient(from 0deg, var(--c1), var(--c2), var(--c3), var(--c1));
+  filter: blur(7px); opacity: .9; animation: spin 8s linear infinite; }
+.petal .pb::after { content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle at 32% 24%, rgba(255,255,255,.5), rgba(255,255,255,0) 22%), radial-gradient(circle, rgba(0,0,0,.25) 35%, rgba(0,0,0,.55) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
+.petal:hover .pb { transform: scale(1.12); box-shadow: 0 8px 22px rgba(0,0,0,.5), 0 0 18px var(--c1); }
+.petal .ic { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; z-index: 2; pointer-events: none; }
+.petal .ic img { width: 18px; height: 18px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
+.petal .ic img + img { margin-left: -5px; }
+.petal .plus { color: #fff; font-size: 24px; font-weight: 300; line-height: 1; text-shadow: 0 1px 3px rgba(0,0,0,.5); }
+.label { position: absolute; padding: 5px 10px; border-radius: 8px; background: rgba(8,9,14,.82); color: #F4F2EE; white-space: nowrap;
+  opacity: 0; transform: translateY(3px); transition: opacity .15s, transform .15s; pointer-events: none; box-shadow: 0 4px 14px rgba(0,0,0,.4); }
+.label.on { opacity: 1; transform: none; }
 @keyframes breathe { 0%, 100% { opacity: .55; } 50% { opacity: .95; } }
+@keyframes spin { to { transform: rotate(360deg); } }
 @keyframes orbit1 { from { transform: rotate(0deg) translateX(13px); } to { transform: rotate(360deg) translateX(13px); } }
 @keyframes orbit2 { from { transform: rotate(140deg) translateX(15px); } to { transform: rotate(-220deg) translateX(15px); } }
 @keyframes orbit3 { from { transform: rotate(260deg) translateX(12px); } to { transform: rotate(620deg) translateX(12px); } }
 @keyframes orbit4 { from { transform: rotate(60deg) translateX(17px); } to { transform: rotate(-300deg) translateX(17px); } }
-@media (prefers-reduced-motion: reduce) { .blob, #glow { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .blob, #glow, .petal .pb::before { animation: none; } }
 </style></head>
 <body>
-<div id="wrap">
+<div id="hit"></div>
+<div id="petals"></div>
+<div id="label" class="label"></div>
+<div id="orb">
   <div id="glow"></div>
   <div id="ball">
-    <div class="blob b3"></div><div class="blob b2"></div><div class="blob b1"></div><div class="blob b4"></div>
-    <div id="shade"></div>
+    <div id="colors"><div class="blob b3"></div><div class="blob b2"></div><div class="blob b1"></div><div class="blob b4"></div></div>
     <img id="cat" alt="">
+    <div id="shade"></div>
   </div>
 </div>
 <script>
 function send(o) { try { window.webkit.messageHandlers.tabbyorb.postMessage(o) } catch (e) {} }
+var orb = document.getElementById('orb'), petals = document.getElementById('petals'), label = document.getElementById('label');
 function setCat(src) { var c = document.getElementById('cat'); c.src = src; c.style.display = 'block'; }
-document.getElementById('wrap').addEventListener('click', function () { send({click: true}); });
+function setPaused(on) { orb.classList.toggle('paused', !!on); }
+// il puntatore: dx, dy da -1 a 1 (verso dove sta), vicino da 0 (lontano) a 1 (sopra)
+function pointer(dx, dy, near) {
+  orb.style.setProperty('--px', dx.toFixed(3));
+  orb.style.setProperty('--py', dy.toFixed(3));
+  orb.style.setProperty('--near', near.toFixed(3));
+  orb.classList.toggle('near', near > 0.6);
+}
+orb.addEventListener('click', function (e) { e.stopPropagation(); send({click: true}); });
+document.getElementById('hit').addEventListener('click', function () { send({outside: true}); });
+
+// ---- il ventaglio ----
+var TINTS = [
+  ['#F2A541', '#FF7AB6', '#8B7CFF'], ['#8B7CFF', '#3E86FF', '#5BE0D0'], ['#3E86FF', '#8B7CFF', '#FF7AB6'],
+  ['#5BE0D0', '#3E86FF', '#F2A541'], ['#FF7AB6', '#F2A541', '#8B7CFF']
+];
+var RINGS = [{r: 92, n: 3}, {r: 150, n: 4}, {r: 208, n: 5}];
+function spots(count) {
+  var out = [];
+  for (var g = 0; g < RINGS.length && out.length < count; g++) {
+    for (var k = 0; k < RINGS[g].n && out.length < count; k++) {
+      var a = (180 - 90 * k / (RINGS[g].n - 1)) * Math.PI / 180;
+      out.push({dx: Math.cos(a) * RINGS[g].r, dy: -Math.sin(a) * RINGS[g].r});
+    }
+  }
+  return out;
+}
+// scelte: [{id, name, icons: [dataURI…]}]; la prima è «+ Nuova app»
+function openFan(choices) {
+  petals.innerHTML = '';
+  var r = orb.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  var sp = spots(choices.length);
+  choices.forEach(function (ch, i) {
+    var p = document.createElement('div');
+    p.className = 'petal';
+    p.style.left = cx + 'px'; p.style.top = cy + 'px';
+    var t = TINTS[i % TINTS.length];
+    p.style.setProperty('--c1', t[0]); p.style.setProperty('--c2', t[1]); p.style.setProperty('--c3', t[2]);
+    p.style.setProperty('--tint', i === 0 ? '#2A1C10' : '#141631');
+    var inner = '<div class="pb"></div><div class="ic">';
+    if (ch.id === 'new') inner += '<span class="plus">+</span>';
+    else (ch.icons || []).slice(0, 2).forEach(function (u) { inner += '<img src="' + u + '" alt="">'; });
+    p.innerHTML = inner + '</div>';
+    p.addEventListener('click', function (e) { e.stopPropagation(); send({choose: ch.id}); });
+    p.addEventListener('mouseenter', function () { showLabel(ch.name, cx + sp[i].dx, cy + sp[i].dy, sp, i); });
+    p.addEventListener('mouseleave', function () { label.classList.remove('on'); });
+    petals.appendChild(p);
+    // si aprono a ventaglio, una dopo l'altra
+    setTimeout(function () {
+      p.classList.add('on');
+      p.style.transform = 'translate(' + sp[i].dx + 'px,' + sp[i].dy + 'px) scale(1)';
+    }, 20 + i * 35);
+  });
+}
+function showLabel(text, x, y, sp, i) {
+  label.textContent = text;
+  var w = label.offsetWidth, h = label.offsetHeight, leftBusy = false;
+  sp.forEach(function (o, j) { if (j !== i && Math.abs(o.dy - sp[i].dy) < 30 && o.dx < sp[i].dx) leftBusy = true; });
+  var lx, ly;
+  if (sp[i].dx < -30 && !leftBusy) { lx = x - 22 - 8 - w; ly = y - h / 2; } else { lx = x - w / 2; ly = y - 22 - 8 - h; }
+  lx = Math.max(4, Math.min(lx, window.innerWidth - w - 4)); ly = Math.max(4, ly);
+  label.style.left = lx + 'px'; label.style.top = ly + 'px';
+  label.classList.add('on');
+}
+function closeFan() { petals.innerHTML = ''; label.classList.remove('on'); }
 send({ready: true});
 </script></body></html>

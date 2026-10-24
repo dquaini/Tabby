@@ -39,6 +39,7 @@ end
 
 -- Adatta una finestra allo spazio accanto a Tabby
 function fitWindow(w, force)
+  if T.paused then return end   -- Tabby chiusa: non tocca niente
   if not w or (not S.fit and not force) then return end
   if not w:isStandard() or w:isFullScreen() then return end
   if T.isFloating(w) then return end   -- finestrella (video in miniatura, accesso…)
@@ -69,7 +70,7 @@ end
 
 -- Nasconde tutte le app tranne quelle in "keep"
 function hideOthers(keep)
-  if not S.oneAtATime then return end
+  if T.paused or not S.oneAtATime then return end
   local _, list = runningApps()
   for _, app in ipairs(list) do
     local b = app:bundleID()
@@ -88,7 +89,7 @@ end
 -- icona (tornano quando le scegli). keepIds = finestre da lasciare in vista.
 -- Mai la miniatura di Meet, mai le app con le finestre in una scheda sola.
 function minimizeSiblings(apps, keepIds)
-  if not S.oneAtATime then return end
+  if T.paused or not S.oneAtATime then return end
   for bid in pairs(apps) do
     if not floating(bid) and (BROWSERS[bid] or perWindow(bid)) then
       local app = appFor(bid)
@@ -440,6 +441,7 @@ end
 
 -- Quando un'app passa in primo piano (o cambia finestra in primo piano)
 handleActive = timed("cambio di scheda", function(app)
+  if T.paused then return end   -- Tabby chiusa: non fa niente
   local bid = app and app:bundleID()
   local drawn = false
   if bid and floating(bid) then
