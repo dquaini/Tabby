@@ -567,9 +567,10 @@ vengono nascoste dalla scrivania.
 
 ## 13. Scrivania
 
-**W-0 Clic sul muso del gatto** (v9.51; nella v9.38 apriva il Finder sulla Scrivania):
-si torna all'**ultima finestra che stavi guardando** (dalla barra: quella prima della
-scheda in cui sei, come ⌃⌥Tab; dal cerchio: quella di prima della scrivania). Tabby
+**W-0 Clic sul muso del gatto.** **Nella barra** (Tabby attiva): si apre il **Finder sulla
+cartella Scrivania** (v9.38; confermato da Daniele il 24/10/2026 dopo che la v9.51 l'aveva
+cambiato). **Nel cerchio** sulla scrivania (v9.51): si torna all'**ultima finestra che
+stavi guardando** (quella di prima della scrivania). Tabby
 ricorda le ultime 20 schede usate e salta quelle che non esistono più. Se non c'è nessuna
 finestra a cui tornare compaiono le scelte: **«+ Nuova app…»** (apre Spotlight) e, se ci
 sono, le **cartelle** (clic = attivala). Dal cerchio le scelte si aprono **a ventaglio**
@@ -582,10 +583,15 @@ altro clic sul cerchio. Dalla barra resta un menu accanto al gatto.
 **W-3 Il cerchio sulla scrivania** (v9.51): quando non c'è **nessuna finestra in vista**
 (app tutte nascoste, ridotte o chiuse, o ⌃⌥0; Lampi, Memo e Hammerspoon non contano) per
 0,4 s, la barra sparisce e Tabby diventa un **cerchio nero di 56 punti col muso del gatto**,
-sempre **in basso a destra** (22 punti dai bordi). Disegno "Eclissi" (v9.52, prototipo D
-in `docs/prototipo-cerchio.html`): disco nero con una **luce ambra sul bordo in alto a
-sinistra**, che passandoci sopra si accende di più (e il gatto si ingrandisce un poco);
-nessuna animazione continua. Clic = W-0. Appena compare una finestra torna la
+sempre **in basso a destra**, a 60 punti dai bordi (v9.53, un po' verso il centro).
+Disegno (v9.53, stile "orb" degli assistenti AI come ElevenLabs): una **sfera viva** di 60
+punti, con macchie di colore sfumate (ambra, viola, blu, un tocco di rosa) che ruotano
+lente dentro, un riflesso in alto a sinistra, bordo più scuro e un alone che respira; il
+muso del gatto bianco al centro. Passandoci sopra la sfera si gonfia un poco e i colori
+accelerano. È una pagina web trasparente (`tabby/cerchio.html`) in una finestrella che
+non ruba la tastiera; fatta solo di strati che ruotano, consuma quasi niente (misurato:
+Hammerspoon ~0,7% con la sfera in vista). (Una versione disegnata dalla scheda grafica
+costava ~10%: scartata.) Clic = W-0. Appena compare una finestra torna la
 barra. Non a schermo intero, né durante la divisione o la creazione di una cartella.
 
 **W-1 Scrivania, ⌃⌥0**: nasconde tutte le app (tranne il Finder

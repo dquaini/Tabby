@@ -351,14 +351,14 @@ hs = {
     end}
   end},
   webview = {
-    new = function(r)
-      local wv = {_frame = r, _shown = false, _js = {}}
-      for _, m in ipairs({"windowStyle","windowTitle","allowTextEntry","deleteOnClose","level","behaviorAsLabels","windowCallback","html"}) do
+    new = function(r, _, ucc)
+      local wv = {_frame = r, _shown = false, _js = {}, _ucc = ucc}
+      for _, m in ipairs({"windowStyle","windowTitle","allowTextEntry","deleteOnClose","level","behaviorAsLabels","windowCallback","html","transparent","bringToFront","alpha"}) do
         wv[m] = function(self, v)
           if m == "html" then
             self._html = v
             -- come la pagina vera: appena caricata dice "pronta"
-            table.insert(timers, function() if MEMO_CB then MEMO_CB({body = {ready = true}}) end end)
+            table.insert(timers, function() if ucc and ucc._cb then ucc._cb({body = {ready = true}}) end end)
           end
           return self
         end
@@ -368,10 +368,14 @@ hs = {
       function wv:hide() self._shown = false; return self end
       function wv:hswindow() return {focus = function() end} end
       function wv:evaluateJavaScript(js) table.insert(self._js, js) end
-      MEMO = wv
+      if ucc and ucc._name == "tabbyorb" then ORBVIEW = wv else MEMO = wv end
       return wv
     end,
-    usercontent = {new = function() return {setCallback = function(self, fn) MEMO_CB = fn; return self end} end},
+    usercontent = {new = function(name) return {_name = name, setCallback = function(self, fn)
+      self._cb = fn
+      if name == "tabbyorb" then ORB_CB = fn else MEMO_CB = fn end
+      return self
+    end} end},
   },
   focus = function() FRONT = HS_APP end, reload = function() end, openConsole = function() end,
 }

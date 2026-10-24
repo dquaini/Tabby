@@ -34,7 +34,7 @@ function onMouse(_, msg, id)
   if id == "quick" then openQuick(); return end
   if id == "split" then openSplitMenu(); return end
   if id == "more" then openOverflow(); return end
-  if id == "desktop" then catClick(false); return end
+  if id == "desktop" then openDesktopFolder(); return end
   if id == "plus" then openSpotlight(); return end
   if id == "fback" then FD.leaveFolderView(); return end
   if id == "fhead" then
@@ -729,7 +729,7 @@ T.diag = {draw = draw, layout = layout, activeIndex = activeIndex, badgeFor = ba
 --  Clic sul gatto (nel cerchio o nella barra): si torna all'ultima finestra che
 --  stavi guardando; se non ce n'è nessuna, un menu: «+ Nuova app…» e le cartelle.
 -- ---------------------------------------------------------------------
-ORB_SIZE, ORB_MARGIN = 56, 22
+ORB_SIZE, ORB_MARGIN = 60, 60   -- un po' verso il centro (24/10/2026, Daniele)
 
 -- C'è almeno una finestra in vista? (i Lampi, il Memo e Hammerspoon non contano)
 function anyWindowShown()
@@ -776,65 +776,63 @@ function orbFrame()
   return {x = f.x + f.w - ORB_SIZE - ORB_MARGIN, y = f.y + f.h - ORB_SIZE - ORB_MARGIN, w = ORB_SIZE, h = ORB_SIZE}
 end
 
--- Il cerchio "Eclissi" (scelto da Daniele il 24/10/2026, prototipo D in
--- docs/prototipo-cerchio.html): nero, con una luce ambra sul bordo in alto a sinistra
--- che si accende passandoci sopra
-ORB_PAD = 16   -- spazio intorno al cerchio per la luce
-function drawOrb(hot)
-  local s, p = ORB_SIZE, ORB_PAD
-  local cx, cy, r = p + s / 2, p + s / 2, s / 2 - 1
-  local els = {
-    -- l'alone ambra dietro, spostato verso l'alto a sinistra
-    {type = "circle", action = "fill", fillColor = {hex = "#F2A541", alpha = hot and 0.55 or 0.32},
-     center = {x = cx - 3, y = cy - 3}, radius = r,
-     withShadow = true, shadow = {blurRadius = hot and 18 or 11, color = {hex = "#F2A541", alpha = hot and 0.9 or 0.6}, offset = {h = 0, v = 0}}},
-    -- il bordo acceso (una falce ambra) e il disco nero sopra
-    {type = "circle", action = "fill", fillColor = {hex = "#F2A541", alpha = hot and 0.95 or 0.75},
-     center = {x = cx - 1.2, y = cy - 1.2}, radius = r},
-    {type = "circle", action = "fill", fillColor = {hex = "#000000"},
-     center = {x = cx + 0.8, y = cy + 0.8}, radius = r - 0.6},
-    {type = "circle", action = "stroke", strokeColor = {white = 1, alpha = 0.06}, strokeWidth = 1,
-     center = {x = cx, y = cy}, radius = r},
-  }
-  local cat = T.catOn
-  if cat then
-    local c = hot and 33 or 30
-    table.insert(els, {type = "image", image = cat, imageScaling = "scaleProportionally",
-      frame = {x = cx - c / 2, y = cy - c / 2, w = c, h = c}})
-  end
-  table.insert(els, {type = "circle", action = "fill", fillColor = {white = 1, alpha = 0.01},
-    trackMouseUp = true, trackMouseEnterExit = true, id = "orb", center = {x = cx, y = cy}, radius = s / 2})
-  T.orb:replaceElements(els)
+-- Il cerchio è una sfera viva (v9.53, stile "orb" degli assistenti AI): una pagina web
+-- trasparente (tabby/cerchio.html) disegnata dalla scheda grafica, col muso del gatto
+-- al centro. La finestrella non ruba la tastiera (nonactivating).
+ORB_VIEW = 96   -- la finestrella intorno alla sfera (spazio per l'alone)
+function orbViewFrame()
+  local o = orbFrame()
+  local d = (ORB_VIEW - o.w) / 2
+  return {x = o.x - d, y = o.y - d, w = ORB_VIEW, h = ORB_VIEW}
 end
 
-function orbCanvasFrame()
-  local o = orbFrame()
-  return {x = o.x - ORB_PAD, y = o.y - ORB_PAD, w = o.w + 2 * ORB_PAD, h = o.h + 2 * ORB_PAD}
+function catDataURI()
+  if T.catURI then return T.catURI end
+  local ok, uri = pcall(function()
+    local f = io.open((T.dir or ".") .. "/assets/gatto-acceso.png", "rb")
+    local data = f and f:read("a"); if f then f:close() end
+    return data and ("data:image/png;base64," .. hs.base64.encode(data)) or nil
+  end)
+  T.catURI = ok and uri or nil
+  return T.catURI
+end
+
+function ensureOrbView()
+  if T.orbView then return T.orbView end
+  T.orbUCC = hs.webview.usercontent.new("tabbyorb")
+  T.orbUCC:setCallback(function(msg)
+    local b = msg and msg.body
+    if type(b) ~= "table" then return end
+    if b.ready then
+      local uri = catDataURI()
+      if uri then T.orbView:evaluateJavaScript("setCat(" .. jsString(uri) .. ")") end
+    end
+    if b.click then
+      if T.fanOpen then closeFan() else catClick(true) end
+    end
+  end)
+  local page = ""
+  local f = io.open((T.dir or ".") .. "/tabby/cerchio.html", "r")
+  if f then page = f:read("a"); f:close() end
+  T.orbView = hs.webview.new(orbViewFrame(), {developerExtrasEnabled = false}, T.orbUCC)
+  T.orbView:windowStyle({"borderless", "nonactivating"})
+  pcall(function() T.orbView:transparent(true) end)
+  T.orbView:allowTextEntry(false)
+  T.orbView:level(hs.canvas.windowLevels.floating)
+  T.orbView:behaviorAsLabels({"canJoinAllSpaces", "stationary"})
+  T.orbView:html(page)
+  return T.orbView
 end
 
 function showOrb(on)
   if not on then
     closeFan()
-    if T.orb then T.orb:hide(0.12) end
+    if T.orbView then T.orbView:hide() end
     return
   end
-  if not T.orb then
-    T.orb = hs.canvas.new(orbCanvasFrame())
-    T.orb:level(hs.canvas.windowLevels.floating)
-    T.orb:behavior({"canJoinAllSpaces", "stationary"})
-    T.orb:clickActivating(false)
-    T.orb:mouseCallback(function(_, msg, id)
-      if tostring(id) ~= "orb" then return end
-      if msg == "mouseEnter" then drawOrb(true)
-      elseif msg == "mouseExit" then drawOrb(false)
-      elseif msg == "mouseUp" then
-        if T.fanOpen then closeFan() else catClick(true) end
-      end
-    end)
-  end
-  T.orb:frame(orbCanvasFrame())
-  drawOrb(false)
-  T.orb:show(0.15)
+  local v = ensureOrbView()
+  v:frame(orbViewFrame())
+  v:show()
 end
 
 -- Clic sul muso del gatto: l'ultima finestra che stavi guardando (dal cerchio: quella
@@ -987,7 +985,8 @@ function openFan()
   local step = 0
   drawFan(0.2, nil)
   T.fan:show()
-  if T.orb then T.orb:orderAbove(T.fan) end
+  -- la sfera sopra il ventaglio
+  if T.orbView then pcall(function() T.orbView:bringToFront(false); T.orbView:level(hs.canvas.windowLevels.floating) end) end
   T.fanTimer = hs.timer.doEvery(0.02, function()
     step = step + 1
     drawFan(math.min(1, 0.2 + step * 0.16), nil)

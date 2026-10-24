@@ -591,6 +591,19 @@ function openSpotlight()
   hs.timer.doAfter(0.15, function() hs.eventtap.keyStroke({"cmd"}, "space", 0) end)
 end
 
+-- Clic sul gatto nella barra (23/10/2026, Daniele; confermato il 24/10): si apre il
+-- Finder sulla cartella Scrivania (se c'è già una sua finestra, macOS riusa quella), che
+-- diventa una scheda come le altre. (Il cerchio sulla scrivania fa un'altra cosa: vedi
+-- catClick.) ⌃⌥0 resta la "scrivania" che nasconde tutto.
+function openDesktopFolder()
+  T.desktopMode = false
+  T.focusSeq = (T.focusSeq or 0) + 1
+  print("Tabby · clic sul gatto: apro il Finder sulla Scrivania")
+  local t = hs.task.new("/usr/bin/open", nil, {os.getenv("HOME") .. "/Desktop"})
+  if t then t:start() end
+  afterFocus()
+end
+
 -- Scrivania (⌃⌥0): nasconde tutto. Ripremendo, torna all'ultima scheda.
 function toggleDesktop()
   T.focusSeq = (T.focusSeq or 0) + 1

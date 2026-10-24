@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<!--
+  Il cerchio di Tabby sulla scrivania (v9.53): una sfera viva, nello stile degli
+  "orb" degli assistenti AI (ElevenLabs): colori che scorrono dentro (ambra, viola,
+  blu), luce e riflesso come un oggetto vero, un alone che respira, il muso del gatto
+  al centro. Fatta con tre macchie di colore sfumate che ruotano dentro la sfera: il
+  Mac sposta solo strati già pronti (animazioni di sola rotazione), quindi consuma
+  pochissimo; si ferma quando la finestrella è nascosta.
+  Tabby → pagina: setCat(dataURI).  Pagina → Tabby: send({click: true}).
+-->
+<style>
+html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+#wrap { position: absolute; inset: 0; display: grid; place-items: center; cursor: pointer; }
+#glow { position: absolute; width: 76px; height: 76px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(242,165,65,.55), rgba(139,124,255,.38) 45%, rgba(76,141,255,0) 70%);
+  filter: blur(9px); animation: breathe 5s ease-in-out infinite; }
+#ball { position: relative; width: 60px; height: 60px; border-radius: 50%; overflow: hidden; isolation: isolate;
+  background: radial-gradient(circle at 50% 60%, #2B2F6E, #0B0C1C 75%);
+  box-shadow: 0 6px 18px rgba(0,0,0,.5); transition: transform .35s cubic-bezier(.3,1.4,.5,1); }
+/* le macchie di colore: ognuna gira intorno al centro a una velocità diversa */
+.blob { position: absolute; left: 50%; top: 50%; width: 38px; height: 38px; margin: -19px 0 0 -19px; border-radius: 50%;
+  filter: blur(8px); will-change: transform; opacity: .82; }
+.b1 { background: #F2A541; animation: orbit1 9s linear infinite; }
+.b2 { background: #8B7CFF; animation: orbit2 12s linear infinite; }
+.b3 { background: #3E86FF; animation: orbit3 15s linear infinite; }
+.b4 { background: #FF7AB6; width: 28px; height: 28px; margin: -14px 0 0 -14px; opacity: .5; animation: orbit4 7s linear infinite; }
+#wrap:hover .b1 { animation-duration: 3.5s; } #wrap:hover .b2 { animation-duration: 4.5s; }
+#wrap:hover .b3 { animation-duration: 5.5s; } #wrap:hover .b4 { animation-duration: 2.8s; }
+/* luce e ombra fisse sopra: riflesso in alto a sinistra, bordo più scuro, sfera vera */
+#shade { position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255,255,255,.5), rgba(255,255,255,0) 18%),
+    radial-gradient(circle at 50% 50%, rgba(0,0,0,.18) 30%, rgba(0,0,0,0) 45%, rgba(0,0,0,.5) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), inset 0 -6px 12px rgba(242,165,65,.25); }
+#cat { position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; transform: translate(-50%, -50%);
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,.75)) drop-shadow(0 0 6px rgba(0,0,0,.35)); pointer-events: none; display: none; transition: transform .35s; }
+#wrap:hover #ball { transform: scale(1.08); }
+#wrap:hover #cat { transform: translate(-50%, -50%) scale(1.06); }
+#wrap:active #ball { transform: scale(.96); }
+@keyframes breathe { 0%, 100% { opacity: .55; } 50% { opacity: .95; } }
+@keyframes orbit1 { from { transform: rotate(0deg) translateX(13px); } to { transform: rotate(360deg) translateX(13px); } }
+@keyframes orbit2 { from { transform: rotate(140deg) translateX(15px); } to { transform: rotate(-220deg) translateX(15px); } }
+@keyframes orbit3 { from { transform: rotate(260deg) translateX(12px); } to { transform: rotate(620deg) translateX(12px); } }
+@keyframes orbit4 { from { transform: rotate(60deg) translateX(17px); } to { transform: rotate(-300deg) translateX(17px); } }
+@media (prefers-reduced-motion: reduce) { .blob, #glow { animation: none; } }
+</style></head>
+<body>
+<div id="wrap">
+  <div id="glow"></div>
+  <div id="ball">
+    <div class="blob b3"></div><div class="blob b2"></div><div class="blob b1"></div><div class="blob b4"></div>
+    <div id="shade"></div>
+    <img id="cat" alt="">
+  </div>
+</div>
+<script>
+function send(o) { try { window.webkit.messageHandlers.tabbyorb.postMessage(o) } catch (e) {} }
+function setCat(src) { var c = document.getElementById('cat'); c.src = src; c.style.display = 'block'; }
+document.getElementById('wrap').addEventListener('click', function () { send({click: true}); });
+send({ready: true});
+</script></body></html>

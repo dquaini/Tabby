@@ -156,4 +156,7 @@ v9.51: senza finestre in vista Tabby diventa un cerchio col muso del gatto in ba
     «+ Nuova app…» e le cartelle; freccia delle sezioni del Memo più grande e bianca.
 v9.52: il cerchio diventa "Eclissi" (luce ambra sul bordo, scelta tra 4 prototipi) e senza
     finestre le scelte si aprono a ventaglio intorno al cerchio, attaccate a lui.
+v9.53: il cerchio diventa una sfera viva in stile "orb" AI (colori che ruotano dentro,
+    riflesso, alone che respira, quasi zero consumo), un po' più verso il centro; il clic
+    sul gatto nella barra torna ad aprire il Finder sulla Scrivania.
 ```
