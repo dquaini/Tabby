@@ -489,6 +489,19 @@ function openQuick()
       fn    = function() toggleQuick(q) end,
     })
   end
+  -- Concentrazione: si sceglie quanto e cosa tenere (in corso: allunga o termina)
+  table.insert(items, {title = "-"})
+  if T.focus then
+    table.insert(items, {title = "Concentrazione · " .. (T.focus.endAt and ("mancano " .. focusLabel()) or "senza tempo"),
+                         image = focusMenuIcon(), menu = {
+      {title = "+5 minuti", fn = function() extendFocus(5) end},
+      {title = "+15 minuti", fn = function() extendFocus(15) end},
+      {title = "-"},
+      {title = "Termina adesso", fn = function() endFocus(true) end},
+    }})
+  else
+    table.insert(items, {title = "Concentrazione…", image = focusMenuIcon(), fn = function() openFocusSetup() end})
+  end
   -- cartelle: clic = attiva; si creano e si modificano da qui
   table.insert(items, {title = "-"})
   -- azioni delle app (icone della barra dei menu di macOS): una riga sola,

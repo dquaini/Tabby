@@ -16,11 +16,21 @@ function onMouse(_, msg, id)
   end
   local ti = tonumber(id:match("^tab(%d+)$"))
   if msg == "mouseDown" then
-    if ti then startPress(ti) end
+    if ti and not T.fsel then startPress(ti) end
     return
   end
   if msg ~= "mouseUp" then return end
   if T.suppressClick then T.suppressClick = false; return end   -- era un trascinamento
+
+  -- Concentrazione: mentre scegli, un clic su una scheda la fa gialla (o la toglie)
+  if T.fsel then
+    local any = id:match("^%a+(%d+)$")
+    if any and (id:find("^tab") or id:find("^close") or id:find("^fmenu") or id:find("^ungroup") or id:find("^rotate")) then
+      focusToggleTab(tonumber(any))
+    end
+    return
+  end
+  if id == "focustimer" then openFocusMenu(); return end
 
   if id == "settings" then openSettings(); return end
   -- ripiano dei Lampi coperti: uno o tutti davanti
@@ -136,12 +146,12 @@ function layout(bf, activeIdx)
   local L = {tabs = {}, dividers = {}}
   local n = #T.tabs
   local w, h = bf.w, bf.h
-  local bat = hasBattery()
+  local bat = hasBattery() or T.focus ~= nil   -- (in concentrazione lì c'è il tempo)
 
   if isVertical() then
     -- in cima la scrivania; in fondo batteria e poi ⊞ ⚡︎ ⚙︎; in mezzo le schede
     local bottomY = h - BTN_W
-    local batH    = bat and 30 or 0
+    local batH    = bat and (T.focus and 38 or 30) or 0
     local third   = w / 3
     -- in cima il gatto intero (se c'è l'immagine): un po' più di spazio
     local deskH   = catFullImage(false) and 92 or BTN_W
@@ -205,7 +215,7 @@ function layout(bf, activeIdx)
     end
   else
     -- a sinistra la scrivania; a destra batteria, ⊞ ⚡︎ ⚙︎; in mezzo le schede
-    local batW   = bat and BAT_W or 0
+    local batW   = bat and (T.focus and FOCUS_W or BAT_W) or 0
     -- Lampi coperti: il tasto ⚡︎ si allarga e accanto al fulmine mostra le loro icone
     -- e «Tutti» (un solo ⚡︎ in Tabby, 23/10/2026)
     local nl     = #T.coveredLamps
@@ -533,7 +543,8 @@ draw = function()
     local i, tr  = tv.i, tv.r
     local t      = T.tabs[i]
     local my     = tr.y + tr.h / 2
-    local active = (i == activeIdx)
+    local picked = T.fsel and T.fsel.keys[t.key]   -- scelta per la concentrazione: gialla
+    local active = (i == activeIdx) and not T.fsel
     local g      = t.group
     local badge  = badgeFor(t)
 
@@ -542,6 +553,10 @@ draw = function()
       local img = t.folder and FD.itemIcon(t.folder.items[1])
                or keyIcon(g and (g.focus or g.members[1]) or t.key)
       local cx = tr.x + tr.w / 2
+      if picked then
+        table.insert(els, {type = "rectangle", action = "fill", fillColor = FOCUS_YELLOW,
+          roundedRectRadii = {xRadius = 8, yRadius = 8}, frame = {x = cx - 15, y = my - 15, w = 30, h = 30}})
+      end
       if img then
         table.insert(els, {type = "image", image = img,
           frame = {x = cx - 10, y = my - 10, w = 20, h = 20}})
@@ -566,7 +581,12 @@ draw = function()
       local ix     = tr.x + (vertical and 14 or 10)
       local closeX = tr.x + tr.w - closeW - (vertical and 8 or 4)
 
-      if active then
+      if picked then
+        table.insert(els, {type = "rectangle", action = "fill", fillColor = FOCUS_YELLOW,
+          roundedRectRadii = {xRadius = 7, yRadius = 7},
+          frame = vertical and {x = tr.x + 6, y = tr.y + 2, w = tr.w - 12, h = tr.h - 4}
+                            or {x = tr.x + 2, y = tr.y + 4, w = tr.w - 4, h = tr.h - 8}})
+      elseif active then
         activeBg(els, tr, vertical)
         table.insert(els, {type = "rectangle", action = "fill", fillColor = COL.accent,
           roundedRectRadii = {xRadius = 1, yRadius = 1},
@@ -626,7 +646,7 @@ draw = function()
 
       table.insert(els, {type = "text", text = t.name,
         textSize = 13, textLineBreak = "truncateTail",
-        textColor = active and COL.text or COL.textMid,
+        textColor = picked and FOCUS_INK or (active and COL.text or COL.textMid),
         frame = {x = textX, y = my - 9, w = closeX - badgeW - textX - 2 - (g and 26 or 0), h = 18}})
 
       local btnR = {x = closeX - 2, y = my - 11, w = closeW + 4, h = 22}
@@ -689,7 +709,9 @@ draw = function()
   end
 
   -- batteria
-  if L.battery then drawBattery(els, L.battery) end
+  if L.battery then
+    if T.focus then drawFocusTimer(els, L.battery) else drawBattery(els, L.battery) end
+  end
 
   -- tasti ⊞ (dividi), ⚡︎ (app veloci) e ⚙︎ (impostazioni)
   if T.split then
@@ -754,7 +776,7 @@ end
 -- Si ritira solo se la scrivania resta vuota per un attimo (mentre passi da un'app
 -- all'altra può esserci un istante senza finestre); torna barra subito
 function updateCollapse(fsHint)
-  local want = not T.fullscreen and not fsHint and not T.split and not T.fedit and not anyWindowShown()
+  local want = not T.fullscreen and not fsHint and not T.split and not T.fedit and not T.fsel and not anyWindowShown()
   if want and not T.collapsed then
     if not T.collapseTimer then
       T.collapseTimer = hs.timer.doAfter(0.4, function()
@@ -823,6 +845,7 @@ function ensureOrbView()
       local uri = catDataURI()
       if uri then T.orbView:evaluateJavaScript("setCat(" .. jsString(uri) .. ")") end
       if T.paused then T.orbView:evaluateJavaScript("setPaused(true)") end
+      if T.focus then later(focusOrbRing) end
     end
     if b.click then
       if T.paused then resumeTabby()
@@ -860,6 +883,7 @@ function showOrb(on)
   local v = ensureOrbView()
   if not T.fanOpen then v:frame(orbViewFrame()) end
   v:show()
+  if T.focus then focusOrbRing() end
   -- la sfera reagisce al puntatore: Tabby guarda dov'è solo mentre la sfera c'è
   if not T.orbPoll then T.orbPoll = hs.timer.new(0.05, orbPointer) end
   T.orbPoll:start()
@@ -887,7 +911,7 @@ end
 function catClick(fromOrb)
   local cur = (not fromOrb) and currentKey() or nil
   for _, k in ipairs(T.recent or {}) do
-    if k ~= cur and (T.cand[k] or T.memberOf[k]) then
+    if k ~= cur and (T.cand[k] or T.memberOf[k]) and (not T.focus or focusAllowsKey(k)) then
       print("Tabby · clic sul gatto: torno a «" .. tostring((T.cand[k] or {}).name or k) .. "»")
       if T.desktopMode then T.desktopMode = false end
       local g = T.memberOf[k]
@@ -1052,7 +1076,7 @@ end
 
 T.mouseTimer = hs.timer.doEvery(0.08, function()
   if not T.bar or T.paused then return end
-  if T.press or T.split or T.fedit then return end   -- mentre trascini, dividi o crei una cartella, resta visibile
+  if T.press or T.split or T.fedit or T.fsel then return end   -- mentre trascini, dividi o crei una cartella, resta visibile
 
   -- Barra dei menu o Dock che si nascondono da soli: quando arrivano dalla parte di
   -- Tabby (il puntatore tocca quel bordo dello schermo) Tabby esce dallo schermo; quando

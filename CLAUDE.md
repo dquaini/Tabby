@@ -35,7 +35,7 @@ Prima di lavorare leggi:
   impostazioni S, schermo, notch, utilità) · `browser` · `notifiche` · `schede` (ordine,
   ricette delle cartelle, `rebuildTabs`) · `finestre` (adattare, nascondere, passare da una
   scheda all'altra) · `memo` · `dividi` (vista divisa) · `cartelle` · `trascina` · `menu` ·
-  `disegno` · `osservatori` · `scorciatoie` · `avvio`.
+  `disegno` · `osservatori` · `concentrazione` · `scorciatoie` · `avvio`.
 - **Come si scrive codice nei file di `tabby/`**: tutti condividono uno **spazio comune di
   nomi** (tabella `E`, `Tabby._env`). A livello del file si scrive `function nome()` /
   `nome = …` **senza `local`**: così il nome si usa direttamente negli altri file e non c'è
@@ -126,5 +126,5 @@ GitHub, poi `git clone git@github.com:dquaini/Tabby.git` e `init.lua` che punta 
 
 ## Versione attuale
 
-**v9.54** (storia in `docs/STORIA.md`). Prossimo obiettivo: **Tabby v1** (A fatta; B Cartelle: base fatta in v9.8, restano "Apri all'avvio" e rifiniture)
+**v9.55** (storia in `docs/STORIA.md`). Prossimo obiettivo: **Tabby v1** (A fatta; B Cartelle: base fatta in v9.8, restano "Apri all'avvio" e rifiniture)
 (`docs/ROADMAP-v1.md`).

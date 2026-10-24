@@ -1,5 +1,5 @@
 -- =====================================================================
---  TABBY  ·  v9.54
+--  TABBY  ·  v9.55
 --  Una barra con una scheda per ogni app e finestra: ne vedi una alla
 --  volta, clicchi (o premi Ctrl+Option+1…9) per passare all'altra.
 --  Storia delle versioni: docs/STORIA.md · Roadmap: docs/ROADMAP-v1.md
@@ -13,7 +13,7 @@ local DIR = (debug.getinfo(1, "S").source or ""):match("^@(.*)/[^/]*$") or "."
 local FILES = {
   "impostazioni", "base", "browser", "notifiche", "schede", "finestre", "memo",
   "dividi", "cartelle", "trascina", "menu", "disegno", "osservatori",
-  "scorciatoie", "avvio",
+  "concentrazione", "scorciatoie", "avvio",
 }
 local E = setmetatable({TABBY_DIR = DIR}, {__index = _G})
 for _, name in ipairs(FILES) do
@@ -24,4 +24,4 @@ for _, name in ipairs(FILES) do
 end
 Tabby._env = E   -- tiene in vita lo spazio comune (e serve alla diagnosi dal Terminale)
 
-hs.alert.show("Tabby v9.54 attiva")
+hs.alert.show("Tabby v9.55 attiva")

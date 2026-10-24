@@ -11,7 +11,7 @@
   quasi zero; si ferma quando la finestrella è nascosta.
 
   Tabby → pagina: setCat(uri) · pointer(dx, dy, vicino 0..1) · openFan(scelte) · closeFan()
-                  setPaused(sì/no)
+                  setPaused(sì/no) · setRing(0..1, o -1 = niente): il tempo della concentrazione
   Pagina → Tabby: send({click}) · send({choose: id}) · send({outside: true})
 -->
 <style>
@@ -76,6 +76,12 @@ body { font: 500 12.5px/1.2 -apple-system, system-ui, sans-serif; }
 @keyframes orbit2 { from { transform: rotate(140deg) translateX(15px); } to { transform: rotate(-220deg) translateX(15px); } }
 @keyframes orbit3 { from { transform: rotate(260deg) translateX(12px); } to { transform: rotate(620deg) translateX(12px); } }
 @keyframes orbit4 { from { transform: rotate(60deg) translateX(17px); } to { transform: rotate(-300deg) translateX(17px); } }
+/* la concentrazione: un anello giallo intorno alla sfera che si riempie col tempo */
+#ring { position: absolute; left: -6px; top: -6px; width: 72px; height: 72px; transform: rotate(-90deg); pointer-events: none; display: none; }
+#ring.on { display: block; }
+#ring circle { fill: none; stroke-width: 3; }
+#ring .bg { stroke: rgba(255,255,255,.14); }
+#ring .fg { stroke: #F4C443; stroke-linecap: round; filter: drop-shadow(0 0 3px rgba(244,196,67,.7)); transition: stroke-dashoffset .6s; }
 @media (prefers-reduced-motion: reduce) { .blob, #glow, .petal .pb::before { animation: none; } }
 </style></head>
 <body>
@@ -84,6 +90,7 @@ body { font: 500 12.5px/1.2 -apple-system, system-ui, sans-serif; }
 <div id="label" class="label"></div>
 <div id="orb">
   <div id="glow"></div>
+  <svg id="ring" viewBox="0 0 72 72"><circle class="bg" cx="36" cy="36" r="34"/><circle class="fg" id="ringFg" cx="36" cy="36" r="34"/></svg>
   <div id="ball">
     <div id="colors"><div class="blob b3"></div><div class="blob b2"></div><div class="blob b1"></div><div class="blob b4"></div></div>
     <img id="cat" alt="">
@@ -95,6 +102,12 @@ function send(o) { try { window.webkit.messageHandlers.tabbyorb.postMessage(o) }
 var orb = document.getElementById('orb'), petals = document.getElementById('petals'), label = document.getElementById('label');
 function setCat(src) { var c = document.getElementById('cat'); c.src = src; c.style.display = 'block'; }
 function setPaused(on) { orb.classList.toggle('paused', !!on); }
+var RING = 2 * Math.PI * 34;
+function setRing(v) {
+  var r = document.getElementById('ring'), fg = document.getElementById('ringFg');
+  r.classList.toggle('on', v >= 0);
+  fg.style.strokeDasharray = RING; fg.style.strokeDashoffset = RING * (1 - Math.max(0, Math.min(1, v)));
+}
 // il puntatore: dx, dy da -1 a 1 (verso dove sta), vicino da 0 (lontano) a 1 (sopra)
 function pointer(dx, dy, near) {
   orb.style.setProperty('--px', dx.toFixed(3));

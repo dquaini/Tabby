@@ -162,4 +162,10 @@ v9.53: il cerchio diventa una sfera viva in stile "orb" AI (colori che ruotano d
 v9.54: dentro la sfera il gatto di Daniele; la sfera reagisce al puntatore; il ventaglio
     diventa di piccole sfere dello stesso stile; ⚙︎ → «Chiudi Tabby»: resta solo la sfera e
     Tabby si ferma finché non la clicchi.
+v9.55: Concentrazione (⚡︎ → Concentrazione…): sfondo scuro, in centro minuti e schede;
+    le schede si scelgono cliccandole nella barra (gialle). Durante: Non disturbare (coi
+    comandi rapidi «Concentrazione on/off»), il tempo al posto della batteria (anello
+    giallo sulla sfera), le altre app nascoste (non chiuse), nella barra solo le schede
+    scelte, un'altra app → Tabby chiede. Alla fine: suono, notifiche arrivate, Riapri
+    tutto / Altri 10 minuti / Resta così. Sopravvive al riavvio.
 ```

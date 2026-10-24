@@ -103,6 +103,7 @@ local function newCanvas(fr)
   function c:show() self._shown = true; return self end
   function c:hide() self._shown = false; return self end
   function c:orderAbove() return self end
+  function c:canvasMouseEvents() return self end
   function c:topLeft(p) self._frame = {x = p.x, y = p.y, w = (self._frame or {}).w, h = (self._frame or {}).h}; return self end
   function c:delete() end
   function c:alpha(a) if a then self._alpha = a; return self end return self._alpha or 1 end
@@ -211,6 +212,7 @@ hs = {
     secondsSinceEpoch = function() return CLOCK or 1000 end,
     absoluteTime = function() return 0 end,
   },
+  sound = {getByName = function(n) return {play = function() SOUNDS = (SOUNDS or 0) + 1 end} end},
   canvas = {
     new = newCanvas,
     windowLevels = {floating = 3, modalPanel = 8, dragging = 500},
@@ -252,6 +254,13 @@ hs = {
     function t:start()
       TASKS = (TASKS or 0) + 1
       table.insert(timers, function()
+        if path:find("/shortcuts$") then
+          -- l'app Comandi: «list» dice i comandi rapidi che hai, «run» ne fa partire uno
+          SHORTCUTS_RUN = SHORTCUTS_RUN or {}
+          if args[1] == "run" then table.insert(SHORTCUTS_RUN, args[2]) end
+          if cb then cb(0, args[1] == "list" and (SHORTCUTS_LIST or "") or "", "") end
+          return
+        end
         if path:find("/open$") then
           -- "open -g -b <app> [indirizzo]": apre un'app (o un sito) senza portarla davanti
           OPENS = OPENS or {}
@@ -377,12 +386,16 @@ hs = {
       function wv:hide() self._shown = false; return self end
       function wv:hswindow() return {focus = function() end} end
       function wv:evaluateJavaScript(js) table.insert(self._js, js) end
-      if ucc and ucc._name == "tabbyorb" then ORBVIEW = wv else MEMO = wv end
+      if ucc and ucc._name == "tabbyorb" then ORBVIEW = wv
+      elseif ucc and ucc._name == "tabbyfocus" then FOCUSVIEW = wv
+      else MEMO = wv end
       return wv
     end,
     usercontent = {new = function(name) return {_name = name, setCallback = function(self, fn)
       self._cb = fn
-      if name == "tabbyorb" then ORB_CB = fn else MEMO_CB = fn end
+      if name == "tabbyorb" then ORB_CB = fn
+      elseif name == "tabbyfocus" then FOCUS_CB = fn
+      else MEMO_CB = fn end
       return self
     end} end},
   },

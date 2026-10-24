@@ -715,6 +715,47 @@ di ritardo): Spotlight è aperto finché la finestra attiva è sua. Dopo 10 minu
 toglie comunque. ⚙︎ → Comportamento → "Oscura lo sfondo con Spotlight e le azioni
 rapide" (acceso di serie).
 
+## 16b. Concentrazione (v9.55)
+
+**C-1 Scelta.** ⚡︎ → «Concentrazione…» (in corso: «Concentrazione · mancano X» con
++5 / +15 / Termina). Lo schermo si oscura (`#06070A` al 72%, prende i clic), **la barra
+no**: resta sopra. In centro una finestra (pagina `tabby/concentrazione.html`, non prende
+la tastiera): minuti (− / + di 5, scelte rapide 25 · 50 · 90; da 5 a 240), quante
+schede hai scelto, le cartelle con schede aperte (un clic le sceglie tutte), lo stato di
+Non disturbare. Le schede si scelgono **cliccandole nella barra**: diventano gialle
+(`#F4C443`, testo scuro); un clic su una scheda (anche sulla ✕) la sceglie o la toglie
+e non ci si sposta. Già gialle: la scheda in cui sei e quelle dell'ultima volta.
+Ricorda anche i minuti. Invio = Inizia, Esc = Annulla. Senza schede non parte (la
+casella trema).
+
+**C-2 Inizio.** Le app non scelte si **nascondono (non si chiudono**: niente «Vuoi
+salvare?», le sessioni remote non cadono); le finestre non scelte di un'app scelta (es.
+un'altra finestra del browser) si riducono. Nella barra **solo le schede scelte** (le
+scorciatoie ⌃⌥ + numero lavorano su quelle) più le finestre nuove delle app scelte.
+Se eri su una scheda non scelta si va sulla prima. Non disturbare si accende col
+comando rapido «Concentrazione on» (app Comandi), se c'è. **[Swift]** usare l'API dei
+Focus se disponibile.
+
+**C-3 Durante.** Al posto della batteria il **tempo che manca** («24 min»; nell'ultimo
+minuto «0:45») in giallo con una barretta che si riempie; largo 64 punti in orizzontale,
+alto 38 di lato. Clic: +5 minuti, +15 minuti, Termina adesso. Col cerchio sulla
+scrivania, un **anello giallo** intorno alla sfera. Un'app non scelta che viene davanti
+(Dock, Spotlight, ⌘Tab) torna nascosta, si torna all'ultima scheda permessa e Tabby
+chiede «Aprire X?» (Invio/Esc = Resto concentrato; «Aprila lo stesso» la aggiunge alle
+schede). Senza chiedere: Lampi, Memo, Finder, azioni rapide. Il clic sul gatto salta
+le schede non permesse.
+
+**C-4 Fine.** Suono «Glass»; finestra «Fatto! N minuti» con le notifiche arrivate nel
+frattempo dalle app e dai siti rimasti fuori (differenza dei numerini rispetto
+all'inizio, es. «Slack 4 · Gmail 2»). Scelte: **Riapri tutto** (Invio: tornano tutte le
+schede, Non disturbare si spegne con «Concentrazione off»), **Altri 10 minuti**,
+**Resta così** (senza tempo: ∞, si termina dal clic sul tempo; Esc). «Termina adesso»
+porta alla stessa finestra, senza suono.
+
+**C-5** Lo stato si salva in `tabbar.focus` (inizio, fine, schede, chiavi, app,
+escluse, numerini dell'inizio): dopo un riavvio la concentrazione continua, o finisce
+se il tempo è passato. Ultima scelta in `tabbar.focusLast`.
+
 ## 17. Scorciatoie
 
 Tutte con **⌃⌥** (Ctrl + Option):
@@ -803,6 +844,7 @@ con gli stessi nomi; offrire l'importazione dalla versione Hammerspoon.
 | `menuApps` | — | app scoperte `{name, on, key, iconOnly}` |
 | `itemWins` | — | legami voce di cartella → finestra |
 | `menuH` | — | altezza della barra dei menu vista l'ultima volta |
+| `focus`, `focusLast` | — | concentrazione in corso; ultima scelta (minuti, schede) |
 | (file) | | Memo in `~/Documents/Tabby Memo.txt` |
 
 ## 22. Osservatori, tempi e consumi
@@ -885,6 +927,7 @@ Ogni regola ha un test in `test/`; nell'app Swift diventano test di accettazione
 | `test_app_veloci.py` | Q-1, D-2 (app veloci nelle zone) |
 | `test_app_veloci_fila.py` | Q-1b (anche «non c'è spazio»), ripiano dei Lampi, D-2 (Memo e fila dei Lampi nelle zone) |
 | `test_cerchio.py` | W-0, W-3 (ventaglio, puntatore), W-4 |
+| `test_concentrazione.py` | C-1 … C-5 |
 | `test_finestre_fluide.py` | C-4 (giallo, ⌘Q, macOS che cambia app prima), D-4, L (angoli), W-0, Q-2 |
 | `test_cartelle.py`, `test_cartelle_casi.py`, `test_cartelle_pagine.py` | F-1…F-10 |
 | `test_notch.py` | A-2, L-6 |

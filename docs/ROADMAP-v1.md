@@ -144,5 +144,11 @@ barra, v9.47).
   da soli), pensate anche come azioni che un agente può usare.
 
 - **Colori di Tabby a scelta** (temi), insieme al design: i colori sono nella tabella `COL`.
-- Dalla mission (`PRODOTTO.md`): Claude/agente dentro Tabby, ricerca veloce, concentrazione,
+- **Concentrazione**: fatta in v9.55 (SPECIFICA 16b).
+- **Cerca in tutte le finestre** (24/10/2026, Daniele: un ⌘F su tutte le finestre aperte, al
+  posto della ricerca veloce): ⌃⌥Spazio, scrivi, l'elenco delle finestre che contengono la
+  parola con un pezzetto di testo; Invio = quella finestra con ⌘F già fatto. Limiti: le
+  altre schede del browser non si leggono, Slack/Notion solo il testo in vista, Windows App
+  niente. **Prima una prova di misura sul Mac** (velocità e quanto testo si trova), poi si decide.
+- Dalla mission (`PRODOTTO.md`): Claude/agente dentro Tabby,
   più monitor, app vera in Swift, impostazioni sincronizzate.

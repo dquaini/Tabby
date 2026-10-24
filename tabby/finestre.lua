@@ -442,6 +442,7 @@ end
 -- Quando un'app passa in primo piano (o cambia finestra in primo piano)
 handleActive = timed("cambio di scheda", function(app)
   if T.paused then return end   -- Tabby chiusa: non fa niente
+  if T.focus and focusBlocks(app) then return end   -- in concentrazione: Tabby chiede
   local bid = app and app:bundleID()
   local drawn = false
   if bid and floating(bid) then

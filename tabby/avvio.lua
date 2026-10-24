@@ -16,6 +16,7 @@ updateFullscreen()
 refreshBrowsers()
 T.badges = readDockBadges()
 T.badgeSig = badgeSig(T.badges)
+restoreFocus()   -- una concentrazione in corso continua
 rebuildTabs()
 draw()
 handleActive(hs.application.frontmostApplication())

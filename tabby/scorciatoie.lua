@@ -73,6 +73,19 @@ T.keyTap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(e)
   local code = e:getKeyCode()
   local noMods = not (f.ctrl or f.alt or f.cmd or f.shift)
 
+  -- Concentrazione: Invio / Esc nella finestra in centro
+  if noMods and (T.fsel or T.fask or T.fend) then
+    local enter = code == K["return"] or code == K.padenter
+    if enter or code == K.escape then
+      later(function()
+        if T.fsel then if enter then startFocus() else cancelFocusSetup() end
+        elseif T.fask then answerFocusAsk(false)
+        elseif T.fend then answerFocusEnd(enter and "reopen" or "stay") end
+      end)
+      return true
+    end
+  end
+
   -- Ventaglio del cerchio aperto: Esc lo chiude
   if T.fanOpen and noMods and code == K.escape then later(closeFan); return true end
 

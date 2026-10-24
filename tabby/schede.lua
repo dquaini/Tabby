@@ -441,5 +441,6 @@ function rebuildTabs()
     end
   end
 
+  focusFilterTabs()   -- in concentrazione: solo le schede scelte
   if changed then saveGroups() end
 end
