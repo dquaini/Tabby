@@ -38,6 +38,13 @@ check("finché il puntatore è sulla barra dei menu resta fuori", ev('Tabby.bar.
 tick(700, 300); slide()
 check("la barra dei menu se ne va: Tabby rientra al suo posto", ev('Tabby.edgeHidden') is None and ev('Tabby.bar._shown') is True and ev('Tabby.bar:frame().y') == ev('Tabby.bf.y'))
 
+print("== Tabby ridotta al cerchio (scrivania): la barra dei menu non la fa comparire")
+run('Tabby.collapsed = true; Tabby.bar:hide(); Tabby.visible = false; SHOWS = 0; local o = Tabby.bar.show; Tabby.bar.show = function(self, ...) SHOWS = SHOWS + 1; return o(self, ...) end')
+tick(700, 0); slide()
+tick(700, 300); slide()
+check("scende e se ne va la barra dei menu: Tabby non compare nemmeno per un istante", ev('SHOWS') == 0 and ev('Tabby.bar._shown') is False)
+run('Tabby.collapsed = false; Tabby.visible = nil; Tabby._env.draw()')
+
 print("== Tabby a destra, Dock a destra")
 run('CLICK("settings"); MENU[1].menu[4].fn()')
 tick(300, 0); slide()

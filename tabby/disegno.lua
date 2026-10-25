@@ -1038,6 +1038,13 @@ function slideBar(out)
   if not T.bar then return end
   if T.slideTimer then T.slideTimer:stop(); T.slideTimer = nil end
   local bf = barFrame()
+  -- Tabby non è in vista (cerchio sulla scrivania, chiusa, schermo intero, «Nascondi
+  -- Tabby»): niente da far scivolare. Prima rientrava per un istante e poi spariva
+  -- (25/10/2026, Daniele: «esce anche Tabby per un millisecondo»)
+  if T.collapsed or T.paused or T.fullscreen or (S.autohide and not T.revealed) then
+    T.bar:frame(bf)
+    return
+  end
   local function at(frac)   -- 0 = al suo posto, 1 = fuori dallo schermo
     local f, p = {x = bf.x, y = bf.y, w = bf.w, h = bf.h}, S.position
     if p == "top" then f.y = bf.y - (bf.h + 4) * frac

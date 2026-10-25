@@ -177,4 +177,6 @@ v9.57: Cerca nelle finestre (⌃⌥F, anche da ⚡︎): un ⌘F su tutte le fine
     Invio = quella finestra davanti con ⌘F e la parola già scritta. Cerca anche nel Memo.
 v9.58: con la ricerca aperta lo sfondo si oscura (la barra di Tabby no), come nella
     Concentrazione.
+v9.59: col cerchio sulla scrivania (o Tabby chiusa) la barra dei menu che scende non fa
+    più ricomparire Tabby per un istante.
 ```

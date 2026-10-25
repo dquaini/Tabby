@@ -537,6 +537,9 @@ l'angolo del gatto). Tabby non vede direttamente barra e Dock: lo deduce dal pun
 (tocca quel bordo dello schermo → compaiono; si allontana oltre l'altezza della barra dei
 menu, 30 punti su macOS 26, o lo spessore del Dock + 10 → se ne vanno). Lato, "nascondi"
 e dimensione del Dock si leggono dalle preferenze di macOS all'avvio e ogni 30 s.
+Se Tabby non è in vista (cerchio sulla scrivania, chiusa, schermo intero, «Nascondi
+Tabby» non rivelata) non scivola né rientra: resta nascosta (v9.59; prima ricompariva per
+un istante).
 
 **A-7 Fascia nera in cima con Tabby di lato** (v9.45): con Tabby a destra o a sinistra e la
 barra dei menu su "nascondi sempre" (senza notch), in cima alla colonna resta una fascia
