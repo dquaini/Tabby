@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<!--
+  «Cerca nelle finestre» (⌃⌥F, v9.57): la barra di ricerca, in stile standard di macOS
+  (come Spotlight), chiara o scura come il sistema.
+  La pagina non prende la tastiera: i tasti li intercetta Tabby, che le manda il testo
+  scritto e i risultati già pronti.
+  Tabby → pagina: render({q, sel, reading, items:[{i, title, app, icon, snip:[prima, parola, dopo]}]}) · reset()
+  Pagina → Tabby: send({choose: i}) · send({hover: i}) · send({outside: true})
+-->
+<style>
+:root { --bg: rgba(246,246,246,.98); --text: #1D1D1F; --sub: #6E6E73; --line: rgba(0,0,0,.08); --sel: #0A84FF; --mark: rgba(255,214,10,.55); }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: rgba(40,40,42,.98); --text: #F5F5F7; --sub: #98989D; --line: rgba(255,255,255,.08); --mark: rgba(255,214,10,.4); }
+}
+html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; user-select: none; -webkit-user-select: none; cursor: default; }
+body { font: 13px/1.35 -apple-system, system-ui, sans-serif; color: var(--text); padding: 12px; box-sizing: border-box; }
+.panel { border-radius: 16px; background: var(--bg); box-shadow: 0 0 0 .5px rgba(0,0,0,.25), 0 18px 46px rgba(0,0,0,.32); overflow: hidden; }
+.field { display: flex; align-items: center; gap: 10px; padding: 12px 16px; font-size: 21px; }
+.field svg { width: 20px; height: 20px; flex: none; opacity: .55; }
+#q { white-space: pre; overflow: hidden; }
+#ph { color: var(--sub); }
+.caret { display: inline-block; width: 2px; height: 22px; background: var(--sel); vertical-align: -4px; margin-left: 1px; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.list { border-top: .5px solid var(--line); padding: 6px; display: none; }
+.list.on { display: block; }
+.head { color: var(--sub); font-size: 11px; font-weight: 600; padding: 6px 10px 4px; }
+.it { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 8px; }
+.it img { width: 28px; height: 28px; flex: none; }
+.it .memo { width: 28px; height: 28px; flex: none; border-radius: 7px; background: #FFD60A; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+.it .tx { min-width: 0; flex: 1; }
+.it .t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.it .t small { font-weight: 400; color: var(--sub); margin-left: 6px; }
+.it .s { color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; margin-top: 1px; }
+.it .s mark { background: var(--mark); color: var(--text); border-radius: 3px; padding: 0 1px; }
+.it.on { background: var(--sel); color: #fff; }
+.it.on .t small, .it.on .s { color: rgba(255,255,255,.82); }
+.it.on .s mark { background: rgba(255,255,255,.28); color: #fff; }
+.foot { display: flex; justify-content: space-between; color: var(--sub); font-size: 11px; padding: 6px 16px 9px; border-top: .5px solid var(--line); }
+.empty { color: var(--sub); padding: 10px 10px 8px; }
+</style></head>
+<body>
+<div class="panel">
+  <div class="field">
+    <svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M13 13l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <span id="q"></span><span class="caret"></span><span id="ph">Cerca nelle finestre</span>
+  </div>
+  <div class="list" id="list"></div>
+  <div class="foot" id="foot"><span id="status"></span><span>↑↓ scegli · ↵ apri · esc chiudi</span></div>
+</div>
+<script>
+function send(o) { try { window.webkit.messageHandlers.tabbysearch.postMessage(o) } catch (e) {} }
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+function render(r) {
+  $('q').textContent = r.q;
+  $('ph').style.display = r.q ? 'none' : '';
+  var l = $('list');
+  var html = r.q ? '' : (r.items.length ? '<div class="head">Usate di recente</div>' : '');
+  r.items.forEach(function (it) {
+    var ic = it.icon ? '<img src="' + it.icon + '" alt="">' : '<div class="memo">✎</div>';
+    var s = it.snip ? '<div class="s">' + esc(it.snip[0]) + '<mark>' + esc(it.snip[1]) + '</mark>' + esc(it.snip[2]) + '</div>' : '';
+    html += '<div class="it' + (it.i === r.sel ? ' on' : '') + '" data-i="' + it.i + '">' + ic +
+      '<div class="tx"><div class="t">' + esc(it.title) + (it.app && it.app !== it.title ? '<small>' + esc(it.app) + '</small>' : '') + '</div>' + s + '</div></div>';
+  });
+  if (r.q && !r.items.length) html = '<div class="empty">Nessuna finestra contiene «' + esc(r.q) + '»</div>';
+  l.innerHTML = html;
+  l.classList.toggle('on', !!html);
+  $('status').textContent = r.reading > 0 ? 'Leggo ' + r.reading + (r.reading === 1 ? ' finestra…' : ' finestre…') : '';
+  l.querySelectorAll('.it').forEach(function (d) {
+    d.onclick = function () { send({choose: Number(d.dataset.i)}); };
+    d.onmouseenter = function () {
+      l.querySelectorAll('.it.on').forEach(function (x) { x.classList.remove('on'); });
+      d.classList.add('on'); send({hover: Number(d.dataset.i)});
+    };
+  });
+}
+// un clic nello spazio vuoto sotto la barra (la finestrella è più alta): chiude
+document.addEventListener('click', function (e) { if (!e.target.closest('.panel')) send({outside: true}); });
+function reset() { render({q: '', sel: 1, reading: 0, items: []}); }
+send({ready: true});
+</script></body></html>

@@ -717,7 +717,7 @@ rapide" (acceso di serie).
 
 ## 16b. Concentrazione (v9.55)
 
-**C-1 Scelta.** ⚡︎ → «Concentrazione…» (in corso: «Concentrazione · mancano X» con
+**H-1 Scelta.** ⚡︎ → «Concentrazione…» (in corso: «Concentrazione · mancano X» con
 +5 / +15 / Termina). Lo schermo si oscura (`#06070A` al 72%, prende i clic), **la barra
 no**: resta sopra. In centro una finestra (pagina `tabby/concentrazione.html`, non prende
 la tastiera): minuti (− / + di 5, scelte rapide 25 · 50 · 90; da 5 a 240), quante
@@ -731,7 +731,7 @@ e non ci si sposta. Già gialle: la scheda in cui sei e quelle dell'ultima volta
 Ricorda anche i minuti. Invio = Inizia, Esc = Annulla. Senza schede non parte (la
 casella trema).
 
-**C-2 Inizio.** Le app non scelte si **nascondono (non si chiudono**: niente «Vuoi
+**H-2 Inizio.** Le app non scelte si **nascondono (non si chiudono**: niente «Vuoi
 salvare?», le sessioni remote non cadono); le finestre non scelte di un'app scelta (es.
 un'altra finestra del browser) si riducono. Nella barra **solo le schede scelte** (le
 scorciatoie ⌃⌥ + numero lavorano su quelle) più le finestre nuove delle app scelte.
@@ -739,7 +739,7 @@ Se eri su una scheda non scelta si va sulla prima. Non disturbare si accende col
 comando rapido «Concentrazione on» (app Comandi), se c'è. **[Swift]** usare l'API dei
 Focus se disponibile.
 
-**C-3 Durante.** Al posto della batteria il **tempo che manca** («24 min»; nell'ultimo
+**H-3 Durante.** Al posto della batteria il **tempo che manca** («24 min»; nell'ultimo
 minuto «0:45») con una barretta blu (accento di Tabby) che si riempie; largo 64 punti in orizzontale,
 alto 38 di lato. Clic: +5 minuti, +15 minuti, Termina adesso. Col cerchio sulla
 scrivania, un **anello giallo** intorno alla sfera. Un'app non scelta che viene davanti
@@ -748,16 +748,46 @@ chiede «Aprire X?» (Invio/Esc = Resto concentrato; «Aprila lo stesso» la agg
 schede). Senza chiedere: Lampi, Memo, Finder, azioni rapide. Il clic sul gatto salta
 le schede non permesse.
 
-**C-4 Fine.** Suono «Glass»; finestra «Fatto! N minuti» con le notifiche arrivate nel
+**H-4 Fine.** Suono «Glass»; finestra «Fatto! N minuti» con le notifiche arrivate nel
 frattempo dalle app e dai siti rimasti fuori (differenza dei numerini rispetto
 all'inizio, es. «Slack 4 · Gmail 2»). Scelte: **Riapri tutto** (Invio: tornano tutte le
 schede, Non disturbare si spegne con «Concentrazione off»), **Altri 10 minuti**,
 **Resta così** (senza tempo: ∞, si termina dal clic sul tempo; Esc). «Termina adesso»
 porta alla stessa finestra, senza suono.
 
-**C-5** Lo stato si salva in `tabbar.focus` (inizio, fine, schede, chiavi, app,
+**H-5** Lo stato si salva in `tabbar.focus` (inizio, fine, schede, chiavi, app,
 escluse, numerini dell'inizio): dopo un riavvio la concentrazione continua, o finisce
 se il tempo è passato. Ultima scelta in `tabbar.focusLast`.
+
+## 16c. Cerca nelle finestre (v9.57)
+
+**E-1** ⌃⌥F (o ⚡︎ → «Cerca nelle finestre…») apre una barra in alto al centro dello spazio
+delle app (640 di larghezza, stile Spotlight standard di macOS, chiaro/scuro). Non prende
+la tastiera: i tasti li intercetta Tabby (lettere, Cancella, ⌘Cancella = svuota, ⌘V =
+incolla, ↑↓, Invio, Esc; ⌃⌥F di nuovo = chiude) e non arrivano all'app sotto. Clic fuori
+= chiude. *Perché:* niente problemi di "attenzione" con le altre app (Memo, Windows App).
+
+**E-2 Il testo.** Tabby legge il testo delle finestre (ruoli AXStaticText, AXTextArea,
+AXTextField, AXCell) con l'Accessibilità, una finestra alla volta, a pezzi di al massimo
+110 ms ogni 0,12 s (Tabby resta reattiva); al massimo 5000 elementi e 60 000 caratteri
+per finestra. Quando: 1,5 s dopo che lasci una finestra, e aprendo la ricerca (prima le
+più usate) quelle lette da più di 30 s; i risultati si aggiornano man mano («Leggo N
+finestre…»). Per le app Electron (Slack, Notion) che non danno testo, Tabby chiede una
+volta `AXManualAccessibility`. Il testo resta **solo in memoria**. Limiti: del browser
+solo la pagina in vista di ogni finestra; Slack/Notion il testo sullo schermo; Windows
+App niente (solo il titolo). **[Swift]** stessa lettura, in un thread a parte.
+
+**E-3 Risultati** (max 8): le finestre in cui tutte le parole sono nel titolo (anche nome
+della scheda e dell'app) o nel testo; minuscole e senza accenti («perche» trova
+«perché»). Prima chi le ha nel titolo, poi per quante volte compaiono, poi le più usate.
+Ogni riga: icona, titolo della finestra (senza « - nome app»), app, e un pezzetto di
+testo intorno alla parola, evidenziata. Anche il Memo (il suo file). A barra vuota: le
+finestre usate di recente.
+
+**E-4 Scelta** (Invio o clic): la ricerca si chiude, la finestra viene davanti (come la
+sua scheda; vista divisa intera se ne fa parte). Se le parole erano nel testo, dopo
+0,45 s — e solo se è davvero lei davanti — Tabby fa ⌘F e scrive le parole. Memo: si apre.
+In concentrazione vale la sua regola (un'app non scelta chiede).
 
 ## 17. Scorciatoie
 
@@ -771,6 +801,7 @@ Tutte con **⌃⌥** (Ctrl + Option):
 | ⌃⌥Tab | scheda usata prima |
 | ⌃⌥S | Scambia (vista divisa) |
 | ⌃⌥W | chiudi la finestra (non l'app) |
+| ⌃⌥F | cerca nelle finestre (E-1) |
 | ⌃⌥M · C · A · T | Memo · Calcolatrice · Calendario · Terminale |
 | ⌃⌥L · N · I | Claude chat rapida · Notion cerca · Notion AI |
 | ⌃⌥ + lettera scelta | azione di un'app scoperta (Gestisci) |
@@ -930,7 +961,8 @@ Ogni regola ha un test in `test/`; nell'app Swift diventano test di accettazione
 | `test_app_veloci.py` | Q-1, D-2 (app veloci nelle zone) |
 | `test_app_veloci_fila.py` | Q-1b (anche «non c'è spazio»), ripiano dei Lampi, D-2 (Memo e fila dei Lampi nelle zone) |
 | `test_cerchio.py` | W-0, W-3 (ventaglio, puntatore), W-4 |
-| `test_concentrazione.py` | C-1 … C-5 |
+| `test_concentrazione.py` | H-1 … H-5 |
+| `test_cerca.py` | E-1 … E-4 |
 | `test_finestre_fluide.py` | C-4 (giallo, ⌘Q, macOS che cambia app prima), D-4, L (angoli), W-0, Q-2 |
 | `test_cartelle.py`, `test_cartelle_casi.py`, `test_cartelle_pagine.py` | F-1…F-10 |
 | `test_notch.py` | A-2, L-6 |

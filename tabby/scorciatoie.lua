@@ -38,6 +38,7 @@ shortcut("down",  "next", function() switchRelative(1) end, isVertical)
 shortcut("tab",   "last", toggleLastApp)
 shortcut("s",     "rotate", function() rotateGroup(currentGroup()) end)
 shortcut("w",     "closewin", function() closeActiveWindow() end)
+shortcut("f",     "search", function() openSearch() end)   -- cerca nelle finestre (25/10/2026)
 for _, a in ipairs(APP_ACTIONS) do
   shortcut(a.key, "azione-" .. a.key, function() runAppAction(a) end)
 end
@@ -69,6 +70,7 @@ end
 
 T.keyTap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(e)
   if T.paused then return false end   -- Tabby chiusa: tutti i tasti alle app
+  if T.searchOpen then return searchKey(e) end   -- «Cerca nelle finestre»: i tasti vanno a lei
   local f    = e:getFlags()
   local code = e:getKeyCode()
   local noMods = not (f.ctrl or f.alt or f.cmd or f.shift)

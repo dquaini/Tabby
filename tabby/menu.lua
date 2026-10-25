@@ -491,6 +491,7 @@ function openQuick()
   end
   -- Concentrazione: si sceglie quanto e cosa tenere (in corso: allunga o termina)
   table.insert(items, {title = "-"})
+  table.insert(items, {title = "Cerca nelle finestre…   ⌃⌥F", fn = function() openSearch() end})
   if T.focus then
     table.insert(items, {title = "Concentrazione · " .. (T.focus.endAt and ("mancano " .. focusLabel()) or "senza tempo"),
                          image = focusMenuIcon(), menu = {

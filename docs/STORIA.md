@@ -171,4 +171,8 @@ v9.55: Concentrazione (⚡︎ → Concentrazione…): sfondo scuro, in centro mi
 v9.56: la finestra della Concentrazione in stile standard di macOS (come Impostazioni,
     chiara o scura come il sistema); il tempo nella barra nei colori normali di Tabby. Lo
     stile personalizzato si decide nell'app Swift, per tutto insieme (Daniele).
+v9.57: Cerca nelle finestre (⌃⌥F, anche da ⚡︎): un ⌘F su tutte le finestre aperte. Tabby
+    legge il testo delle finestre con l'Accessibilità (a piccoli passi, solo in memoria);
+    la barra in stile Spotlight mostra le finestre con le parole e un pezzetto di testo;
+    Invio = quella finestra davanti con ⌘F e la parola già scritta. Cerca anche nel Memo.
 ```

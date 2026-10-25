@@ -475,6 +475,7 @@ handleActive = timed("cambio di scheda", function(app)
   if isTabApp(app) then
     local key = currentKey()
     if key ~= T.lastKey then
+      textOnLeave(T.lastKey)   -- la finestra che lasci: Tabby ne legge il testo (per la ricerca)
       T.prevKey = T.lastKey   -- per ⌃⌥Tab (torna alla scheda di prima)
       T.lastKey = key
     end

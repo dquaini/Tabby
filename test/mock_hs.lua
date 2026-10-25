@@ -212,6 +212,7 @@ hs = {
     secondsSinceEpoch = function() return CLOCK or 1000 end,
     absoluteTime = function() return 0 end,
   },
+  pasteboard = {getContents = function() return CLIPBOARD end},
   sound = {getByName = function(n) return {play = function() SOUNDS = (SOUNDS or 0) + 1 end} end},
   canvas = {
     new = newCanvas,
@@ -236,7 +237,8 @@ hs = {
       table.insert(TAPS, t)
       return t
     end,
-    keyStroke = function() end,
+    keyStroke = function(m, k) KEYSTROKES = KEYSTROKES or {}; table.insert(KEYSTROKES, table.concat(m or {}, "+") .. "+" .. tostring(k)) end,
+    keyStrokes = function(s) TYPED = s end,
     checkKeyboardModifiers = function() return HELD or {} end,
   },
   keycodes = {map = {}},
@@ -326,8 +328,12 @@ hs = {
     -- il pallino verde: 16x16, a 48 punti dal bordo sinistro, in alto
     local f = w._frame or {x = 0, y = 0}
     local green = el("AXButton", {AXPosition = {x = f.x + 48, y = f.y + 6}, AXSize = {w = 16, h = 16}})
+    -- il testo della finestra (w._texts): per «Cerca nelle finestre»
+    local page = {el("AXTextField", {AXValue = "non-deve-leggermi.com"})}
+    for _, t in ipairs(w._texts or {}) do table.insert(page, el("AXStaticText", {AXValue = t})) end
+    AXREADS = (AXREADS or 0) + 1
     local win = el("AXWindow", {AXFullScreenButton = green, AXPosition = w._axpos}, {el("AXGroup", nil, tabs),
-      el("AXWebArea", {AXURL = {url = w._page}}, {el("AXTextField", {AXValue = "non-deve-leggermi.com"})})})
+      el("AXWebArea", {AXURL = {url = w._page}}, page)})
     -- spostare la finestra (es. quella delle notifiche di macOS)
     win.setAttributeValue = function(_, k, v) if k == "AXPosition" then w._axpos = v end end
     return win
@@ -388,6 +394,7 @@ hs = {
       function wv:evaluateJavaScript(js) table.insert(self._js, js) end
       if ucc and ucc._name == "tabbyorb" then ORBVIEW = wv
       elseif ucc and ucc._name == "tabbyfocus" then FOCUSVIEW = wv
+      elseif ucc and ucc._name == "tabbysearch" then SEARCHVIEW = wv
       else MEMO = wv end
       return wv
     end,
@@ -395,6 +402,7 @@ hs = {
       self._cb = fn
       if name == "tabbyorb" then ORB_CB = fn
       elseif name == "tabbyfocus" then FOCUS_CB = fn
+      elseif name == "tabbysearch" then SEARCH_CB = fn
       else MEMO_CB = fn end
       return self
     end} end},
@@ -404,16 +412,23 @@ hs = {
 
 -- tastiera: mappa bidirezionale come quella vera
 local codes = {["0"]=29,["1"]=18,["2"]=19,["3"]=20,["4"]=21,["5"]=23,["6"]=22,["7"]=26,["8"]=28,["9"]=25,
-  a=0, c=8, f=3, m=46, s=1, w=13, l=37, n=45, i=34, t=17, left=123, right=124, down=125, up=126, escape=53, ["return"]=36, padenter=76, tab=48}
+  a=0, c=8, f=3, m=46, s=1, w=13, l=37, n=45, i=34, t=17, v=9, delete=51, x=7, left=123, right=124, down=125, up=126, escape=53, ["return"]=36, padenter=76, tab=48}
 for k, v in pairs(codes) do hs.keycodes.map[k] = v; hs.keycodes.map[v] = k end
 
 function KEY(name, mods)
   local flags = {}
   for _, m in ipairs(mods or {}) do flags[m] = true end
-  local ev = {getFlags = function() return flags end, getKeyCode = function() return codes[name] end}
+  local ev = {getFlags = function() return flags end, getKeyCode = function() return codes[name] end,
+              getCharacters = function() return CHARS or (#name == 1 and name) or "" end}
   for _, t in ipairs(TAPS) do
     if t.types[1] == 10 and t.on then return t.fn(ev) end
   end
+end
+
+-- scrive un testo, un carattere alla volta (come la tastiera)
+function TYPE(s)
+  for _, c in utf8.codes(s) do CHARS = utf8.char(c); KEY("x"); FLUSH() end
+  CHARS = nil
 end
 
 function BAR() return CANVASES[1] end
