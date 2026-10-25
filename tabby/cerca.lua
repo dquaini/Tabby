@@ -4,7 +4,8 @@
 --  Fa parte di Tabby: lo carica tabby.lua e condivide con gli altri file
 --  tutti i nomi (una funzione definita qui si usa direttamente altrove).
 --
---  ⌃⌥F apre una barra di ricerca in alto al centro. Scrivi: compaiono le finestre che
+--  ⌃⌥F apre una barra di ricerca in alto al centro (lo sfondo si oscura, la barra di
+--  Tabby no). Scrivi: compaiono le finestre che
 --  contengono quelle parole (nel titolo o nel testo), con un pezzetto di testo intorno.
 --  Invio (o clic): Tabby porta davanti quella finestra e ci fa ⌘F con la parola già
 --  scritta, così la trovi evidenziata. A barra vuota: le ultime finestre usate.
@@ -313,6 +314,7 @@ function openSearch()
   T.searchSel = 1
   local v = ensureSearchView()
   v:frame(searchFrame())
+  focusDim(true)   -- lo sfondo si oscura, la barra di Tabby no (come la Concentrazione)
   v:show()
   print("Tabby · cerca nelle finestre")
   -- si rileggono le finestre non lette da un po' (prima quelle usate di recente)
@@ -345,6 +347,7 @@ function closeSearch()
   if not T.searchOpen then return end
   T.searchOpen = false
   if T.searchTap then T.searchTap:stop() end
+  focusDim(false)
   if T.searchView then
     T.searchView:evaluateJavaScript("typeof reset === 'function' && reset()")
     T.searchView:hide()

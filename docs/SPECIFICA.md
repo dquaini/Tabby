@@ -762,7 +762,8 @@ se il tempo è passato. Ultima scelta in `tabbar.focusLast`.
 ## 16c. Cerca nelle finestre (v9.57)
 
 **E-1** ⌃⌥F (o ⚡︎ → «Cerca nelle finestre…») apre una barra in alto al centro dello spazio
-delle app (640 di larghezza, stile Spotlight standard di macOS, chiaro/scuro). Non prende
+delle app (640 di larghezza, stile Spotlight standard di macOS, chiaro/scuro). Lo sfondo
+si oscura come nella Concentrazione (H-1), la barra di Tabby resta sopra e accesa. Non prende
 la tastiera: i tasti li intercetta Tabby (lettere, Cancella, ⌘Cancella = svuota, ⌘V =
 incolla, ↑↓, Invio, Esc; ⌃⌥F di nuovo = chiude) e non arrivano all'app sotto. Clic fuori
 = chiude. *Perché:* niente problemi di "attenzione" con le altre app (Memo, Windows App).

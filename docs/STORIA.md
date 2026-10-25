@@ -175,4 +175,6 @@ v9.57: Cerca nelle finestre (⌃⌥F, anche da ⚡︎): un ⌘F su tutte le fine
     legge il testo delle finestre con l'Accessibilità (a piccoli passi, solo in memoria);
     la barra in stile Spotlight mostra le finestre con le parole e un pezzetto di testo;
     Invio = quella finestra davanti con ⌘F e la parola già scritta. Cerca anche nel Memo.
+v9.58: con la ricerca aperta lo sfondo si oscura (la barra di Tabby no), come nella
+    Concentrazione.
 ```
