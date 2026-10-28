@@ -313,6 +313,7 @@ function openSearch()
   T.searchQ = ""
   T.searchSel = 1
   local v = ensureSearchView()
+  markViewUsed("searchView")
   v:frame(searchFrame())
   focusDim(true)   -- lo sfondo si oscura, la barra di Tabby no (come la Concentrazione)
   v:show()

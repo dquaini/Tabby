@@ -117,14 +117,22 @@ function axBrowserInfo(app, short)
   -- memoria per finestra: si tengono solo le finestre ancora aperte
   local oldCache, oldDiag = T.axCache or {}, T.axDiag or {}
   T.axCache, T.axDiag = {}, {}
+  local hidden = app:isHidden()
+  local now = hs.timer.secondsSinceEpoch()
   for _, w in ipairs(app:allWindows()) do
-    if w:isStandard() then
-      -- quando il browser è nascosto macOS non lascia guardare dentro le
-      -- finestre: si usa l'ultima cosa vista (ricordata per ogni finestra)
-      local r = (not app:isHidden()) and axScan(w) or {roles = {}}
+    -- (isTabWindow: anche le finestre ridotte, che su macOS 26 si dicono "dialogo")
+    if isTabWindow(w, hidden) then
+      -- Leggere dentro una finestra costa (~40 ms l'una): si rilegge solo se il titolo
+      -- è cambiato (hai navigato o cambiato scheda) o dopo 10 secondi; una finestra
+      -- ridotta non cambia, e di un browser nascosto macOS non lascia guardare
+      -- dentro: in quei casi vale l'ultima cosa vista (ricordata per ogni finestra)
       local cached = oldCache[w:id()]
+      local title = w:title() or ""
+      local fresh = cached and cached.title == title and now - (cached.at or 0) < 10
+      local skip = hidden or (cached and (fresh or w:isMinimized()))
+      local r = skip and {roles = cached and cached.roles or {}} or axScan(w)
       if r.url and r.tabs then
-        T.axCache[w:id()] = {url = r.url, tabs = r.tabs}
+        T.axCache[w:id()] = {url = r.url, tabs = r.tabs, title = title, at = now, roles = r.roles}
       elseif cached then
         T.axCache[w:id()] = cached
         r.url, r.tabs = cached.url, cached.tabs

@@ -46,6 +46,7 @@ end
 -- opts = {title, sub, icon (immagine), buttons = {{id, label, main, fn}}}
 function showNotice(opts)
   local v = ensureNoticeView()
+  markViewUsed("noticeView")
   T.noticeActions = {}
   local bs = {}
   for _, b in ipairs(opts.buttons or {}) do
@@ -65,6 +66,34 @@ function hideNotice()
   if T.noticeTimer then T.noticeTimer:stop(); T.noticeTimer = nil end
   if T.noticeView then T.noticeView:hide() end
 end
+
+-- ---------------------------------------------------------------------
+--  MEMORIA (28/10/2026): le pagine della Concentrazione, della ricerca e degli avvisi
+--  tengono acceso ciascuna un piccolo motore web (~30 MB). Se non le usi da 5 minuti
+--  si chiudono; la prossima volta si ricreano da sole (un attimo in più, la prima volta).
+--  Il Memo e la sfera restano sempre pronti (devono aprirsi subito).
+-- ---------------------------------------------------------------------
+VIEW_IDLE_S = 300
+T.viewUsed = T.viewUsed or {}
+IDLE_VIEWS = {
+  {view = "focusView", ready = "focusReady", busy = function() return T.fsel or T.fask or T.fend end},
+  {view = "searchView", ready = "searchReady", busy = function() return T.searchOpen end},
+  {view = "noticeView", ready = "noticeReady", busy = function() return false end},
+}
+function markViewUsed(name) T.viewUsed[name] = hs.timer.secondsSinceEpoch() end
+
+function releaseIdleViews()
+  local now = hs.timer.secondsSinceEpoch()
+  for _, d in ipairs(IDLE_VIEWS) do
+    local v = T[d.view]
+    if v and not d.busy() and not v:isVisible() and now - (T.viewUsed[d.view] or 0) > VIEW_IDLE_S then
+      pcall(function() v:delete() end)
+      T[d.view], T[d.ready] = nil, nil
+      print("Tabby · memoria: chiudo la pagina «" .. d.view .. "» (non usata da 5 minuti)")
+    end
+  end
+end
+T.viewGC = hs.timer.doEvery(120, releaseIdleViews)
 
 -- ---------------------------------------------------------------------
 --  SITI DOPPI: apri una finestra con un solo sito (es. Gmail) e quel sito è già aperto

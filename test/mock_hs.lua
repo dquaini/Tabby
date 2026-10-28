@@ -394,6 +394,7 @@ hs = {
       function wv:show() self._shown = true; return self end
       function wv:isVisible() return self._shown end
       function wv:hide() self._shown = false; return self end
+      function wv:delete() self._deleted = true; self._shown = false end
       function wv:hswindow() return {focus = function() end} end
       function wv:evaluateJavaScript(js) table.insert(self._js, js) end
       if ucc and ucc._name == "tabbyorb" then ORBVIEW = wv

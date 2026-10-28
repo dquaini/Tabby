@@ -189,4 +189,8 @@ v9.61: le finestre ridotte nel Dock (e quelle delle app nascoste) restano schede
 v9.62: robustezza: i timer «tra un attimo» (46 punti, compreso quello di ogni cambio di
     app) e i comandi esterni ora sono tenuti finché non scattano (Hammerspoon li buttava
     via: provato, 20 su 20 persi). Test che lo controlla.
+v9.63: DuckDuckGo: si legge dentro una finestra solo se il titolo è cambiato o dopo 10 s
+    (prima ogni 3 s tutte), e le finestre ridotte restano nell'elenco (macOS 26); le
+    pagine di Concentrazione, ricerca e avvisi si chiudono dopo 5 minuti senza uso
+    (memoria); tolte due funzioni non più usate.
 ```

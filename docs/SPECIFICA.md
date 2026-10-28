@@ -934,6 +934,12 @@ Hammerspoon butta via quelli senza riferimento alla prima pulizia della memoria 
 20 su 20 persi), e il lavoro non si faceva — anche quello che scatta a ogni cambio di app.
 **[Swift]** il problema non esiste (ARC/closure), ma i timer vanno comunque tenuti.
 
+**DuckDuckGo** (v9.63): dentro una finestra si legge (Accessibilità) solo se il suo
+titolo è cambiato o sono passati 10 s dall'ultima lettura; le finestre ridotte e quelle
+di un DuckDuckGo nascosto usano l'ultima cosa vista. **Pagine** (v9.63): Concentrazione,
+ricerca e avvisi si chiudono dopo 5 minuti senza uso (controllo ogni 2 minuti) e si
+ricreano alla prossima apertura; Memo e sfera restano sempre pronti.
+
 ## 23. Permessi
 
 - **Accessibilità** (indispensabile): finestre, scorciatoie, Dock, DuckDuckGo.

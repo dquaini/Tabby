@@ -191,6 +191,7 @@ end
 
 function focusShow(js)
   local v = ensureFocusView()
+  markViewUsed("focusView")
   v:frame(focusViewFrame())
   focusDim(true)
   v:show()

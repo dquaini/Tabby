@@ -182,9 +182,6 @@ closeMemo = function()
   backToPrev()
 end
 
-function toggleMemo()
-  if T.memoOpen then closeMemo() else openMemo() end
-end
 
 -- Apre / chiude un'azione veloce (stessa scorciatoia)
 -- Azione rapida di un'app (vedi APP_ACTIONS). Per qualche secondo l'app non

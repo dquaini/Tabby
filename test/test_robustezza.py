@@ -43,4 +43,37 @@ check("in attesa: tenuto in T.pending", L.execute('return next(Tabby.pending) ~=
 L.execute('FLUSH()')
 check("scattato: fatto e lasciato andare", L.execute('return N') == 1 and L.execute('return next(Tabby.pending) == nil') is True)
 
+print("== Memoria: le pagine non usate da 5 minuti si chiudono, e si ricreano")
+L.execute('Tabby._env.openSearch(); FLUSH(); Tabby._env.closeSearch(); SV1 = Tabby.searchView')
+L.execute('CLOCK = (CLOCK or 1000) + 100; Tabby._env.releaseIdleViews()')
+check("dopo 100 secondi resta", L.execute('return Tabby.searchView ~= nil') is True)
+L.execute('CLOCK = CLOCK + 250; Tabby._env.releaseIdleViews()')
+check("dopo 5 minuti non usata: chiusa", L.execute('return Tabby.searchView == nil and SV1._deleted == true') is True)
+L.execute('Tabby._env.openSearch(); FLUSH()')
+check("riaprendo la ricerca si ricrea e funziona", L.execute('return Tabby.searchView ~= nil and Tabby.searchView._shown and Tabby.searchReady') is True)
+L.execute('Tabby._env.closeSearch()')
+
+print("== DuckDuckGo: si legge dentro le finestre solo quando serve")
+L2 = l.LuaRuntime()
+L2.execute(open(base + '/test/mock_hs.lua').read())
+L2.execute('''print = function() end
+ADDAPP("com.apple.finder", "Finder")
+DDG = ADDAPP("com.duckduckgo.macos.browser", "DuckDuckGo")
+W1 = newWindow(DDG, "Proton Mail"); W1._page = "https://mail.proton.me/u/0/inbox"; W1._ntabs = 1
+W2 = newWindow(DDG, "Wikipedia"); W2._page = "https://it.wikipedia.org/wiki/Gatto"; W2._ntabs = 3
+W1._macos26 = true; W2._macos26 = true
+DDG._wins = {W1, W2}
+FRONT = DDG''')
+L2.execute(carica(base))
+L2.execute('FLUSH()')
+def e2(c): return L2.execute('return ' + c)
+L2.execute('Tabby.axCache = {}; AXREADS = 0; Tabby._env.axBrowserInfo(DDG, "DDG")')
+check("la prima volta legge le finestre", e2('AXREADS') >= 2)
+L2.execute('AXREADS = 0; for i = 1, 3 do Tabby._env.axBrowserInfo(DDG, "DDG") end')
+check("subito dopo, niente è cambiato: non rilegge (prima: ogni 3 secondi)", e2('AXREADS') == 0)
+L2.execute('W2._title = "Cane - Wikipedia"; AXREADS = 0; Tabby._env.axBrowserInfo(DDG, "DDG")')
+check("cambia il titolo (hai navigato): rilegge solo quella", e2('AXREADS') == 1)
+L2.execute('CLOCK = (CLOCK or 1000) + 11; W1._min = true; AXREADS = 0; local wins = Tabby._env.axBrowserInfo(DDG, "DDG"); NW = #wins')
+check("finestra ridotta: resta nell'elenco (macOS 26) ma non si rilegge", e2('NW') == 2 and e2('AXREADS') == 1)
+
 print("\n" + ("TUTTO OK" if not fails else f"FALLITI: {len(fails)}"))

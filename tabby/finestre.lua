@@ -294,7 +294,6 @@ end
 -- (23/10/2026: un "guardiano" che ogni mezzo secondo riportava davanti i Lampi è
 -- stato tolto: su macOS 26 riportare davanti la finestra di un'altra app non ha effetto
 -- se quell'app non è attiva — provato sul Mac. Il Memo resta davanti perché è di Tabby.)
-function updateLampKeeper() end
 
 -- App veloci: piccole, in alto a destra
 -- (con più finestre, es. più post-it, si dispongono a cascata)
@@ -363,7 +362,6 @@ function layoutFloaters()
   T.floatStack = keep
   local pos = floatPositions(keep)
   for i, it in ipairs(keep) do placeFloatItem(it.key, pos[i]) end
-  updateLampKeeper()
   checkCoveredSoon()
   local names = {}
   for _, it in ipairs(keep) do table.insert(names, it.key == "memo" and "Memo" or appName(it.key, appFor(it.key))) end
