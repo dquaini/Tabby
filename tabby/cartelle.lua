@@ -194,9 +194,9 @@ end
 --  adatta e le nasconde: visto da fuori, un lampeggiare di finestre. Ora un velo
 --  scuro copre lo schermo (la barra di Tabby resta sopra) con le icone della
 --  cartella: ognuna si accende quando la sua finestra è arrivata. Quando ci sono
---  tutte (o dopo 8 secondi al massimo) il velo sfuma via in un attimo.
+--  tutte (o dopo 6 secondi al massimo, o con un clic) il velo sfuma via in un attimo.
 -- ---------------------------------------------------------------------
-OPEN_MAX_S = 8
+OPEN_MAX_S = 6   -- al massimo (un clic sul velo lo toglie subito)
 
 function FD.openingDraw(st)
   local c = T.openVeil
@@ -244,6 +244,14 @@ function FD.showOpening(f, order)
     T.openVeil:level(hs.canvas.windowLevels.floating)
     T.openVeil:behavior({"canJoinAllSpaces", "stationary", "fullScreenAuxiliary"})
     T.openVeil:clickActivating(false)
+    -- un clic sul velo lo toglie subito (non aspetti le app lente)
+    T.openVeil:canvasMouseEvents(true, true)
+    T.openVeil:mouseCallback(function(_, msg)
+      if msg == "mouseUp" and T.opening then
+        if T.openTimer then T.openTimer:stop(); T.openTimer = nil end
+        FD.hideOpening()
+      end
+    end)
   end
   if T.openTimer then T.openTimer:stop() end
   local st = {f = f, here = {}, start = hs.timer.secondsSinceEpoch()}
@@ -264,6 +272,7 @@ function FD.showOpening(f, order)
     if all or late then
       T.openTimer:stop(); T.openTimer = nil
       if late and not all then print("Tabby · cartella «" .. f.name .. "»: dopo " .. OPEN_MAX_S .. " s manca ancora qualcosa, tolgo il velo") end
+      if not T.opening then return end
       -- un attimo per far finire gli ultimi aggiustamenti, poi sfuma
       T.openFade = hs.timer.doAfter(0.35, FD.hideOpening)
     end

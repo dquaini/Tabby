@@ -415,8 +415,8 @@ voce si lega alla finestra scelta (es. quale delle due Gmail). Avviso: "Cartella
 5. **due o più voci da aprire** (v9.60): un **velo scuro** copre lo schermo (la barra
    di Tabby resta sopra) con «Apro «Lavoro»», le icone delle voci (spente al 28%) e
    «N di M»; ogni icona si accende con una ✓ verde quando la sua finestra è arrivata
-   (controllo ogni 0,2 s). Arrivate tutte (o dopo 8 s), 0,35 s dopo il velo sfuma in
-   0,24 s. *Perché:* sotto il velo succede il "ballo" delle finestre che arrivano,
+   (controllo ogni 0,2 s). Arrivate tutte (o dopo 6 s), 0,35 s dopo il velo sfuma in
+   0,24 s. Un clic sul velo lo toglie subito. *Perché:* sotto il velo succede il "ballo" delle finestre che arrivano,
    vengono adattate e nascoste.
 ⌃⌥⇧ + numero sulla cartella che stai già guardando → torni a tutte le schede.
 
