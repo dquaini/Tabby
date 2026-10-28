@@ -179,4 +179,9 @@ v9.58: con la ricerca aperta lo sfondo si oscura (la barra di Tabby no), come ne
     Concentrazione.
 v9.59: col cerchio sulla scrivania (o Tabby chiusa) la barra dei menu che scende non fa
     più ricomparire Tabby per un istante.
+v9.60: cartelle con tante voci: il riquadro diventa una griglia (tutte visibili, ognuna
+    con la ✕); tasto destro sulla scheda-cartella = il suo menu (Rinomina…); avviso
+    «sito già aperto in un'altra finestra» (Lascia / Vai a quella / Chiudi questa);
+    aprendo una cartella con più app, un velo con le icone che si accendono e poi sfuma;
+    diario su file (~/Library/Logs/Tabby.log) con tutte le chiusure.
 ```

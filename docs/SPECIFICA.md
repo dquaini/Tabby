@@ -187,6 +187,15 @@ le conta come finestre "vere":
 - **popup di accesso/pagamento**: finestra di browser che nasce più stretta del 60%
   dello spazio delle app (es. "Accedi con Google").
 
+**B-9 Siti doppi** (v9.60): quando una finestra di browser con un solo sito (webapp)
+compare — o passa a quel sito — e lo stesso sito è già aperto da solo in un'altra
+finestra (anche di un altro browser), in alto al centro dello spazio delle app compare
+un **avviso** (stile notifiche di macOS, non prende la tastiera): «Gmail è già aperto in
+un'altra finestra» con **Lascia** · **Vai a quella** · **Chiudi questa** (blu: chiude la
+finestra nuova e ti porta all'altra). Una volta per finestra; sparisce da solo dopo
+12 s. Solo per finestre "nuove" da meno di 2 minuti; quello che si vede nei primi 15 s
+dopo l'avvio di Tabby c'era già e non conta.
+
 ## 4. Passare da una scheda all'altra
 
 **P-1 Clic o ⌃⌥+numero** (`switchTo`):
@@ -381,7 +390,11 @@ un ricaricamento). Una vista divisa corrisponde se uno dei suoi membri corrispon
 
 **F-3 Creare** (⚡︎ → Nuova cartella…): si chiede il nome ("es. Lavoro, Studio"),
 poi compare un riquadro con già **la scheda in cui sei**; ci si trascinano (o si
-cliccano) le altre schede; ✕ togli; "rinomina"; Esc annulla, Invio/Fatto salva. La
+cliccano) le altre schede; "rinomina"; Esc annulla, Invio/Fatto salva. Le voci stanno
+in una **griglia che va a capo** (v9.60; prima oltre 6 voci si vedeva solo «+N»): il
+riquadro cresce con le righe, ognuna ha icona, nome e una **✕ tonda** in alto a destra
+per toglierla; nel titolo quante sono. Con tantissime voci (più alte dello schermo) le
+voci si rimpiccioliscono. La
 voce si lega alla finestra scelta (es. quale delle due Gmail). Avviso: "Cartella
 «Lavoro» salvata · menu ⚡︎ o ⌃⌥⇧2". Una vista divisa aggiunta = i suoi membri.
 
@@ -399,6 +412,12 @@ voce si lega alla finestra scelta (es. quale delle due Gmail). Avviso: "Cartella
 4. la cartella diventa attiva (con "Vista cartelle" spenta: solo aprire, schede
    normali). Se sei su una sua scheda entri nella **vista cartella**; se sei altrove
    la cartella compare come **una scheda sola** e resti dove sei.
+5. **due o più voci da aprire** (v9.60): un **velo scuro** copre lo schermo (la barra
+   di Tabby resta sopra) con «Apro «Lavoro»», le icone delle voci (spente al 28%) e
+   «N di M»; ogni icona si accende con una ✓ verde quando la sua finestra è arrivata
+   (controllo ogni 0,2 s). Arrivate tutte (o dopo 8 s), 0,35 s dopo il velo sfuma in
+   0,24 s. *Perché:* sotto il velo succede il "ballo" delle finestre che arrivano,
+   vengono adattate e nascoste.
 ⌃⌥⇧ + numero sulla cartella che stai già guardando → torni a tutte le schede.
 
 **F-5 Scheda-cartella** (vista normale): sta dove l'hai messa (`f:<n>` nell'ordine)
@@ -425,7 +444,8 @@ che era una voce "pagine" resta "pagine" anche se ora ha una pagina sola.
 **F-9 Spegnimento automatico**: una cartella attiva senza più schede (app chiuse) si
 spegne, ma non nei primi 20 s dopo l'attivazione (le app ci mettono a aprirsi).
 
-**F-10** ⚡︎ → Modifica le cartelle → Modifica le schede / Rinomina / Elimina.
+**F-10** ⚡︎ → Modifica le cartelle → Modifica le schede / Rinomina / Elimina. Anche il
+**tasto destro sulla scheda-cartella** apre il suo menu (con Rinomina…) (v9.60).
 ⚙︎ → Comportamento → Vista cartelle (acceso di serie).
 
 ## 9. Notifiche
@@ -932,6 +952,11 @@ l'ora al millesimo, livello della barra, lentezza. Mai l'indirizzo completo di u
 pagina (privacy). **[Swift]** stesse righe nel registro di sistema (`os_log`, categoria
 "Tabby") e una voce "Copia diagnosi".
 
+**Diario** (v9.60): le righe `Tabby ·` si scrivono anche in `~/Library/Logs/Tabby.log`
+(con data e ora; oltre 1 MB diventa `Tabby.old.log`), che resta dopo i riavvii. Ci sono
+anche tutte le chiusure: ✕ → Chiudi finestra / Chiudi l'app, ⌃⌥W, Chiudi tutte, Chiudi
+cartella, sito doppio chiuso, e ogni scheda-finestra chiusa (da chiunque).
+
 ## 25. Limiti noti (da tenere presenti, non da copiare per forza)
 
 - Un solo monitor (lo schermo principale).
@@ -967,6 +992,7 @@ Ogni regola ha un test in `test/`; nell'app Swift diventano test di accettazione
 | `test_cerchio.py` | W-0, W-3 (ventaglio, puntatore), W-4 |
 | `test_concentrazione.py` | H-1 … H-5 |
 | `test_cerca.py` | E-1 … E-4 |
+| `test_cartelle_avvisi.py` | F-3 (griglia), F-4.5 (velo), F-10, B-9, Diario |
 | `test_finestre_fluide.py` | C-4 (giallo, ⌘Q, macOS che cambia app prima), D-4, L (angoli), W-0, Q-2 |
 | `test_cartelle.py`, `test_cartelle_casi.py`, `test_cartelle_pagine.py` | F-1…F-10 |
 | `test_notch.py` | A-2, L-6 |

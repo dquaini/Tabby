@@ -442,5 +442,6 @@ function rebuildTabs()
   end
 
   focusFilterTabs()   -- in concentrazione: solo le schede scelte
+  checkDuplicates()   -- lo stesso sito in due finestre: avviso
   if changed then saveGroups() end
 end

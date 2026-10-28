@@ -25,6 +25,28 @@ T = Tabby
 print = function(...)
   local ok = pcall(_G.print, ...)
   if not ok then pcall(hs.console.printStyledtext, table.concat({...}, " ")) end
+  diaryWrite(...)
+end
+
+-- Il diario di Tabby (28/10/2026): le righe "Tabby · …" si scrivono anche in un file,
+-- ~/Library/Logs/Tabby.log, che resta dopo un riavvio di Hammerspoon o del Mac. Serve a
+-- capire problemi successi ore prima (es. «Tabby mi ha chiuso delle finestre»). Oltre
+-- 1 MB il file vecchio diventa Tabby.old.log.
+DIARY_FILE = os.getenv("HOME") .. "/Library/Logs/Tabby.log"
+function diaryWrite(...)
+  if NO_DIARY then return end   -- (nel Mac simulato no)
+  local first = select(1, ...)
+  if type(first) ~= "string" or not first:find("^Tabby ·") then return end
+  local parts = {}
+  for i = 1, select("#", ...) do parts[i] = tostring(select(i, ...)) end
+  pcall(function()
+    local f = io.open(DIARY_FILE, "a")
+    if not f then return end
+    f:write(os.date("%Y-%m-%d %H:%M:%S  "), table.concat(parts, " "), "\n")
+    local size = f:seek("end")
+    f:close()
+    if size and size > 1024 * 1024 then os.rename(DIARY_FILE, (DIARY_FILE:gsub("%.log$", ".old.log"))) end
+  end)
 end
 
 hs.window.animationDuration = 0

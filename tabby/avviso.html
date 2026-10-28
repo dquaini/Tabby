@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<!--
+  Un avviso di Tabby (v9.60), in stile standard di macOS (come le notifiche), chiaro o
+  scuro come il sistema. Per ora: «questo sito è già aperto in un'altra finestra».
+  Tabby → pagina: show({title, sub, icon, buttons:[{id, label, main}]})
+  Pagina → Tabby: send({choose: id}) · send({ready: true})
+-->
+<style>
+:root { --bg: rgba(246,246,246,.98); --text: #1D1D1F; --sub: #6E6E73; --btn: #FFFFFF; --accent: #0A84FF; }
+@media (prefers-color-scheme: dark) { :root { --bg: rgba(44,44,46,.98); --text: #F5F5F7; --sub: #98989D; --btn: #4A4A4D; } }
+html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; user-select: none; -webkit-user-select: none; cursor: default; }
+body { font: 13px/1.35 -apple-system, system-ui, sans-serif; color: var(--text); padding: 10px; box-sizing: border-box; }
+.card { display: none; border-radius: 16px; background: var(--bg); padding: 12px 14px; box-shadow: 0 0 0 .5px rgba(0,0,0,.25), 0 10px 30px rgba(0,0,0,.28); }
+.card.on { display: block; animation: drop .25s cubic-bezier(.3,1.2,.5,1); }
+@keyframes drop { from { transform: translateY(-10px); opacity: 0; } }
+.top { display: flex; gap: 11px; align-items: center; }
+.top img { width: 32px; height: 32px; border-radius: 7px; flex: none; }
+.t { font-weight: 600; }
+.s { color: var(--sub); font-size: 12px; margin-top: 1px; }
+.row { display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end; }
+.btn { padding: 4px 12px; border-radius: 6px; border: 0; font: inherit; color: var(--text); background: var(--btn);
+  box-shadow: 0 0 0 .5px rgba(0,0,0,.15), 0 .5px 1.5px rgba(0,0,0,.15); }
+.btn.main { background: var(--accent); color: #fff; }
+.btn:active { filter: brightness(.92); }
+</style></head>
+<body>
+<div class="card" id="card">
+  <div class="top"><img id="ic" alt=""><div><div class="t" id="t"></div><div class="s" id="s"></div></div></div>
+  <div class="row" id="row"></div>
+</div>
+<script>
+function send(o) { try { window.webkit.messageHandlers.tabbynotice.postMessage(o) } catch (e) {} }
+function show(a) {
+  var c = document.getElementById('card');
+  c.classList.remove('on'); void c.offsetWidth;
+  document.getElementById('t').textContent = a.title || '';
+  document.getElementById('s').textContent = a.sub || '';
+  var ic = document.getElementById('ic'); ic.src = a.icon || ''; ic.style.display = a.icon ? '' : 'none';
+  var row = document.getElementById('row'); row.innerHTML = '';
+  (a.buttons || []).forEach(function (b) {
+    var el = document.createElement('button');
+    el.className = 'btn' + (b.main ? ' main' : '');
+    el.textContent = b.label;
+    el.onclick = function () { send({choose: b.id}); };
+    row.appendChild(el);
+  });
+  c.classList.add('on');
+}
+send({ready: true});
+</script></body></html>

@@ -125,6 +125,9 @@ T.allWins:subscribe(WF.windowDestroyed, function(w)
   local popup = ok and id and T.popups and T.popups[id]
   local snap = ok and id and not popup and snapForWin(id)
   if popup then T.popups[id] = nil end
+  -- (per il diario: quale scheda-finestra si è chiusa, chiunque l'abbia chiusa)
+  local k = ok and id and T.winKey[id]
+  if k then print(string.format("Tabby · finestra chiusa: «%s» (%s)", tostring((T.cand[k] or {}).name or k), tostring(T.keyBid[k] or "?"))) end
   scheduleRebuild()
   if snap then goNeighborSoon(snap, "chiusa la finestra")
   else hs.timer.doAfter(0.3, T.restoreAfterClose) end

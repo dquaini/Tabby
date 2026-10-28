@@ -161,6 +161,8 @@ function FD.activateFolder(f)
     end
   end
   print(string.format("Tabby · cartella «%s» attivata: %d voci, %d da aprire", f.name, #f.items, opened))
+  -- più finestre da aprire: un velo copre il "ballo" delle finestre che arrivano
+  if opened >= 2 then FD.showOpening(f, order) end
   -- le app appena aperte non devono portarti via da dove sei
   if opened > 0 and before then
     for _, d in ipairs({1.2, 2.5}) do
@@ -184,6 +186,104 @@ function FD.activateFolder(f)
   -- 2. sei su una sua scheda? entri nella vista cartella, restando lì
   if FD.currentInFolder(f) then T.viewFolder = f.id; rebuildTabs() end
   draw()
+end
+
+-- ---------------------------------------------------------------------
+--  APERTURA DI UNA CARTELLA CON TANTE FINESTRE (28/10/2026, Daniele: «scatta lo
+--  schermo»). Le app arrivano una alla volta, macOS le porta davanti, Tabby le
+--  adatta e le nasconde: visto da fuori, un lampeggiare di finestre. Ora un velo
+--  scuro copre lo schermo (la barra di Tabby resta sopra) con le icone della
+--  cartella: ognuna si accende quando la sua finestra è arrivata. Quando ci sono
+--  tutte (o dopo 8 secondi al massimo) il velo sfuma via in un attimo.
+-- ---------------------------------------------------------------------
+OPEN_MAX_S = 8
+
+function FD.openingDraw(st)
+  local c = T.openVeil
+  local ff = screen():fullFrame()
+  local A = appArea()
+  local n = #st.f.items
+  local isz, gap = 48, 18
+  local perRow = math.max(1, math.min(n, math.floor((math.min(A.w, 760) + gap) / (isz + gap))))
+  local rows = math.ceil(n / perRow)
+  local cx0, cy0 = A.x - ff.x + A.w / 2, A.y - ff.y + A.h / 2
+  local els = {{type = "rectangle", action = "fill", fillColor = {hex = "#0B0D12", alpha = 0.9},
+                frame = {x = 0, y = 0, w = ff.w, h = ff.h}}}
+  table.insert(els, {type = "text", text = "Apro «" .. st.f.name .. "»", textSize = 20, textColor = COL.text,
+    textAlignment = "center", frame = {x = cx0 - 300, y = cy0 - rows * (isz + gap) / 2 - 56, w = 600, h = 28}})
+  for k, it in ipairs(st.f.items) do
+    local col, row = (k - 1) % perRow, math.floor((k - 1) / perRow)
+    local inRow = math.min(perRow, n - row * perRow)
+    local x = cx0 - (inRow * (isz + gap) - gap) / 2 + col * (isz + gap)
+    local y = cy0 - rows * (isz + gap) / 2 + row * (isz + gap)
+    local here = st.here[k]
+    local im = FD.itemIcon(it)
+    if im then
+      table.insert(els, {type = "image", image = im, imageAlpha = here and 1 or 0.28,
+        frame = {x = x, y = y, w = isz, h = isz}})
+    end
+    if here then
+      table.insert(els, {type = "circle", action = "fill", fillColor = COL.batFull,
+        center = {x = x + isz - 4, y = y + isz - 4}, radius = 7})
+      table.insert(els, {type = "text", text = "✓", textSize = 9, textColor = {white = 1}, textAlignment = "center",
+        frame = {x = x + isz - 11, y = y + isz - 11, w = 14, h = 13}})
+    end
+  end
+  local done = 0
+  for k = 1, n do if st.here[k] then done = done + 1 end end
+  table.insert(els, {type = "text", text = done .. " di " .. n, textSize = 13, textColor = COL.textMid,
+    textAlignment = "center", frame = {x = cx0 - 100, y = cy0 + rows * (isz + gap) / 2 + 10, w = 200, h = 18}})
+  c:replaceElements(els)
+  return done == n
+end
+
+function FD.showOpening(f, order)
+  local ff = screen():fullFrame()
+  if not T.openVeil then
+    T.openVeil = hs.canvas.new(ff)
+    T.openVeil:level(hs.canvas.windowLevels.floating)
+    T.openVeil:behavior({"canJoinAllSpaces", "stationary", "fullScreenAuxiliary"})
+    T.openVeil:clickActivating(false)
+  end
+  if T.openTimer then T.openTimer:stop() end
+  local st = {f = f, here = {}, start = hs.timer.secondsSinceEpoch()}
+  T.opening = st
+  T.openVeil:frame(ff)
+  T.openVeil:alpha(1)
+  FD.openingDraw(st)
+  T.openVeil:show()
+  if T.bar then T.bar:orderAbove(T.openVeil) end
+  -- ogni 0,2 s: quali voci hanno già la loro finestra?
+  T.openTimer = hs.timer.doEvery(0.2, function()
+    local _, byItem = FD.assign(order, T.allTabs)
+    for k, it in ipairs(f.items) do
+      if byItem[FD.bindKey(f, it)] then st.here[k] = true end
+    end
+    local all = FD.openingDraw(st)
+    local late = hs.timer.secondsSinceEpoch() - st.start > OPEN_MAX_S
+    if all or late then
+      T.openTimer:stop(); T.openTimer = nil
+      if late and not all then print("Tabby · cartella «" .. f.name .. "»: dopo " .. OPEN_MAX_S .. " s manca ancora qualcosa, tolgo il velo") end
+      -- un attimo per far finire gli ultimi aggiustamenti, poi sfuma
+      T.openFade = hs.timer.doAfter(0.35, FD.hideOpening)
+    end
+  end)
+end
+
+function FD.hideOpening()
+  if not T.openVeil then return end
+  T.opening = nil
+  local k = 0
+  if T.openFadeT then T.openFadeT:stop() end
+  T.openFadeT = hs.timer.doEvery(0.03, function()
+    k = k + 1
+    T.openVeil:alpha(math.max(0, 1 - k / 8))
+    if k >= 8 then
+      T.openFadeT:stop(); T.openFadeT = nil
+      T.openVeil:hide()
+      T.openVeil:alpha(1)
+    end
+  end)
 end
 
 -- ⌃⌥⇧ + numero: attiva la cartella; se la stai già guardando, torni a tutte
@@ -213,6 +313,7 @@ function FD.closeFolder(f)
       "Chiudi", "Annulla")
   end)
   if btn ~= "Chiudi" then return end
+  print("Tabby · chiudo la cartella «" .. f.name .. "» (le sue app e finestre)")
   local killed = {}
   for _, t in ipairs(T.allTabs) do
     if T.tabFolder[t.key] == f then
@@ -388,16 +489,31 @@ FD.drawFolderEdit = function()
   else
     T.fOverlay:frame(A)
   end
-  local pw = math.min(600, A.w - 40)
-  local ph = 262
-  local px, py = (A.w - pw) / 2, (A.h - ph) / 2
+  -- le voci stanno in una griglia che va a capo (28/10/2026, Daniele: con più di 6 voci
+  -- si vedeva solo «+3» sopra l'ultima icona): le vedi sempre tutte, ognuna con la sua ✕
+  local pw = math.min(640, A.w - 40)
+  local zw = pw - 40
+  local cw, th = 84, 100                       -- larghezza e altezza di una voce
+  local perRow = math.max(1, math.floor((zw - 16) / cw))
+  local n = #fe.items
+  local rows = math.max(1, math.ceil(n / perRow))
+  local maxZoneH = A.h - 200
+  if 16 + rows * th > maxZoneH then           -- tantissime voci: più piccole
+    cw, th = 66, 82
+    perRow = math.max(1, math.floor((zw - 16) / cw))
+    rows = math.max(1, math.ceil(n / perRow))
+  end
+  local zh = math.min(maxZoneH, math.max(134, 16 + rows * th))
+  local ph = 52 + zh + 76
+  local px, py = (A.w - pw) / 2, math.max(10, (A.h - ph) / 2)
   local els = {
     {type = "rectangle", action = "fill", fillColor = {white = 0, alpha = 0.5},
      frame = {x = 0, y = 0, w = A.w, h = A.h}},
     {type = "rectangle", action = "strokeAndFill", fillColor = {hex = "#191B20", alpha = 0.98},
      strokeColor = COL.divider, strokeWidth = 1, roundedRectRadii = {xRadius = 14, yRadius = 14},
      frame = {x = px, y = py, w = pw, h = ph}},
-    {type = "text", text = (fe.id and "Cartella «" or "Nuova cartella «") .. fe.name .. "»",
+    {type = "text", text = (fe.id and "Cartella «" or "Nuova cartella «") .. fe.name .. "»" ..
+       (n > 0 and ("  ·  " .. n .. (n == 1 and " voce" or " voci")) or ""),
      textSize = 17, textColor = COL.text, textLineBreak = "truncateTail",
      frame = {x = px + 20, y = py + 16, w = pw - 130, h = 24}},
     {type = "text", text = "rinomina", textSize = 11, textColor = COL.accent, textAlignment = "right",
@@ -406,39 +522,38 @@ FD.drawFolderEdit = function()
      id = "fname", frame = {x = px + pw - 110, y = py + 16, w = 90, h = 24}},
   }
   -- il riquadro dove si lasciano le schede
-  local zr = {x = px + 20, y = py + 52, w = pw - 40, h = 134}
+  local zr = {x = px + 20, y = py + 52, w = zw, h = zh}
   T.fZoneAbs = {x = A.x + zr.x, y = A.y + zr.y, w = zr.w, h = zr.h}
   table.insert(els, {type = "rectangle", action = "strokeAndFill",
     fillColor = fe.hover and {hex = "#4C8DFF", alpha = 0.18} or {white = 1, alpha = 0.04},
     strokeColor = fe.hover and COL.accent or {white = 1, alpha = 0.35}, strokeWidth = 2,
     strokeDashPattern = {9, 6}, roundedRectRadii = {xRadius = 12, yRadius = 12}, frame = zr})
-  local cw = 84
-  local perRow = math.max(1, math.floor((zr.w - 16) / cw))
+  local isz = (cw >= 84) and 40 or 32        -- lato dell'icona
   for k, it in ipairs(fe.items) do
-    if k > perRow then
-      table.insert(els, {type = "text", text = "+" .. (#fe.items - perRow + 1), textSize = 14,
-        textColor = COL.textMid, textAlignment = "center",
-        frame = {x = zr.x + 8 + (perRow - 1) * cw, y = zr.y + 40, w = cw, h = 20}})
-      break
-    end
-    local cx = zr.x + 8 + (k - 1) * cw
+    local col, row = (k - 1) % perRow, math.floor((k - 1) / perRow)
+    local cx, cy = zr.x + 8 + col * cw, zr.y + 8 + row * th
+    if cy + th > zr.y + zr.h then break end   -- (non succede: il riquadro cresce)
     local im = FD.itemIcon(it)
     if im then
-      table.insert(els, {type = "image", image = im, frame = {x = cx + cw / 2 - 20, y = zr.y + 18, w = 40, h = 40}})
+      table.insert(els, {type = "image", image = im, frame = {x = cx + cw / 2 - isz / 2, y = cy + 10, w = isz, h = isz}})
     end
     table.insert(els, {type = "text", text = it.name or it.site or it.bid, textSize = 11.5,
       textColor = COL.text, textAlignment = "center", textLineBreak = "truncateTail",
-      frame = {x = cx + 2, y = zr.y + 64, w = cw - 4, h = 16}})
-    table.insert(els, {type = "text", text = "✕ togli", textSize = 10, textColor = COL.textDim,
-      textAlignment = "center", frame = {x = cx, y = zr.y + 82, w = cw, h = 14}})
+      frame = {x = cx + 2, y = cy + 16 + isz, w = cw - 4, h = 16}})
+    -- la ✕ per toglierla, in alto a destra dell'icona
+    local bx, by = cx + cw / 2 + isz / 2 - 7, cy + 4
+    table.insert(els, {type = "circle", action = "fill", fillColor = {hex = "#3A3D45"},
+      center = {x = bx + 8, y = by + 8}, radius = 9})
+    table.insert(els, {type = "text", text = "✕", textSize = 9.5, textColor = COL.text, textAlignment = "center",
+      frame = {x = bx, y = by + 2, w = 16, h = 14}})
     table.insert(els, {type = "rectangle", action = "fill", fillColor = {white = 1, alpha = 0.01},
-      trackMouseUp = true, id = "fitem" .. k, frame = {x = cx, y = zr.y + 10, w = cw, h = 92}})
+      trackMouseUp = true, id = "fitem" .. k, frame = {x = bx - 4, y = by - 4, w = 24, h = 24}})
   end
-  if #fe.items < 2 then
-    local hx = zr.x + 8 + #fe.items * cw
+  if n < perRow and (zr.w - 8 - n * cw) > 190 then
+    local hx = zr.x + 8 + n * cw
     table.insert(els, {type = "text", text = "Trascina qui le schede di Tabby (o cliccale)",
       textSize = 14, textColor = {white = 1, alpha = 0.75},
-      frame = {x = hx + 10, y = zr.y + zr.h / 2 - 10, w = zr.x + zr.w - hx - 20, h = 20}})
+      frame = {x = hx + 10, y = zr.y + 48, w = zr.x + zr.w - hx - 20, h = 40}})
   end
   table.insert(els, {type = "text", text = "Esc annulla · Invio fatto", textSize = 11.5, textColor = COL.textDim,
     frame = {x = px + 20, y = py + ph - 44, w = 220, h = 18}})

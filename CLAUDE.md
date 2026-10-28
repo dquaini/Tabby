@@ -35,7 +35,7 @@ Prima di lavorare leggi:
   impostazioni S, schermo, notch, utilità) · `browser` · `notifiche` · `schede` (ordine,
   ricette delle cartelle, `rebuildTabs`) · `finestre` (adattare, nascondere, passare da una
   scheda all'altra) · `memo` · `dividi` (vista divisa) · `cartelle` · `trascina` · `menu` ·
-  `disegno` · `osservatori` · `concentrazione` · `cerca` · `scorciatoie` · `avvio`.
+  `disegno` · `osservatori` · `concentrazione` · `cerca` · `avvisi` · `scorciatoie` · `avvio`.
 - **Come si scrive codice nei file di `tabby/`**: tutti condividono uno **spazio comune di
   nomi** (tabella `E`, `Tabby._env`). A livello del file si scrive `function nome()` /
   `nome = …` **senza `local`**: così il nome si usa direttamente negli altri file e non c'è
@@ -88,7 +88,8 @@ Prima di lavorare leggi:
    Il simulatore non sostituisce il Mac: comportamenti di macOS (notch, livelli delle
    finestre, permessi, app che "rimbalzano") si vedono solo lì.
 3. Codice e commenti **in italiano**, chiari per un non sviluppatore che li legge.
-4. Le righe di diagnosi in console iniziano con `Tabby ·` (es. notch, DuckDuckGo,
+4. Le righe di diagnosi in console iniziano con `Tabby ·` (e finiscono anche nel diario
+   `~/Library/Logs/Tabby.log`, che resta dopo i riavvii: leggilo per i problemi di ore prima) (es. notch, DuckDuckGo,
    app veloci, `Tabby · lento:` per i lavori sopra i 150 ms): usale per capire problemi reali invece di tirare a indovinare.
 5. Non cambiare scorciatoie o comportamenti a cui l'utente è abituato senza dirlo.
 6. Usa git: un commit per ogni versione funzionante, messaggio in italiano. A ogni
@@ -126,5 +127,5 @@ GitHub, poi `git clone git@github.com:dquaini/Tabby.git` e `init.lua` che punta 
 
 ## Versione attuale
 
-**v9.59** (storia in `docs/STORIA.md`). Prossimo obiettivo: **Tabby v1** (A fatta; B Cartelle: base fatta in v9.8, restano "Apri all'avvio" e rifiniture)
+**v9.60** (storia in `docs/STORIA.md`). Prossimo obiettivo: **Tabby v1** (A fatta; B Cartelle: base fatta in v9.8, restano "Apri all'avvio" e rifiniture)
 (`docs/ROADMAP-v1.md`).

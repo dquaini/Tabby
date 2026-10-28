@@ -37,7 +37,10 @@ function openCloseMenu(i)
     local title = shorten(main:title(), 40)
     table.insert(items, {
       title = title and ("Chiudi finestra  “" .. title .. "”") or "Chiudi finestra",
-      fn = function() main:close(); scheduleRebuild(); goNeighborSoon(snap, "chiusa la finestra") end,
+      fn = function()
+        print("Tabby · ✕ → Chiudi finestra «" .. tostring(main:title()) .. "»")
+        main:close(); scheduleRebuild(); goNeighborSoon(snap, "chiusa la finestra")
+      end,
     })
   end
   if t.bid == FINDER then
@@ -48,6 +51,7 @@ function openCloseMenu(i)
       fn = function()
         T.quitting = T.quitting or {}
         T.quitting[t.bid] = hs.timer.secondsSinceEpoch()   -- (vale per 6 secondi)
+        print("Tabby · ✕ → Chiudi l'app " .. tostring(app:name()))
         app:kill(); scheduleRebuild(); goNeighborSoon(snap, "chiusa l'app")
       end,
     })
@@ -81,7 +85,9 @@ end
 -- prima, e per le finestre di browser con più siti il sito da mostrare
 function openTabContextMenu(i, pos)
   local t = T.tabs[i]
-  if not t or t.group or t.folder then return end
+  -- scheda-cartella: il menu della cartella (Rinomina, Modifica le schede…) (28/10/2026)
+  if t and t.folder then FD.openFolderMenu(t.folder, pos); return end
+  if not t or t.group then return end
   local id = tabNameId(t)
   local items = {{title = "Rinomina la scheda…", fn = function() renameTab(t) end}}
   if T.tabNames[id] then
@@ -289,6 +295,7 @@ function closeAllApps()
     "Le app con documenti non salvati ti chiederanno cosa fare.",
     "Chiudi tutte", "Annulla")
   if btn ~= "Chiudi tutte" then return end
+  print("Tabby · Chiudi tutte le app")
   local _, list = runningApps()
   for _, app in ipairs(list) do
     if app:bundleID() == FINDER then

@@ -1,3 +1,4 @@
+NO_DIARY = true   -- il diario su file solo sul Mac vero
 -- Finto Hammerspoon, abbastanza per far girare Tabby e simulare l'uso
 LOG = {}
 local function log(...) local t = {} for i = 1, select('#', ...) do t[#t+1] = tostring(select(i, ...)) end LOG[#LOG+1] = table.concat(t, " ") end
@@ -395,6 +396,7 @@ hs = {
       if ucc and ucc._name == "tabbyorb" then ORBVIEW = wv
       elseif ucc and ucc._name == "tabbyfocus" then FOCUSVIEW = wv
       elseif ucc and ucc._name == "tabbysearch" then SEARCHVIEW = wv
+      elseif ucc and ucc._name == "tabbynotice" then NOTICEVIEW = wv
       else MEMO = wv end
       return wv
     end,
@@ -403,6 +405,7 @@ hs = {
       if name == "tabbyorb" then ORB_CB = fn
       elseif name == "tabbyfocus" then FOCUS_CB = fn
       elseif name == "tabbysearch" then SEARCH_CB = fn
+      elseif name == "tabbynotice" then NOTICE_CB = fn
       else MEMO_CB = fn end
       return self
     end} end},
