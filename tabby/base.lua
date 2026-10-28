@@ -439,12 +439,36 @@ end
 
 -- (draw: definita più sotto o in un altro file)
 
+-- Una finestra "vera" (una scheda)? Su macOS 26 una finestra ridotta nel Dock, o di
+-- un'app nascosta, non si dice più "finestra normale" ma "dialogo" (visto il
+-- 28/10/2026 con TextEdit: AXDialog). Tabby la perdeva come scheda: le finestre di
+-- Chrome e Anteprima ridotte da "una scheda alla volta" sparivano dalla barra.
+-- Ora vale anche una finestra che Tabby ha già visto normale, una ridotta nel Dock
+-- (i veri dialoghi non si riducono) e, di un'app nascosta, una col titolo.
+T.stdSeen = T.stdSeen or {}
+function isTabWindow(w, hidden)
+  if w:isFullScreen() then return false end   -- (fuori dai radar finché non torna normale)
+  local id = w:id()
+  if w:isStandard() then
+    if id then T.stdSeen[id] = true end
+    return true
+  end
+  if id and T.stdSeen[id] then return true end
+  local okR, role = pcall(function() return w:role() end)
+  if not okR or role ~= "AXWindow" then return false end
+  if w:isMinimized() or (hidden and (w:title() or "") ~= "") then
+    if id then T.stdSeen[id] = true end
+    return true
+  end
+  return false
+end
+
 function standardWindows(app)
   local t0 = hs.timer.absoluteTime()
   local out = {}
+  local hidden = app:isHidden()
   for _, w in ipairs(app:allWindows()) do
-    -- (a schermo intero no: è fuori dai radar di Tabby finché non torna normale)
-    if w:isStandard() and not w:isFullScreen() then table.insert(out, w) end
+    if isTabWindow(w, hidden) then table.insert(out, w) end
   end
   if T.appMs then
     local b = app:bundleID() or "?"

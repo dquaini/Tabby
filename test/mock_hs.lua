@@ -48,8 +48,11 @@ function newWindow(app, title, urls)
     end
   end
   function w:unminimize() self._min = false end
-  function w:isStandard() return true end
-  function w:subrole() return "AXStandardWindow" end
+  -- come macOS 26: una finestra ridotta, o di un'app nascosta, si dice "dialogo"
+  -- (solo per le finestre con _macos26 = true)
+  function w:isStandard() return not (self._macos26 and (self._min or self._app._hidden)) end
+  function w:subrole() return self:isStandard() and "AXStandardWindow" or "AXDialog" end
+  function w:role() return "AXWindow" end
   function w:isVisible() return true end
   function w:isFullScreen() return self._fs end
   function w:isMinimized() return self._min end

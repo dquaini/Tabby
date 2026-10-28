@@ -957,6 +957,12 @@ pagina (privacy). **[Swift]** stesse righe nel registro di sistema (`os_log`, ca
 anche tutte le chiusure: ✕ → Chiudi finestra / Chiudi l'app, ⌃⌥W, Chiudi tutte, Chiudi
 cartella, sito doppio chiuso, e ogni scheda-finestra chiusa (da chiunque).
 
+**Finestre "vere" su macOS 26** (v9.61): una finestra ridotta nel Dock, o di un'app
+nascosta, macOS la descrive come `AXDialog` invece di `AXStandardWindow`. Per Tabby è
+una scheda se: è normale; oppure Tabby l'ha già vista normale; oppure è ridotta (con
+ruolo `AXWindow`: i veri dialoghi non si riducono); oppure è di un'app nascosta e ha un
+titolo. **[Swift]** stessa regola.
+
 ## 25. Limiti noti (da tenere presenti, non da copiare per forza)
 
 - Un solo monitor (lo schermo principale).
@@ -992,6 +998,7 @@ Ogni regola ha un test in `test/`; nell'app Swift diventano test di accettazione
 | `test_cerchio.py` | W-0, W-3 (ventaglio, puntatore), W-4 |
 | `test_concentrazione.py` | H-1 … H-5 |
 | `test_cerca.py` | E-1 … E-4 |
+| `test_finestre_ridotte.py` | finestre ridotte / app nascoste su macOS 26 |
 | `test_cartelle_avvisi.py` | F-3 (griglia), F-4.5 (velo), F-10, B-9, Diario |
 | `test_finestre_fluide.py` | C-4 (giallo, ⌘Q, macOS che cambia app prima), D-4, L (angoli), W-0, Q-2 |
 | `test_cartelle.py`, `test_cartelle_casi.py`, `test_cartelle_pagine.py` | F-1…F-10 |
