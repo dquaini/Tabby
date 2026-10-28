@@ -142,7 +142,7 @@ function openMemo()
   T.memoSeq = (T.memoSeq or 0) + 1
   local seq = T.memoSeq
   for _, d in ipairs({0.08, 0.25, 0.6}) do
-    hs.timer.doAfter(d, function()
+    after(d, function()
       if seq ~= T.memoSeq or not T.memoOpen then return end
       local f, mw = hs.window.focusedWindow(), m:hswindow()
       local ok, same = pcall(function() return f:id() == mw:id() end)
@@ -173,7 +173,7 @@ end
 closeMemo = function()
   if not T.memo or not T.memoOpen then return end
   T.memoOpen = false
-  hs.timer.doAfter(0, function()
+  after(0, function()
     layoutFloaters()   -- le altre app veloci si spostano a riempire il posto
     if T.memberOf["memo"] then scheduleRebuild() end   -- era in una vista divisa
   end)
@@ -199,12 +199,12 @@ function actionFallback(a, app)
   local function send(tries)
     local m = hs.eventtap.checkKeyboardModifiers() or {}
     if (m.ctrl or m.alt) and tries < 30 then
-      hs.timer.doAfter(0.05, function() send(tries + 1) end)
+      after(0.05, function() send(tries + 1) end)
     else
       hs.eventtap.keyStroke(a.fallbackKeys[1], a.fallbackKeys[2], 0)
     end
   end
-  hs.timer.doAfter(0.4, function() send(0) end)
+  after(0.4, function() send(0) end)
   return true
 end
 
@@ -214,7 +214,7 @@ function runAppAction(a, retry)
     -- l'app non è aperta: si apre dietro e si riprova tra poco (una volta)
     if retry then return end
     FD.runTask("/usr/bin/open", {"-g", "-b", a.bid})
-    hs.timer.doAfter(2.5, function() runAppAction(a, true) end)
+    after(2.5, function() runAppAction(a, true) end)
     return
   end
   T.actionAt = {bid = a.bid, at = hs.timer.secondsSinceEpoch()}
@@ -224,7 +224,7 @@ function runAppAction(a, retry)
     local function send(tries)
       local m = hs.eventtap.checkKeyboardModifiers() or {}
       if (m.ctrl or m.alt) and tries < 30 then
-        hs.timer.doAfter(0.05, function() send(tries + 1) end)
+        after(0.05, function() send(tries + 1) end)
       else
         T.actionAt.at = hs.timer.secondsSinceEpoch()
         hs.eventtap.keyStroke(a.keys[1], a.keys[2], 0)
@@ -258,7 +258,7 @@ function runAppAction(a, retry)
       -- "Apri <app>": se non si è aperto niente (l'icona apre un menu, ma è spenta
       -- in macOS e il menu non compare), si apre l'app
       if a.generic then
-        hs.timer.doAfter(1.2, function()
+        after(1.2, function()
           local now = hs.window.focusedWindow()
           local menuOpen = false
           pcall(function()
@@ -296,7 +296,7 @@ function runAppAction(a, retry)
             print(string.format("Tabby · azione «%s»: voce trovata dopo %.1f s", a.name, hs.timer.secondsSinceEpoch() - t0))
             mi:performAction("AXPress")
           elseif tries < 15 then
-            hs.timer.doAfter(0.1, look)
+            after(0.1, look)
           else
             hs.eventtap.keyStroke({}, "escape", 0)
             T.veil(false)
@@ -317,7 +317,7 @@ function runAppAction(a, retry)
               a.name, a.menuItem, tostring(p and p.x), tostring(p and p.y), table.concat(seen, " ")))
           end
         end
-        hs.timer.doAfter(0.1, look)
+        after(0.1, look)
       end
     else
       print("Tabby · azione «" .. a.name .. "»: icona dell'app non trovata nella barra dei menu")
@@ -441,7 +441,7 @@ function chooseAppShortcut(b)
   m.key = k
   save("menuApps")
   hs.alert.show(m.name .. ": ⌃⌥" .. k:upper())
-  hs.timer.doAfter(0.8, function() hs.reload() end)
+  after(0.8, function() hs.reload() end)
 end
 
 -- Un'azione rapida è appena partita per quest'app? (il suo pannello non è una scheda)
@@ -488,7 +488,7 @@ function openQuickApp(q, place)
   hs.application.launchOrFocusByBundleID(bid)
   -- l'app può metterci un po' ad aprire le finestre: riprova più volte
   for _, delay in ipairs({0.3, 0.8, 1.6}) do
-    hs.timer.doAfter(delay, layoutFloaters)
+    after(delay, layoutFloaters)
   end
 end
 
@@ -584,11 +584,11 @@ function hideFloater(bid)
   setFloatMode(bid, false)
   if app then app:hide() end
   scheduleRebuild()
-  hs.timer.doAfter(0, layoutFloaters)   -- le altre si spostano a riempire il posto
+  after(0, layoutFloaters)   -- le altre si spostano a riempire il posto
 end
 
 function openSpotlight()
-  hs.timer.doAfter(0.15, function() hs.eventtap.keyStroke({"cmd"}, "space", 0) end)
+  after(0.15, function() hs.eventtap.keyStroke({"cmd"}, "space", 0) end)
 end
 
 -- Clic sul gatto nella barra (23/10/2026, Daniele; confermato il 24/10): si apre il
@@ -599,8 +599,7 @@ function openDesktopFolder()
   T.desktopMode = false
   T.focusSeq = (T.focusSeq or 0) + 1
   print("Tabby · clic sul gatto: apro il Finder sulla Scrivania")
-  local t = hs.task.new("/usr/bin/open", nil, {os.getenv("HOME") .. "/Desktop"})
-  if t then t:start() end
+  runTask("/usr/bin/open", {os.getenv("HOME") .. "/Desktop"})
   afterFocus()
 end
 
@@ -622,7 +621,7 @@ function toggleDesktop()
   local f = appFor(FINDER)
   if f then
     f:activate()
-    hs.timer.doAfter(0.2, function()
+    after(0.2, function()
       if not T.desktopMode then return end
       for _, w in ipairs(standardWindows(f)) do
         if not w:isMinimized() then T.selfMin[w:id()] = hs.timer.secondsSinceEpoch(); w:minimize() end

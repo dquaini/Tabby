@@ -12,25 +12,25 @@
 -- macOS (prima aspettava ~1 s: Tabby restava visibile, o tornava in ritardo)
 function checkFullscreenSoon()
   updateFullscreen()
-  for _, d in ipairs({0.25, 0.6, 1.1}) do hs.timer.doAfter(d, updateFullscreen) end
+  for _, d in ipairs({0.25, 0.6, 1.1}) do after(d, updateFullscreen) end
 end
 
 W = hs.application.watcher
 T.appWatcher = W.new(function(_, event, app)
   if event == W.activated then
-    hs.timer.doAfter(0.1, function() handleActive(app) end)
+    after(0.1, function() handleActive(app) end)
     checkFullscreenSoon()
   elseif event == W.launched then
     scheduleRebuild()
     -- un'app appena aperta (anche appena installata) ha un'icona nella barra dei menu?
-    if app then hs.timer.doAfter(3, function() scanMenuBarApps(app) end) end
+    if app then after(3, function() scanMenuBarApps(app) end) end
   elseif event == W.hidden or event == W.unhidden then
     scheduleRebuild()   -- (può comparire o sparire il cerchio sulla scrivania)
   elseif event == W.terminated then
     scheduleRebuild()
     if app and app:bundleID() and floating(app:bundleID()) then
       setFloatMode(app:bundleID(), false)
-      hs.timer.doAfter(0, layoutFloaters)
+      after(0, layoutFloaters)
     end
     -- chiusa l'app della scheda attiva (⌘Q, ✕ → Chiudi app): scheda accanto
     local b = app and app:bundleID()
@@ -73,7 +73,7 @@ T.allWins:subscribe(WF.windowCreated, function(w)
     placeFloater(a)
   elseif g then
     -- nuova finestra di un'app in un gruppo: nella sua zona (se il gruppo è attivo)
-    hs.timer.doAfter(0.2, function()
+    after(0.2, function()
       if T.memberOf[currentKey()] == g then layoutGroup(g) end
     end)
   elseif a and b == frontBid() and not actionRecent(b) then
@@ -130,7 +130,7 @@ T.allWins:subscribe(WF.windowDestroyed, function(w)
   if k then print(string.format("Tabby · finestra chiusa: «%s» (%s)", tostring((T.cand[k] or {}).name or k), tostring(T.keyBid[k] or "?"))) end
   scheduleRebuild()
   if snap then goNeighborSoon(snap, "chiusa la finestra")
-  else hs.timer.doAfter(0.3, T.restoreAfterClose) end
+  else after(0.3, T.restoreAfterClose) end
 end)
 
 -- Ridotta a icona col pallino giallo (o ⌘M): come chiuderla, si passa alla scheda
@@ -242,7 +242,7 @@ T.rightTap:start()
 -- Un clic può portare una finestra sopra un'app veloce: Tabby la rimette sopra
 T.floatTap = hs.eventtap.new({hs.eventtap.event.types.leftMouseUp}, function()
   if T.paused then return false end
-  if next(T.floatMode) then hs.timer.doAfter(0.08, raiseFloaters) end
+  if next(T.floatMode) then after(0.08, raiseFloaters) end
   checkCoveredSoon()
   return false
 end)

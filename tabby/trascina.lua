@@ -159,7 +159,7 @@ function onDragEnd(p)
       if pos then reorderTab(pr.i, pos) else draw() end
     end
   end
-  hs.timer.doAfter(0.25, function() T.suppressClick = false end)
+  after(0.25, function() T.suppressClick = false end)
 end
 
 ET = hs.eventtap.event.types

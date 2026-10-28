@@ -119,14 +119,14 @@ end
 --  Non disturbare (con due comandi rapidi dell'app Comandi: macOS non lascia
 --  accenderlo direttamente alle altre app)
 -- ---------------------------------------------------------------------
-function checkDndShortcuts(after)
+function checkDndShortcuts(done)
   local ok = pcall(function()
-    hs.task.new("/usr/bin/shortcuts", function(_, out)
+    runTask("/usr/bin/shortcuts", {"list"}, function(_, out)
       local have = {}
       for line in (out or ""):gmatch("[^\n]+") do have[line] = true end
       T.dndReady = have[FOCUS_DND_ON] and have[FOCUS_DND_OFF] or false
-      if after then after() end
-    end, {"list"}):start()
+      if done then done() end
+    end)
   end)
   if not ok then T.dndReady = false end
 end
@@ -134,7 +134,7 @@ end
 function setDnd(on)
   if not T.dndReady then return false end
   local name = on and FOCUS_DND_ON or FOCUS_DND_OFF
-  pcall(function() hs.task.new("/usr/bin/shortcuts", nil, {"run", name}):start() end)
+  pcall(function() runTask("/usr/bin/shortcuts", {"run", name}) end)
   print("Tabby · concentrazione: Non disturbare " .. (on and "acceso" or "spento"))
   return true
 end
@@ -597,7 +597,7 @@ function restoreFocus()
   if f.dnd then checkDndShortcuts() end
   if f.ended or (f.endAt and hs.timer.secondsSinceEpoch() >= f.endAt) then
     f.ended = nil
-    hs.timer.doAfter(1, function() endFocus() end)
+    after(1, function() endFocus() end)
   else
     startFocusTick()
   end

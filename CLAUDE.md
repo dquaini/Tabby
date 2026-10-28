@@ -39,7 +39,11 @@ Prima di lavorare leggi:
 - **Come si scrive codice nei file di `tabby/`**: tutti condividono uno **spazio comune di
   nomi** (tabella `E`, `Tabby._env`). A livello del file si scrive `function nome()` /
   `nome = …` **senza `local`**: così il nome si usa direttamente negli altri file e non c'è
-  il limite di Lua dei 200 nomi locali (che il file unico aveva quasi raggiunto). `local`
+  il limite di Lua dei 200 nomi locali (che il file unico aveva quasi raggiunto).
+  **Timer e comandi esterni**: mai `hs.timer.doAfter(...)` o `hs.task.new(...)` lasciati
+  senza riferimento (Hammerspoon li butta via prima che scattino): usa `after(secondi, fn)`
+  / `later(fn)` e `runTask(percorso, argomenti, fn)`, oppure tienili in un campo di `T`.
+  `test/test_robustezza.py` lo controlla, insieme ai nomi di funzione definiti due volte. `local`
   solo dentro le funzioni, o per cose davvero private del file. L'ordine di `FILES` in
   `tabby.lua` conta: una funzione si può *chiamare* solo dopo che il suo file è caricato.
   Diagnosi dal Terminale: `hs -c "Tabby._env.nomeFunzione(...)"` o `Tabby.diag`.
@@ -127,5 +131,5 @@ GitHub, poi `git clone git@github.com:dquaini/Tabby.git` e `init.lua` che punta 
 
 ## Versione attuale
 
-**v9.61** (storia in `docs/STORIA.md`). Prossimo obiettivo: **Tabby v1** (A fatta; B Cartelle: base fatta in v9.8, restano "Apri all'avvio" e rifiniture)
+**v9.62** (storia in `docs/STORIA.md`). Prossimo obiettivo: **Tabby v1** (A fatta; B Cartelle: base fatta in v9.8, restano "Apri all'avvio" e rifiniture)
 (`docs/ROADMAP-v1.md`).

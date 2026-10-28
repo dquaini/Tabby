@@ -31,7 +31,7 @@ function createGroup(layoutId, zones, nz)
   saveGroups()
   rebuildTabs()
   showGroup(g)
-  hs.timer.doAfter(0, layoutFloaters)   -- le app veloci rimaste si rimettono in fila
+  after(0, layoutFloaters)   -- le app veloci rimaste si rimettono in fila
 end
 
 -- "Scambia" (tasto ⇄ e ⌃⌥S): le app della vista divisa ruotano di una zona
@@ -314,7 +314,7 @@ function assignKeyToZone(k, key)
   for kk = 1, zoneCount(sp) do
     if not sp.zones[kk] then return end
   end
-  hs.timer.doAfter(0.35, function() if T.split == sp then finishSplit() end end)
+  after(0.35, function() if T.split == sp then finishSplit() end end)
 end
 
 -- Clic (senza trascinare) su una scheda durante la divisione:

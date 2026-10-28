@@ -23,8 +23,7 @@ FD.OPEN_WIN = {
 }
 
 function FD.runTask(path, args)
-  local t = hs.task.new(path, nil, args)
-  if t then t:start() end
+  runTask(path, args)
 end
 
 -- Apre una voce della ricetta che non è aperta, senza portarla davanti
@@ -166,7 +165,7 @@ function FD.activateFolder(f)
   -- le app appena aperte non devono portarti via da dove sei
   if opened > 0 and before then
     for _, d in ipairs({1.2, 2.5}) do
-      hs.timer.doAfter(d, function()
+      after(d, function()
         local now = hs.window.focusedWindow()
         if now and before:id() and now:id() ~= before:id() and before:application() then
           local nb = now:application() and now:application():bundleID()

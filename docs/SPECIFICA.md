@@ -928,6 +928,12 @@ Obiettivo misurato (23/10): Hammerspoon con Tabby **~0,2% del processore** a rip
 <lavoro> <ms>` con i passaggi più lunghi e l'app più lenta a rispondere (al massimo
 una volta al minuto per lavoro).
 
+**Timer e comandi esterni** (v9.62): ogni "fai tra un attimo" e ogni comando esterno
+(osascript, open, shortcuts) resta tenuto finché non è finito (`after`, `runTask`):
+Hammerspoon butta via quelli senza riferimento alla prima pulizia della memoria (provato:
+20 su 20 persi), e il lavoro non si faceva — anche quello che scatta a ogni cambio di app.
+**[Swift]** il problema non esiste (ARC/closure), ma i timer vanno comunque tenuti.
+
 ## 23. Permessi
 
 - **Accessibilità** (indispensabile): finestre, scorciatoie, Dock, DuckDuckGo.
@@ -998,6 +1004,7 @@ Ogni regola ha un test in `test/`; nell'app Swift diventano test di accettazione
 | `test_cerchio.py` | W-0, W-3 (ventaglio, puntatore), W-4 |
 | `test_concentrazione.py` | H-1 … H-5 |
 | `test_cerca.py` | E-1 … E-4 |
+| `test_robustezza.py` | timer e comandi esterni tenuti; nessuna funzione doppia |
 | `test_finestre_ridotte.py` | finestre ridotte / app nascoste su macOS 26 |
 | `test_cartelle_avvisi.py` | F-3 (griglia), F-4.5 (velo), F-10, B-9, Diario |
 | `test_finestre_fluide.py` | C-4 (giallo, ⌘Q, macOS che cambia app prima), D-4, L (angoli), W-0, Q-2 |

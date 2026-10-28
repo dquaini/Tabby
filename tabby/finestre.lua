@@ -190,7 +190,7 @@ function anticipateFullscreen(how)
   T.fsHintUntil = hs.timer.secondsSinceEpoch() + 2
   print("Tabby · schermo intero chiesto (" .. how .. ") alle " .. clockMs() .. ": Tabby si fa da parte")
   draw()
-  hs.timer.doAfter(2.1, function()
+  after(2.1, function()
     T.fsHintUntil = nil
     updateFullscreen()
     draw()
@@ -261,18 +261,18 @@ function updateCoveredLamps()
   end
 end
 function checkCoveredSoon()
-  if next(T.floatMode) or #T.coveredLamps > 0 then hs.timer.doAfter(0.25, updateCoveredLamps) end
+  if next(T.floatMode) or #T.coveredLamps > 0 then after(0.25, updateCoveredLamps) end
 end
 
 -- Riporta davanti dei Lampi (clic sul ripiano): uno, o tutti uno dopo l'altro
 function bringLamps(keys)
   for n, key in ipairs(keys) do
-    hs.timer.doAfter((n - 1) * 0.15, function()
+    after((n - 1) * 0.15, function()
       local app = appFor(key)
       if app then app:activate() end
     end)
   end
-  hs.timer.doAfter(#keys * 0.15 + 0.3, updateCoveredLamps)
+  after(#keys * 0.15 + 0.3, updateCoveredLamps)
 end
 
 function raiseFloaters()
@@ -287,7 +287,7 @@ function raiseFloaters()
   end
 end
 function raiseFloatersSoon()
-  if next(T.floatMode) then hs.timer.doAfter(0.15, raiseFloaters) end
+  if next(T.floatMode) then after(0.15, raiseFloaters) end
   checkCoveredSoon()
 end
 
@@ -495,7 +495,7 @@ handleActive = timed("cambio di scheda", function(app)
       g.focus = key
       layoutGroup(g)
       T.step("vista divisa")
-      hs.timer.doAfter(0.6, function()
+      after(0.6, function()
         if T.memberOf[currentKey()] == g then layoutGroup(g) end
       end)
     else
@@ -534,7 +534,7 @@ handleActive = timed("cambio di scheda", function(app)
       fitApp(app)
       T.step("adatta finestre")
       -- alcune app creano le finestre con un attimo di ritardo
-      hs.timer.doAfter(0.6, function() fitApp(app); raiseFloaters() end)
+      after(0.6, function() fitApp(app); raiseFloaters() end)
       raiseFloatersSoon()
     end
   end
@@ -545,7 +545,7 @@ handleActive = timed("cambio di scheda", function(app)
 end)
 
 function afterFocus()
-  hs.timer.doAfter(0.2, function()
+  after(0.2, function()
     handleActive(hs.application.frontmostApplication())
   end)
 end
@@ -575,7 +575,7 @@ function focusWin(e)
   T.focusSeq = (T.focusSeq or 0) + 1
   local seq = T.focusSeq
   for _, d in ipairs({0.25, 0.6}) do
-    hs.timer.doAfter(d, function()
+    after(d, function()
       if T.focusSeq ~= seq then return end   -- nel frattempo hai scelto altro
       local f = hs.window.focusedWindow()
       if (not f or f:id() ~= wid) and w:application() and not w:isMinimized() then
@@ -600,7 +600,7 @@ function showGroup(g)
   T.desktopMode = false
   layoutGroup(g, true)
   focusKey(g.focus or g.members[1])
-  hs.timer.doAfter(0.35, function() layoutGroup(g); draw() end)
+  after(0.35, function() layoutGroup(g); draw() end)
 end
 
 -- Passa alla scheda numero i

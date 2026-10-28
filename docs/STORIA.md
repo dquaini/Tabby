@@ -186,4 +186,7 @@ v9.60: cartelle con tante voci: il riquadro diventa una griglia (tutte visibili,
     diario su file (~/Library/Logs/Tabby.log) con tutte le chiusure.
 v9.61: le finestre ridotte nel Dock (e quelle delle app nascoste) restano schede: su
     macOS 26 si dicono "dialogo" e Tabby le perdeva (Chrome e Anteprima "chiuse").
+v9.62: robustezza: i timer «tra un attimo» (46 punti, compreso quello di ogni cambio di
+    app) e i comandi esterni ora sono tenuti finché non scattano (Hammerspoon li buttava
+    via: provato, 20 su 20 persi). Test che lo controlla.
 ```

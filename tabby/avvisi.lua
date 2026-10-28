@@ -131,7 +131,7 @@ function warnDuplicate(new, old)
         print("Tabby · sito doppio: chiudo la finestra nuova di «" .. name .. "»")
         pcall(function() newWin:close() end)
         scheduleRebuild()
-        if T.cand[oldKey] then hs.timer.doAfter(0.3, function() focusKey(oldKey) end) end
+        if T.cand[oldKey] then after(0.3, function() focusKey(oldKey) end) end
       end},
     },
   })

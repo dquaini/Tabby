@@ -152,7 +152,7 @@ function textOnLeave(key)
     w = app and app:mainWindow()
   end
   if not w then return end
-  hs.timer.doAfter(1.5, function() if not T.paused then textQueue(w) end end)
+  after(1.5, function() if not T.paused then textQueue(w) end end)
 end
 
 -- ---------------------------------------------------------------------
@@ -430,11 +430,11 @@ function searchChoose(i)
     afterFocus()
   end
   if it.inText and q:find("%S") then
-    hs.timer.doAfter(0.45, function()
+    after(0.45, function()
       local fw = hs.window.focusedWindow()
       if not (fw and fw:id() == w:id()) then return end   -- (non è arrivata davanti, o è cambiata)
       hs.eventtap.keyStroke({"cmd"}, "f", 0)
-      hs.timer.doAfter(0.15, function() hs.eventtap.keyStrokes(q) end)
+      after(0.15, function() hs.eventtap.keyStrokes(q) end)
     end)
   end
 end

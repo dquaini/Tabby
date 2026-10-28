@@ -246,7 +246,7 @@ function goNeighborSoon(snap, why)
     if T.focusSeq ~= focus then return end   -- hai scelto tu un'altra scheda
     rebuildTabs()
     if snapStillVisible(snap) then
-      if tries[n + 1] then hs.timer.doAfter(tries[n + 1] - tries[n], function() attempt(n + 1) end) end
+      if tries[n + 1] then after(tries[n + 1] - tries[n], function() attempt(n + 1) end) end
       draw(); return
     end
     local target
@@ -257,7 +257,7 @@ function goNeighborSoon(snap, why)
       tostring(why), tostring(snap.name), tostring(T.tabs[target].name)))
     switchTo(target)
   end
-  hs.timer.doAfter(tries[1], function() attempt(1) end)
+  after(tries[1], function() attempt(1) end)
 end
 
 
@@ -362,11 +362,11 @@ function windowsMenu()
   return items
 end
 
-function toggle(key, after)
+function toggle(key, done)
   return function()
     S[key] = not S[key]
     save(key)
-    if after then after() end
+    if done then done() end
     draw()
   end
 end
@@ -402,7 +402,7 @@ function refit()
     layoutFloaters()
   end
   once()
-  hs.timer.doAfter(0.4, once)
+  after(0.4, once)
 end
 
 function behaviourMenu()
@@ -534,7 +534,7 @@ function openQuick()
          fn = function() m.on = not m.on; save("menuApps") end},
         {title = "Scorciatoia ⌃⌥ + lettera…", fn = function() chooseAppShortcut(b) end},
         {title = "Togli la scorciatoia", disabled = (m.key == nil),
-         fn = function() m.key = nil; save("menuApps"); hs.timer.doAfter(0.5, function() hs.reload() end) end},
+         fn = function() m.key = nil; save("menuApps"); after(0.5, function() hs.reload() end) end},
       }})
   end
   if #manage == 0 then table.insert(manage, {title = "Nessuna app trovata (si aggiungono da sole)", disabled = true}) end

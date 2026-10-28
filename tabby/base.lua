@@ -126,7 +126,35 @@ end
 
 function screen() return hs.screen.primaryScreen() end
 
-function later(fn) hs.timer.doAfter(0, fn) end
+-- "Fai questa cosa tra un attimo". Un timer che nessuno tiene da parte, Hammerspoon
+-- può buttarlo via (pulizia della memoria) prima che scatti, e il lavoro non si fa
+-- più: provato il 28/10/2026, 20 timer su 20 persi. Erano 45 punti di Tabby, tra cui
+-- quello che scatta a ogni cambio di app. after() tiene ogni timer in T.pending
+-- finché non è scattato.
+T.pending = T.pending or {}
+function after(delay, fn)
+  local t
+  t = hs.timer.doAfter(delay, function()
+    T.pending[t] = nil
+    fn()
+  end)
+  T.pending[t] = true
+  return t
+end
+function later(fn) return after(0, fn) end
+
+-- Lo stesso per i comandi esterni (osascript, open, shortcuts): tenuti finché non
+-- finiscono, così la loro risposta arriva sempre
+T.tasks = T.tasks or {}
+function runTask(path, args, cb)
+  local t
+  t = hs.task.new(path, function(...)
+    T.tasks[t] = nil
+    if cb then cb(...) end
+  end, args)
+  if t and t:start() then T.tasks[t] = true; return t end
+  return nil
+end
 
 -- Spia di lentezza: Tabby fa tutto su un solo "filo", quindi un lavoro lento
 -- fa scattare anche la tastiera. Se un lavoro supera SLOW_MS lo scrive in
