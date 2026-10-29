@@ -180,7 +180,7 @@ end
 --    aperta, anche se ci navighi dentro (T.itemWins, ricordato anche dopo un
 --    ricaricamento di Tabby)
 -- 3. le altre finestre dello stesso browser o app restano fuori
-function FD.bindKey(f, it) return f.id .. "|" .. FD.itemKey(it) end
+function FD.bindKey(f, it) return tostring(f.id) .. "|" .. FD.itemKey(it) end
 T.itemWins = T.itemWins or hs.settings.get("tabbar.itemWins") or {}
 
 local function entryMatches(it, t)
