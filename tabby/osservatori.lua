@@ -389,12 +389,26 @@ function touchesX(touches)
   return n > 0 and sum / n or nil, n
 end
 
+-- Memoria (28/10/2026): ogni lettura delle dita (getTouches) lascia in Hammerspoon un
+-- po' di memoria che non si libera più (provato: 50 000 letture = 33 MB, con le dita
+-- vere di più). Gli eventi del trackpad arrivano decine di volte al secondo anche solo
+-- scorrendo una pagina: in un giorno Hammerspoon arrivava oltre 1 GB. Ora, se le dita
+-- non sono tre (scorrere con due, una), per 150 ms non si rileggono; durante un gesto a
+-- tre dita si legge tutto (è breve, e serve vedere quando alzi le dita).
+GESTURE_PAUSE = 0.15
 T.gestureTap = hs.eventtap.new({hs.eventtap.event.types.gesture}, function(e)
   if not S.gestures or T.paused then return false end
+  local now = hs.timer.secondsSinceEpoch()
+  if not T.swipe and T.gestNext and now < T.gestNext then return false end
   local ok, touches = pcall(function() return e:getTouches() end)
   if not ok or type(touches) ~= "table" then return false end
   local x, n = touchesX(touches)
-  if n ~= 3 then T.swipe = nil; return false end   -- finito, o un gesto con altre dita
+  if n ~= 3 then   -- finito, o un gesto con altre dita (scorrere con due)
+    T.swipe = nil
+    T.gestNext = (n > 0) and (now + GESTURE_PAUSE) or nil
+    return false
+  end
+  T.gestNext = nil
   if not T.swipe then
     T.swipe = {x0 = x, done = false}
     if not T.gestureDiag then   -- la prima volta: cosa c'è in un tocco (per la diagnosi)

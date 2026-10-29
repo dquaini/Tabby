@@ -940,6 +940,12 @@ di un DuckDuckGo nascosto usano l'ultima cosa vista. **Pagine** (v9.63): Concent
 ricerca e avvisi si chiudono dopo 5 minuti senza uso (controllo ogni 2 minuti) e si
 ricreano alla prossima apertura; Memo e sfera restano sempre pronti.
 
+**Gesti e memoria** (v9.64): leggere le dita (getTouches) lascia memoria che
+Hammerspoon non libera (50 000 letture = 33 MB). Con dita diverse da tre la lettura si
+sospende per 150 ms; durante un gesto a tre dita si legge ogni evento. **Notch**: la
+risposta di macOS si ricorda per schermo (nome e misura), si chiede solo per uno schermo
+nuovo. **[Swift]** NSEvent.allTouches non ha questo problema, ma basta il gesto di sistema.
+
 ## 23. Permessi
 
 - **Accessibilità** (indispensabile): finestre, scorciatoie, Dock, DuckDuckGo.

@@ -349,9 +349,24 @@ end
 
 -- Il "notch" (la tacca della fotocamera dei MacBook recenti).
 -- Lo chiediamo a macOS: dove inizia e finisce, in coordinate dello schermo.
+-- (memoria, 28/10/2026) ogni domanda in JavaScript a macOS lascia in Hammerspoon un
+-- motore JavaScript che non si chiude più. Il notch di uno schermo non cambia: la
+-- risposta si ricorda per schermo e misura, e si chiede solo per uno schermo nuovo
+-- (prima a ogni stop, risveglio e cambio di monitor).
+T.notchCache = T.notchCache or {}
 function detectNotch()
   local s  = screen()
   local ff = s:fullFrame()
+  local ck = tostring(s:name()) .. "|" .. ff.w .. "x" .. ff.h
+  local c = T.notchCache[ck]
+  if c then T.notchInfo = c.info; return c.zone end
+  local zone = detectNotchNow(s, ff)
+  -- (se macOS non ha risposto, la prossima volta si richiede)
+  if not tostring(T.notchInfo):find("nessuna risposta") then T.notchCache[ck] = {zone = zone, info = T.notchInfo} end
+  return zone
+end
+
+function detectNotchNow(s, ff)
   local ok, success, res = pcall(function(src) return hs.osascript.javascript(src) end, [[
     ObjC.import('AppKit');
     var out = '';

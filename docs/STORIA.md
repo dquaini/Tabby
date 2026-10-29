@@ -193,4 +193,8 @@ v9.63: DuckDuckGo: si legge dentro una finestra solo se il titolo è cambiato o 
     (prima ogni 3 s tutte), e le finestre ridotte restano nell'elenco (macOS 26); le
     pagine di Concentrazione, ricerca e avvisi si chiudono dopo 5 minuti senza uso
     (memoria); tolte due funzioni non più usate.
+v9.64: memoria: Hammerspoon arrivava oltre 1 GB in un giorno. Causa: la lettura delle dita
+    sul trackpad (per il gesto a tre dita), fatta a ogni movimento anche scorrendo, lascia
+    memoria che non si libera. Ora con due dita o una si rilegge dopo 150 ms; durante un
+    gesto a tre dita si legge tutto. Il notch si chiede una volta per schermo.
 ```
