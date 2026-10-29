@@ -197,4 +197,8 @@ v9.64: memoria: Hammerspoon arrivava oltre 1 GB in un giorno. Causa: la lettura 
     sul trackpad (per il gesto a tre dita), fatta a ogni movimento anche scorrendo, lascia
     memoria che non si libera. Ora con due dita o una si rilegge dopo 150 ms; durante un
     gesto a tre dita si legge tutto. Il notch si chiede una volta per schermo.
+v9.65: apertura delle cartelle: al posto del velo semitrasparente una schermata piena
+    (sfondo della Scrivania sfocato, nome della cartella, icone che si accendono, barretta)
+    che copre tutto PRIMA che le app partano e sfuma solo quando Tabby ha finito di
+    sistemarle (almeno 2,9 s, al massimo 7, un clic la toglie).
 ```

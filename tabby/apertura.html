@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<!--
+  L'apertura di una cartella (v9.65, Daniele: «è brutto vedere scattare le finestre di
+  prima mattina»). Copre tutto lo schermo, senza trasparenza: lo sfondo della Scrivania
+  sfocato (come quando macOS si sblocca), il nome della cartella e le icone delle sue
+  app, che si accendono una alla volta quando la loro finestra è arrivata. Sotto, intanto,
+  le finestre si aprono e Tabby le sistema; quando è tutto a posto la schermata sfuma via.
+  Tabby → pagina: setup({name, bg, items:[{icon}]}) · arrive(i) · done()
+  Pagina → Tabby: send({ready}) · send({shown}) · send({skip})
+-->
+<style>
+html, body { margin: 0; height: 100%; overflow: hidden; user-select: none; -webkit-user-select: none; cursor: default;
+  background: #101114; font: 13px/1.35 -apple-system, system-ui, sans-serif; color: #fff; }
+#stage { position: fixed; inset: 0; opacity: 0; transition: opacity .22s ease-out; }
+#stage.on { opacity: 1; }
+#stage.out { opacity: 0; transition: opacity .38s ease-in; }
+#bg { position: absolute; inset: -60px; background: radial-gradient(ellipse at 50% 40%, #2B2F3A, #0E0F13 70%) center/cover no-repeat;
+  filter: blur(40px) saturate(1.2); transform: scale(1.08); }
+#shade { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,.18), rgba(0,0,0,.5)); }
+#box { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); text-align: center; width: 80%; }
+#name { font-size: 26px; font-weight: 600; letter-spacing: .2px; text-shadow: 0 2px 14px rgba(0,0,0,.35);
+  opacity: 0; transform: translateY(6px); transition: opacity .4s .05s, transform .4s .05s cubic-bezier(.2,.9,.3,1); }
+#stage.on #name { opacity: 1; transform: none; }
+#icons { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; margin: 30px auto 0; max-width: 720px; }
+.ic { width: 64px; height: 64px; position: relative; opacity: .28; transform: scale(.86); filter: saturate(.3);
+  transition: opacity .35s, transform .45s cubic-bezier(.3,1.5,.5,1), filter .35s; }
+.ic img { width: 100%; height: 100%; filter: drop-shadow(0 6px 14px rgba(0,0,0,.35)); }
+.ic.wait { animation: breathe 1.6s ease-in-out infinite; }
+.ic.here { opacity: 1; transform: scale(1); filter: none; animation: none; }
+@keyframes breathe { 0%, 100% { opacity: .22; } 50% { opacity: .42; } }
+#bar { width: 180px; height: 4px; border-radius: 2px; background: rgba(255,255,255,.16); margin: 34px auto 0; overflow: hidden; }
+#fill { height: 100%; width: 0; border-radius: 2px; background: rgba(255,255,255,.85); transition: width .4s ease; }
+#hint { margin-top: 14px; font-size: 11.5px; color: rgba(255,255,255,.5); }
+@media (prefers-reduced-motion: reduce) { .ic.wait { animation: none; } }
+</style></head>
+<body>
+<div id="stage">
+  <div id="bg"></div><div id="shade"></div>
+  <div id="box">
+    <div id="name"></div>
+    <div id="icons"></div>
+    <div id="bar"><div id="fill"></div></div>
+    <div id="hint">clic per continuare</div>
+  </div>
+</div>
+<script>
+function send(o) { try { window.webkit.messageHandlers.tabbyopen.postMessage(o) } catch (e) {} }
+var total = 0, here = 0;
+function setup(s) {
+  var st = document.getElementById('stage');
+  st.className = '';
+  document.getElementById('name').textContent = s.name;
+  if (s.bg) document.getElementById('bg').style.backgroundImage = 'url(' + s.bg + ')';
+  var box = document.getElementById('icons'); box.innerHTML = '';
+  total = s.items.length; here = 0;
+  s.items.forEach(function (it, i) {
+    var d = document.createElement('div');
+    d.className = 'ic wait'; d.id = 'ic' + (i + 1);
+    d.style.animationDelay = (i * 0.12) + 's';
+    if (it.icon) d.innerHTML = '<img src="' + it.icon + '" alt="">';
+    box.appendChild(d);
+  });
+  document.getElementById('fill').style.width = '0';
+  requestAnimationFrame(function () { requestAnimationFrame(function () {
+    st.classList.add('on');
+    setTimeout(function () { send({shown: true}); }, 230);   // coperto del tutto: le app possono partire
+  }); });
+}
+function arrive(i) {
+  var d = document.getElementById('ic' + i);
+  if (!d || d.classList.contains('here')) return;
+  d.classList.remove('wait'); d.classList.add('here');
+  here++;
+  document.getElementById('fill').style.width = Math.round(here / Math.max(1, total) * 100) + '%';
+}
+function done() {
+  document.getElementById('fill').style.width = '100%';
+  var st = document.getElementById('stage');
+  st.classList.add('out');
+}
+document.addEventListener('click', function () { send({skip: true}); });
+send({ready: true});
+</script></body></html>

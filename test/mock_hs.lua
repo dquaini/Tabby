@@ -15,6 +15,7 @@ end
 local SCREEN = {
   frame = function() return {x = 0, y = 25, w = 1440, h = 875} end,
   fullFrame = function() return {x = 0, y = 0, w = 1440, h = 900} end,
+  desktopImageURL = function() return "file:///System/Library/CoreServices/DefaultDesktop.heic" end,
   id = function() return 1 end,
   name = function() return "Built-in Retina Display" end,
 }
@@ -174,7 +175,8 @@ hs = {
     watcher = {new = function() return {start = function(s) return s end} end},
   },
   geometry = {rect = function(x, y, w, h) return {x = x, y = y, w = w, h = h} end},
-  image = {imageFromAppBundle = function(b) return {setSize = function(s) return s end, _b = b} end,
+  image = {imageFromAppBundle = function(b) return {setSize = function(s) return s end, _b = b, encodeAsURLString = function() return "data:image/png;base64,ICONA" end} end,
+           imageFromPath = function(p) if not p:find("%.heic$") then return nil end return {setSize = function(s) return s end, size = function() return {w = 480, h = 300} end, encodeAsURLString = function() return "data:image/jpeg;base64,SFONDO" end} end,
            imageFromURL = function(u, cb) FAVICON_REQ = (FAVICON_REQ or 0) + 1; FAVICON_URLS = FAVICON_URLS or {}; table.insert(FAVICON_URLS, u); if cb then if FAVICON_FAIL and u:find(FAVICON_FAIL, 1, true) then cb(nil) else cb({setSize = function(s) return s end, size = function() return {w = 32, h = 32} end, _url = u}) end end end},
   application = {
     runningApplications = function() local o = {} for _, a in ipairs(APPS) do o[#o+1] = a end return o end,
@@ -401,6 +403,7 @@ hs = {
       elseif ucc and ucc._name == "tabbyfocus" then FOCUSVIEW = wv
       elseif ucc and ucc._name == "tabbysearch" then SEARCHVIEW = wv
       elseif ucc and ucc._name == "tabbynotice" then NOTICEVIEW = wv
+      elseif ucc and ucc._name == "tabbyopen" then OPENVIEW = wv
       else MEMO = wv end
       return wv
     end,
@@ -410,6 +413,7 @@ hs = {
       elseif name == "tabbyfocus" then FOCUS_CB = fn
       elseif name == "tabbysearch" then SEARCH_CB = fn
       elseif name == "tabbynotice" then NOTICE_CB = fn
+      elseif name == "tabbyopen" then OPEN_CB = fn
       else MEMO_CB = fn end
       return self
     end} end},

@@ -3,7 +3,8 @@
 2. tasto destro sulla scheda-cartella → il menu della cartella (Rinomina…)
 3. diario su file di cosa chiude Tabby
 4. lo stesso sito in due finestre → avviso (Vai a quella / Chiudi questa / Lascia)
-5. aprendo una cartella con tante finestre: un velo con le icone che si accendono, poi sfuma"""
+5. aprendo una cartella con tante finestre: una schermata piena (sfondo sfocato, icone che si
+   accendono) copre tutto prima che partano le app, e sfuma quando è tutto sistemato"""
 import os, tempfile
 import lupa.lua54 as l
 from aiuto import carica
@@ -45,7 +46,7 @@ print("== 1. Riquadro della cartella con 9 voci")
 L.execute('''Tabby._env.T.fedit = nil
 local items = {}
 for i = 1, 9 do items[i] = {bid = "app.numero" .. i, name = "App " .. i} end
-Tabby._env.icon = function() return {size = function() return {w = 32, h = 32} end} end
+Tabby._env.icon = function() return {size = function() return {w = 32, h = 32} end, setSize = function(s) return s end, encodeAsURLString = function() return "data:image/png;base64,ICONA" end} end
 Tabby._env.T.fedit = {name = "Tante", items = items, hover = false}
 Tabby._env.FD.drawFolderEdit()''')
 check("si vedono tutte e 9 le icone (nessun «+N»)", count_els('e.type == "image"') == 9 and count_els('e.text and e.text:find("^%+%d")') == 0)
@@ -112,28 +113,30 @@ L.execute('''Tabby._env.S.folders = {{id = 2, name = "Lavoro", items = {
 -- le app arrivano "dopo": l'apertura le mette in coda
 QUEUED = {}
 OPEN_HOOK = function(args) table.insert(QUEUED, args[3]) end''')
-run('Tabby._env.FD.activateFolder(Tabby._env.S.folders[1])')
-check("compare il velo «Apro «Lavoro»» con le 3 icone spente", ev('Tabby.openVeil ~= nil and Tabby.openVeil._shown') is True
-      and ev('(function() for _, e in ipairs(Tabby.openVeil._els) do if e.text and e.text:find("Apro «Lavoro»") then return true end end return false end)()') is True
-      and ev('(function() for _, e in ipairs(Tabby.openVeil._els) do if e.text == "0 di 3" then return true end end return false end)()') is True)
-def fade(): L.execute('for _ = 1, 12 do if Tabby.openFadeT then Tabby.openFadeT.fn() end end')
+L.execute('Tabby._env.FD.activateFolder(Tabby._env.S.folders[1])')   # (senza far scattare i timer)
+def ojs(): return ev('OPENVIEW and table.concat(OPENVIEW._js, " | ") or ""')
+check("prima si copre lo schermo, e nessuna app è ancora partita", ev('OPENVIEW ~= nil and OPENVIEW._shown') is True and ev('#QUEUED') == 0)
+L.execute('FLUSH()')
+check("la schermata: nome della cartella, sfondo della Scrivania, le 3 icone", 'setup({name:"Lavoro"' in ojs() and 'SFONDO' in ojs() and ojs().count('ICONA') >= 3)
+check("coperto lo schermo, partono le app", ev('#QUEUED') == 3)
 def arrive(i):
     run(f'local b = QUEUED[{i}]; local a = ADDAPP(b, b); a._wins = {{newWindow(a, b)}}; APPWATCH(a._name, "launch", a); Tabby._env.rebuildTabs(); Tabby.openTimer.fn()')
 arrive(1)
-check("arriva la prima: «1 di 3», la sua icona si accende (✓)", ev('(function() for _, e in ipairs(Tabby.openVeil._els) do if e.text == "1 di 3" then return true end end return false end)()') is True
-      and ev('(function() for _, e in ipairs(Tabby.openVeil._els) do if e.text == "✓" then return true end end return false end)()') is True)
-arrive(2); arrive(3); fade()
-check("arrivate tutte: il velo sfuma e sparisce", ev('Tabby.openVeil._shown') is False and ev('Tabby.openTimer') is None)
+check("arriva la prima: la sua icona si accende", 'arrive(1)' in ojs() and ev('OPENVIEW._shown') is True)
+arrive(2); arrive(3)
+check("arrivate tutte: resta ancora un attimo (Tabby le sta sistemando)", ev('OPENVIEW._shown') is True and 'done()' not in ojs())
+run('CLOCK = (CLOCK or 1000) + 3; Tabby.openTimer.fn()')
+check("finito di sistemarle: sfuma via", 'done()' in ojs() and ev('OPENVIEW._shown') is False and ev('Tabby.openTimer') is None)
 L.execute('''Tabby._env.S.folders[1].items = {{bid = "com.quattro.app", name = "Quattro"}, {bid = "com.cinque.app", name = "Cinque"}}''')
 run('Tabby._env.FD.activateFolder(Tabby._env.S.folders[1])')
-run('CLOCK = (CLOCK or 1000) + 9; Tabby.openTimer.fn()'); fade()
-check("se un'app non arriva, dopo 6 secondi il velo si toglie comunque", ev('Tabby.openVeil._shown') is False)
+run('CLOCK = (CLOCK or 1000) + 8; Tabby.openTimer.fn()')
+check("se un'app non arriva, dopo 7 secondi si toglie comunque", ev('OPENVIEW._shown') is False)
 run('Tabby._env.FD.activateFolder(Tabby._env.S.folders[1])')
-check("(di nuovo il velo)", ev('Tabby.openVeil._shown') is True)
-run('Tabby.openVeil._cb(Tabby.openVeil, "mouseUp", "x")'); fade()
-check("un clic sul velo lo toglie subito", ev('Tabby.openVeil._shown') is False and ev('Tabby.openTimer') is None)
-L.execute('Tabby._env.S.folders[1].items = {{bid = "com.sei.app", name = "Sei"}}')
+check("(di nuovo la schermata)", ev('OPENVIEW._shown') is True)
+run('OPEN_CB({body = {skip = true}})')
+check("un clic la toglie subito", ev('OPENVIEW._shown') is False and ev('Tabby.openTimer') is None)
+L.execute('Tabby._env.S.folders[1].items = {{bid = "com.sei.app", name = "Sei"}}; QUEUED = {}')
 run('Tabby._env.FD.activateFolder(Tabby._env.S.folders[1])')
-check("una sola app da aprire: niente velo", ev('Tabby.openVeil._shown') is False)
+check("una sola app da aprire: niente schermata, si apre subito", ev('OPENVIEW._shown') is False and ev('#QUEUED') == 1)
 
 print("\n" + ("TUTTO OK" if not fails else f"FALLITI: {len(fails)}"))

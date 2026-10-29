@@ -150,32 +150,35 @@ function FD.activateFolder(f)
   for _, x in ipairs(FD.activeList()) do if x ~= f then table.insert(order, x) end end
   table.insert(order, f)
   local _, byItem = FD.assign(order, T.allTabs)
-  local opened = 0
+  local toOpen, toCheck = {}, {}
   for _, it in ipairs(f.items) do
     local tab = byItem[FD.bindKey(f, it)]
-    if not tab then
-      FD.openItem(it, FD.bindKey(f, it)); opened = opened + 1
-    elseif it.pages then
-      opened = opened + FD.reopenMissingPages(it, tab)   -- ricetta fissa: schede chiuse
-    end
+    if not tab then table.insert(toOpen, it)
+    elseif it.pages then table.insert(toCheck, {it = it, tab = tab}) end
   end
-  print(string.format("Tabby · cartella «%s» attivata: %d voci, %d da aprire", f.name, #f.items, opened))
-  -- più finestre da aprire: un velo copre il "ballo" delle finestre che arrivano
-  if opened >= 2 then FD.showOpening(f, order) end
-  -- le app appena aperte non devono portarti via da dove sei
-  if opened > 0 and before then
-    for _, d in ipairs({1.2, 2.5}) do
-      after(d, function()
-        local now = hs.window.focusedWindow()
-        if now and before:id() and now:id() ~= before:id() and before:application() then
-          local nb = now:application() and now:application():bundleID()
-          for _, it in ipairs(f.items) do
-            if it.bid == nb then before:focus(); break end
+  local function openAll()
+    local opened = 0
+    for _, it in ipairs(toOpen) do FD.openItem(it, FD.bindKey(f, it)); opened = opened + 1 end
+    for _, x in ipairs(toCheck) do opened = opened + FD.reopenMissingPages(x.it, x.tab) end   -- ricetta fissa: schede chiuse
+    print(string.format("Tabby · cartella «%s» attivata: %d voci, %d da aprire", f.name, #f.items, opened))
+    -- le app appena aperte non devono portarti via da dove sei
+    if opened > 0 and before then
+      for _, d in ipairs({1.2, 2.5}) do
+        after(d, function()
+          local now = hs.window.focusedWindow()
+          if now and before:id() and now:id() ~= before:id() and before:application() then
+            local nb = now:application() and now:application():bundleID()
+            for _, it in ipairs(f.items) do
+              if it.bid == nb then before:focus(); break end
+            end
           end
-        end
-      end)
+        end)
+      end
     end
   end
+  -- più app da aprire: prima si copre lo schermo (schermata di apertura), poi partono
+  -- le app, così non si vede il "ballo" delle finestre che arrivano e si sistemano
+  if #toOpen >= 2 then FD.showOpening(f, order, openAll) else openAll() end
   if not S.folderView then return end   -- Vista cartelle spenta: solo aprire
   if not FD.isFolderActive(f.id) then
     table.insert(S.activeFolders, f.id)
@@ -189,108 +192,126 @@ end
 
 -- ---------------------------------------------------------------------
 --  APERTURA DI UNA CARTELLA CON TANTE FINESTRE (28/10/2026, Daniele: «scatta lo
---  schermo»). Le app arrivano una alla volta, macOS le porta davanti, Tabby le
---  adatta e le nasconde: visto da fuori, un lampeggiare di finestre. Ora un velo
---  scuro copre lo schermo (la barra di Tabby resta sopra) con le icone della
---  cartella: ognuna si accende quando la sua finestra è arrivata. Quando ci sono
---  tutte (o dopo 6 secondi al massimo, o con un clic) il velo sfuma via in un attimo.
+--  schermo… è brutto vedere scattare le finestre di prima mattina»). Le app arrivano
+--  una alla volta, macOS le porta davanti, Tabby le adatta e le nasconde: visto da
+--  fuori, un lampeggiare di finestre. Ora una schermata piena (tabby/apertura.html:
+--  lo sfondo della Scrivania sfocato, il nome della cartella, le icone che si
+--  accendono man mano) copre tutto PRIMA che le app partano, e sfuma via solo quando
+--  le finestre sono arrivate e Tabby ha finito di sistemarle. Al massimo 7 s; un clic
+--  la toglie subito. Copre anche la barra di Tabby (schermo pulito).
 -- ---------------------------------------------------------------------
-OPEN_MAX_S = 6   -- al massimo (un clic sul velo lo toglie subito)
+OPEN_MAX_S    = 7     -- al massimo (un clic la toglie subito)
+OPEN_SETTLE_S = 1.0   -- dopo l'ultima finestra arrivata, il tempo per sistemarle
+OPEN_MIN_S    = 2.9   -- almeno fino al ritorno alla finestra di prima (1,2 e 2,5 s)
 
-function FD.openingDraw(st)
-  local c = T.openVeil
-  local ff = screen():fullFrame()
-  local A = appArea()
-  local n = #st.f.items
-  local isz, gap = 48, 18
-  local perRow = math.max(1, math.min(n, math.floor((math.min(A.w, 760) + gap) / (isz + gap))))
-  local rows = math.ceil(n / perRow)
-  local cx0, cy0 = A.x - ff.x + A.w / 2, A.y - ff.y + A.h / 2
-  local els = {{type = "rectangle", action = "fill", fillColor = {hex = "#0B0D12", alpha = 0.9},
-                frame = {x = 0, y = 0, w = ff.w, h = ff.h}}}
-  table.insert(els, {type = "text", text = "Apro «" .. st.f.name .. "»", textSize = 20, textColor = COL.text,
-    textAlignment = "center", frame = {x = cx0 - 300, y = cy0 - rows * (isz + gap) / 2 - 56, w = 600, h = 28}})
-  for k, it in ipairs(st.f.items) do
-    local col, row = (k - 1) % perRow, math.floor((k - 1) / perRow)
-    local inRow = math.min(perRow, n - row * perRow)
-    local x = cx0 - (inRow * (isz + gap) - gap) / 2 + col * (isz + gap)
-    local y = cy0 - rows * (isz + gap) / 2 + row * (isz + gap)
-    local here = st.here[k]
-    local im = FD.itemIcon(it)
-    if im then
-      table.insert(els, {type = "image", image = im, imageAlpha = here and 1 or 0.28,
-        frame = {x = x, y = y, w = isz, h = isz}})
-    end
-    if here then
-      table.insert(els, {type = "circle", action = "fill", fillColor = COL.batFull,
-        center = {x = x + isz - 4, y = y + isz - 4}, radius = 7})
-      table.insert(els, {type = "text", text = "✓", textSize = 9, textColor = {white = 1}, textAlignment = "center",
-        frame = {x = x + isz - 11, y = y + isz - 11, w = 14, h = 13}})
-    end
-  end
-  local done = 0
-  for k = 1, n do if st.here[k] then done = done + 1 end end
-  table.insert(els, {type = "text", text = done .. " di " .. n, textSize = 13, textColor = COL.textMid,
-    textAlignment = "center", frame = {x = cx0 - 100, y = cy0 + rows * (isz + gap) / 2 + 10, w = 200, h = 18}})
-  c:replaceElements(els)
-  return done == n
+-- Lo sfondo della Scrivania, piccolo (tanto è sfocato): come indirizzo "data:"
+function FD.wallpaperURI()
+  local ok, url = pcall(function() return screen():desktopImageURL() end)
+  if not ok or not url then return nil end
+  if T.wallURL == url and T.wallURI then return T.wallURI end
+  local path = tostring(url):gsub("^file://", ""):gsub("%%(%x%x)", function(h) return string.char(tonumber(h, 16)) end)
+  local uri
+  pcall(function()
+    local img = hs.image.imageFromPath(path)
+    if img then uri = img:setSize({w = 480, h = 300}, true):encodeAsURLString(false, "JPEG") end
+  end)
+  T.wallURL, T.wallURI = url, uri
+  return uri
 end
 
-function FD.showOpening(f, order)
-  local ff = screen():fullFrame()
-  if not T.openVeil then
-    T.openVeil = hs.canvas.new(ff)
-    T.openVeil:level(hs.canvas.windowLevels.floating)
-    T.openVeil:behavior({"canJoinAllSpaces", "stationary", "fullScreenAuxiliary"})
-    T.openVeil:clickActivating(false)
-    -- un clic sul velo lo toglie subito (non aspetti le app lente)
-    T.openVeil:canvasMouseEvents(true, true)
-    T.openVeil:mouseCallback(function(_, msg)
-      if msg == "mouseUp" and T.opening then
-        if T.openTimer then T.openTimer:stop(); T.openTimer = nil end
-        FD.hideOpening()
-      end
-    end)
-  end
-  if T.openTimer then T.openTimer:stop() end
-  local st = {f = f, here = {}, start = hs.timer.secondsSinceEpoch()}
-  T.opening = st
-  T.openVeil:frame(ff)
-  T.openVeil:alpha(1)
-  FD.openingDraw(st)
-  T.openVeil:show()
-  if T.bar then T.bar:orderAbove(T.openVeil) end
-  -- ogni 0,2 s: quali voci hanno già la loro finestra?
-  T.openTimer = hs.timer.doEvery(0.2, function()
-    local _, byItem = FD.assign(order, T.allTabs)
-    for k, it in ipairs(f.items) do
-      if byItem[FD.bindKey(f, it)] then st.here[k] = true end
+function FD.iconURI(it)
+  local ok, uri = pcall(function()
+    local img = FD.itemIcon(it)
+    if not img then return nil end
+    local c = img.copy and img:copy() or img
+    return c:setSize({w = 128, h = 128}):encodeAsURLString()
+  end)
+  return ok and uri or nil
+end
+
+function FD.ensureOpenView()
+  if T.openView then return T.openView end
+  T.openUCC = hs.webview.usercontent.new("tabbyopen")
+  T.openUCC:setCallback(function(msg)
+    local b = msg and msg.body
+    if type(b) ~= "table" then return end
+    if b.ready then
+      T.openReady = true
+      if T.openPending then T.openView:evaluateJavaScript(T.openPending); T.openPending = nil end
     end
-    local all = FD.openingDraw(st)
-    local late = hs.timer.secondsSinceEpoch() - st.start > OPEN_MAX_S
-    if all or late then
-      T.openTimer:stop(); T.openTimer = nil
-      if late and not all then print("Tabby · cartella «" .. f.name .. "»: dopo " .. OPEN_MAX_S .. " s manca ancora qualcosa, tolgo il velo") end
-      if not T.opening then return end
-      -- un attimo per far finire gli ultimi aggiustamenti, poi sfuma
-      T.openFade = hs.timer.doAfter(0.35, FD.hideOpening)
+    if b.shown then FD.openingStart() end
+    if b.skip and T.opening then FD.finishOpening("clic") end
+  end)
+  local page = ""
+  local fh = io.open((T.dir or ".") .. "/tabby/apertura.html", "r")
+  if fh then page = fh:read("a"); fh:close() end
+  T.openView = hs.webview.new(screen():fullFrame(), {developerExtrasEnabled = false}, T.openUCC)
+  T.openView:windowStyle({"borderless", "nonactivating"})
+  pcall(function() T.openView:transparent(true) end)
+  T.openView:allowTextEntry(false)
+  T.openView:level(hs.canvas.windowLevels.floating)
+  T.openView:behaviorAsLabels({"canJoinAllSpaces", "stationary", "fullScreenAuxiliary"})
+  T.openView:html(page)
+  return T.openView
+end
+
+-- go = la funzione che apre le app: parte quando lo schermo è coperto del tutto
+function FD.showOpening(f, order, go)
+  if T.opening then FD.finishOpening("nuova cartella") end
+  local v = FD.ensureOpenView()
+  markViewUsed("openView")
+  local st = {f = f, order = order, go = go, here = {}, shownAt = hs.timer.secondsSinceEpoch()}
+  T.opening = st
+  local items = {}
+  for _, it in ipairs(f.items) do table.insert(items, "{icon:" .. jsString(FD.iconURI(it) or "") .. "}") end
+  local js = string.format("setup({name:%s,bg:%s,items:[%s]})", jsString(f.name), jsString(FD.wallpaperURI() or ""),
+    table.concat(items, ","))
+  v:frame(screen():fullFrame())
+  v:show()
+  pcall(function() v:bringToFront(false) end)   -- (sopra anche la barra di Tabby: schermo pulito)
+  if T.openReady then v:evaluateJavaScript(js) else T.openPending = js end
+  -- rete di sicurezza: se la pagina non dice «coperto» entro 0,8 s, le app partono lo stesso
+  st.safety = after(0.8, function() if T.opening == st then FD.openingStart() end end)
+end
+
+-- Lo schermo è coperto: partono le app e Tabby guarda chi arriva
+function FD.openingStart()
+  local st = T.opening
+  if not st or st.started then return end
+  st.started = hs.timer.secondsSinceEpoch()
+  if st.go then st.go() end
+  if T.openTimer then T.openTimer:stop() end
+  T.openTimer = hs.timer.doEvery(0.2, function()
+    local now = hs.timer.secondsSinceEpoch()
+    local _, byItem = FD.assign(st.order, T.allTabs)
+    local all = true
+    for k, it in ipairs(st.f.items) do
+      if byItem[FD.bindKey(st.f, it)] then
+        if not st.here[k] then
+          st.here[k] = true
+          if T.openView then T.openView:evaluateJavaScript("arrive(" .. k .. ")") end
+        end
+      else all = false end
+    end
+    if all and not st.allAt then st.allAt = now end
+    local ready = st.allAt and now >= math.max(st.allAt + OPEN_SETTLE_S, st.started + OPEN_MIN_S)
+    if ready or now - st.started > OPEN_MAX_S then
+      FD.finishOpening(ready and "tutto a posto" or ("dopo " .. OPEN_MAX_S .. " s manca ancora qualcosa"))
     end
   end)
 end
 
-function FD.hideOpening()
-  if not T.openVeil then return end
+function FD.finishOpening(why)
+  local st = T.opening
+  if not st then return end
   T.opening = nil
-  local k = 0
-  if T.openFadeT then T.openFadeT:stop() end
-  T.openFadeT = hs.timer.doEvery(0.03, function()
-    k = k + 1
-    T.openVeil:alpha(math.max(0, 1 - k / 8))
-    if k >= 8 then
-      T.openFadeT:stop(); T.openFadeT = nil
-      T.openVeil:hide()
-      T.openVeil:alpha(1)
-    end
+  if T.openTimer then T.openTimer:stop(); T.openTimer = nil end
+  if not st.started then st.started = true; if st.go then st.go() end end   -- (le app non erano ancora partite)
+  print("Tabby · cartella «" .. st.f.name .. "»: tolgo la schermata di apertura (" .. tostring(why) .. ")")
+  if T.openView then T.openView:evaluateJavaScript("done()") end
+  T.openHide = hs.timer.doAfter(0.42, function()
+    T.openHide = nil
+    if not T.opening and T.openView then T.openView:hide() end
   end)
 end
 

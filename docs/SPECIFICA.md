@@ -412,12 +412,16 @@ voce si lega alla finestra scelta (es. quale delle due Gmail). Avviso: "Cartella
 4. la cartella diventa attiva (con "Vista cartelle" spenta: solo aprire, schede
    normali). Se sei su una sua scheda entri nella **vista cartella**; se sei altrove
    la cartella compare come **una scheda sola** e resti dove sei.
-5. **due o più voci da aprire** (v9.60): un **velo scuro** copre lo schermo (la barra
-   di Tabby resta sopra) con «Apro «Lavoro»», le icone delle voci (spente al 28%) e
-   «N di M»; ogni icona si accende con una ✓ verde quando la sua finestra è arrivata
-   (controllo ogni 0,2 s). Arrivate tutte (o dopo 6 s), 0,35 s dopo il velo sfuma in
-   0,24 s. Un clic sul velo lo toglie subito. *Perché:* sotto il velo succede il "ballo" delle finestre che arrivano,
-   vengono adattate e nascoste.
+5. **due o più voci da aprire** (v9.65, al posto del velo della v9.60): **prima** si
+   copre tutto lo schermo, barra di Tabby compresa, con una schermata piena, senza
+   trasparenza (pagina `tabby/apertura.html`): lo sfondo della Scrivania rimpicciolito e
+   sfocato, il nome della cartella, le icone delle voci (spente, che "respirano"; si
+   accendono quando la loro finestra è arrivata) e una barretta. Le app partono solo
+   quando la pagina dice che lo schermo è coperto (dopo la dissolvenza di 0,22 s; al
+   massimo 0,8 s). La schermata sfuma (0,38 s) quando sono arrivate tutte **e** è passato
+   1 s dall'ultima **e** almeno 2,9 s dall'inizio (dopo il ritorno alla finestra di prima,
+   punto 3); al massimo 7 s. Un clic la toglie subito. *Perché:* le finestre che arrivano,
+   vengono adattate e nascoste non si devono vedere ("sembra che qualcosa non vada").
 ⌃⌥⇧ + numero sulla cartella che stai già guardando → torni a tutte le schede.
 
 **F-5 Scheda-cartella** (vista normale): sta dove l'hai messa (`f:<n>` nell'ordine)
@@ -1018,7 +1022,7 @@ Ogni regola ha un test in `test/`; nell'app Swift diventano test di accettazione
 | `test_cerca.py` | E-1 … E-4 |
 | `test_robustezza.py` | timer e comandi esterni tenuti; nessuna funzione doppia |
 | `test_finestre_ridotte.py` | finestre ridotte / app nascoste su macOS 26 |
-| `test_cartelle_avvisi.py` | F-3 (griglia), F-4.5 (velo), F-10, B-9, Diario |
+| `test_cartelle_avvisi.py` | F-3 (griglia), F-4.5 (schermata di apertura), F-10, B-9, Diario |
 | `test_finestre_fluide.py` | C-4 (giallo, ⌘Q, macOS che cambia app prima), D-4, L (angoli), W-0, Q-2 |
 | `test_cartelle.py`, `test_cartelle_casi.py`, `test_cartelle_pagine.py` | F-1…F-10 |
 | `test_notch.py` | A-2, L-6 |

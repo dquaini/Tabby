@@ -79,6 +79,7 @@ IDLE_VIEWS = {
   {view = "focusView", ready = "focusReady", busy = function() return T.fsel or T.fask or T.fend end},
   {view = "searchView", ready = "searchReady", busy = function() return T.searchOpen end},
   {view = "noticeView", ready = "noticeReady", busy = function() return false end},
+  {view = "openView", ready = "openReady", busy = function() return T.opening ~= nil end},
 }
 function markViewUsed(name) T.viewUsed[name] = hs.timer.secondsSinceEpoch() end
 
