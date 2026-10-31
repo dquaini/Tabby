@@ -80,6 +80,7 @@ IDLE_VIEWS = {
   {view = "searchView", ready = "searchReady", busy = function() return T.searchOpen end},
   {view = "noticeView", ready = "noticeReady", busy = function() return false end},
   {view = "openView", ready = "openReady", busy = function() return T.opening ~= nil end},
+  {view = "keysView", ready = "keysReady", busy = function() return T.keysOpen end},
 }
 function markViewUsed(name) T.viewUsed[name] = hs.timer.secondsSinceEpoch() end
 

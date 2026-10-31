@@ -404,6 +404,7 @@ hs = {
       elseif ucc and ucc._name == "tabbysearch" then SEARCHVIEW = wv
       elseif ucc and ucc._name == "tabbynotice" then NOTICEVIEW = wv
       elseif ucc and ucc._name == "tabbyopen" then OPENVIEW = wv
+      elseif ucc and ucc._name == "tabbykeys" then KEYSVIEW = wv
       else MEMO = wv end
       return wv
     end,
@@ -414,6 +415,7 @@ hs = {
       elseif name == "tabbysearch" then SEARCH_CB = fn
       elseif name == "tabbynotice" then NOTICE_CB = fn
       elseif name == "tabbyopen" then OPEN_CB = fn
+      elseif name == "tabbykeys" then KEYS_CB = fn
       else MEMO_CB = fn end
       return self
     end} end},
@@ -423,7 +425,7 @@ hs = {
 
 -- tastiera: mappa bidirezionale come quella vera
 local codes = {["0"]=29,["1"]=18,["2"]=19,["3"]=20,["4"]=21,["5"]=23,["6"]=22,["7"]=26,["8"]=28,["9"]=25,
-  a=0, c=8, f=3, m=46, s=1, w=13, l=37, n=45, i=34, t=17, v=9, delete=51, x=7, left=123, right=124, down=125, up=126, escape=53, ["return"]=36, padenter=76, tab=48}
+  a=0, c=8, f=3, m=46, s=1, w=13, l=37, n=45, i=34, t=17, v=9, delete=51, x=7, ["/"]=44, left=123, right=124, down=125, up=126, escape=53, ["return"]=36, padenter=76, tab=48}
 for k, v in pairs(codes) do hs.keycodes.map[k] = v; hs.keycodes.map[v] = k end
 
 function KEY(name, mods)

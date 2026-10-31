@@ -594,16 +594,20 @@ vengono nascoste dalla scrivania.
 
 ## 13. Scrivania
 
-**W-0 Clic sul muso del gatto.** **Nella barra** (Tabby attiva): si apre il **Finder sulla
-cartella Scrivania** (v9.38; confermato da Daniele il 24/10/2026 dopo che la v9.51 l'aveva
-cambiato). **Nel cerchio** sulla scrivania (v9.51): si torna all'**ultima finestra che
-stavi guardando** (quella di prima della scrivania). Tabby
-ricorda le ultime 20 schede usate e salta quelle che non esistono più. Se non c'è nessuna
-finestra a cui tornare compaiono le scelte: **«+ Nuova app…»** (apre Spotlight) e, se ci
-sono, le **cartelle** (clic = attivala). Dal cerchio le scelte si aprono **a ventaglio**
-intorno a lui (v9.52; dalla v9.54 come **piccole sfere dello stesso stile**, di vetro
-colorato, che si accendono al passaggio): da 44 punti su giri di raggio 92, 150, 208 (3, 4,
-5 posti), da sinistra verso l'alto, una dopo l'altra; il «+» per primo, poi una per
+**W-0 Il gatto = «casa»** (v9.66, deciso da Daniele il 31/10/2026; prima nella barra apriva
+subito il Finder e nella sfera tornava all'ultima finestra). Un clic sul muso del gatto,
+**nella barra o nella sfera**, mostra sempre le stesse scelte, in quest'ordine:
+1. **«Torna a X»**: l'ultima scheda che stavi guardando (non quella in cui sei; Tabby
+   ricorda le ultime 20 e salta quelle che non esistono più; in concentrazione solo le
+   permesse) — solo se c'è;
+2. **«+ Nuova app…»** (apre Spotlight);
+3. **«Scrivania»** (il Finder sulla cartella Scrivania; ⌃⌥0 resta la scrivania di Tabby);
+4. le **cartelle** (clic = attivala; accanto ⌃⌥⇧ + numero).
+Nella barra sono un **menu** accanto al gatto (con le icone; «Cartelle» come titolo).
+Dalla sfera si aprono **a ventaglio** intorno a lei (v9.52; dalla v9.54 come **piccole
+sfere dello stesso stile**, di vetro colorato, che si accendono al passaggio): da 44 punti
+su giri di raggio 92, 150, 208 (3, 4, 5 posti), da sinistra verso l'alto, una dopo
+l'altra; «Torna a» e «Scrivania» con l'icona dell'app, il «+» senza icona, una per
 cartella con le icone delle sue prime due app; il nome compare passandoci sopra (a
 sinistra, o sopra se a sinistra c'è un'altra sfera). Sono nella stessa pagina della
 sfera: la finestrella si allarga (420 punti) mentre il ventaglio è aperto e torna piccola
@@ -830,6 +834,7 @@ Tutte con **⌃⌥** (Ctrl + Option):
 | ⌃⌥S | Scambia (vista divisa) |
 | ⌃⌥W | chiudi la finestra (non l'app) |
 | ⌃⌥F | cerca nelle finestre (E-1) |
+| ⌃⌥/ | foglio delle scorciatoie (K-2) |
 | ⌃⌥M · C · A · T | Memo · Calcolatrice · Calendario · Terminale |
 | ⌃⌥L · N · I | Claude chat rapida · Notion cerca · Notion AI |
 | ⌃⌥ + lettera scelta | azione di un'app scoperta (Gestisci) |
@@ -845,6 +850,13 @@ Se la stessa scorciatoia arriva dai due meccanismi entro 0,3 s conta **una volta
 due pressioni vere dallo stesso meccanismo contano due. I modificatori devono essere
 esatti (⌃⌥ e basta, o ⌃⌥⇧ per le cartelle). macOS a volte spegne l'intercettatore:
 Tabby lo riaccende ogni 5 s. Le frecce ↑↓ valgono solo con Tabby laterale.
+
+**K-2 Foglio delle scorciatoie** (v9.66): ⌃⌥/ (il tasto del «?») o ⚙︎ → «Scorciatoie».
+Un foglio al centro (760×560, stile standard di macOS, chiaro/scuro; pagina
+`tabby/scorciatoie.html`) sopra lo sfondo scuro (la barra no), in due colonne: Schede (con
+il gesto a tre dita se è acceso), Vista divisa, Lampi, Strumenti, App, Cartelle (coi loro
+nomi), Tabby. Si compila ogni volta dalle scorciatoie vere. Esc, ⌃⌥/ o un clic fuori lo
+chiudono; non prende la tastiera. **[Swift]** nella sezione Documentazione.
 
 ## 18. Gesti
 
@@ -1020,7 +1032,7 @@ Ogni regola ha un test in `test/`; nell'app Swift diventano test di accettazione
 | `test_cerchio.py` | W-0, W-3 (ventaglio, puntatore), W-4 |
 | `test_concentrazione.py` | H-1 … H-5 |
 | `test_cerca.py` | E-1 … E-4 |
-| `test_robustezza.py` | timer e comandi esterni tenuti; nessuna funzione doppia |
+| `test_robustezza.py` | timer e comandi esterni tenuti; nessuna funzione doppia; K-2; pagine chiuse dopo 5 min |
 | `test_finestre_ridotte.py` | finestre ridotte / app nascoste su macOS 26 |
 | `test_cartelle_avvisi.py` | F-3 (griglia), F-4.5 (schermata di apertura), F-10, B-9, Diario |
 | `test_finestre_fluide.py` | C-4 (giallo, ⌘Q, macOS che cambia app prima), D-4, L (angoli), W-0, Q-2 |

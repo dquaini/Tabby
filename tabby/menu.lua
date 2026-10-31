@@ -476,6 +476,7 @@ function openSettings()
     {title = "App preferite", menu = favoritesMenu()},
     {title = "Finestre separate", menu = windowsMenu()},
     {title = "Comportamento", menu = behaviourMenu()},
+    {title = "Scorciatoie   ⌃⌥/", fn = function() openKeys() end},
     {title = "-"},
     {title = "Chiudi tutte le app…", fn = closeAllApps},
     {title = "Chiudi Tabby (resta solo il cerchio)", fn = pauseTabby},

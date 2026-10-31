@@ -39,6 +39,7 @@ shortcut("tab",   "last", toggleLastApp)
 shortcut("s",     "rotate", function() rotateGroup(currentGroup()) end)
 shortcut("w",     "closewin", function() closeActiveWindow() end)
 shortcut("f",     "search", function() openSearch() end)   -- cerca nelle finestre (25/10/2026)
+shortcut("/",     "keys", function() openKeys() end)       -- foglio delle scorciatoie (31/10/2026)
 for _, a in ipairs(APP_ACTIONS) do
   shortcut(a.key, "azione-" .. a.key, function() runAppAction(a) end)
 end
@@ -87,6 +88,9 @@ T.keyTap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(e)
       return true
     end
   end
+
+  -- Foglio delle scorciatoie aperto: Esc lo chiude
+  if T.keysOpen and noMods and code == K.escape then later(closeKeys); return true end
 
   -- Ventaglio del cerchio aperto: Esc lo chiude
   if T.fanOpen and noMods and code == K.escape then later(closeFan); return true end

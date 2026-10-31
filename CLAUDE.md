@@ -35,7 +35,7 @@ Prima di lavorare leggi:
   impostazioni S, schermo, notch, utilità) · `browser` · `notifiche` · `schede` (ordine,
   ricette delle cartelle, `rebuildTabs`) · `finestre` (adattare, nascondere, passare da una
   scheda all'altra) · `memo` · `dividi` (vista divisa) · `cartelle` · `trascina` · `menu` ·
-  `disegno` · `osservatori` · `concentrazione` · `cerca` · `avvisi` · `scorciatoie` · `avvio`.
+  `disegno` · `osservatori` · `concentrazione` · `cerca` · `avvisi` · `guida` · `scorciatoie` · `avvio`.
 - **Come si scrive codice nei file di `tabby/`**: tutti condividono uno **spazio comune di
   nomi** (tabella `E`, `Tabby._env`). A livello del file si scrive `function nome()` /
   `nome = …` **senza `local`**: così il nome si usa direttamente negli altri file e non c'è
@@ -131,7 +131,7 @@ GitHub, poi `git clone git@github.com:dquaini/Tabby.git` e `init.lua` che punta 
 
 ## Versione attuale
 
-**v9.65** (storia in `docs/STORIA.md`). Piano (31/10/2026, `docs/ROADMAP-v1.md`): 1) ordine
+**v9.66** (storia in `docs/STORIA.md`). Piano (31/10/2026, `docs/ROADMAP-v1.md`): 1) ordine
 nella UX, 2) sistema di design (decisioni e prototipi; realizzazione in Swift), 3) seconda
 settimana di prova (2–8/11), 4) app Swift. Nell'app Swift Tabby avrà cinque sezioni:
 Impostazioni, Design, Documentazione, Automazione (apertura delle cartelle da sole), Kat.

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<!--
+  Il foglio delle scorciatoie (⌃⌥/, v9.66), in stile standard di macOS, chiaro o scuro come
+  il sistema. Tabby lo compila con le scorciatoie vere (anche App e cartelle coi loro nomi).
+  Tabby → pagina: render([{title, rows:[[tasti, cosa]]}])
+  Pagina → Tabby: send({close}) · send({ready})
+-->
+<style>
+:root { --bg: rgba(246,246,246,.98); --text: #1D1D1F; --sub: #6E6E73; --line: rgba(0,0,0,.08); --key: #fff; }
+@media (prefers-color-scheme: dark) { :root { --bg: rgba(40,40,42,.98); --text: #F5F5F7; --sub: #98989D; --line: rgba(255,255,255,.08); --key: #48484A; } }
+html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; user-select: none; -webkit-user-select: none; cursor: default; }
+body { font: 13px/1.35 -apple-system, system-ui, sans-serif; color: var(--text); padding: 12px; box-sizing: border-box; }
+.panel { height: 100%; box-sizing: border-box; border-radius: 16px; background: var(--bg); box-shadow: 0 0 0 .5px rgba(0,0,0,.25), 0 18px 46px rgba(0,0,0,.32);
+  display: flex; flex-direction: column; overflow: hidden; }
+.top { display: flex; align-items: baseline; padding: 16px 20px 10px; border-bottom: .5px solid var(--line); }
+h1 { margin: 0; font-size: 15px; font-weight: 700; }
+.top span { margin-left: auto; color: var(--sub); font-size: 11.5px; }
+.cols { padding: 8px 20px 16px; columns: 2 300px; column-gap: 28px; overflow: auto; flex: 1; }
+.grp { break-inside: avoid; margin: 10px 0 6px; }
+.grp h2 { font-size: 11px; font-weight: 600; color: var(--sub); text-transform: uppercase; letter-spacing: .05em; margin: 0 0 5px; }
+.row { display: flex; align-items: center; gap: 10px; padding: 3px 0; }
+.row .what { flex: 1; }
+.keys { display: flex; gap: 3px; flex: none; }
+kbd { font: 500 11.5px -apple-system, system-ui; min-width: 20px; text-align: center; padding: 2px 6px; border-radius: 5px; background: var(--key);
+  box-shadow: 0 0 0 .5px rgba(0,0,0,.18), 0 1px 0 rgba(0,0,0,.18); }
+</style></head>
+<body>
+<div class="panel">
+  <div class="top"><h1>Scorciatoie di Tabby</h1><span>⌃ Ctrl · ⌥ Option · ⇧ Maiuscole · esc per chiudere</span></div>
+  <div class="cols" id="cols"></div>
+</div>
+<script>
+function send(o) { try { window.webkit.messageHandlers.tabbykeys.postMessage(o) } catch (e) {} }
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+function render(groups) {
+  document.getElementById('cols').innerHTML = groups.map(function (g) {
+    return '<div class="grp"><h2>' + esc(g.title) + '</h2>' + g.rows.map(function (r) {
+      return '<div class="row"><span class="what">' + esc(r[1]) + '</span><span class="keys">' +
+        r[0].split(' ').map(function (k) { return '<kbd>' + esc(k) + '</kbd>'; }).join('') + '</span></div>';
+    }).join('') + '</div>';
+  }).join('');
+}
+document.addEventListener('click', function (e) { if (!e.target.closest('.panel')) send({close: true}); });
+send({ready: true});
+</script></body></html>

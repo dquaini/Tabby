@@ -201,4 +201,6 @@ v9.65: apertura delle cartelle: al posto del velo semitrasparente una schermata 
     (sfondo della Scrivania sfocato, nome della cartella, icone che si accendono, barretta)
     che copre tutto PRIMA che le app partano e sfuma solo quando Tabby ha finito di
     sistemarle (almeno 2,9 s, al massimo 7, un clic la toglie).
+v9.66: il gatto = «casa», uguale nella barra (menu) e nella sfera (ventaglio): Torna a…,
+    Nuova app, Scrivania, cartelle. Foglio delle scorciatoie con ⌃⌥/ (anche da ⚙︎).
 ```

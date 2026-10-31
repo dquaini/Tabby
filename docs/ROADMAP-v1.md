@@ -27,15 +27,14 @@ zone (nel codice "gruppo") · **Lampi** = le app piccole del menu ⚡︎ (nel co
    ricerca e avvisi in stile Apple; domande (Rinomina…) con le finestre di Hammerspoon (col
    martello). → uno stile solo (lo decide il punto 2 del piano).
 2. **Il menu ⚡︎ è un cassetto unico** (Lampi, Concentrazione, Cerca, App, Cartelle, Modifica
-   cartelle, file del Memo) → ognuna al suo posto.
-3. **Clic diversi per cose simili**: ✕ apre un menu, il tasto destro un altro; sulla
-   scheda-cartella ⋯ e tasto destro fanno la stessa cosa.
-4. **Il gatto fa cose diverse**: nella barra apre il Finder sulla Scrivania, nella sfera torna
-   all'ultima finestra o apre il ventaglio.
+   cartelle, file del Memo) → da decidere insieme su 4 proposte cliccabili
+   (`docs/prototipo-menu.html`: menu a sezioni, pannello a riquadri, due tasti, tavolozza
+   dei comandi). Le cartelle intanto sono anche nel gatto.
+3. ✅ **✕ e tasto destro**: restano come sono (deciso il 31/10/2026).
+4. ✅ **Il gatto = «casa»**, uguale nella barra e nella sfera (v9.66).
 5. **Quattro veli scuri diversi** (Spotlight, Concentrazione, ricerca, apertura delle
    cartelle) → uno solo.
-6. **Le scorciatoie si sono accumulate** (⌃⌥ + lettere, ⌃⌥⇧ + numeri) senza un posto dove
-   vederle tutte → un foglio delle scorciatoie.
+6. ✅ **Foglio delle scorciatoie** con ⌃⌥/ (v9.66).
 
 ---
 

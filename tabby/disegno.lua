@@ -44,7 +44,7 @@ function onMouse(_, msg, id)
   if id == "quick" then openQuick(); return end
   if id == "split" then openSplitMenu(); return end
   if id == "more" then openOverflow(); return end
-  if id == "desktop" then openDesktopFolder(); return end
+  if id == "desktop" then catClick(false); return end   -- il gatto = casa (31/10/2026)
   if id == "plus" then openSpotlight(); return end
   if id == "fback" then FD.leaveFolderView(); return end
   if id == "fhead" then
@@ -904,27 +904,42 @@ function orbPointer()
   T.orbView:evaluateJavaScript(string.format("pointer(%.3f,%.3f,%.3f)", dx, dy, near))
 end
 
--- Clic sul muso del gatto: l'ultima finestra che stavi guardando (dal cerchio: quella
--- di prima di finire sulla scrivania; dalla barra: quella prima della scheda in cui sei,
--- come ⌃⌥Tab); se non c'è nessuna finestra a cui tornare, le scelte (dal cerchio: a
--- ventaglio intorno a lui; dalla barra: un menu accanto al gatto)
+-- Il gatto = «casa», uguale nella barra e nella sfera (31/10/2026, Daniele; prima nella
+-- barra apriva subito il Finder e nella sfera tornava all'ultima finestra). Un clic
+-- mostra sempre le stesse scelte: torna all'ultima finestra, Scrivania (il Finder sulla
+-- cartella Scrivania), «+ Nuova app…» e le cartelle. Nella barra come menu accanto al
+-- gatto, nella sfera a ventaglio. ⌃⌥0 resta la scrivania.
 function catClick(fromOrb)
-  local cur = (not fromOrb) and currentKey() or nil
-  for _, k in ipairs(T.recent or {}) do
-    if k ~= cur and (T.cand[k] or T.memberOf[k]) and (not T.focus or focusAllowsKey(k)) then
-      print("Tabby · clic sul gatto: torno a «" .. tostring((T.cand[k] or {}).name or k) .. "»")
-      if T.desktopMode then T.desktopMode = false end
-      local g = T.memberOf[k]
-      if g then showGroup(g) else focusKey(k) end
-      return
-    end
-  end
   if fromOrb then openFan() else openCatMenu() end
 end
 
--- Le scelte quando non c'è nessuna finestra: «+ Nuova app…» e le cartelle
+-- L'ultima scheda a cui tornare (non quella in cui sei; in concentrazione solo le permesse)
+function catBackKey()
+  local cur = currentKey()
+  for _, k in ipairs(T.recent or {}) do
+    if k ~= cur and (T.cand[k] or T.memberOf[k]) and (not T.focus or focusAllowsKey(k)) then return k end
+  end
+  return nil
+end
+
+function goBackTo(k)
+  print("Tabby · gatto: torno a «" .. tostring((T.cand[k] or {}).name or k) .. "»")
+  if T.desktopMode then T.desktopMode = false end
+  local g = T.memberOf[k]
+  if g then showGroup(g) else focusKey(k) end
+end
+
+-- Le scelte del gatto (le stesse per il menu della barra e per il ventaglio della sfera)
 function catChoices()
-  local list = {{id = "new", name = "Nuova app", fn = function() openSpotlight() end}}
+  local list = {}
+  local back = catBackKey()
+  if back then
+    local e = T.cand[back] or {}
+    table.insert(list, {id = "back", name = "Torna a " .. tostring(e.name or back), bid = e.bid or T.keyBid[back],
+      fn = function() goBackTo(back) end})
+  end
+  table.insert(list, {id = "new", name = "Nuova app", fn = function() openSpotlight() end})
+  table.insert(list, {id = "desk", name = "Scrivania", bid = FINDER, fn = function() openDesktopFolder() end})
   for i, f in ipairs(S.folders) do
     table.insert(list, {id = "f" .. i, name = f.name, folder = f, fn = function() FD.activateFolder(f) end})
   end
@@ -932,14 +947,25 @@ function catChoices()
 end
 
 function openCatMenu()
-  local items = {{title = "+  Nuova app…", fn = openSpotlight}}
-  if #S.folders > 0 then
-    table.insert(items, {title = "-"})
-    table.insert(items, {title = "Cartelle", disabled = true})
-    for _, f in ipairs(S.folders) do
-      table.insert(items, {title = f.name, image = FD.folderImage(f), fn = function() FD.activateFolder(f) end})
+  local items = {}
+  for _, ch in ipairs(catChoices()) do
+    if ch.folder and not items.folders then
+      items.folders = true
+      table.insert(items, {title = "-"})
+      table.insert(items, {title = "Cartelle", disabled = true})
     end
+    local title = ch.id == "new" and "+  Nuova app…" or ch.name
+    if ch.id == "desk" then title = "Scrivania   ⌃⌥0" end
+    if ch.folder then
+      local n
+      for i, f in ipairs(S.folders) do if f == ch.folder then n = i end end
+      if n and n <= 9 then title = title .. "   ⌃⌥⇧" .. n end
+    end
+    table.insert(items, {title = title, fn = ch.fn,
+      image = ch.folder and FD.folderImage(ch.folder) or (ch.bid and smallIcon(ch.bid)) or nil})
+    if ch.id == "back" then table.insert(items, {title = "-"}) end
   end
+  items.folders = nil
   popup(items, popPos(T.L.desk))
 end
 
@@ -964,12 +990,16 @@ function openFan()
       local uri = imageDataURI(FD.itemIcon(it))
       if uri then table.insert(icons, jsString(uri)) end
     end
+    if ch.bid then   -- «Torna a…» e «Scrivania»: l'icona dell'app
+      local uri = imageDataURI(icon(ch.bid))
+      if uri then table.insert(icons, jsString(uri)) end
+    end
     table.insert(parts, "{id:" .. jsString(ch.id) .. ",name:" .. jsString(ch.name) .. ",icons:[" .. table.concat(icons, ",") .. "]}")
   end
   T.fanOpen = true
   v:frame(fanFrame())
   v:evaluateJavaScript("openFan([" .. table.concat(parts, ",") .. "])")
-  print("Tabby · nessuna finestra: le scelte a ventaglio intorno al cerchio")
+  print("Tabby · gatto: le scelte a ventaglio intorno alla sfera")
   -- un clic fuori dalla finestrella lo chiude (dentro, lo dice la pagina)
   if not T.fanTap then
     T.fanTap = hs.eventtap.new({hs.eventtap.event.types.leftMouseDown}, function(e)
