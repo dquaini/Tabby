@@ -131,5 +131,7 @@ GitHub, poi `git clone git@github.com:dquaini/Tabby.git` e `init.lua` che punta 
 
 ## Versione attuale
 
-**v9.65** (storia in `docs/STORIA.md`). Prossimo obiettivo: **Tabby v1** (A fatta; B Cartelle: base fatta in v9.8, restano "Apri all'avvio" e rifiniture)
-(`docs/ROADMAP-v1.md`).
+**v9.65** (storia in `docs/STORIA.md`). Piano (31/10/2026, `docs/ROADMAP-v1.md`): 1) ordine
+nella UX, 2) sistema di design (decisioni e prototipi; realizzazione in Swift), 3) seconda
+settimana di prova (2–8/11), 4) app Swift. Nell'app Swift Tabby avrà cinque sezioni:
+Impostazioni, Design, Documentazione, Automazione (apertura delle cartelle da sole), Kat.
