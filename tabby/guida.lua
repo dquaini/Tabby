@@ -26,7 +26,7 @@ function keysGroups()
     {"⌃ ⌥ W", "Chiudi la finestra (l'app resta aperta)"},
     {"⌃ ⌥ 0", "Scrivania"},
   }
-  if S.gestures then table.insert(tabs, {"3 dita ← →", "Scheda dopo / prima (trackpad)"}) end
+  if S.gestures then table.insert(tabs, {"← →", "Scheda dopo / prima: tre dita sul trackpad"}) end
   local groups = {{title = "Schede", rows = tabs}}
   table.insert(groups, {title = "Vista divisa", rows = {
     {"⌃ ⌥ S", "Scambia le zone"},
