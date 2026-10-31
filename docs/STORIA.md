@@ -203,4 +203,7 @@ v9.65: apertura delle cartelle: al posto del velo semitrasparente una schermata 
     sistemarle (almeno 2,9 s, al massimo 7, un clic la toglie).
 v9.66: il gatto = «casa», uguale nella barra (menu) e nella sfera (ventaglio): Torna a…,
     Nuova app, Scrivania, cartelle. Foglio delle scorciatoie con ⌃⌥/ (anche da ⚙︎).
+v9.67: menu ⚡︎ a sezioni (Lampi · Strumenti · App; proposta A): le App con scorciatoia
+    subito, le altre in «Tutte le App». Cartelle: si aprono dal gatto, si creano e
+    modificano in ⚙︎ → Cartelle; anche il file del Memo è in ⚙︎.
 ```

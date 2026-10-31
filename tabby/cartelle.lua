@@ -6,7 +6,7 @@
 
 -- ---------------------------------------------------------------------
 --  CARTELLE: ATTIVARE, VISTA CARTELLA, CHIUDERE
---  Attivare una cartella (menu ⚡︎ o ⌃⌥⇧ + numero) apre quello che manca e
+--  Attivare una cartella (dal gatto o ⌃⌥⇧ + numero) apre quello che manca e
 --  non ti sposta: se sei su una sua scheda entri nella vista cartella (solo
 --  le sue schede, nome a sinistra / in alto); se sei altrove la cartella
 --  compare come una scheda sola e tu resti dove sei.
@@ -456,7 +456,7 @@ end
 
 
 -- ---------------------------------------------------------------------
---  CARTELLE: CREARE E MODIFICARE (menu ⚡︎ → Nuova cartella…)
+--  CARTELLE: CREARE E MODIFICARE (⚙︎ → Cartelle → Nuova cartella…)
 --  Si sceglie il nome, poi compare un riquadro con già la scheda in cui
 --  sei; ci trascini (o clicchi) le altre schede di Tabby. Fatto = salvata.
 -- ---------------------------------------------------------------------
@@ -656,7 +656,7 @@ FD.finishFolderEdit = function()
   save("folders"); save("folderSeq")
   local n = 1
   for i, x in ipairs(S.folders) do if x == f then n = i end end
-  hs.alert.show(string.format("Cartella «%s» salvata · menu ⚡︎ o ⌃⌥⇧%d", f.name, n))
+  hs.alert.show(string.format("Cartella «%s» salvata · dal gatto o ⌃⌥⇧%d", f.name, n))
   rebuildTabs()
   draw()
 end

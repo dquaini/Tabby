@@ -44,8 +44,11 @@ def idx_key(k): return ev(f'(function() for i, t in ipairs(Tabby.tabs) do if t.k
 def idx_win(var): return ev(f'(function() for i, t in ipairs(Tabby.tabs) do if t.win == {var} then return i end end end)()')
 def in_folder(var): return ev(f'(function() for _, t in ipairs(Tabby.allTabs) do if t.win == {var} then return Tabby.tabFolder[t.key] ~= nil end end return false end)()')
 def quick_item(prefix):
-    run('CLICK("quick")')
-    return f'(function() for _, it in ipairs(MENU) do if it.title and it.title:sub(1, {len(prefix)}) == "{prefix}" then return it end end end)()'
+    # (31/10/2026) crearle/modificarle: ⚙︎ → Cartelle; aprirle: il gatto
+    n = len(prefix.encode())
+    return ('(function() CLICK("settings"); for _, it in ipairs(MENU) do if it.title == "Cartelle" then '
+            'for _, x in ipairs(it.menu) do if x.title and x.title:sub(1, %d) == "%s" then return x end end end end; '
+            'CLICK("desktop"); for _, it in ipairs(MENU) do if it.title and it.title:sub(1, %d) == "%s" then return it end end end)()') % (n, prefix, n, prefix)
 fails = []
 def check(what, ok):
     print(("  ok   " if ok else "  NO   ") + what)

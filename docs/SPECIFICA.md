@@ -388,7 +388,7 @@ perdono (e una cartella rimasta vuota si cancella).
 La scheda presa lega la voce alla sua finestra (`itemWins`, salvato: vale anche dopo
 un ricaricamento). Una vista divisa corrisponde se uno dei suoi membri corrisponde.
 
-**F-3 Creare** (⚡︎ → Nuova cartella…): si chiede il nome ("es. Lavoro, Studio"),
+**F-3 Creare** (⚙︎ → Cartelle → Nuova cartella…; fino alla v9.66 era in ⚡︎): si chiede il nome ("es. Lavoro, Studio"),
 poi compare un riquadro con già **la scheda in cui sei**; ci si trascinano (o si
 cliccano) le altre schede; "rinomina"; Esc annulla, Invio/Fatto salva. Le voci stanno
 in una **griglia che va a capo** (v9.60; prima oltre 6 voci si vedeva solo «+N»): il
@@ -396,9 +396,9 @@ riquadro cresce con le righe, ognuna ha icona, nome e una **✕ tonda** in alto 
 per toglierla; nel titolo quante sono. Con tantissime voci (più alte dello schermo) le
 voci si rimpiccioliscono. La
 voce si lega alla finestra scelta (es. quale delle due Gmail). Avviso: "Cartella
-«Lavoro» salvata · menu ⚡︎ o ⌃⌥⇧2". Una vista divisa aggiunta = i suoi membri.
+«Lavoro» salvata · dal gatto o ⌃⌥⇧2". Una vista divisa aggiunta = i suoi membri.
 
-**F-4 Attivare** (⚡︎ → nome della cartella, o ⌃⌥⇧ + numero nell'ordine del menu):
+**F-4 Attivare** (clic sul gatto → nome della cartella, o ⌃⌥⇧ + numero nell'ordine delle cartelle):
 1. apre le voci che mancano **senza portartele davanti**: webapp di Chrome/Safari in
    una finestra nuova; pagine in una finestra nuova con tutte le schede (altri
    browser: come schede); DuckDuckGo: il sito come scheda; un browser già aperto per
@@ -448,7 +448,7 @@ che era una voce "pagine" resta "pagine" anche se ora ha una pagina sola.
 **F-9 Spegnimento automatico**: una cartella attiva senza più schede (app chiuse) si
 spegne, ma non nei primi 20 s dopo l'attivazione (le app ci mettono a aprirsi).
 
-**F-10** ⚡︎ → Modifica le cartelle → Modifica le schede / Rinomina / Elimina. Anche il
+**F-10** ⚙︎ → Cartelle → Modifica le cartelle → Modifica le schede / Rinomina / Elimina. Anche il
 **tasto destro sulla scheda-cartella** apre il suo menu (con Rinomina…) (v9.60).
 ⚙︎ → Comportamento → Vista cartelle (acceso di serie).
 
@@ -884,10 +884,16 @@ Dopo un trascinamento il clic che segue si ignora.
   automatico) · App preferite ▸ (app aperte e preferite con la spunta; Aggiungi
   un'altra app…) · Finestre separate ▸ · Comportamento ▸ (Una scheda alla volta,
   Adatta le finestre, Nascondi Tabby, Mostra app senza finestre, Tre dita, Oscura lo
-  sfondo, Vista cartelle) · Chiudi tutte le app… · Ricarica Tabby · Console.
-- **⚡︎**: app veloci con scorciatoia (Memo spuntato se aperto) · App ▸ (azioni,
-  Gestisci ▸, Cerca app nuove adesso) · Cartelle (spuntate le attive, con ⌃⌥⇧n) ·
-  Nuova cartella… · Modifica le cartelle ▸ · Mostra il file del Memo nel Finder.
+  sfondo, Vista cartelle) · Scorciatoie ⌃⌥/ · **Cartelle ▸** (Nuova cartella…, Modifica le
+  cartelle ▸) · Mostra il file del Memo nel Finder · Chiudi tutte le app… · Chiudi Tabby ·
+  Ricarica Tabby · Console.
+- **⚡︎** (v9.67, proposta A scelta da Daniele il 31/10/2026, `docs/prototipo-menu.html`): a
+  **sezioni** con titoli grigi. **Lampi**: Memo, Calcolatrice, Calendario, Terminale con la
+  loro scorciatoia (Memo spuntato se aperto). **Strumenti**: Concentrazione… (in corso:
+  «Concentrazione · mancano X ▸» con +5 / +15 / Termina) · Cerca nelle finestre… ⌃⌥F.
+  **App**: subito le azioni **con scorciatoia**; tutte (anche tante) in **Tutte le App ▸**,
+  con Gestisci ▸ e Cerca app nuove adesso. Le cartelle non ci sono più: si aprono dal
+  gatto (W-0), si creano e modificano da ⚙︎ → Cartelle.
 - **⊞**: i 4 schemi con anteprima; con una vista attiva anche Scambia e Scomponi.
   Ripremuto durante la divisione: annulla.
 - **+N**: le schede che non ci stanno, con le notifiche tra parentesi.

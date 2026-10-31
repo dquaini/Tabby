@@ -41,7 +41,7 @@ L.execute('TASKS = 0; FRONT = CHROME; CLOCK = 2019; Tabby.browserTimer.fn(); FLU
 check("se stai usando Chrome: ogni 3 s", ev('TASKS') > 0)
 
 print("== Apri Proton VPN con l'icona spenta in macOS")
-run('PRESSED = nil; OPENS = nil; CLICK("quick"); for _, it in ipairs(MENU) do if it.title == "App" then for _, x in ipairs(it.menu) do if x.title == "Apri Proton VPN" then x.fn() end end end end')
+run('PRESSED = nil; OPENS = nil; CLICK("quick"); for _, it in ipairs(MENU) do if it.title == "Tutte le App" then for _, x in ipairs(it.menu) do if x.title == "Apri Proton VPN" then x.fn() end end end end')
 check("non preme l'icona (non servirebbe)", ev('PRESSED') is None)
 check("apre l'app (open -b)", any("-b ch.protonvpn.mac" in o for o in (ev('OPENS') or {}).values()) if ev('OPENS') else False)
 

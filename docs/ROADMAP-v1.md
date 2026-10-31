@@ -26,10 +26,8 @@ zone (nel codice "gruppo") · **Lampi** = le app piccole del menu ⚡︎ (nel co
 1. **Tre stili diversi**: barra, menu e riquadro delle cartelle scuri "nostri"; Concentrazione,
    ricerca e avvisi in stile Apple; domande (Rinomina…) con le finestre di Hammerspoon (col
    martello). → uno stile solo (lo decide il punto 2 del piano).
-2. **Il menu ⚡︎ è un cassetto unico** (Lampi, Concentrazione, Cerca, App, Cartelle, Modifica
-   cartelle, file del Memo) → da decidere insieme su 4 proposte cliccabili
-   (`docs/prototipo-menu.html`: menu a sezioni, pannello a riquadri, due tasti, tavolozza
-   dei comandi). Le cartelle intanto sono anche nel gatto.
+2. ✅ **Menu ⚡︎ a sezioni** (Lampi · Strumenti · App), proposta A scelta su 4
+   (`docs/prototipo-menu.html`), v9.67. Cartelle nel gatto; crearle e modificarle in ⚙︎.
 3. ✅ **✕ e tasto destro**: restano come sono (deciso il 31/10/2026).
 4. ✅ **Il gatto = «casa»**, uguale nella barra e nella sfera (v9.66).
 5. **Quattro veli scuri diversi** (Spotlight, Concentrazione, ricerca, apertura delle
@@ -49,7 +47,10 @@ Nell'app Swift Tabby avrà cinque sezioni:
   all'avvio del Mac, a un orario («Lavoro» alle 9), quando ti colleghi a una rete Wi-Fi
   (l'ufficio); pensate anche come azioni che un agente può usare. *(Deciso: non si fa in
   Hammerspoon, nasce qui.)*
-- **Kat** — *da definire con Daniele.*
+- **Kat** — una **cartella del Mac collegata a Tabby** dove stanno tutti i file di Tabby
+  (il Memo e gli altri). Con Tabby ambiente multi-agente, è anche il posto dove finiscono
+  tutti gli HTML e gli altri file generati dagli agenti con Tabby. (Oggi il Memo è in
+  `~/Documents/Tabby Memo.txt`: in Swift si sposta in Kat.)
 
 ---
 
@@ -70,7 +71,7 @@ Nell'app Swift Tabby avrà cinque sezioni:
 - Pulizia dei nomi nel codice: `group` → `split` (in Swift i nomi nascono già giusti).
 
 ## 🔭 Dopo la v1
-- **Kat / Claude dentro Tabby**, agenti che usano le cartelle e le automazioni.
+- **Agenti dentro Tabby** (Claude…), che usano le cartelle e le automazioni e salvano in Kat.
 - **Schermo intero con Tabby visibile** (tolto il 23/10/2026: non funzionava con tutte le app).
 - Più monitor; impostazioni sincronizzate tra i Mac.
 - Trascinare una scheda sopra la scheda-cartella per aggiungerla (da confermare).

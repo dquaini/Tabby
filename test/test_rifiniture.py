@@ -71,7 +71,7 @@ print("\\n== ⌃⌥ + numero sulla scheda-cartella: entra subito, senza menu")
 run('FRONT = hs.application.get("com.apple.finder")')
 L.execute('hs.settings.set("tabbar.folders", nil)')
 run('''PROMPT_TEXT = "Lavoro"
-CLICK("quick"); for _, it in ipairs(MENU) do if it.title == "Nuova cartella…" then it.fn() end end''')
+CLICK("settings"); for _, it in ipairs(MENU) do if it.title == "Cartelle" then it.menu[1].fn() end end''')
 run(f'CLICK("tab{idx("Slack")}"); KEY("return")')
 run('KEY("1", {"ctrl","alt","shift"})')
 n = idx("Lavoro")

@@ -76,7 +76,7 @@ check("Calcolatrice e Terminale sul ripiano (il Memo è di Tabby: resta sopra)",
 check("il tasto ⚡︎ si allarga con le icone (nessun secondo ⚡︎)", ev('Tabby.L.quickWide') is True and ev('Tabby.L.quick.w') > 44
       and ev('(function() local n = 0 for _, e in ipairs(BAR()._els) do if e.text == "⚡︎" then n = n + 1 end end return n end)()') == 1)
 run('CLICK("quick")')
-check("clic sul fulmine: il menu ⚡︎ di sempre", ev('MENU ~= nil and MENU[1].title:find("Memo") ~= nil') is True)
+check("clic sul fulmine: il menu ⚡︎ di sempre", ev('MENU ~= nil and MENU[2].title:find("Memo") ~= nil') is True)
 run('CLICK("lampshelf:com.apple.calculator")')
 check("clic sull'icona: la Calcolatrice torna davanti", ev('FRONT == CALC') is True)
 check("sul ripiano resta il Terminale (ancora sotto Slack)", list(ev('Tabby.coveredLamps').values()) == ["com.apple.Terminal"])

@@ -477,6 +477,12 @@ function openSettings()
     {title = "Finestre separate", menu = windowsMenu()},
     {title = "Comportamento", menu = behaviourMenu()},
     {title = "Scorciatoie   ⌃⌥/", fn = function() openKeys() end},
+    {title = "Cartelle", menu = foldersSettingsMenu()},
+    {title = "Mostra il file del Memo nel Finder", fn = function()
+      local f = io.open(MEMO_FILE, "r")
+      if f then f:close() else writeMemo(readMemo()) end
+      hs.execute('open -R "' .. MEMO_FILE .. '"')
+    end},
     {title = "-"},
     {title = "Chiudi tutte le app…", fn = closeAllApps},
     {title = "Chiudi Tabby (resta solo il cerchio)", fn = pauseTabby},
@@ -488,7 +494,10 @@ end
 
 -- Menu del tasto ⚡︎ (app veloci)
 function openQuick()
-  local items = {}
+  -- Menu ⚡︎ a sezioni (proposta A scelta da Daniele il 31/10/2026, `docs/prototipo-menu.html`):
+  -- Lampi · Strumenti · App. Le cartelle stanno nel gatto («casa»); crearle e modificarle,
+  -- e il file del Memo, sono in ⚙︎.
+  local items = {{title = "Lampi", disabled = true}}
   for _, q in ipairs(QUICK) do
     table.insert(items, {
       title = q.name .. "   ⌃⌥" .. q.key:upper(),
@@ -497,9 +506,9 @@ function openQuick()
       fn    = function() toggleQuick(q) end,
     })
   end
-  -- Concentrazione: si sceglie quanto e cosa tenere (in corso: allunga o termina)
   table.insert(items, {title = "-"})
-  table.insert(items, {title = "Cerca nelle finestre…   ⌃⌥F", fn = function() openSearch() end})
+  table.insert(items, {title = "Strumenti", disabled = true})
+  -- Concentrazione: si sceglie quanto e cosa tenere (in corso: allunga o termina)
   if T.focus then
     table.insert(items, {title = "Concentrazione · " .. (T.focus.endAt and ("mancano " .. focusLabel()) or "senza tempo"),
                          image = focusMenuIcon(), menu = {
@@ -511,16 +520,16 @@ function openQuick()
   else
     table.insert(items, {title = "Concentrazione…", image = focusMenuIcon(), fn = function() openFocusSetup() end})
   end
-  -- cartelle: clic = attiva; si creano e si modificano da qui
-  table.insert(items, {title = "-"})
-  -- azioni delle app (icone della barra dei menu di macOS): una riga sola,
-  -- "App ▸", anche con tante app; dentro, "Gestisci ▸" per mostrarle e scegliere
-  -- la scorciatoia
+  table.insert(items, {title = "Cerca nelle finestre…   ⌃⌥F", fn = function() openSearch() end})
+  -- App (azioni delle icone della barra dei menu di macOS): qui subito solo quelle con
+  -- una scorciatoia; tutte le altre (anche tante) dentro «Tutte le App ▸», con «Gestisci»
   local actions = appActionsList()
-  local sub = {}
+  local sub, keyed = {}, {}
   for _, a in ipairs(actions) do
-    table.insert(sub, {title = a.name .. (a.key and ("   ⌃⌥" .. a.key:upper()) or ""),
-                       image = smallIcon(a.bid), fn = function() runAppAction(a) end})
+    local it = {title = a.name .. (a.key and ("   ⌃⌥" .. a.key:upper()) or ""),
+                image = smallIcon(a.bid), fn = function() runAppAction(a) end}
+    table.insert(sub, it)
+    if a.key then table.insert(keyed, it) end
   end
   local manage = {}
   local known = {}
@@ -546,17 +555,15 @@ function openQuick()
     hs.alert.show(n > 0 and (n .. " app nuove in ⚡︎ → App") or "Nessuna app nuova")
   end})
   table.insert(items, {title = "-"})
-  table.insert(items, {title = "App", menu = sub})
-  table.insert(items, {title = "Cartelle", disabled = true})
-  for i, f in ipairs(S.folders) do
-    table.insert(items, {
-      title   = f.name .. (i <= 9 and ("   ⌃⌥⇧" .. i) or ""),
-      image   = FD.folderImage(f),
-      checked = (S.folderView and FD.isFolderActive(f.id)) or nil,
-      fn      = function() FD.activateFolder(f) end,
-    })
-  end
-  table.insert(items, {title = "Nuova cartella…", fn = function() FD.openFolderEditor(nil) end})
+  table.insert(items, {title = "App", disabled = true})
+  for _, it in ipairs(keyed) do table.insert(items, it) end
+  table.insert(items, {title = "Tutte le App", menu = sub})
+  popup(items, popPos(T.L.quick))
+end
+
+-- ⚙︎ → Cartelle: crearle e modificarle (prima in ⚡︎; aprirle si fa dal gatto)
+function foldersSettingsMenu()
+  local items = {{title = "Nuova cartella…", fn = function() FD.openFolderEditor(nil) end}}
   if #S.folders > 0 then
     local edit = {}
     for _, f in ipairs(S.folders) do
@@ -569,13 +576,7 @@ function openQuick()
     end
     table.insert(items, {title = "Modifica le cartelle", menu = edit})
   end
-  table.insert(items, {title = "-"})
-  table.insert(items, {title = "Mostra il file del Memo nel Finder", fn = function()
-    local f = io.open(MEMO_FILE, "r")
-    if f then f:close() else writeMemo(readMemo()) end
-    hs.execute('open -R "' .. MEMO_FILE .. '"')
-  end})
-  popup(items, popPos(T.L.quick))
+  return items
 end
 
 -- Clic sulla scheda-cartella: le sue app; scelta una, la cartella si apre lì
