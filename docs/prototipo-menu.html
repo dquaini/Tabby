@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Menu ⚡︎ — quattro proposte</title>
+<!--
+  Prototipo per Daniele (31/10/2026): come organizzare il menu ⚡︎ di Tabby. Quattro
+  proposte cliccabili. In tutte le cartelle sono passate al gatto ("gatto = casa",
+  deciso lo stesso giorno) e «Modifica le cartelle» / «file del Memo» vanno in ⚙︎.
+-->
+<style>
+:root { --bg: #E9E9EC; --bar: #000; --text: #1D1D1F; --sub: #6E6E73; --menu: rgba(246,246,246,.97); --line: rgba(0,0,0,.09);
+  --sel: #0A84FF; --card: #fff; --tile: rgba(0,0,0,.05); }
+@media (prefers-color-scheme: dark) { :root { --bg: #1C1C1E; --text: #F5F5F7; --sub: #98989D; --menu: rgba(44,44,46,.97);
+  --line: rgba(255,255,255,.09); --card: #2C2C2E; --tile: rgba(255,255,255,.07); } }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font: 13px/1.4 -apple-system, system-ui, sans-serif; }
+header { max-width: 980px; margin: 0 auto; padding: 22px 16px 6px; }
+h1 { font-size: 20px; margin: 0 0 4px; }
+header p { margin: 0; color: var(--sub); }
+.tabsel { display: flex; gap: 6px; flex-wrap: wrap; max-width: 980px; margin: 14px auto 0; padding: 0 16px; }
+.tabsel button { border: 0; border-radius: 999px; padding: 6px 13px; font: inherit; background: var(--tile); color: var(--text); cursor: pointer; }
+.tabsel button.on { background: var(--sel); color: #fff; }
+.screen { max-width: 980px; margin: 14px auto 0; padding: 0 16px; }
+.mac { position: relative; height: 470px; border-radius: 14px; overflow: hidden;
+  background: radial-gradient(ellipse at 30% 30%, #3B6B9A, #1C3350 60%, #10202F); box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+.bar { position: absolute; left: 0; right: 0; top: 0; height: 40px; background: var(--bar); display: flex; align-items: center; color: #E8E9EC; }
+.bar .cat { width: 44px; text-align: center; font-size: 18px; cursor: pointer; }
+.bar .tab { height: 30px; margin: 0 2px; padding: 0 12px; border-radius: 7px; display: flex; align-items: center; gap: 7px; color: #B9BDC6; font-size: 12.5px; }
+.bar .tab.on { background: #2C2F36; color: #fff; }
+.bar .dot { width: 14px; height: 14px; border-radius: 4px; }
+.bar .sp { flex: 1; }
+.bar .btn { width: 44px; height: 40px; display: flex; align-items: center; justify-content: center; color: #7D828C; font-size: 16px; cursor: pointer; border-left: 1px solid #2A2D33; }
+.bar .btn.hot { color: #F2A541; }
+.bar .btn.on { color: #fff; background: #1d1f24; }
+.window { position: absolute; left: 30px; right: 30px; top: 58px; bottom: 22px; border-radius: 10px; background: rgba(255,255,255,.9); opacity: .16; }
+.note { max-width: 980px; margin: 12px auto 40px; padding: 0 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.note div { background: var(--card); border-radius: 12px; padding: 12px 14px; box-shadow: 0 0 0 .5px var(--line); }
+.note b { display: block; margin-bottom: 4px; }
+.note ul { margin: 4px 0 0; padding-left: 18px; color: var(--sub); }
+@media (max-width: 640px) { .note { grid-template-columns: 1fr; } .bar .tab:nth-child(n+4) { display: none; } }
+/* ---- menu in stile macOS ---- */
+.menu { position: absolute; top: 44px; min-width: min(250px, calc(100% - 16px)); max-width: calc(100% - 16px); background: var(--menu); color: var(--text); border-radius: 10px; padding: 5px;
+  box-shadow: 0 0 0 .5px rgba(0,0,0,.25), 0 12px 30px rgba(0,0,0,.3); display: none; z-index: 5; }
+.menu.on { display: block; }
+.mi { display: flex; align-items: center; gap: 8px; padding: 4px 9px; border-radius: 5px; cursor: default; white-space: nowrap; }
+.mi:hover { background: var(--sel); color: #fff; }
+.mi:hover .k, .mi:hover .ar { color: rgba(255,255,255,.85); }
+.mi .ic { width: 18px; text-align: center; }
+.mi .k { margin-left: auto; color: var(--sub); font-size: 12px; padding-left: 18px; }
+.mi .ar { margin-left: auto; color: var(--sub); }
+.mh { font-size: 11px; font-weight: 600; color: var(--sub); padding: 7px 9px 2px; }
+.ms { height: 1px; background: var(--line); margin: 5px 6px; }
+/* ---- pannello a griglia ---- */
+.panel { position: absolute; top: 46px; width: min(330px, calc(100% - 16px)); background: var(--menu); color: var(--text); border-radius: 16px; padding: 12px;
+  box-shadow: 0 0 0 .5px rgba(0,0,0,.25), 0 14px 36px rgba(0,0,0,.32); display: none; z-index: 5; }
+.panel.on { display: block; }
+.pt { font-size: 11px; font-weight: 600; color: var(--sub); margin: 2px 2px 7px; }
+.lamps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+.lamp { background: var(--tile); border-radius: 12px; padding: 10px 4px 8px; text-align: center; cursor: default; }
+.lamp:hover { background: rgba(10,132,255,.18); }
+.lamp .e { font-size: 22px; } .lamp .n { font-size: 11px; margin-top: 3px; } .lamp .s { font-size: 10px; color: var(--sub); }
+.tools { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.tool { background: var(--tile); border-radius: 12px; padding: 10px; display: flex; gap: 9px; align-items: center; cursor: default; }
+.tool:hover { background: rgba(10,132,255,.18); }
+.tool .e { width: 30px; height: 30px; border-radius: 50%; background: var(--sel); color: #fff; display: flex; align-items: center; justify-content: center; }
+.tool .n { font-weight: 600; font-size: 12px; } .tool .s { font-size: 10.5px; color: var(--sub); }
+.apps { display: flex; gap: 8px; flex-wrap: wrap; }
+.app { background: var(--tile); border-radius: 9px; padding: 6px 9px; font-size: 11.5px; cursor: default; }
+.app:hover { background: rgba(10,132,255,.18); }
+/* ---- tavolozza dei comandi ---- */
+.palette { position: absolute; left: 50%; top: 80px; transform: translateX(-50%); width: 520px; max-width: calc(100% - 32px);
+  background: var(--menu); color: var(--text); border-radius: 14px; box-shadow: 0 0 0 .5px rgba(0,0,0,.25), 0 18px 46px rgba(0,0,0,.35); display: none; z-index: 5; overflow: hidden; }
+.palette.on { display: block; }
+.palette input { width: 100%; border: 0; outline: 0; background: transparent; color: var(--text); font: 18px -apple-system, system-ui; padding: 13px 16px; border-bottom: .5px solid var(--line); }
+.palette .list { padding: 6px; max-height: 300px; overflow: auto; }
+.pi { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 8px; }
+.pi.on { background: var(--sel); color: #fff; }
+.pi .ic { width: 22px; text-align: center; } .pi .g { margin-left: auto; font-size: 11px; color: var(--sub); }
+.pi.on .g { color: rgba(255,255,255,.8); }
+.pi .k { font-size: 11.5px; color: var(--sub); margin-left: 10px; } .pi.on .k { color: rgba(255,255,255,.8); }
+.veil { position: absolute; inset: 40px 0 0 0; background: rgba(0,0,0,.45); display: none; z-index: 4; }
+.veil.on { display: block; }
+.hint { position: absolute; left: 0; right: 0; bottom: 10px; text-align: center; color: rgba(255,255,255,.75); font-size: 12px; pointer-events: none; }
+</style></head>
+<body>
+<header>
+  <h1>Menu ⚡︎ — quattro proposte</h1>
+  <p>Clicca ⚡︎ nella barra (e il gatto 🐱, che ora è la «casa»: Scrivania, cartelle, nuova app). In tutte le proposte «Modifica le cartelle» e «file del Memo» passano in ⚙︎.</p>
+</header>
+<div class="tabsel" id="sel">
+  <button data-p="A" class="on">A · Menu a sezioni</button>
+  <button data-p="B">B · Pannello a riquadri</button>
+  <button data-p="C">C · Due tasti</button>
+  <button data-p="D">D · Tavolozza dei comandi</button>
+</div>
+<div class="screen">
+  <div class="mac" id="mac">
+    <div class="window"></div>
+    <div class="bar">
+      <div class="cat" id="cat" title="Casa">🐱</div>
+      <div class="tab on"><span class="dot" style="background:#4A154B"></span>Slack</div>
+      <div class="tab"><span class="dot" style="background:#E8E8E8"></span>Notion</div>
+      <div class="tab"><span class="dot" style="background:#EA4335"></span>Gmail</div>
+      <div class="tab"><span class="dot" style="background:#D97757"></span>Claude</div>
+      <div class="sp"></div>
+      <div class="btn" id="tools" style="display:none" title="Strumenti">◎</div>
+      <div class="btn" title="Dividi">⊞</div>
+      <div class="btn hot" id="bolt" title="Lampi">⚡︎</div>
+      <div class="btn" title="Impostazioni">⚙︎</div>
+    </div>
+    <div class="veil" id="veil"></div>
+    <div class="hint" id="hint">Clicca ⚡︎</div>
+  </div>
+</div>
+<div class="note" id="note"></div>
+
+<script>
+var P = 'A';
+var LAMPI = [['📝','Memo','⌃⌥M'],['🧮','Calcolatrice','⌃⌥C'],['📅','Calendario','⌃⌥A'],['⌨️','Terminale','⌃⌥T']];
+var APPS = [['💬','Claude · chat rapida','⌃⌥L'],['🔎','Notion · cerca','⌃⌥N'],['✨','Notion AI','⌃⌥I']];
+var TOOLS = [['◐','Concentrazione','25 min · schede scelte',''],['⌕','Cerca nelle finestre','parole dentro le finestre','⌃⌥F']];
+var NOTES = {
+  A: ['Menu a sezioni', 'Il menu di sempre, ma ordinato: titoli Lampi · Strumenti · App. Un clic, una lista.',
+      ['Familiare: è un menu macOS', 'Scorciatoie scritte accanto', 'Con tante App si allunga']],
+  B: ['Pannello a riquadri', 'Come il Centro di Controllo di macOS: i Lampi grandi in alto, gli strumenti come riquadri, le App come pastiglie.',
+      ['Si vede tutto a colpo d\'occhio', 'Più bello e "di Tabby"', 'Più grande di un menu; in Swift viene naturale']],
+  C: ['Due tasti', '⚡︎ = solo Lampi (si aprono e chiudono). Un tasto nuovo ◎ Strumenti: Concentrazione, Cerca e le App.',
+      ['⚡︎ fa una cosa sola', 'Un tasto in più nella barra (spazio stretto, specie di lato)', 'Gli strumenti si trovano al loro posto']],
+  D: ['Tavolozza dei comandi', '⚡︎ (o una scorciatoia) apre una barra in centro: scrivi «calc», «conc», «notion»… e Invio. Senza scrivere, l\'elenco di tutto.',
+      ['Velocissima con la tastiera', 'Cresce senza diventare disordinata', 'Da mouse un po\' meno immediata']]
+};
+function el(h) { var d = document.createElement('div'); d.innerHTML = h; return d.firstElementChild; }
+function clearPop() {
+  document.querySelectorAll('.menu,.panel,.palette').forEach(function (x) { x.remove(); });
+  document.getElementById('veil').classList.remove('on');
+  document.querySelectorAll('.bar .btn, .bar .cat').forEach(function (b) { b.classList.remove('on'); });
+}
+function place(pop, anchor) {
+  var mac = document.getElementById('mac').getBoundingClientRect(), r = anchor.getBoundingClientRect();
+  mac = document.getElementById('mac');
+  mac.appendChild(pop);
+  var mw = mac.getBoundingClientRect().width;
+  var left = r.right - mac.getBoundingClientRect().left - pop.offsetWidth;
+  pop.style.left = Math.max(8, Math.min(left, mw - pop.offsetWidth - 8)) + 'px';
+}
+function mi(ic, t, k, sub) { return '<div class="mi"><span class="ic">' + ic + '</span>' + t + (sub ? '<span class="ar">▸</span>' : (k ? '<span class="k">' + k + '</span>' : '')) + '</div>'; }
+function menuA() {
+  var h = '<div class="menu on"><div class="mh">Lampi</div>';
+  LAMPI.forEach(function (l) { h += mi(l[0], l[1], l[2]); });
+  h += '<div class="ms"></div><div class="mh">Strumenti</div>';
+  TOOLS.forEach(function (t) { h += mi(t[0], t[1] + '…', t[3]); });
+  h += '<div class="ms"></div><div class="mh">App</div>';
+  APPS.forEach(function (a) { h += mi(a[0], a[1], a[2]); });
+  h += mi('', 'Gestisci le App', '', true) + '</div>';
+  return el(h);
+}
+function menuLampi() {
+  var h = '<div class="menu on"><div class="mh">Lampi</div>';
+  LAMPI.forEach(function (l) { h += mi(l[0], l[1], l[2]); });
+  return el(h + '</div>');
+}
+function menuTools() {
+  var h = '<div class="menu on"><div class="mh">Strumenti</div>';
+  TOOLS.forEach(function (t) { h += mi(t[0], t[1] + '…', t[3]); });
+  h += '<div class="ms"></div><div class="mh">App</div>';
+  APPS.forEach(function (a) { h += mi(a[0], a[1], a[2]); });
+  return el(h + mi('', 'Gestisci le App', '', true) + '</div>');
+}
+function panelB() {
+  var h = '<div class="panel on"><div class="pt">Lampi</div><div class="lamps">';
+  LAMPI.forEach(function (l) { h += '<div class="lamp"><div class="e">' + l[0] + '</div><div class="n">' + l[1] + '</div><div class="s">' + l[2] + '</div></div>'; });
+  h += '</div><div class="pt">Strumenti</div><div class="tools">';
+  TOOLS.forEach(function (t) { h += '<div class="tool"><div class="e">' + t[0] + '</div><div><div class="n">' + t[1] + '</div><div class="s">' + t[2] + '</div></div></div>'; });
+  h += '</div><div class="pt">App</div><div class="apps">';
+  APPS.forEach(function (a) { h += '<div class="app">' + a[0] + ' ' + a[1] + '</div>'; });
+  return el(h + '</div></div>');
+}
+var ALL = [];
+LAMPI.forEach(function (l) { ALL.push([l[0], l[1], 'Lampo', l[2]]); });
+TOOLS.forEach(function (t) { ALL.push([t[0], t[1], 'Strumento', t[3]]); });
+APPS.forEach(function (a) { ALL.push([a[0], a[1], 'App', a[2]]); });
+function paletteD() {
+  var p = el('<div class="palette on"><input placeholder="Cosa vuoi fare? (es. calc, conc, notion)"><div class="list"></div></div>');
+  var inp = p.querySelector('input'), list = p.querySelector('.list'), sel = 0;
+  function draw() {
+    var q = inp.value.toLowerCase(), items = ALL.filter(function (x) { return x[1].toLowerCase().indexOf(q) >= 0; });
+    sel = Math.min(sel, Math.max(0, items.length - 1));
+    list.innerHTML = items.map(function (x, i) {
+      return '<div class="pi' + (i === sel ? ' on' : '') + '"><span class="ic">' + x[0] + '</span>' + x[1] + '<span class="g">' + x[2] + '</span>' + (x[3] ? '<span class="k">' + x[3] + '</span>' : '') + '</div>';
+    }).join('') || '<div class="pi">Niente</div>';
+  }
+  inp.addEventListener('input', function () { sel = 0; draw(); });
+  inp.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowDown') { sel++; draw(); e.preventDefault(); }
+    if (e.key === 'ArrowUp') { sel = Math.max(0, sel - 1); draw(); e.preventDefault(); }
+    if (e.key === 'Escape') clearPop();
+  });
+  draw();
+  setTimeout(function () { inp.focus(); }, 0);
+  return p;
+}
+function catMenu() {
+  return el('<div class="menu on"><div class="mh">Torna</div>' + mi('↩︎', 'Notion (ultima finestra)', '') +
+    '<div class="ms"></div>' + mi('🖥', 'Scrivania', '⌃⌥0') + mi('＋', 'Nuova app…', '') +
+    '<div class="ms"></div><div class="mh">Cartelle</div>' + mi('🗂', 'Lavoro', '⌃⌥⇧1') + mi('🗂', 'Daily', '⌃⌥⇧2') + mi('🗂', 'Viaggio Lisbona', '⌃⌥⇧3') + '</div>');
+}
+function setP(p) {
+  P = p; clearPop();
+  document.querySelectorAll('#sel button').forEach(function (b) { b.classList.toggle('on', b.dataset.p === p); });
+  document.getElementById('tools').style.display = (p === 'C') ? 'flex' : 'none';
+  var n = NOTES[p];
+  document.getElementById('note').innerHTML = '<div><b>' + n[0] + '</b>' + n[1] + '</div><div><b>Pro e contro</b><ul>' + n[2].map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul></div>';
+  document.getElementById('hint').textContent = p === 'C' ? 'Clicca ⚡︎ oppure ◎' : 'Clicca ⚡︎ (o il gatto 🐱)';
+}
+document.getElementById('sel').addEventListener('click', function (e) { if (e.target.dataset.p) setP(e.target.dataset.p); });
+document.getElementById('bolt').addEventListener('click', function (e) {
+  e.stopPropagation(); var was = this.classList.contains('on'); clearPop(); if (was) return;
+  this.classList.add('on');
+  if (P === 'A') place(menuA(), this);
+  if (P === 'B') place(panelB(), this);
+  if (P === 'C') place(menuLampi(), this);
+  if (P === 'D') { document.getElementById('veil').classList.add('on'); document.getElementById('mac').appendChild(paletteD()); }
+});
+document.getElementById('tools').addEventListener('click', function (e) {
+  e.stopPropagation(); var was = this.classList.contains('on'); clearPop(); if (was) return;
+  this.classList.add('on'); place(menuTools(), this);
+});
+document.getElementById('cat').addEventListener('click', function (e) {
+  e.stopPropagation(); var was = this.classList.contains('on'); clearPop(); if (was) return;
+  this.classList.add('on');
+  var m = catMenu(); document.getElementById('mac').appendChild(m); m.style.left = '6px';
+});
+document.addEventListener('click', function (e) { if (!e.target.closest('.menu,.panel,.palette')) clearPop(); });
+setP('A');
+</script>
+</body></html>
