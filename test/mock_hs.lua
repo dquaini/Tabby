@@ -254,7 +254,7 @@ hs = {
   end},
   hotkey = {bind = function(m, k, fn) HOTKEYS = HOTKEYS or {}; HOTKEYS[k] = fn; return {} end},
   alert = {show = function(m) log("alert", m) end},
-  dialog = {blockAlert = function(_, _, b1) return BLOCK_ANSWER or b1 end, chooseFileOrFolder = function() return nil end,
+  dialog = {blockAlert = function(_, _, b1) return BLOCK_ANSWER or b1 end, chooseFileOrFolder = function() return CHOOSE_FILE end,
             textPrompt = function(_, _, def, b1, b2) local t = PROMPT_TEXT; PROMPT_TEXT = nil; if t == false then return b2, "" end return b1, t or def end},
   -- comandi esterni (usato per osascript): la risposta arriva "dopo", come sul Mac
   task = {new = function(path, cb, args)
@@ -420,7 +420,7 @@ hs = {
       return self
     end} end},
   },
-  focus = function() FRONT = HS_APP end, reload = function() end, openConsole = function() end,
+  focus = function() FRONT = HS_APP end, reload = function() RELOADS = (RELOADS or 0) + 1 end, openConsole = function() end,
 }
 
 -- tastiera: mappa bidirezionale come quella vera

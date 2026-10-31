@@ -506,6 +506,7 @@ function openQuick()
       fn    = function() toggleQuick(q) end,
     })
   end
+  table.insert(items, {title = "Personalizza i Lampi", menu = lampiMenu()})
   table.insert(items, {title = "-"})
   table.insert(items, {title = "Strumenti", disabled = true})
   -- Concentrazione: si sceglie quanto e cosa tenere (in corso: allunga o termina)
@@ -559,6 +560,108 @@ function openQuick()
   for _, it in ipairs(keyed) do table.insert(items, it) end
   table.insert(items, {title = "Tutte le App", menu = sub})
   popup(items, popPos(T.L.quick))
+end
+
+-- ---------------------------------------------------------------------
+--  LAMPI PERSONALIZZATI (31/10/2026, Daniele: «se voglio togliere il Calendario e
+--  aggiungere Promemoria posso farlo da solo, così ognuno personalizza il suo ambiente»).
+--  ⚡︎ → Personalizza i Lampi: togli un Lampo, cambiagli la scorciatoia, aggiungine uno
+--  (un'app aperta o un'altra dalla cartella Applicazioni), torna a quelli di serie.
+--  Si salva in "tabbar.quick"; Tabby si ricarica per attivare le scorciatoie nuove.
+-- ---------------------------------------------------------------------
+LAMPO_W, LAMPO_H = 560, 480   -- misura di un Lampo aggiunto (l'app può volerla più grande)
+
+function saveLampi(msg)
+  hs.settings.set("tabbar.quick", QUICK)
+  print("Tabby · Lampi: " .. msg)
+  hs.alert.show(msg)
+  after(0.8, function() hs.reload() end)
+end
+
+-- Una lettera libera per ⌃⌥ (nil se annulli o è già usata); suggerita: la prima libera del nome
+function askLampoKey(name, current)
+  local used = usedShortcutKeys()
+  local suggest = current
+  if not suggest then
+    for c in (name or ""):lower():gmatch("%a") do if not used[c] then suggest = c; break end end
+  end
+  local btn, txt = FD.ask(function()
+    return hs.dialog.textPrompt("Scorciatoia per " .. name, "Una lettera: si userà con ⌃⌥ (es. P → ⌃⌥P)",
+      suggest and suggest:upper() or "", "OK", "Annulla")
+  end)
+  local k = txt and txt:lower():match("^%s*(%a)%s*$")
+  if btn ~= "OK" or not k then return nil end
+  if used[k] and k ~= current then
+    hs.alert.show("⌃⌥" .. k:upper() .. " è già usata: scegline un'altra")
+    return nil
+  end
+  return k
+end
+
+function addLampo(bid, name)
+  if not bid or bid == FINDER or IGNORE[bid] or BROWSERS[bid] then
+    hs.alert.show("Questa app non può essere un Lampo")
+    return
+  end
+  for _, q in ipairs(QUICK) do if q.bid == bid then hs.alert.show(name .. " è già un Lampo"); return end end
+  local k = askLampoKey(name)
+  if not k then return end
+  table.insert(QUICK, {bid = bid, name = name, key = k, w = LAMPO_W, h = LAMPO_H})
+  saveLampi(name .. " è un Lampo: ⌃⌥" .. k:upper())
+end
+
+-- Un'app dalla cartella Applicazioni
+function addLampoFromFile()
+  local ok, res = pcall(function()
+    return FD.ask(function()
+      return hs.dialog.chooseFileOrFolder("Scegli l'app da aggiungere ai Lampi", "/Applications", true, false, false, {"app"})
+    end)
+  end)
+  local path = ok and type(res) == "table" and res["1"] or (ok and type(res) == "table" and res[1]) or nil
+  if not path then return end
+  local info = hs.application.infoForBundlePath(path) or {}
+  local bid = info.CFBundleIdentifier
+  local name = info.CFBundleDisplayName or info.CFBundleName or path:match("([^/]+)%.app/?$")
+  addLampo(bid, name)
+end
+
+function lampiMenu()
+  local items = {}
+  for i, q in ipairs(QUICK) do
+    table.insert(items, {title = q.name .. "   ⌃⌥" .. q.key:upper(),
+      image = smallIcon(q.bid or "com.apple.TextEdit"), menu = {
+      {title = "Cambia la scorciatoia…", fn = function()
+        local k = askLampoKey(q.name, q.key)
+        if k and k ~= q.key then q.key = k; saveLampi(q.name .. ": ⌃⌥" .. k:upper()) end
+      end},
+      {title = "Togli dai Lampi", fn = function()
+        table.remove(QUICK, i)
+        saveLampi(q.name .. " non è più un Lampo")
+      end},
+    }})
+  end
+  table.insert(items, {title = "-"})
+  local add = {}
+  local mine = {}
+  for _, q in ipairs(QUICK) do if q.bid then mine[q.bid] = true end end
+  local _, list = runningApps()
+  table.sort(list, function(a, b) return (a:name() or ""):lower() < (b:name() or ""):lower() end)
+  for _, app in ipairs(list) do
+    local b = app:bundleID()
+    if b and not mine[b] and b ~= FINDER and not BROWSERS[b] and not IGNORE[b] then
+      table.insert(add, {title = appName(b, app), image = smallIcon(b), fn = function() addLampo(b, appName(b, app)) end})
+    end
+  end
+  if #add > 0 then table.insert(add, {title = "-"}) end
+  table.insert(add, {title = "Altra app…", fn = addLampoFromFile})
+  table.insert(items, {title = "Aggiungi un Lampo", menu = add})
+  table.insert(items, {title = "Torna ai Lampi di serie", fn = function()
+    hs.settings.set("tabbar.quick", nil)
+    print("Tabby · Lampi: tornati quelli di serie")
+    hs.alert.show("Lampi di serie")
+    after(0.8, function() hs.reload() end)
+  end})
+  return items
 end
 
 -- ⚙︎ → Cartelle: crearle e modificarle (prima in ⚡︎; aprirle si fa dal gatto)

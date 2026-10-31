@@ -206,4 +206,6 @@ v9.66: il gatto = «casa», uguale nella barra (menu) e nella sfera (ventaglio):
 v9.67: menu ⚡︎ a sezioni (Lampi · Strumenti · App; proposta A): le App con scorciatoia
     subito, le altre in «Tutte le App». Cartelle: si aprono dal gatto, si creano e
     modificano in ⚙︎ → Cartelle; anche il file del Memo è in ⚙︎.
+v9.68: Lampi personalizzati (⚡︎ → Personalizza i Lampi): togliere, aggiungere (app aperte o
+    dalla cartella Applicazioni), cambiare scorciatoia, tornare a quelli di serie.
 ```

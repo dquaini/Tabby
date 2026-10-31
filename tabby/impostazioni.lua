@@ -45,7 +45,9 @@ MODS = {"ctrl", "alt"}
 -- l'app che stai usando, senza nasconderla. Stessa scorciatoia per
 -- aprirle e chiuderle, Esc per chiuderle. "key" va premuto insieme a ⌃⌥.
 -- (memo = true è il Memo di Tabby, non un'app)
-QUICK = {
+-- Questi sono i Lampi "di serie": ognuno può cambiarli da ⚡︎ → Personalizza i Lampi
+-- (31/10/2026); la scelta si salva in "tabbar.quick" (vedi base.lua).
+QUICK_DEFAULT = {
   {memo = true, name = "Memo", key = "m"},
   {bid = "com.apple.calculator", name = "Calcolatrice", key = "c"},
   -- il Calendario si apre piccolo (w × h: la misura minima che accetta, vista

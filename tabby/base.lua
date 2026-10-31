@@ -88,6 +88,9 @@ for k, v in pairs(DEFAULTS) do
 end
 function save(k) hs.settings.set("tabbar." .. k, S[k]) end
 
+-- I Lampi: quelli scelti da te (⚡︎ → Personalizza i Lampi) o quelli di serie
+QUICK = hs.settings.get("tabbar.quick") or QUICK_DEFAULT
+
 -- App che possono essere "app veloci" (Calcolatrice, Calendario, Terminale)
 FLOATER = {}
 for _, q in ipairs(QUICK) do if q.bid then FLOATER[q.bid] = true end end

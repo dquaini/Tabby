@@ -24,7 +24,8 @@ Prima di lavorare leggi:
 - Tiene molto alla qualità: "o fatto bene o meglio non averlo".
 - **Come ci intendiamo** (nomi decisi con Daniele): **Lampi** = le app del menu ⚡︎ (Memo,
   Calcolatrice, Calendario, Terminale), piccole in alto a destra; nel codice "app veloci"
-  (`QUICK`, `FLOATER`, `floating()`, `T.floatStack`). **Vista divisa** = schermo diviso in
+  (`QUICK`, `FLOATER`, `floating()`, `T.floatStack`); i Lampi di serie sono `QUICK_DEFAULT`,
+  quelli scelti da Daniele in `tabbar.quick` (⚡︎ → Personalizza i Lampi). **Vista divisa** = schermo diviso in
   zone (nel codice "gruppo"). **Cartella** = spazio di lavoro salvato.
 
 ## Come è fatto il progetto
@@ -131,7 +132,7 @@ GitHub, poi `git clone git@github.com:dquaini/Tabby.git` e `init.lua` che punta 
 
 ## Versione attuale
 
-**v9.67** (storia in `docs/STORIA.md`). Piano (31/10/2026, `docs/ROADMAP-v1.md`): 1) ordine
+**v9.68** (storia in `docs/STORIA.md`). Piano (31/10/2026, `docs/ROADMAP-v1.md`): 1) ordine
 nella UX, 2) sistema di design (decisioni e prototipi; realizzazione in Swift), 3) seconda
 settimana di prova (2–8/11), 4) app Swift. Nell'app Swift Tabby avrà cinque sezioni:
 Impostazioni, Design, Documentazione, Automazione (apertura delle cartelle da sole), Kat

@@ -683,6 +683,17 @@ lì**, senza domande; **nessun posto → non si apre** e al centro compare «Non
 mettere …». Chiudendone uno, **gli altri si spostano** a riempire il posto. I Lampi già al
 loro posto non si spostano.
 
+**Q-1c Lampi personalizzati** (v9.68, 31/10/2026, Daniele: «così ognuno personalizza il suo
+ambiente»): ⚡︎ → **Personalizza i Lampi ▸**. Per ogni Lampo: «Cambia la scorciatoia…» e
+«Togli dai Lampi». **Aggiungi un Lampo ▸**: le app aperte (non Finder, browser, Hammerspoon,
+né quelle già Lampi) oppure «Altra app…» (scelta nella cartella Applicazioni). La
+scorciatoia è ⌃⌥ + una lettera: Tabby propone la prima libera del nome; una lettera già
+usata (schede, Lampi, App, ⌃⌥W, F, S…) viene rifiutata con un avviso. Un Lampo aggiunto si
+apre 560×480 (se l'app vuole di più, la sua misura minima). «Torna ai Lampi di serie»
+cancella la scelta. Si salva in `tabbar.quick` (elenco `{memo | bid, name, key, w, h}`);
+dopo ogni cambio Tabby si ricarica (0,8 s) per attivare le scorciatoie. **[Swift]** senza
+ricaricare.
+
 **Q-2 Memo**: blocco note 340×280 in alto a destra (in fila con gli altri Lampi), scuro,
 testo 14. Il testo è un **file vero**: `~/Documents/Tabby Memo.txt` (si apre con
 TextEdit, si trova con Spotlight). **Editor a righe** (v9.50, `tabby/memo.html`), con
@@ -925,6 +936,7 @@ con gli stessi nomi; offrire l'importazione dalla versione Hammerspoon.
 | `itemWins` | — | legami voce di cartella → finestra |
 | `menuH` | — | altezza della barra dei menu vista l'ultima volta |
 | `focus`, `focusLast` | — | concentrazione in corso; ultima scelta (minuti, schede) |
+| `quick` | (di serie) | i Lampi scelti (Q-1c) |
 | (file) | | Memo in `~/Documents/Tabby Memo.txt` |
 
 ## 22. Osservatori, tempi e consumi
@@ -1038,6 +1050,7 @@ Ogni regola ha un test in `test/`; nell'app Swift diventano test di accettazione
 | `test_cerchio.py` | W-0, W-3 (ventaglio, puntatore), W-4 |
 | `test_concentrazione.py` | H-1 … H-5 |
 | `test_cerca.py` | E-1 … E-4 |
+| `test_lampi_personali.py` | Q-1c |
 | `test_robustezza.py` | timer e comandi esterni tenuti; nessuna funzione doppia; K-2; pagine chiuse dopo 5 min |
 | `test_finestre_ridotte.py` | finestre ridotte / app nascoste su macOS 26 |
 | `test_cartelle_avvisi.py` | F-3 (griglia), F-4.5 (schermata di apertura), F-10, B-9, Diario |

@@ -78,7 +78,7 @@ Nell'app Swift Tabby avrà cinque sezioni:
 
 ---
 
-## ✅ Fatto (v9.4 → v9.65), per area
+## ✅ Fatto (v9.4 → v9.68), per area
 
 - **Schede**: una per app o per finestra (v9.5), una alla volta anche tra finestre della
   stessa app; le finestre ridotte nel Dock restano schede (v9.61, macOS 26); rinomina col
@@ -90,8 +90,8 @@ Nell'app Swift Tabby avrà cinque sezioni:
 - **Cartelle**: creare, attivare, vista cartella, chiudere, aggiornare (v9.8); pagine del
   browser (v9.23); riquadro a griglia, tasto destro (v9.60); schermata di apertura (v9.65).
 - **Lampi**: Memo (con elenchi, cose da fare, sezioni — v9.50), Calcolatrice, Calendario,
-  Terminale; fila, ripiano dei Lampi coperti (v9.39–9.48); ⚡︎ → App (icone della barra dei
-  menu di macOS con scorciatoia).
+  Terminale; fila, ripiano dei Lampi coperti (v9.39–9.48); **personalizzabili** (v9.68);
+  ⚡︎ → App (icone della barra dei menu di macOS con scorciatoia).
 - **Concentrazione** (v9.55–9.56) e **Cerca nelle finestre** ⌃⌥F (v9.57–9.58).
 - **Scrivania**: sfera col gatto di Daniele, ventaglio, «Chiudi Tabby» (v9.51–9.54).
 - **Barra**: nera con angoli smussati, notch, batteria a icona, barra dei menu e Dock che la
