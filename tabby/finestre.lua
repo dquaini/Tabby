@@ -437,6 +437,33 @@ end
 --  PASSARE DA UNA SCHEDA ALL'ALTRA
 -- ---------------------------------------------------------------------
 
+-- Un pannello: la finestra in primo piano dell'app è piccola e non è una finestra normale
+-- (pannello, finestrella fluttuante, dialogo). Non conta come scheda.
+PANEL_ROLES = {AXFloatingWindow = true, AXSystemFloatingWindow = true, AXDialog = true,
+               AXSystemDialog = true, AXUnknown = true}
+function isPanelWindow(w, bid)
+  if not w then return false end
+  local ok, res = pcall(function()
+    local a = w:application()
+    if not a or a:bundleID() ~= bid then return false end
+    if BROWSERS[bid] then return false end   -- (per i browser ci sono già le regole delle finestrelle)
+    if w:isStandard() or w:isMinimized() or w:isFullScreen() then return false end
+    if T.stdSeen and T.stdSeen[w:id()] then return false end   -- (era una finestra normale)
+    return PANEL_ROLES[w:subrole() or "AXUnknown"] == true and T.isSmall(w)
+  end)
+  if ok and res then
+    local id = w:id()
+    T.panelSeen = T.panelSeen or {}
+    if not T.panelSeen[id] then
+      T.panelSeen[id] = true
+      local f = w:frame()
+      print(string.format("Tabby · pannello di %s «%s» (%s, %.0fx%.0f): non nascondo le altre app",
+        tostring(w:application():name()), tostring(w:title()), tostring(w:subrole()), f.w, f.h))
+    end
+  end
+  return ok and res or false
+end
+
 -- Quando un'app passa in primo piano (o cambia finestra in primo piano)
 handleActive = timed("cambio di scheda", function(app)
   if T.paused then return end   -- Tabby chiusa: non fa niente
@@ -452,6 +479,24 @@ handleActive = timed("cambio di scheda", function(app)
   local fsw = hs.window.focusedWindow()
   if fsw and fsw:isFullScreen() then
     updateFullscreen()   -- finestra a schermo intero: Tabby si fa da parte
+    return
+  end
+  -- per il diario: ogni cambio di app, con la finestra in primo piano (tipo e misura)
+  if bid and bid ~= T.diagFront then
+    T.diagFront = bid
+    local w0 = hs.window.focusedWindow()
+    local okS, sr = pcall(function() return w0 and w0:subrole() end)
+    local f0 = w0 and w0:frame()
+    print(string.format("Tabby · attiva: %s · finestra «%s» %s %s", tostring(app:name()),
+      tostring(w0 and w0:title() or "-"), tostring(okS and sr or "?"),
+      f0 and string.format("%.0fx%.0f", f0.w, f0.h) or "-"))
+  end
+  -- Un pannello piccolo che non è una finestra normale (5/11/2026, Daniele: «quando arriva
+  -- la notifica di Notion che inizia un meeting e vuole registrare spacca tutto»): l'app
+  -- diventa attiva per mostrare la sua finestrella, e Tabby nascondeva tutte le altre
+  -- (anche il browser col meeting). Ora come per le azioni rapide: non si nasconde niente.
+  if bid and isTabApp(app) and isPanelWindow(hs.window.focusedWindow(), bid) then
+    draw()
     return
   end
   if bid and actionRecent(bid) then

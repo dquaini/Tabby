@@ -208,4 +208,7 @@ v9.67: menu ⚡︎ a sezioni (Lampi · Strumenti · App; proposta A): le App con
     modificano in ⚙︎ → Cartelle; anche il file del Memo è in ⚙︎.
 v9.68: Lampi personalizzati (⚡︎ → Personalizza i Lampi): togliere, aggiungere (app aperte o
     dalla cartella Applicazioni), cambiare scorciatoia, tornare a quelli di serie.
+v9.69: i pannelli piccoli (es. Notion «vuoi registrare il meeting?») non nascondono più le
+    altre app; la linea blu del trascinamento non resta più disegnata se il rilascio del
+    clic si perde; il diario scrive ogni cambio di app con la sua finestra.
 ```

@@ -51,8 +51,14 @@ function newWindow(app, title, urls)
   function w:unminimize() self._min = false end
   -- come macOS 26: una finestra ridotta, o di un'app nascosta, si dice "dialogo"
   -- (solo per le finestre con _macos26 = true)
-  function w:isStandard() return not (self._macos26 and (self._min or self._app._hidden)) end
-  function w:subrole() return self:isStandard() and "AXStandardWindow" or "AXDialog" end
+  function w:isStandard()
+    if self._subrole and self._subrole ~= "AXStandardWindow" then return false end   -- (pannelli, dialoghi)
+    return not (self._macos26 and (self._min or self._app._hidden))
+  end
+  function w:subrole()
+    if self._subrole then return self._subrole end
+    return self:isStandard() and "AXStandardWindow" or "AXDialog"
+  end
   function w:role() return "AXWindow" end
   function w:isVisible() return true end
   function w:isFullScreen() return self._fs end
@@ -246,6 +252,7 @@ hs = {
     keyStroke = function(m, k) KEYSTROKES = KEYSTROKES or {}; table.insert(KEYSTROKES, table.concat(m or {}, "+") .. "+" .. tostring(k)) end,
     keyStrokes = function(s) TYPED = s end,
     checkKeyboardModifiers = function() return HELD or {} end,
+    checkMouseButtons = function() return {left = MOUSE_DOWN == true} end,
   },
   keycodes = {map = {}},
   mouse = {absolutePosition = function() return {x = MOUSE.x, y = MOUSE.y} end},

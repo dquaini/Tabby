@@ -93,6 +93,7 @@ function startPress(i)
   local p = hs.mouse.absolutePosition()
   T.press = {i = i, x = p.x, y = p.y, dragging = false}
   T.dragTap:start()
+  startPressGuard()
 end
 
 -- Trascinare un Lampo (dalla fila della vista divisa) invece di una scheda
@@ -100,6 +101,24 @@ function startPressKey(key)
   local p = hs.mouse.absolutePosition()
   T.press = {key = key, x = p.x, y = p.y, dragging = false}
   T.dragTap:start()
+  startPressGuard()
+end
+
+-- Rete di sicurezza (5/11/2026, Daniele: «ogni tanto la linea blu compare in mezzo tra due
+-- icone»). Se macOS spegne l'ascolto del mouse durante un trascinamento (succede quando
+-- Tabby è lenta a rispondere), il rilascio del clic non arriva: la linea blu di "dove
+-- cadrà" restava disegnata, e il clic dopo sulla barra veniva ignorato. Ora, finché tieni
+-- premuto, Tabby guarda ogni 0,3 s se il tasto del mouse è ancora giù; se non lo è, chiude.
+function startPressGuard()
+  if T.pressGuard then T.pressGuard:stop() end
+  T.pressGuard = hs.timer.doEvery(0.3, function()
+    if not T.press then T.pressGuard:stop(); T.pressGuard = nil; return end
+    local ok, b = pcall(hs.eventtap.checkMouseButtons)
+    if ok and type(b) == "table" and not b.left and not b[1] then
+      print("Tabby · trascinamento: il rilascio del clic non è arrivato, chiudo io")
+      onDragEnd(hs.mouse.absolutePosition(), true)
+    end
+  end)
 end
 
 function pressedItem(pr)
@@ -138,11 +157,23 @@ function onDragMove(p)
   end
 end
 
-function onDragEnd(p)
+-- lost = il rilascio non è arrivato (vedi startPressGuard): si annulla e basta
+function onDragEnd(p, lost)
   T.dragTap:stop()
+  if T.pressGuard then T.pressGuard:stop(); T.pressGuard = nil end
   local pr = T.press
   T.press = nil
   if T.ghost then T.ghost:hide() end
+  -- la linea blu di "dove cadrà" sparisce sempre, comunque finisca
+  local hadMarker = T.dropMarker ~= nil
+  T.dropKey, T.dropMarker = nil, nil
+  if lost then
+    if T.split then T.split.hover = nil; drawSplit() end
+    if T.fedit then T.fedit.hover = false; FD.drawFolderEdit() end
+    T.suppressClick = false
+    draw()
+    return
+  end
   if pr and pr.dragging then
     if T.split then
       local k = zoneAt(p)
@@ -155,9 +186,10 @@ function onDragEnd(p)
       if T.fedit.hover then FD.feditAdd(T.tabs[pr.i]) else FD.drawFolderEdit() end
     elseif pr.i then
       local pos = dropSlot(p)
-      T.dropKey, T.dropMarker = nil, nil
       if pos then reorderTab(pr.i, pos) else draw() end
     end
+  elseif hadMarker then
+    draw()
   end
   after(0.25, function() T.suppressClick = false end)
 end

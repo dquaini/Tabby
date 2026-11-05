@@ -746,6 +746,16 @@ apre niente: allora si apre l'app come dal Dock; per un'app solo icona, avviso.
 ingrandisce, e l'app in cui sei non viene nascosta. Sotto il pannello c'è il velo
 (16) finché torni alla finestra di prima o passi a una finestra "vera".
 
+**X-5 Pannelli** (v9.69, 5/11/2026: la finestrella di Notion «vuoi registrare il meeting?»):
+se l'app che diventa attiva ha in primo piano una finestra **piccola** (meno di metà
+larghezza e meno del 60% dell'altezza dello spazio delle app) che **non è una finestra
+normale** (ruolo AXFloatingWindow, AXSystemFloatingWindow, AXDialog, AXSystemDialog o
+sconosciuto; mai vista normale; non ridotta, non a schermo intero; non di un browser),
+Tabby non nasconde le altre app, non la ingrandisce e non la conta come scheda. Prima
+nascondeva tutto, anche il browser col meeting. Nel diario: «pannello di X … non
+nascondo le altre app». Il diario scrive anche ogni cambio di app con titolo, ruolo e
+misura della finestra in primo piano.
+
 ## 16. Velo
 
 **V-1** Con Spotlight aperto (e con i pannelli delle azioni rapide) lo schermo,
@@ -888,6 +898,13 @@ una "scheda fantasma" sotto il puntatore.
 - durante la divisione: la zona sotto il puntatore si illumina; lasciata → in quella zona;
 - durante la creazione di una cartella: il riquadro si illumina; lasciata → aggiunta.
 Dopo un trascinamento il clic che segue si ignora.
+
+**T-2 Rilascio perso** (v9.69): se macOS spegne l'ascolto del mouse durante un trascinamento
+(quando Tabby è lenta a rispondere), il rilascio del clic non arriva. Finché una scheda è
+premuta Tabby controlla ogni 0,3 s il tasto sinistro del mouse: se non è più giù chiude
+lei il trascinamento (niente riordino), toglie la lineetta d'accento e la scheda
+fantasma, e il clic dopo **non** viene ignorato. La lineetta sparisce comunque a ogni fine
+di trascinamento. *Perché:* «ogni tanto la linea blu compare in mezzo tra due icone».
 
 ## 20. Menu
 
@@ -1051,6 +1068,7 @@ Ogni regola ha un test in `test/`; nell'app Swift diventano test di accettazione
 | `test_concentrazione.py` | H-1 … H-5 |
 | `test_cerca.py` | E-1 … E-4 |
 | `test_lampi_personali.py` | Q-1c |
+| `test_pannelli_trascina.py` | X-5, T-2 |
 | `test_robustezza.py` | timer e comandi esterni tenuti; nessuna funzione doppia; K-2; pagine chiuse dopo 5 min |
 | `test_finestre_ridotte.py` | finestre ridotte / app nascoste su macOS 26 |
 | `test_cartelle_avvisi.py` | F-3 (griglia), F-4.5 (schermata di apertura), F-10, B-9, Diario |
