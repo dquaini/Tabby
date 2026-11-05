@@ -252,7 +252,8 @@ hs = {
     keyStroke = function(m, k) KEYSTROKES = KEYSTROKES or {}; table.insert(KEYSTROKES, table.concat(m or {}, "+") .. "+" .. tostring(k)) end,
     keyStrokes = function(s) TYPED = s end,
     checkKeyboardModifiers = function() return HELD or {} end,
-    checkMouseButtons = function() return {left = MOUSE_DOWN == true} end,
+    -- come il Mac vero: con nessun tasto premuto un elenco vuoto
+    checkMouseButtons = function() if MOUSE_DOWN then return {left = true, [1] = true} end return {} end,
   },
   keycodes = {map = {}},
   mouse = {absolutePosition = function() return {x = MOUSE.x, y = MOUSE.y} end},

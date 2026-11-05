@@ -114,7 +114,7 @@ function startPressGuard()
   T.pressGuard = hs.timer.doEvery(0.3, function()
     if not T.press then T.pressGuard:stop(); T.pressGuard = nil; return end
     local ok, b = pcall(hs.eventtap.checkMouseButtons)
-    if ok and type(b) == "table" and not b.left and not b[1] then
+    if ok and type(b) == "table" and next(b) == nil then   -- (nessun tasto premuto)
       print("Tabby · trascinamento: il rilascio del clic non è arrivato, chiudo io")
       onDragEnd(hs.mouse.absolutePosition(), true)
     end
