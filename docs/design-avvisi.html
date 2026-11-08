@@ -34,7 +34,8 @@ h1 { font-size: 20px; margin: 0 0 4px; } .lead { margin: 0 0 12px; color: #6E6E7
 .sp { flex: 1; } .bbs { display: flex; } .side .bbs { justify-content: space-around; }
 .bb { width: 34px; height: 38px; display: flex; align-items: center; justify-content: center; color: #A69E8B; } .bb.hot { color: #E9B44A; }
 /* la pila degli avvisi */
-.stack { position: absolute; z-index: 7; width: 300px; display: flex; flex-direction: column; gap: 8px; }
+.stack { position: absolute; z-index: 7; display: flex; flex-direction: row-reverse; align-items: flex-start; gap: 8px; }
+.stack .n { width: 270px; flex: none; } .stack .n.more { width: auto; align-self: center; border-radius: 999px; }
 .top .stack { right: 12px; top: 46px; } .side .stack { right: 160px; top: 10px; }
 .n { position: relative; display: flex; gap: 10px; padding: 9px 10px 9px 10px; border-radius: 12px; color: #F2F2F4; overflow: hidden;
   background: rgba(38,38,40,.88); backdrop-filter: blur(30px) saturate(1.8); -webkit-backdrop-filter: blur(30px) saturate(1.8);
@@ -44,7 +45,7 @@ h1 { font-size: 20px; margin: 0 0 4px; } .lead { margin: 0 0 12px; color: #6E6E7
 @keyframes inTop { from { opacity: 0; transform: translateY(-14px) scale(.98); } }
 @keyframes inSide { from { opacity: 0; transform: translateX(16px) scale(.98); } }
 .n.out { animation: out .2s cubic-bezier(.4,0,1,1) forwards; }
-@keyframes out { to { opacity: 0; transform: translateX(14px); height: 0; padding-top: 0; padding-bottom: 0; margin-top: -8px; } }
+@keyframes out { to { opacity: 0; transform: translateY(-10px) scale(.97); } }
 .n .g { width: 26px; height: 26px; border-radius: 7px; flex: none; display: flex; align-items: center; justify-content: center; color: #E9B44A; background: rgba(233,180,74,.14); }
 .n .g.app { color: #fff; font-weight: 700; font-size: 12px; }
 .n .g.warn { color: #FFB340; background: rgba(255,179,64,.14); }
@@ -84,7 +85,7 @@ th { background: #F5F5F7; font-size: 11.5px; color: #6E6E73; border-top: 0; }
 <li><b>Dove:</b> sotto la barra, a destra (con Tabby di lato: in alto, accanto alla barra). Mai al centro, mai col velo: non interrompe.</li>
 <li><b>Com'è:</b> lo stile dei menu (vetro, angoli 12). A sinistra l'icona dell'app o il simbolo nel colore del tema (arancio se è un problema); titolo in una riga, al massimo una riga sotto; pulsanti piccoli solo se c'è una scelta.</li>
 <li><b>Quanto resta:</b> 4 s se è solo un'informazione, 8 s se ha pulsanti; passandoci sopra il tempo si ferma (una lineetta sottile in fondo mostra quanto manca). Clic sulla ✕ = via subito.</li>
-<li><b>Tanti insieme:</b> al massimo 3 uno sotto l'altro (il più nuovo in alto); gli altri aspettano e una riga dice «+2 altri».</li>
+<li><b>Tanti insieme:</b> <b>affiancati in orizzontale</b> sotto la barra: il più nuovo a destra (vicino all'angolo), i precedenti scivolano a sinistra; al massimo 3, gli altri aspettano e una pastiglia a sinistra dice «+2 altri». Con Tabby di lato: in riga in alto, accanto alla barra.</li>
 <li><b>Uguali:</b> se arriva lo stesso avviso mentre c'è già, non se ne fa un altro: si rinnova il tempo.</li>
 <li>Con Concentrazione o Non disturbare: solo gli avvisi con una scelta da fare; gli altri non compaiono.</li></ul></div>
 <table><tr><th>Messaggio di oggi</th><th>Cosa diventa</th></tr>

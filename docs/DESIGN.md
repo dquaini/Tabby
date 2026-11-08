@@ -284,3 +284,28 @@ riconoscibile dal suo riempimento). Nel foglio le scelte compaiono come etichett
    della riga dei Lampi in ⚡︎); clic sui tasti e premi una lettera per cambiare la scorciatoia
    (se è già usata lo dice); «Aggiungi un Lampo…» apre l'elenco delle app (menu); «Lampi di
    serie» · **Fatto**.
+
+### 3.5 Avvisi ✅ (8/11/2026)
+Prototipo: `docs/design-avvisi.html`. **Un avviso solo** per tutti i messaggi.
+- **Dove:** sotto la barra, a destra (Tabby di lato: in alto, accanto alla barra). Mai al
+  centro, mai col velo: non interrompono. Entrano scivolando dalla barra (0,38 s elastico),
+  escono in 0,2 s.
+- **Com'è:** stile dei menu (vetro, angoli 12), largo 270. A sinistra l'icona dell'app o il
+  simbolo nel colore del tema (**arancio** se è un problema); titolo in una riga, al massimo una
+  riga sotto; pulsanti piccoli solo se c'è una scelta (principale nel colore del Mac).
+- **Quanto resta:** 4 s se è un'informazione, 8 s con pulsanti; passandoci sopra il tempo si
+  ferma (lineetta sottile in fondo); ✕ in alto a sinistra (al passaggio del mouse) = via subito.
+- **Tanti insieme** (Daniele): **affiancati in orizzontale** — il più nuovo a destra, vicino
+  all'angolo; i precedenti scivolano a sinistra; al massimo 3, gli altri aspettano e una
+  pastiglia a sinistra dice «+2 altri».
+- **Lo stesso avviso** mentre c'è già: non se ne fa un altro, si rinnova il tempo.
+- In **Concentrazione** o con Non disturbare: solo quelli con una scelta da fare.
+
+**I messaggi di oggi:** restano come avviso con pulsanti «Gmail è già aperto…» (Lascia · Vai a
+quella · Chiudi questa) e «Lavoro chiusa» (Riapri); come avviso semplice «Non c'è spazio per X»
+(problema), «X si apre dalla sua icona» (problema, pulsante «Come fare»), «Non trovo l'icona di
+X» (problema), «Cartella salvata · dal gatto o ⌃⌥⇧2», «N app nuove in ⚡︎ → App» (solo se ce ne
+sono). **Spariscono:** «⌃⌥X è già usata» e «Memo: ⌃⌥M» (lo dice la scorciatoia mentre la
+registri), «Lampi di serie» (si vede nel foglio), «Questa app non può essere un Lampo» e «X è già
+un Lampo» (non compaiono nell'elenco), «Cartella aggiornata» (si vede nella barra), «Nessuna app
+nuova», «Tabby vX attiva». La **fine della Concentrazione** resta un foglio.
