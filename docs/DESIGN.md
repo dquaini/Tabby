@@ -332,3 +332,11 @@ sulla Scrivania · batteria (verde, rossa, fulmine) · tempo della Concentrazion
 **Pulizie decise (Daniele):** la finestra ridotta nel Dock ha icona e nome attenuati · la ✕
 si vede solo sulla scheda attiva e su quella sotto il mouse (come Safari) · niente riga dopo
 il gatto (solo spazio; già tolta quella tra batteria e tasti).
+
+### 3.8 La sfera (in corso, 8/11/2026)
+Prototipo: `docs/design-sfera.html` (tutti gli stati, coi temi). Resta com'è oggi (v9.54): 60
+punti, in basso a destra a 60 dai bordi, colori che girano dentro, il gatto di Daniele,
+reagisce al mouse; clic = le scelte del gatto (Casa). Proposte da decidere: colori secondo il
+tema · clic con ventaglio (A, consigliato) o menu Casa (B) · numerino delle notifiche · pausa
+con colori fermi e segno ❙❙ · anello della Concentrazione nel colore del tema · comparsa
+(barra che sale 0,2 s, sfera elastica 0,38 s; ferma con «Riduci movimento»).
