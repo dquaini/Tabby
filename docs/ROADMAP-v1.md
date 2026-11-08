@@ -55,7 +55,8 @@ Nell'app Swift Tabby avrà cinque sezioni:
 - **Automazione** — spazi di lavoro che si preparano da soli: **apertura delle cartelle**
   all'avvio del Mac, a un orario («Lavoro» alle 9), quando ti colleghi a una rete Wi-Fi
   (l'ufficio); pensate anche come azioni che un agente può usare. *(Deciso: non si fa in
-  Hammerspoon, nasce qui.)*
+  Hammerspoon, nasce qui.)* Ricerca di spunti su Berd, Goose e Buzz (Block):
+  `docs/ricerca/block/NOTE.md`.
 - **Kat** — una **cartella del Mac collegata a Tabby** dove stanno tutti i file di Tabby
   (il Memo e gli altri). Con Tabby ambiente multi-agente, è anche il posto dove finiscono
   tutti gli HTML e gli altri file generati dagli agenti con Tabby. (Oggi il Memo è in
