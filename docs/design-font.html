@@ -3,15 +3,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tabby — il carattere</title>
 <!--
-  Sistema di design, passo 2a (8/11/2026): il font. Daniele: «anche nel font scegliere tra 3–5
-  opportunità»; linea guida di stile per il «tocco di design» (facoltativo): il risograph
-  (colori vivi e piatti, sovrastampa sfalsata, grana, forme geometriche, titoli grassi e tondi).
-  Di base Tabby resta semplice come macOS.
+  Sistema di design, passo 2a (8/11/2026): il font, tra 5 scelte (deciso con Daniele).
   I font non di Apple sono liberi (licenza OFL): si possono mettere dentro l'app.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sorts+Mill+Goudy&family=Grandstander:wght@400;600;800&family=JetBrains+Mono:wght@400;600;800&family=Nunito:wght@400;600;800&family=Titan+One&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sorts+Mill+Goudy&family=Grandstander:wght@400;600;800&family=JetBrains+Mono:wght@400;600;800&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; }
 html, body { margin: 0; font: 13px/1.4 -apple-system, system-ui, sans-serif; background: #ECECEF; color: #1D1D1F; }
@@ -76,35 +73,18 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 .hero .ics { display: flex; gap: 14px; margin-top: 18px; }
 .hero .ics span { width: 42px; height: 42px; border-radius: 10px; }
 .hero .p { margin-top: 14px; font-size: 12px; opacity: .65; }
-/* ---- il tocco di design: risograph ---- */
-.riso .hero { background: #F3EBDD; color: #1D1B16; }
-.riso .hero::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5; mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.45  0 0 0 0 0.38  0 0 0 0 0.3  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
-.riso .hero .t { font-family: 'Titan One', var(--ui); font-weight: 400; font-size: 52px; line-height: 1.1; color: #FF5A2E;
-  letter-spacing: .07em; text-transform: uppercase; position: relative;
-  /* la sovrastampa come ombra netta DIETRO le lettere (rosa in basso a destra, un filo di giallo in alto a sinistra) */
-  text-shadow: 4px 4px 0 #FF3FA4, -1.5px -1.5px 0 #FFD23A; }
-.riso .hero .p { font-family: 'Titan One', var(--ui); font-weight: 400; color: #E8338F; opacity: 1; font-size: 14px; letter-spacing: .1em; text-transform: uppercase; position: relative; }
-.riso .hero .ics { position: relative; }
-.riso .hero .ics span { border-radius: 50%; mix-blend-mode: multiply; }
-.riso .hero .ics span:nth-child(1) { background: #FF3FA4 !important; } .riso .hero .ics span:nth-child(2) { background: #FFCD28 !important; border-radius: 4px; transform: rotate(45deg) scale(.85); }
-.riso .hero .ics span:nth-child(3) { background: #2E9FD6 !important; } .riso .hero .ics span:nth-child(4) { background: #8A4FD0 !important; border-radius: 4px; }
-.riso .hero .ics span:nth-child(5) { background: #FF5A36 !important; clip-path: polygon(50% 0, 100% 100%, 0 100%); border-radius: 0; }
-.riso .shape { display: block; }
 .shape { display: none; position: absolute; mix-blend-mode: multiply; }
 .cap { color: rgba(255,255,255,.8); font-size: 11.5px; padding: 0 22px 16px; font-family: -apple-system, system-ui; }
 </style></head>
 <body>
 <div class="wrap">
   <h1>Tabby — il carattere (font)</h1>
-  <p class="lead">Scegli il carattere di Tabby tra 5 (aggiornati: SF Pro, SF Pro Rounded, Californiano, Goofy, Terminale): cambia dal vivo la barra, il menu, una finestra e la schermata di apertura (tema Notte · Tabby). L'interruttore <b>Tocco di design</b> mostra lo stile risograph del tuo riferimento sui momenti "di carattere" (qui la schermata di apertura): resta una scelta, di base Tabby è semplice come macOS.</p>
+  <p class="lead">Scegli il carattere di Tabby tra 5: cambiano dal vivo la barra, il menu, una finestra e la schermata di apertura (tema Notte · Tabby). Di serie: Sistema (SF Pro). Vale solo per Tabby: il resto del Mac resta in SF Pro.</p>
   <div class="grid">
     <div class="pane">
       <h2>Design</h2>
       <div class="sec">Carattere</div>
       <div class="fonts" id="fonts"></div>
-      <div class="sec">Tocco di design</div>
-      <div class="sw"><div>Stile risograph<small>colori vivi, sovrastampa, grana, forme</small></div><div class="tg" id="riso"></div></div>
       <div class="note">SF Pro e SF Pro Rounded sono di Apple (già nel Mac). Gli altri sono liberi: si mettono dentro Tabby. Se il tuo visualizzatore non ha SF Pro Rounded, la prova "Arrotondato" usa Nunito, molto simile.</div>
     </div>
     <div class="mac" id="mac">
@@ -155,7 +135,7 @@ var FONTS = [
   {id: 'goofy', name: 'Goofy', d: 'giocoso e un po\' buffo, ma si legge (Grandstander)', ui: '"Grandstander", system-ui, sans-serif', k: .96, ls: '0', wMid: 600, wBold: 800},
   {id: 'mono', name: 'Terminale', d: 'a spaziatura fissa, come il Terminale (JetBrains Mono)', ui: '"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace', k: .9, ls: '-.01em', wMid: 600, wBold: 800}
 ];
-var cur = 'sf', riso = false;
+var cur = 'sf';
 function render() {
   var box = document.getElementById('fonts'); box.innerHTML = '';
   FONTS.forEach(function (f) {
@@ -168,11 +148,8 @@ function render() {
   var f = FONTS.filter(function (x) { return x.id === cur; })[0], m = document.getElementById('mac');
   m.style.setProperty('--ui', f.ui); m.style.setProperty('--k', f.k); m.style.setProperty('--ls', f.ls);
   m.style.setProperty('--wMid', f.wMid); m.style.setProperty('--wBold', f.wBold);
-  m.classList.toggle('riso', riso);
-  document.getElementById('riso').classList.toggle('on', riso);
-  document.getElementById('cap').textContent = 'Carattere: ' + f.name + (riso ? ' · tocco di design: risograph' : '');
+  document.getElementById('cap').textContent = 'Carattere: ' + f.name;
 }
-document.getElementById('riso').onclick = function () { riso = !riso; render(); };
 render();
 </script>
 </body></html>

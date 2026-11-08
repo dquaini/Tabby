@@ -13,15 +13,9 @@ notch), che è in `SPECIFICA.md`.
 **Ordine di lavoro:** 1 direzione ✅ · 2 mattoni · 3 componenti · 4 struttura e percorsi ·
 5 funzioni nuove · 6 parole.
 
-**Principio (8/11/2026, Daniele):** di base Tabby è **semplice da usare come macOS**; chi vuole
-può avere **un tocco di design**. Linea guida di stile per il tocco di design: il
-**risograph** (immagine di riferimento di Daniele): pochi colori vivi e piatti (rosa fluo,
-arancio, giallo, azzurro, viola), sovrastampa un po' sfalsata, grana della carta, forme
-geometriche semplici, titoli grassi e tondi. Si usa nei momenti "di carattere" (schermata di
-apertura delle cartelle, sfera, titoli grandi, schermate vuote, primo avvio, Kat) — dove e
-come esattamente si decide con i componenti. Mai nei nomi delle schede, nei menu e nelle
-impostazioni, che restano leggibili e familiari. **Ovunque si sceglie, poche opzioni curate**
-(3–5), come per i temi.
+**Principio (8/11/2026, Daniele):** Tabby **personalizzabile ma sempre efficace**: di base
+semplice da usare come macOS; ovunque si sceglie, **poche opzioni curate** (3–5), come per
+i temi. (Uno stile "risograph" per i momenti di carattere è stato provato e **scartato**.)
 
 ---
 
@@ -76,3 +70,25 @@ Regole dei temi Tabby:
 
 I valori completi (tutte le sfumature e le trasparenze) sono nel prototipo; quando si
 costruisce l'app diventano il file dei temi che Tabby legge.
+
+---
+
+## 2. Mattoni
+
+### 2.1 Carattere (font) ✅ (8/11/2026)
+Prototipo: `docs/design-font.html`. Nella sezione Design, 5 scelte; **di serie: Sistema**.
+
+| Nome | Font | Com'è | Da dove |
+|---|---|---|---|
+| **Sistema** (di serie) | SF Pro | quello di macOS, neutro e chiarissimo | già nel Mac |
+| **Arrotondato** | SF Pro Rounded | lo stesso, con le punte morbide | già nel Mac |
+| **Californiano** | Sorts Mill Goudy | classico con le grazie (stile Californian FB, che è a pagamento) | libero (OFL), dentro Tabby |
+| **Goofy** | Grandstander | giocoso e un po' buffo, ma leggibile | libero (OFL), dentro Tabby |
+| **Terminale** | JetBrains Mono | a spaziatura fissa, come il Terminale | libero (OFL), dentro Tabby |
+
+- Il carattere vale **solo per Tabby** (barra, sue finestre, sue pagine); il resto del Mac e
+  delle altre app resta com'è.
+- Ogni font ha la sua **scala**, perché a parità di punti alcuni sono più grandi o più piccoli
+  (Californiano ×1,10, Goofy ×0,96, Terminale ×0,90): così le schede restano della stessa misura.
+- Le icone delle app, i numerini delle notifiche e i simboli dei tasti restano sempre nel
+  carattere di sistema.
