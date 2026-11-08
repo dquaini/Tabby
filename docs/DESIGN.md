@@ -13,6 +13,16 @@ notch), che è in `SPECIFICA.md`.
 **Ordine di lavoro:** 1 direzione ✅ · 2 mattoni · 3 componenti · 4 struttura e percorsi ·
 5 funzioni nuove · 6 parole.
 
+**Principio (8/11/2026, Daniele):** di base Tabby è **semplice da usare come macOS**; chi vuole
+può avere **un tocco di design**. Linea guida di stile per il tocco di design: il
+**risograph** (immagine di riferimento di Daniele): pochi colori vivi e piatti (rosa fluo,
+arancio, giallo, azzurro, viola), sovrastampa un po' sfalsata, grana della carta, forme
+geometriche semplici, titoli grassi e tondi. Si usa nei momenti "di carattere" (schermata di
+apertura delle cartelle, sfera, titoli grandi, schermate vuote, primo avvio, Kat) — dove e
+come esattamente si decide con i componenti. Mai nei nomi delle schede, nei menu e nelle
+impostazioni, che restano leggibili e familiari. **Ovunque si sceglie, poche opzioni curate**
+(3–5), come per i temi.
+
 ---
 
 ## 1. Direzione: aspetto e temi ✅ (8/11/2026)

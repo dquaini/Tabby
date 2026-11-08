@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tabby — il carattere</title>
+<!--
+  Sistema di design, passo 2a (8/11/2026): il font. Daniele: «anche nel font scegliere tra 3–5
+  opportunità»; linea guida di stile per il «tocco di design» (facoltativo): il risograph
+  (colori vivi e piatti, sovrastampa sfalsata, grana, forme geometriche, titoli grassi e tondi).
+  Di base Tabby resta semplice come macOS.
+  I font non di Apple sono liberi (licenza OFL): si possono mettere dentro l'app.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Fraunces:opsz,wght,SOFT@9..144,400,100;9..144,600,100;9..144,800,100&family=Recursive:slnt,wght,CASL@0,400,1;0,600,1;0,800,1&family=Nunito:wght@400;600;800&family=Bagel+Fat+One&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; }
+html, body { margin: 0; font: 13px/1.4 -apple-system, system-ui, sans-serif; background: #ECECEF; color: #1D1D1F; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 50px; }
+h1 { font-size: 20px; margin: 0 0 4px; }
+.lead { margin: 0 0 16px; color: #6E6E73; max-width: 820px; }
+.grid { display: grid; grid-template-columns: 340px 1fr; gap: 16px; align-items: start; }
+@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+.pane { background: #F5F5F7; border-radius: 14px; box-shadow: 0 0 0 .5px rgba(0,0,0,.12), 0 8px 24px rgba(0,0,0,.08); padding: 16px; }
+.pane h2 { font-size: 15px; margin: 0 0 4px; }
+.sec { font-size: 11px; font-weight: 600; color: #6E6E73; text-transform: uppercase; letter-spacing: .05em; margin: 14px 2px 8px; }
+.fonts { display: grid; gap: 8px; }
+.f { display: flex; align-items: center; gap: 12px; padding: 9px 12px; background: #fff; border-radius: 11px; box-shadow: 0 0 0 .5px rgba(0,0,0,.12); cursor: pointer; }
+.f.on { box-shadow: 0 0 0 2.5px #0A84FF; }
+.f .aa { font-size: 26px; width: 44px; text-align: center; line-height: 1; }
+.f b { display: block; font-size: 13px; } .f span { font-size: 11.5px; color: #6E6E73; }
+.sw { display: flex; align-items: center; justify-content: space-between; background: #fff; border-radius: 11px; padding: 10px 12px; box-shadow: 0 0 0 .5px rgba(0,0,0,.12); }
+.sw small { display: block; color: #6E6E73; font-size: 11.5px; }
+.tg { width: 38px; height: 22px; border-radius: 11px; background: #D1D1D6; position: relative; cursor: pointer; flex: none; transition: background .2s; }
+.tg::after { content: ""; position: absolute; left: 2px; top: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: left .2s; }
+.tg.on { background: #34C759; } .tg.on::after { left: 18px; }
+.note { margin-top: 12px; font-size: 11.5px; color: #8A8A8F; }
+
+/* anteprima (tema Notte · Tabby) */
+.mac { position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 14px 40px rgba(0,0,0,.28); min-height: 640px;
+  background: radial-gradient(ellipse at 25% 20%, #4E7FAE, #22405F 55%, #111D2B); font-family: var(--ui); }
+.tb { height: 44px; display: flex; align-items: center; padding: 0 4px; gap: 2px; color: #F2EDE1;
+  background: radial-gradient(55% 260% at 0% 50%, rgba(236,172,60,.11), rgba(236,172,60,0) 62%), linear-gradient(180deg, #15120C, #0A0907); border-radius: 0 0 14px 14px; }
+.tb .cat { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
+.tb .cat svg { width: 24px; height: 24px; fill: #EDBF58; }
+.tab { height: 32px; padding: 0 10px 0 9px; border-radius: 9px; display: flex; align-items: center; gap: 8px; color: #A69E8B; font-size: calc(12.5px * var(--k)); max-width: 180px; min-width: 0; letter-spacing: var(--ls); }
+.tab .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tab.on { color: #1C1505; font-weight: var(--wMid);
+  background: radial-gradient(100% 150% at 12% 0%, rgba(251,226,160,.85), rgba(251,226,160,0) 44%), radial-gradient(80% 140% at 100% 100%, #B9661E, rgba(185,102,30,0) 62%), radial-gradient(70% 120% at 66% 24%, #EDBD52, rgba(237,189,82,0) 72%), #DDA23A;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 2px 10px rgba(220,150,40,.22); }
+.ic { width: 18px; height: 18px; border-radius: 5px; flex: none; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: 700; font-family: -apple-system, system-ui; }
+.badge { margin-left: auto; min-width: 17px; height: 16px; padding: 0 5px; border-radius: 8px; background: #FF453A; color: #fff; font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+.sp { flex: 1; }
+.btn { width: 40px; height: 44px; display: flex; align-items: center; justify-content: center; color: #A69E8B; font-size: 15px; font-family: -apple-system, system-ui; }
+.btn.on { color: #E9B44A; }
+.body { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 22px; }
+@media (max-width: 760px) { .body { grid-template-columns: 1fr; } .tab:nth-child(n+5) { display: none; } }
+.panel { color: #F2EDE1; border-radius: 16px; padding: 18px; border: .5px solid rgba(255,214,120,.09);
+  background: radial-gradient(90% 70% at 0% 0%, rgba(236,180,80,.06), rgba(236,180,80,0) 60%), linear-gradient(180deg, #1C1812, #13100A); box-shadow: 0 16px 40px rgba(0,0,0,.4); }
+.panel h3 { margin: 0 0 2px; font-size: calc(15px * var(--k)); font-weight: var(--wBold); letter-spacing: var(--ls); }
+.panel .s { color: #A69E8B; font-size: calc(12px * var(--k)); margin-bottom: 12px; }
+.row { display: flex; justify-content: space-between; gap: 10px; padding: 8px 11px; font-size: calc(13px * var(--k)); background: rgba(255,236,190,.045); }
+.row:first-of-type { border-radius: 10px 10px 0 0; } .row:last-of-type { border-radius: 0 0 10px 10px; }
+.row + .row { border-top: .5px solid rgba(255,226,160,.09); }
+.row i { font-style: normal; color: #A69E8B; }
+.bt { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.b { padding: 5px 15px; border-radius: 8px; font-size: calc(13px * var(--k)); background: rgba(255,236,190,.06); box-shadow: 0 0 0 .5px rgba(255,226,160,.12); font-weight: var(--wMid); }
+.b.m { color: #1C1505; background: #DDA23A; box-shadow: inset 0 1px 0 rgba(255,255,255,.28); }
+.menu .h { font-size: calc(11px * var(--k)); color: #A69E8B; font-weight: var(--wMid); padding: 6px 4px 3px; }
+.menu .i { display: flex; justify-content: space-between; padding: 5px 9px; border-radius: 6px; font-size: calc(13px * var(--k)); }
+.menu .i.hl { background: #DDA23A; color: #1C1505; }
+.menu .i span { color: #A69E8B; } .menu .i.hl span { color: rgba(28,21,5,.7); }
+/* la schermata di apertura (un momento "di carattere") */
+.hero { grid-column: 1 / -1; border-radius: 16px; overflow: hidden; position: relative; min-height: 200px;
+  background: radial-gradient(ellipse at 30% 30%, #5C86B0, #2A4A6A 60%, #18283A); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; padding: 24px; text-align: center; }
+.hero .t { font-size: calc(30px * var(--k)); font-weight: var(--wBold); letter-spacing: var(--ls); }
+.hero .ics { display: flex; gap: 14px; margin-top: 18px; }
+.hero .ics span { width: 42px; height: 42px; border-radius: 10px; }
+.hero .p { margin-top: 14px; font-size: 12px; opacity: .65; }
+/* ---- il tocco di design: risograph ---- */
+.riso .hero { background: #F3EBDD; color: #1D1B16; }
+.riso .hero::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.45  0 0 0 0 0.38  0 0 0 0 0.3  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+.riso .hero .t { font-family: 'Bagel Fat One', var(--ui); font-weight: 400; font-size: calc(46px * var(--k)); color: #FF5A36; letter-spacing: .5px;
+  text-shadow: 3px 2px 0 #FF3FA4, -2px -1px 0 rgba(255,205,40,.85); position: relative; }
+.riso .hero .p { color: #2E78A8; opacity: 1; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; position: relative; }
+.riso .hero .ics { position: relative; }
+.riso .hero .ics span { border-radius: 50%; mix-blend-mode: multiply; }
+.riso .hero .ics span:nth-child(1) { background: #FF3FA4 !important; } .riso .hero .ics span:nth-child(2) { background: #FFCD28 !important; border-radius: 4px; transform: rotate(45deg) scale(.85); }
+.riso .hero .ics span:nth-child(3) { background: #2E9FD6 !important; } .riso .hero .ics span:nth-child(4) { background: #8A4FD0 !important; border-radius: 4px; }
+.riso .hero .ics span:nth-child(5) { background: #FF5A36 !important; clip-path: polygon(50% 0, 100% 100%, 0 100%); border-radius: 0; }
+.riso .shape { display: block; }
+.shape { display: none; position: absolute; mix-blend-mode: multiply; }
+.cap { color: rgba(255,255,255,.8); font-size: 11.5px; padding: 0 22px 16px; font-family: -apple-system, system-ui; }
+</style></head>
+<body>
+<div class="wrap">
+  <h1>Tabby — il carattere (font)</h1>
+  <p class="lead">Scegli il carattere di Tabby tra 5: cambia dal vivo la barra, il menu, una finestra e la schermata di apertura (tema Notte · Tabby). L'interruttore <b>Tocco di design</b> mostra lo stile risograph del tuo riferimento sui momenti "di carattere" (qui la schermata di apertura): resta una scelta, di base Tabby è semplice come macOS.</p>
+  <div class="grid">
+    <div class="pane">
+      <h2>Design</h2>
+      <div class="sec">Carattere</div>
+      <div class="fonts" id="fonts"></div>
+      <div class="sec">Tocco di design</div>
+      <div class="sw"><div>Stile risograph<small>colori vivi, sovrastampa, grana, forme</small></div><div class="tg" id="riso"></div></div>
+      <div class="note">SF Pro e SF Pro Rounded sono di Apple (già nel Mac). Gli altri sono liberi: si mettono dentro Tabby. Se il tuo visualizzatore non ha SF Pro Rounded, la prova "Arrotondato" usa Nunito, molto simile.</div>
+    </div>
+    <div class="mac" id="mac">
+      <div class="tb">
+        <div class="cat"><svg viewBox="0 0 24 24"><path d="M4 3l4 4.2c1.2-.4 2.6-.7 4-.7s2.8.3 4 .7L20 3v8.5c0 4.9-3.6 9-8 9s-8-4.1-8-9V3zm5 9.5a1.2 1.2 0 100 2.4 1.2 1.2 0 000-2.4zm6 0a1.2 1.2 0 100 2.4 1.2 1.2 0 000-2.4z"/></svg></div>
+        <div class="tab on"><span class="ic" style="background:#4A154B">S</span><span class="nm">Slack</span><span class="badge">3</span></div>
+        <div class="tab"><span class="ic" style="background:#111">N</span><span class="nm">Notion</span></div>
+        <div class="tab"><span class="ic" style="background:#EA4335">M</span><span class="nm">Posta in arrivo</span></div>
+        <div class="tab"><span class="ic" style="background:#D97757">✳</span><span class="nm">Claude</span></div>
+        <div class="tab"><span class="ic" style="background:#0078D4">W</span><span class="nm">Windows App</span></div>
+        <div class="sp"></div><div class="btn">⊞</div><div class="btn on">⚡︎</div><div class="btn">⚙︎</div>
+      </div>
+      <div class="body">
+        <div class="panel">
+          <h3>Concentrazione</h3>
+          <div class="s">Le altre app si nascondono e tornano alla fine.</div>
+          <div class="row">Durata<i>50 min</i></div>
+          <div class="row">Schede da tenere<i>2 scelte</i></div>
+          <div class="row">Non disturbare<i>Si attiva da solo</i></div>
+          <div class="bt"><span class="b">Annulla</span><span class="b m">Inizia</span></div>
+        </div>
+        <div class="panel menu">
+          <div class="h">Lampi</div>
+          <div class="i">Memo<span>⌃⌥M</span></div>
+          <div class="i hl">Calcolatrice<span>⌃⌥C</span></div>
+          <div class="i">Promemoria<span>⌃⌥P</span></div>
+          <div class="h" style="margin-top:6px">Strumenti</div>
+          <div class="i">Concentrazione…<span></span></div>
+          <div class="i">Cerca nelle finestre…<span>⌃⌥F</span></div>
+        </div>
+        <div class="hero">
+          <div class="t">Lavoro</div>
+          <div class="ics"><span style="background:#4A154B"></span><span style="background:#111"></span><span style="background:#EA4335"></span><span style="background:#D97757"></span><span style="background:#0078D4"></span></div>
+          <div class="p">apro la cartella · 3 di 5</div>
+        </div>
+      </div>
+      <div class="cap" id="cap"></div>
+    </div>
+  </div>
+</div>
+<script>
+// ui = la famiglia · k = scala (alcuni font sono più grandi o più piccoli a parità di punti)
+// ls = spaziatura delle lettere · wMid/wBold = pesi per testo in evidenza e titoli
+var FONTS = [
+  {id: 'sf', name: 'Sistema', d: 'SF Pro: quello di macOS, neutro e chiarissimo', ui: '-apple-system, "SF Pro Text", system-ui, sans-serif', k: 1, ls: '0', wMid: 600, wBold: 700},
+  {id: 'rounded', name: 'Arrotondato', d: 'SF Pro Rounded: lo stesso, con le punte morbide', ui: 'ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif', k: 1, ls: '0', wMid: 600, wBold: 800},
+  {id: 'bricolage', name: 'Bricolage', d: 'grottesco con un po\' di stranezza: moderno, ha carattere', ui: '"Bricolage Grotesque", system-ui, sans-serif', k: 1.02, ls: '-.01em', wMid: 600, wBold: 800},
+  {id: 'fraunces', name: 'Fraunces', d: 'graziato morbido, caldo, da rivista', ui: '"Fraunces", Georgia, serif', k: 1.03, ls: '0', wMid: 600, wBold: 700},
+  {id: 'recursive', name: 'Casual', d: 'Recursive: rilassato, quasi scritto a mano, ma leggibile', ui: '"Recursive", system-ui, sans-serif', k: .97, ls: '0', wMid: 600, wBold: 800}
+];
+var cur = 'sf', riso = false;
+function render() {
+  var box = document.getElementById('fonts'); box.innerHTML = '';
+  FONTS.forEach(function (f) {
+    var d = document.createElement('div');
+    d.className = 'f' + (f.id === cur ? ' on' : '');
+    d.innerHTML = '<div class="aa" style="font-family:' + f.ui.replace(/"/g, '&quot;') + ';font-weight:' + f.wBold + '">Aa</div><div><b>' + f.name + '</b><span>' + f.d + '</span></div>';
+    d.onclick = function () { cur = f.id; render(); };
+    box.appendChild(d);
+  });
+  var f = FONTS.filter(function (x) { return x.id === cur; })[0], m = document.getElementById('mac');
+  m.style.setProperty('--ui', f.ui); m.style.setProperty('--k', f.k); m.style.setProperty('--ls', f.ls);
+  m.style.setProperty('--wMid', f.wMid); m.style.setProperty('--wBold', f.wBold);
+  m.classList.toggle('riso', riso);
+  document.getElementById('riso').classList.toggle('on', riso);
+  document.getElementById('cap').textContent = 'Carattere: ' + f.name + (riso ? ' · tocco di design: risograph' : '');
+}
+document.getElementById('riso').onclick = function () { riso = !riso; render(); };
+render();
+</script>
+</body></html>
