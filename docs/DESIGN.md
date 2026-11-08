@@ -321,7 +321,7 @@ pezzo di testo evidenziato) · Cartelle · Lampi · Azioni · Impostazioni di Ta
 gruppo, 8 in tutto; ⌘↵ = finestra: apri e cerca dentro (⌘F) · impostazione: apri la sezione ·
 Lampo: apri accanto; azioni forti confermate con un secondo ↵.
 
-### 3.7 La barra di Tabby in tutti i suoi stati (in corso, 8/11/2026)
+### 3.7 La barra di Tabby in tutti i suoi stati (decisa, 8/11/2026)
 Prototipo: `docs/design-barra.html` (tutti gli stati, coi temi da cambiare).
 Restano come oggi, nei mattoni decisi: scheda normale · sotto il mouse · attiva (riempimento
 del tema che scivola) · notifiche (numerino rosso, pallino se manca il numero) · compatta
@@ -329,5 +329,6 @@ del tema che scivola) · notifiche (numerino rosso, pallino se manca il numero) 
 (contorno + spunta) · trascinata (fantasma + lineetta) · rinomina sul posto · gatto acceso
 sulla Scrivania · batteria (verde, rossa, fulmine) · tempo della Concentrazione · Lampi coperti
 (⚡︎ allargato) · ⊞ acceso · vista cartella (← e nome ▾) · notch · Tabby di lato.
-Proposte da decidere: finestra ridotta attenuata · ✕ solo sulla scheda attiva e sotto il
-mouse · niente riga dopo il gatto.
+**Pulizie decise (Daniele):** la finestra ridotta nel Dock ha icona e nome attenuati · la ✕
+si vede solo sulla scheda attiva e su quella sotto il mouse (come Safari) · niente riga dopo
+il gatto (solo spazio; già tolta quella tra batteria e tasti).

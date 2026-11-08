@@ -155,7 +155,7 @@ function render() {
     g[1].forEach(function (s, i) { h += '<div class="st"><div class="lb"><b>' + s[0] + '</b>' + (s[4] ? '<span class="prop">PROPOSTA</span>' : '') + '<span>' + s[1] + '</span></div>' + BAR(s[2]) + '</div>'; });
   });
   h += '<h2>Tabby di lato (a destra)</h2><div class="st"><div class="lb"><b>Colonna</b><span>In cima il gatto intero; le schede in righe col nome; in fondo batteria e tasti. Stessi stati di sopra.</span></div>' + side() + '</div>';
-  h += '<div class="note"><b>Da decidere (righe PROPOSTA):</b><ul><li>Finestra ridotta: icona e nome attenuati?</li><li>La ✕ solo sulla scheda attiva e sotto il mouse?</li><li>Togliere anche la riga dopo il gatto?</li></ul></div>';
+  h += '<div class="note"><b>Decise da Daniele (8/11/2026):</b><ul><li>Finestra ridotta: icona e nome attenuati.</li><li>La ✕ solo sulla scheda attiva e sotto il mouse.</li><li>Niente riga dopo il gatto.</li></ul></div>';
   out.innerHTML = h;
   for (var k in t) out.style.setProperty('--' + k, t[k]);
   document.getElementById('themes').innerHTML = '<span class="lbl">Tema:</span>' + Object.keys(TH).map(function (n) { return '<button class="' + (n === theme ? 'on' : '') + '">' + n + '</button>'; }).join('');
