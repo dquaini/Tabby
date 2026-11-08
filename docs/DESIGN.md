@@ -76,19 +76,12 @@ costruisce l'app diventano il file dei temi che Tabby legge.
 ## 2. Mattoni
 
 ### 2.1 Carattere (font) ✅ (8/11/2026)
-Prototipo: `docs/design-font.html`. Nella sezione Design, 5 scelte; **di serie: Sistema**.
+**Solo il carattere di macOS (SF Pro), ovunque, senza scelte.** *Perché* (Daniele): così tutto
+è coerente — barra, finestre di Tabby, menu (che in macOS sono sempre in SF Pro) e il resto
+del Mac. Una scelta tra 5 caratteri (SF Pro, SF Pro Rounded, un graziato stile Californian, uno
+"goofy", uno da terminale) è stata provata (`docs/design-font.html`) e **scartata**.
 
-| Nome | Font | Com'è | Da dove |
-|---|---|---|---|
-| **Sistema** (di serie) | SF Pro | quello di macOS, neutro e chiarissimo | già nel Mac |
-| **Arrotondato** | SF Pro Rounded | lo stesso, con le punte morbide | già nel Mac |
-| **Californiano** | Sorts Mill Goudy | classico con le grazie (stile Californian FB, che è a pagamento) | libero (OFL), dentro Tabby |
-| **Goofy** | Grandstander | giocoso e un po' buffo, ma leggibile | libero (OFL), dentro Tabby |
-| **Terminale** | JetBrains Mono | a spaziatura fissa, come il Terminale | libero (OFL), dentro Tabby |
-
-- Il carattere vale **solo per Tabby** (barra, sue finestre, sue pagine); il resto del Mac e
-  delle altre app resta com'è.
-- Ogni font ha la sua **scala**, perché a parità di punti alcuni sono più grandi o più piccoli
-  (Californiano ×1,10, Goofy ×0,96, Terminale ×0,90): così le schede restano della stessa misura.
-- Le icone delle app, i numerini delle notifiche e i simboli dei tasti restano sempre nel
-  carattere di sistema.
+- Grandezze e pesi: quelli di macOS (testo 13, piccolo 11–12, titoli 15–17; regolare,
+  medio per la scheda attiva, grassetto per i titoli). Il dettaglio va con i componenti.
+- I numeri che cambiano (tempo della Concentrazione, «3 di 5») a cifre di uguale larghezza,
+  così non "ballano".
