@@ -202,6 +202,12 @@ impostazioni passano nella sezione Impostazioni.
 **Restano di macOS:** colore della voce sotto il mouse (= colore principale del Mac), angoli,
 vetro, animazione, tastiera, sottomenu, ricerca nei menu.
 
+**Dove si aprono** (8/11/2026): sempre **attaccati a ciò che li apre**, come in macOS, dal lato
+verso le app — ⚡︎ e ⚙︎ sotto il loro tasto (Tabby in alto: in alto a destra; Tabby a destra:
+alla sinistra del tasto; a sinistra: alla destra), il gatto accanto al gatto, il tasto destro
+dove è il puntatore. **In centro** solo ciò che non nasce da un tasto: il pannello «Tabby…», la
+ricerca ⌃⌥F, i fogli e le poche domande rimaste.
+
 ### Decisioni trasversali (8/11/2026)
 - **Niente «Apri Tabby»**: da Tabby già avviata, al centro un **pannello come Spotlight**
   («Tabby…», proposta ⌃⌥,) per andare nelle cinque sezioni e cercare un'impostazione
@@ -210,3 +216,25 @@ vetro, animazione, tastiera, sottomenu, ricerca nei menu.
 - **Lingua: quella del Mac** per tutti i nomi e le frasi di Tabby (Lampi, menu, sezioni,
   avvisi). **Italiano e inglese**; con altre lingue, inglese. (In Swift: tutto scritto in
   più lingue fin dall'inizio.)
+
+### 3.2 Domande e conferme ✅ (8/11/2026)
+Prototipo: `docs/design-domande.html`. **Regola: niente domanda quando c'è un modo diretto**
+(Daniele: tutti e quattro i casi senza domanda).
+- **Rinominare una scheda** (anche una cartella): si scrive **direttamente sulla scheda**, come
+  un file nel Finder (tasto destro → Rinomina, o doppio clic sul nome). Invio salva, Esc annulla,
+  vuoto = torna al nome di prima; sotto, un fumetto con i tasti.
+- **Chiudere tutte le app** (e ogni azione forte in un menu): **conferma dentro il menu** — al
+  primo clic la voce diventa rossa, «Clic di nuovo per chiudere tutte»; secondo clic = fatto;
+  uscendo dal menu si annulla.
+- **Cambiare la scorciatoia** (Lampi, App): la voce **resta in ascolto** (tasti che pulsano col
+  colore del tema) e **premi la combinazione** che vuoi; Esc annulla; se è già usata lo dice e
+  aspetta un'altra.
+- **Chiudere una cartella**: si chiude subito; un **avviso con «Riapri»** per qualche secondo
+  la rimette com'era (le app si riaprono).
+
+**La finestrella di domanda** (per i casi rari che restano, es. un nome nuovo da scrivere senza
+una scheda su cui farlo): al centro dello spazio delle app, sopra il velo; larga 286, angoli 18,
+margine 16; simbolo dell'azione in alto nel colore del tema (rosso se distruttiva), titolo breve,
+una riga di spiegazione, al massimo due pulsanti. Invio = pulsante evidenziato, Esc = Annulla;
+se distruttiva, pulsante rosso e Invio non la fa (serve il clic). Entra col rimbalzo (0,38 s),
+esce veloce (0,2 s).
