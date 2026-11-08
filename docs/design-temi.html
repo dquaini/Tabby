@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tabby — aspetto e temi</title>
+<!--
+  Sistema di design, passo 1b (8/11/2026). Deciso con Daniele:
+  - Aspetto: Nativo (come macOS, chiaro/scuro col Mac, colore principale = quello scelto nelle
+    Impostazioni del Mac) oppure Notte (sempre scura, con un tema).
+  - Temi di Notte, pochi e curati, in stile Slack: 3 «Base» (tinta unita, sobri) e 3 «Tabby»
+    (con sfumature e gradazioni).
+  - Di serie: Notte, tema «Tabby» (nero e giallo).
+  Qui: la sezione Design come sarà nell'app (a sinistra) e Tabby che cambia dal vivo.
+-->
+<style>
+* { box-sizing: border-box; }
+html, body { margin: 0; font: 13px/1.4 -apple-system, system-ui, sans-serif; background: #ECECEF; color: #1D1D1F; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 50px; }
+h1 { font-size: 20px; margin: 0 0 4px; }
+.lead { margin: 0 0 16px; color: #6E6E73; max-width: 760px; }
+.grid { display: grid; grid-template-columns: 340px 1fr; gap: 16px; align-items: start; }
+@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+/* ---- la sezione Design (impostazioni, stile Apple) ---- */
+.pane { background: #F5F5F7; border-radius: 14px; box-shadow: 0 0 0 .5px rgba(0,0,0,.12), 0 8px 24px rgba(0,0,0,.08); padding: 16px; }
+.pane h2 { font-size: 15px; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
+.pane .sec { font-size: 11px; font-weight: 600; color: #6E6E73; text-transform: uppercase; letter-spacing: .05em; margin: 16px 2px 8px; }
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mode { border-radius: 12px; padding: 8px; background: #fff; box-shadow: 0 0 0 .5px rgba(0,0,0,.12); cursor: pointer; text-align: center; }
+.mode.on { box-shadow: 0 0 0 2.5px #0A84FF; }
+.mode .mini { height: 62px; border-radius: 8px; position: relative; overflow: hidden; margin-bottom: 7px; }
+.mode .mini .mb { position: absolute; left: 0; right: 0; top: 0; height: 14px; }
+.mode .mini .mt { position: absolute; top: 3px; left: 8px; width: 26px; height: 8px; border-radius: 3px; }
+.mode .mini .mw { position: absolute; left: 10px; right: 10px; top: 22px; bottom: 8px; border-radius: 5px; }
+.mode b { display: block; font-size: 13px; } .mode span { font-size: 11px; color: #6E6E73; }
+.themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.th { cursor: pointer; text-align: center; }
+.th .sw { height: 58px; border-radius: 11px; position: relative; overflow: hidden; box-shadow: 0 0 0 .5px rgba(0,0,0,.18); }
+.th.on .sw { box-shadow: 0 0 0 2.5px #0A84FF, 0 0 0 4px #fff inset; }
+.th .sw .a { position: absolute; left: 10px; right: 10px; bottom: 10px; height: 14px; border-radius: 5px; }
+.th .sw .t { position: absolute; left: 10px; top: 10px; width: 22px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.35); }
+.th .sw .t2 { position: absolute; left: 36px; top: 10px; width: 14px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.18); }
+.th .n { font-size: 12px; margin-top: 5px; } .th .d { font-size: 10.5px; color: #8A8A8F; }
+.native { background: #fff; border-radius: 12px; box-shadow: 0 0 0 .5px rgba(0,0,0,.12); padding: 10px 12px; }
+.native p { margin: 0 0 8px; color: #6E6E73; font-size: 12px; }
+.acc { display: flex; gap: 8px; flex-wrap: wrap; }
+.acc i { width: 18px; height: 18px; border-radius: 50%; cursor: pointer; box-shadow: inset 0 0 0 .5px rgba(0,0,0,.2); }
+.acc i.on { box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px #8E8E93; }
+.sys { display: flex; gap: 6px; margin-top: 10px; }
+.sys button { flex: 1; border: 0; border-radius: 7px; padding: 5px; font: inherit; background: rgba(0,0,0,.06); cursor: pointer; }
+.sys button.on { background: #fff; box-shadow: 0 .5px 2px rgba(0,0,0,.2); }
+.def { margin-top: 14px; font-size: 11.5px; color: #8A8A8F; }
+
+/* ---- l'anteprima: Tabby su un Mac ---- */
+.mac { position: relative; height: 600px; border-radius: 16px; overflow: hidden; box-shadow: 0 14px 40px rgba(0,0,0,.28);
+  background: radial-gradient(ellipse at 25% 20%, #4E7FAE, #22405F 55%, #111D2B); }
+.mac .win { position: absolute; left: 24px; right: 24px; top: 60px; bottom: 24px; border-radius: 12px; background: linear-gradient(#fff, #f3f3f5); opacity: .22; }
+.tb { position: absolute; left: 0; right: 0; top: 0; height: 44px; display: flex; align-items: center; padding: 0 4px; gap: 2px; z-index: 3;
+  background: var(--bar); color: var(--text); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); border-bottom: var(--barLine);
+  border-radius: 0 0 var(--barR) var(--barR); }
+.tb .cat { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
+.tb .cat svg { width: 24px; height: 24px; fill: var(--cat); }
+.tb .tab { height: 32px; padding: 0 10px 0 9px; border-radius: 9px; display: flex; align-items: center; gap: 8px; color: var(--sub); font-size: 12.5px; max-width: 180px; min-width: 0; }
+.tb .tab .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tb .tab.on { background: var(--accentFill); color: var(--onAccent); box-shadow: var(--tabShadow); }
+.tb .tab.hov { background: var(--hover); color: var(--text); }
+.tb .ic { width: 18px; height: 18px; border-radius: 5px; flex: none; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: 700; }
+.tb .badge { margin-left: auto; min-width: 17px; height: 16px; padding: 0 5px; border-radius: 8px; background: #FF453A; color: #fff; font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+.tb .plus { width: 32px; text-align: center; color: var(--sub); font-size: 17px; }
+.tb .sp { flex: 1; }
+.tb .btn { width: 40px; height: 44px; display: flex; align-items: center; justify-content: center; color: var(--sub); font-size: 15px; }
+.tb .btn.on { color: var(--accent); }
+.tb .sep { width: 1px; height: 22px; background: var(--line); }
+.tb .bat { width: 22px; height: 11px; border: 1px solid var(--sub); border-radius: 3px; position: relative; margin: 0 8px; }
+.tb .bat::before { content: ""; position: absolute; left: 1.5px; top: 1.5px; bottom: 1.5px; width: 62%; border-radius: 1.5px; background: var(--sub); }
+.panel { background: var(--surface); color: var(--text); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  border: .5px solid var(--line); box-shadow: 0 16px 40px rgba(0,0,0,.35); }
+.menu { position: absolute; top: 50px; right: 46px; width: 250px; padding: 5px; border-radius: 11px; z-index: 4; }
+.menu .h { font-size: 11px; font-weight: 600; color: var(--sub); padding: 6px 9px 2px; }
+.menu .i { display: flex; align-items: center; gap: 8px; padding: 4px 9px; border-radius: 6px; }
+.menu .i .k { margin-left: auto; color: var(--sub); font-size: 12px; }
+.menu .i.hl { background: var(--accentFill); color: var(--onAccent); }
+.menu .i.hl .k { color: var(--onAccent); opacity: .75; }
+.menu .s { height: 1px; background: var(--line); margin: 5px 7px; }
+.menu .gl { width: 16px; height: 16px; border-radius: 4px; flex: none; }
+.sheet { position: absolute; left: 34px; top: 150px; width: 370px; padding: 20px; border-radius: 18px; z-index: 4; }
+.sheet h3 { margin: 0 0 2px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.sheet h3 .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--mark); }
+.sheet .sub { color: var(--sub); font-size: 12px; margin-bottom: 14px; }
+.grp { background: var(--surface2); border-radius: 12px; box-shadow: 0 0 0 .5px var(--line); }
+.row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; }
+.row + .row { border-top: .5px solid var(--line); }
+.row .l { flex: 1; } .row .note { color: var(--sub); font-size: 12px; }
+.seg { display: inline-flex; background: var(--hover); border-radius: 7px; padding: 2px; }
+.seg span { padding: 2px 10px; border-radius: 5px; font-size: 12px; }
+.seg span.on { background: var(--accentFill); color: var(--onAccent); }
+.btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.b { padding: 5px 16px; border-radius: 8px; font-size: 13px; background: var(--surface2); color: var(--text); box-shadow: 0 0 0 .5px var(--line); }
+.b.main { background: var(--accentFill); color: var(--onAccent); box-shadow: none; }
+.toast { position: absolute; right: 22px; top: 290px; width: 320px; padding: 12px 14px; border-radius: 16px; z-index: 4; display: flex; gap: 11px; }
+.toast .gl { width: 32px; height: 32px; border-radius: 8px; flex: none; background: #EA4335; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.toast .t { font-weight: 600; } .toast .s2 { color: var(--sub); font-size: 12px; }
+.toast .btns { margin-top: 8px; justify-content: flex-start; gap: 6px; } .toast .b { padding: 3px 10px; font-size: 12px; }
+.orb { position: absolute; right: 56px; bottom: 44px; width: 62px; height: 62px; border-radius: 50%; z-index: 4; overflow: hidden;
+  background: var(--orb); box-shadow: 0 6px 18px rgba(0,0,0,.45), 0 0 0 1.5px var(--orbRing); display: flex; align-items: center; justify-content: center; }
+.orb svg { width: 34px; height: 34px; fill: var(--orbCat); position: relative; z-index: 2; }
+.orb .blob { position: absolute; width: 40px; height: 40px; border-radius: 50%; filter: blur(9px); opacity: var(--blobs); animation: spin 9s linear infinite; }
+.orb .b1 { background: var(--c1); left: 4px; top: 6px; } .orb .b2 { background: var(--c2); right: 2px; bottom: 2px; animation-duration: 12s; animation-direction: reverse; }
+@keyframes spin { from { transform: rotate(0) translateX(6px); } to { transform: rotate(360deg) translateX(6px); } }
+.cap { position: absolute; left: 24px; bottom: 10px; z-index: 5; color: rgba(255,255,255,.8); font-size: 11.5px; }
+@media (max-width: 760px) {
+  .mac { height: 880px; } .sheet { left: 14px; right: 14px; width: auto; top: 320px; }
+  .menu { right: 8px; width: min(250px, calc(100% - 16px)); } .toast { left: 14px; right: 14px; width: auto; top: 620px; }
+  .tb .tab:nth-child(n+5) { display: none; }
+}
+</style></head>
+<body>
+<div class="wrap">
+  <h1>Tabby — aspetto e temi</h1>
+  <p class="lead">A sinistra la sezione <b>Design</b> come sarà nell'app; a destra Tabby che cambia dal vivo. Scegli l'aspetto e, con Notte, uno dei 6 temi. Dimmi quali tenere, quali cambiare e come.</p>
+  <div class="grid">
+    <div class="pane">
+      <h2>Design</h2>
+      <div class="sec">Aspetto</div>
+      <div class="modes" id="modes">
+        <div class="mode" data-m="nativo"><div class="mini" style="background:linear-gradient(#cfd9e6,#aebdd1)"><div class="mb" style="background:rgba(246,246,248,.8)"></div><div class="mt" style="background:#fff"></div><div class="mw" style="background:rgba(255,255,255,.7)"></div></div><b>Nativo</b><span>come macOS, chiaro o scuro</span></div>
+        <div class="mode on" data-m="notte"><div class="mini" style="background:linear-gradient(#3a5a7d,#1d3049)"><div class="mb" style="background:#0D0D0F"></div><div class="mt" style="background:linear-gradient(135deg,#FBDF7E,#F2A93B)"></div><div class="mw" style="background:#1C1B18"></div></div><b>Notte</b><span>sempre scura, col suo tema</span></div>
+      </div>
+      <div id="notteBox">
+        <div class="sec">Temi Base</div>
+        <div class="themes" id="base"></div>
+        <div class="sec">Temi Tabby</div>
+        <div class="themes" id="tabby"></div>
+      </div>
+      <div id="nativoBox" style="display:none">
+        <div class="sec">Colore principale</div>
+        <div class="native">
+          <p>È quello che hai scelto in Impostazioni di Sistema → Aspetto. Qui puoi provarli per vedere l'effetto.</p>
+          <div class="acc" id="acc"></div>
+          <div class="sys" id="sys"><button data-s="light" class="on">Mac chiaro</button><button data-s="dark">Mac scuro</button></div>
+        </div>
+      </div>
+      <div class="def">Di serie: Notte · Tabby.</div>
+    </div>
+    <div class="mac" id="mac">
+      <div class="win"></div>
+      <div class="tb">
+        <div class="cat"><svg viewBox="0 0 24 24"><path d="M4 3l4 4.2c1.2-.4 2.6-.7 4-.7s2.8.3 4 .7L20 3v8.5c0 4.9-3.6 9-8 9s-8-4.1-8-9V3zm5 9.5a1.2 1.2 0 100 2.4 1.2 1.2 0 000-2.4zm6 0a1.2 1.2 0 100 2.4 1.2 1.2 0 000-2.4z"/></svg></div>
+        <div class="sep"></div>
+        <div class="tab on"><span class="ic" style="background:#4A154B">S</span><span class="nm">Slack</span><span class="badge">3</span></div>
+        <div class="tab hov"><span class="ic" style="background:#111;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)">N</span><span class="nm">Notion</span></div>
+        <div class="tab"><span class="ic" style="background:#EA4335">M</span><span class="nm">Gmail</span></div>
+        <div class="tab"><span class="ic" style="background:#D97757">✳</span><span class="nm">Claude</span></div>
+        <div class="tab"><span class="ic" style="background:#0078D4">W</span><span class="nm">Windows App</span></div>
+        <div class="plus">+</div><div class="sp"></div>
+        <div class="bat"></div><div class="sep"></div>
+        <div class="btn">⊞</div><div class="btn on">⚡︎</div><div class="btn">⚙︎</div>
+      </div>
+      <div class="menu panel">
+        <div class="h">Lampi</div>
+        <div class="i"><span class="gl" style="background:#FFD60A"></span>Memo<span class="k">⌃⌥M</span></div>
+        <div class="i hl"><span class="gl" style="background:#8E8E93"></span>Calcolatrice<span class="k">⌃⌥C</span></div>
+        <div class="i"><span class="gl" style="background:#FF453A"></span>Promemoria<span class="k">⌃⌥P</span></div>
+        <div class="s"></div>
+        <div class="h">Strumenti</div>
+        <div class="i"><span class="gl" style="background:var(--mark)"></span>Concentrazione…</div>
+        <div class="i"><span class="gl" style="background:#5E5CE6"></span>Cerca nelle finestre…<span class="k">⌃⌥F</span></div>
+      </div>
+      <div class="sheet panel">
+        <h3><span class="dot"></span>Concentrazione</h3>
+        <div class="sub">Le altre app si nascondono e tornano alla fine.</div>
+        <div class="grp">
+          <div class="row"><span class="l">Durata</span><span class="seg"><span>25</span><span class="on">50</span><span>90</span></span></div>
+          <div class="row"><span class="l">Schede da tenere</span><span class="note">2 scelte</span></div>
+          <div class="row"><span class="l">Non disturbare</span><span class="note">Si attiva da solo</span></div>
+        </div>
+        <div class="btns"><span class="b">Annulla</span><span class="b main">Inizia</span></div>
+      </div>
+      <div class="toast panel">
+        <div class="gl">M</div>
+        <div><div class="t">Gmail è già aperto in un'altra finestra</div><div class="s2">Hai due finestre con lo stesso sito.</div>
+          <div class="btns"><span class="b">Lascia</span><span class="b">Vai a quella</span><span class="b main">Chiudi questa</span></div></div>
+      </div>
+      <div class="orb"><span class="blob b1"></span><span class="blob b2"></span>
+        <svg viewBox="0 0 24 24"><path d="M4 3l4 4.2c1.2-.4 2.6-.7 4-.7s2.8.3 4 .7L20 3v8.5c0 4.9-3.6 9-8 9s-8-4.1-8-9V3zm5 9.5a1.2 1.2 0 100 2.4 1.2 1.2 0 000-2.4zm6 0a1.2 1.2 0 100 2.4 1.2 1.2 0 000-2.4z"/></svg></div>
+      <div class="cap" id="cap"></div>
+    </div>
+  </div>
+</div>
+<script>
+// I temi di Notte. bar = la barra · surface/surface2 = finestre e riquadri · text/sub = testo
+// accent = colore principale (tinta unita, per linee e icone) · accentFill = riempimento
+// (nei temi Tabby: una sfumatura) · onAccent = il testo sopra l'accento
+var THEMES = {
+  grafite: {group: 'base', name: 'Grafite', d: 'la Tabby di oggi',
+    bar: '#000000', surface: '#17181C', surface2: '#202228', text: '#ECEDF0', sub: '#9A9EA8', line: 'rgba(255,255,255,.09)', hover: 'rgba(255,255,255,.07)',
+    accent: '#4C8DFF', accentFill: '#4C8DFF', onAccent: '#FFFFFF', cat: '#FFFFFF',
+    orb: 'radial-gradient(circle at 50% 60%, #252A3A, #0B0C12 75%)', orbRing: 'rgba(76,141,255,.45)', c1: '#4C8DFF', c2: '#8B7CFF'},
+  ardesia: {group: 'base', name: 'Ardesia', d: 'blu notte e verde acqua',
+    bar: '#0E151C', surface: '#151E27', surface2: '#1C2833', text: '#E6EEF3', sub: '#8FA3B3', line: 'rgba(160,200,230,.12)', hover: 'rgba(160,200,230,.08)',
+    accent: '#3CC8B4', accentFill: '#3CC8B4', onAccent: '#06201C', cat: '#E6EEF3',
+    orb: 'radial-gradient(circle at 50% 60%, #19323A, #0A1116 75%)', orbRing: 'rgba(60,200,180,.45)', c1: '#3CC8B4', c2: '#2E7DBA'},
+  fumo: {group: 'base', name: 'Fumo', d: 'grigio caldo e lavanda',
+    bar: '#141313', surface: '#1C1B1B', surface2: '#252423', text: '#EEEBE8', sub: '#A19C97', line: 'rgba(255,240,230,.09)', hover: 'rgba(255,240,230,.07)',
+    accent: '#A894F5', accentFill: '#A894F5', onAccent: '#18122E', cat: '#EEEBE8',
+    orb: 'radial-gradient(circle at 50% 60%, #2C2638, #100E12 75%)', orbRing: 'rgba(168,148,245,.45)', c1: '#A894F5', c2: '#E59BB8'},
+  tabby: {group: 'tabby', name: 'Tabby', d: 'nero e giallo (di serie)',
+    bar: 'linear-gradient(180deg, #17150F, #0A0908)', surface: 'linear-gradient(180deg, #1F1C15, #17150F)', surface2: '#26231B', text: '#F3EFE4', sub: '#A8A190', line: 'rgba(255,230,170,.11)', hover: 'rgba(255,215,120,.08)',
+    accent: '#F4C443', accentFill: 'linear-gradient(135deg, #FDE58A 0%, #F4C443 45%, #EC9F2E 100%)', onAccent: '#1A1405', cat: '#F4C443',
+    orb: 'radial-gradient(circle at 50% 55%, #3A2E12, #0D0B07 75%)', orbRing: 'rgba(244,196,67,.6)', c1: '#F4C443', c2: '#E07A3F'},
+  tramonto: {group: 'tabby', name: 'Tramonto', d: 'prugna, arancio e rosa',
+    bar: 'linear-gradient(180deg, #23122A, #120A17)', surface: 'linear-gradient(180deg, #2A1631, #1C0F22)', surface2: '#30193A', text: '#F7ECF2', sub: '#B79DB0', line: 'rgba(255,180,220,.12)', hover: 'rgba(255,150,200,.09)',
+    accent: '#FF7A6B', accentFill: 'linear-gradient(135deg, #FFB067 0%, #FF6F7A 55%, #E2509E 100%)', onAccent: '#2A0A16', cat: '#FFB067',
+    orb: 'radial-gradient(circle at 50% 55%, #4A1E3E, #12091A 75%)', orbRing: 'rgba(255,122,107,.55)', c1: '#FFB067', c2: '#E2509E'},
+  aurora: {group: 'tabby', name: 'Aurora', d: 'notte boreale, verde e viola',
+    bar: 'linear-gradient(180deg, #0C1A24, #070E16)', surface: 'linear-gradient(180deg, #102230, #0B1620)', surface2: '#132A3A', text: '#E8F6F5', sub: '#8FB1B6', line: 'rgba(120,240,220,.12)', hover: 'rgba(120,240,220,.08)',
+    accent: '#4FE3C1', accentFill: 'linear-gradient(135deg, #5CF0C4 0%, #45C6E6 50%, #8A78FF 100%)', onAccent: '#04201C', cat: '#5CF0C4',
+    orb: 'radial-gradient(circle at 50% 55%, #123A44, #060D14 75%)', orbRing: 'rgba(79,227,193,.55)', c1: '#5CF0C4', c2: '#8A78FF'}
+};
+// I colori principali di macOS (Impostazioni di Sistema → Aspetto)
+var ACC = [['Blu','#0A84FF','#fff'],['Viola','#BF5AF2','#fff'],['Rosa','#FF375F','#fff'],['Rosso','#FF453A','#fff'],
+           ['Arancione','#FF9F0A','#1D1D1F'],['Giallo','#FFD60A','#1D1D1F'],['Verde','#30D158','#06210F'],['Grafite','#8E8E93','#fff']];
+var st = {mode: 'notte', theme: 'tabby', acc: 0, sys: 'light'};
+function el(id) { return document.getElementById(id); }
+function swatch(k) {
+  var t = THEMES[k];
+  var d = document.createElement('div');
+  d.className = 'th' + (st.theme === k ? ' on' : ''); d.dataset.t = k;
+  d.innerHTML = '<div class="sw" style="background:' + t.bar + '"><span class="t"></span><span class="t2"></span><span class="a" style="background:' + t.accentFill + '"></span></div>' +
+    '<div class="n">' + t.name + '</div><div class="d">' + t.d + '</div>';
+  d.onclick = function () { st.theme = k; render(); };
+  return d;
+}
+function apply(v) { var m = el('mac'); for (var k in v) m.style.setProperty('--' + k, v[k]); }
+function render() {
+  document.querySelectorAll('.mode').forEach(function (m) { m.classList.toggle('on', m.dataset.m === st.mode); });
+  el('notteBox').style.display = st.mode === 'notte' ? '' : 'none';
+  el('nativoBox').style.display = st.mode === 'nativo' ? '' : 'none';
+  el('base').innerHTML = ''; el('tabby').innerHTML = '';
+  for (var k in THEMES) el(THEMES[k].group).appendChild(swatch(k));
+  if (st.mode === 'notte') {
+    var t = THEMES[st.theme];
+    apply({bar: t.bar, surface: t.surface, surface2: t.surface2, text: t.text, sub: t.sub, line: t.line, hover: t.hover,
+      accent: t.accent, accentFill: t.accentFill, mark: t.accentFill, onAccent: t.onAccent, cat: t.cat, blur: 'none', barLine: 'none', barR: '14px',
+      tabShadow: 'none', orb: t.orb, orbRing: t.orbRing, orbCat: t.cat, c1: t.c1, c2: t.c2, blobs: '.6'});
+    el('cap').textContent = 'Notte · ' + t.name;
+  } else {
+    var a = ACC[st.acc], dark = st.sys === 'dark';
+    apply({bar: dark ? 'rgba(30,30,32,.72)' : 'rgba(246,246,248,.72)', surface: dark ? 'rgba(38,38,40,.9)' : 'rgba(242,242,245,.9)',
+      surface2: dark ? 'rgba(255,255,255,.07)' : 'rgba(255,255,255,.9)', text: dark ? '#F5F5F7' : '#1D1D1F', sub: dark ? '#98989D' : '#6E6E73',
+      line: dark ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.1)', hover: dark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.05)',
+      accent: a[1], mark: a[1], accentFill: dark ? 'rgba(255,255,255,.16)' : '#FFFFFF', onAccent: dark ? '#fff' : '#1D1D1F', cat: dark ? '#F5F5F7' : '#1D1D1F',
+      blur: 'blur(28px) saturate(1.7)', barLine: dark ? '.5px solid rgba(255,255,255,.1)' : '.5px solid rgba(0,0,0,.12)', barR: '0px',
+      tabShadow: '0 .5px 2px rgba(0,0,0,.2)', orb: dark ? 'rgba(40,40,42,.85)' : 'rgba(255,255,255,.8)', orbRing: 'rgba(0,0,0,.12)',
+      orbCat: dark ? '#F5F5F7' : '#1D1D1F', c1: 'transparent', c2: 'transparent', blobs: '0'});
+    // in Nativo l'accento colora i pulsanti principali, la voce scelta nei menu e le selezioni
+    var m = el('mac');
+    m.querySelectorAll('.menu .i.hl, .b.main, .seg span.on').forEach(function (x) { x.style.background = a[1]; x.style.color = a[2]; });
+    el('cap').textContent = 'Nativo · ' + a[0] + ' · Mac ' + (dark ? 'scuro' : 'chiaro');
+    el('acc').innerHTML = ACC.map(function (x, i) { return '<i title="' + x[0] + '" data-i="' + i + '" class="' + (i === st.acc ? 'on' : '') + '" style="background:' + x[1] + '"></i>'; }).join('');
+    document.querySelectorAll('#sys button').forEach(function (b) { b.classList.toggle('on', b.dataset.s === st.sys); });
+    return;
+  }
+  el('mac').querySelectorAll('.menu .i.hl, .b.main, .seg span.on').forEach(function (x) { x.style.background = ''; x.style.color = ''; });
+}
+el('modes').addEventListener('click', function (e) { var m = e.target.closest('.mode'); if (m) { st.mode = m.dataset.m; render(); } });
+el('acc').addEventListener('click', function (e) { if (e.target.dataset.i) { st.acc = +e.target.dataset.i; render(); } });
+el('sys').addEventListener('click', function (e) { if (e.target.dataset.s) { st.sys = e.target.dataset.s; render(); } });
+render();
+</script>
+</body></html>
