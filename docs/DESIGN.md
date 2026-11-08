@@ -10,7 +10,7 @@ animazioni, risposte e suoni) · funzionalità e struttura (dove sta ogni cosa, 
 le funzioni nuove) · parole (nomi, frasi, tono). Fuori: il "motore" (finestre, browser,
 notch), che è in `SPECIFICA.md`.
 
-**Ordine di lavoro:** 1 direzione ✅ · 2 mattoni · 3 componenti · 4 struttura e percorsi ·
+**Ordine di lavoro:** 1 direzione ✅ · 2 mattoni ✅ · 3 componenti · 4 struttura e percorsi ·
 5 funzioni nuove · 6 parole.
 
 **Principio (8/11/2026, Daniele):** Tabby **personalizzabile ma sempre efficace**: di base
@@ -73,7 +73,7 @@ costruisce l'app diventano il file dei temi che Tabby legge.
 
 ---
 
-## 2. Mattoni
+## 2. Mattoni ✅
 
 ### 2.1 Carattere (font) ✅ (8/11/2026)
 **Solo il carattere di macOS (SF Pro), ovunque, senza scelte.** *Perché* (Daniele): così tutto
@@ -88,15 +88,36 @@ del Mac. Una scelta tra 5 caratteri (SF Pro, SF Pro Rounded, un graziato stile C
 
 ### 2.2 Icone ✅ (8/11/2026)
 - **Tasti e azioni di Tabby: i simboli di Apple (SF Symbols)**, gli stessi di macOS, disegnati
-  per stare con SF Pro e che si adattano da soli a grandezza e peso. Proposta di partenza
-  (da confermare con i componenti): dividi `rectangle.split.2x1`, Lampi `bolt.fill`,
-  impostazioni `gearshape`, nuova app `plus`, chiudi `xmark`, Concentrazione `moon.fill`,
-  ricerca `magnifyingglass`, cartella `folder`, batteria `battery.75`, scambia
-  `arrow.left.arrow.right`, Scrivania `menubar.dock.rectangle`.
+  per stare con SF Pro e che si adattano da soli a grandezza e peso. **Scelti da Daniele**
+  (8/11/2026, su `docs/design-icone.html`):
+
+  | Funzione | Simbolo |
+  |---|---|
+  | Dividi lo schermo (tasto della barra) | `rectangle.grid.2x2` |
+  | Lampi (tasto della barra) | `sparkles` |
+  | Impostazioni (tasto della barra **e** sezione Impostazioni: un'icona sola) | `slider.horizontal.3` |
+  | Nuova app | `plus.app` |
+  | Chiudi (sulla scheda) | `xmark.circle.fill` |
+  | Batteria | `battery.75percent` (e le sue varianti di carica) |
+  | Concentrazione | `target` |
+  | Cerca nelle finestre | `text.magnifyingglass` |
+  | Cartella | `square.stack.3d.up` |
+  | Scambia (vista divisa) | `arrow.left.arrow.right` |
+  | Scrivania | `macwindow` |
+  | Torna all'ultima finestra | `arrow.uturn.backward` |
+  | Rinomina | `square.and.pencil` |
+  | Memo | `note.text` |
+  | Scorciatoie | `command` |
+  | Avviso | `exclamationmark.triangle` |
+  | Altro (⋯) | `ellipsis` |
+  | Sezione Design | `paintpalette` |
+  | Sezione Documentazione | `book.closed` |
+  | Sezione Automazione | `clock.arrow.2.circlepath` |
+  | Sezione Kat | `tray.full` |
+
 - **Il gatto è l'unico disegno di Tabby**: il marchio (barra, sfera, icona dell'app).
 - **Icone delle app e loghi dei siti**: quelli veri, come oggi.
-- Le icone vere, con le alternative per ogni funzione: `docs/design-icone.html` (scelta
-  finale di Daniele da riportare qui).
+- Le icone vere, con le alternative per ogni funzione: `docs/design-icone.html`.
 - **Barra: niente riga verticale** tra la batteria e i tasti ⊞ ⚡︎ ⚙︎ (8/11/2026, Daniele).
 
 ### 2.3 Forme, spazio, ombre, movimento ✅ (8/11/2026)
@@ -116,3 +137,22 @@ Regole del movimento:
 - **Escono** senza rimbalzo, più veloci (~0,2 s), per non far aspettare.
 - Il cambio di scheda non aspetta l'animazione: l'app arriva subito, il disegno la segue.
 - Con «Riduci movimento» di macOS: solo dissolvenze brevi, niente rimbalzi né riflessi.
+
+---
+
+## 3. Componenti (in corso)
+
+**Metodo** (8/11/2026): un componente alla volta, sempre in 4 passi — (1) cosa c'è oggi, in
+tutti i punti di Tabby dove compare; (2) le regole (quando si usa, dove, quanto è grande, cosa
+contiene, come si apre e si chiude, Invio/Esc); (3) prototipo coi mattoni decisi, su esempi
+veri, in tutti i temi e in Nativo; (4) decide Daniele, si scrive qui.
+
+**Insieme: ordine e pulizia della UX** (Daniele): per ogni componente si guarda anche *come si
+avvia e come si modifica* ogni funzione, cercando il modo più diretto. Idee da proporre:
+rinominare scrivendo sulla scheda (come nel Finder) invece di una finestra; creare una
+cartella selezionando le schede nella barra (come per la Concentrazione) e dando il nome
+alla fine; cambiare la scorciatoia di un Lampo premendo la combinazione invece di scriverla.
+
+**La famiglia (proposta):** menu · domanda · foglio · avviso · velo · schermata piena; più la
+barra, la sfera e la **finestra di Tabby** (le cinque sezioni: si apre al primo avvio e da
+Impostazioni; non sta sotto la barra).
