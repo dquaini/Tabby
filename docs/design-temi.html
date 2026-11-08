@@ -35,7 +35,7 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 .themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .th { cursor: pointer; text-align: center; }
 .th .sw { height: 58px; border-radius: 11px; position: relative; overflow: hidden; box-shadow: 0 0 0 .5px rgba(0,0,0,.18); }
-.th.lx .sw .a { box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 3px 10px var(--glow); }
+.th.lx .sw .a { box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 2px 8px var(--glow); }
 .th.on .sw { box-shadow: 0 0 0 2.5px #0A84FF, 0 0 0 4px #fff inset; }
 .th .sw .a { position: absolute; left: 10px; right: 10px; bottom: 10px; height: 14px; border-radius: 5px; }
 .th .sw .t { position: absolute; left: 10px; top: 10px; width: 22px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.35); }
@@ -110,22 +110,22 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 /* ---- temi Tabby: grana, luce, profondità, riflesso lento ---- */
 .luxe .tb::before, .luxe .panel::before, .th.lx .sw::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 0;
-  background-image: var(--grain); background-size: 160px; opacity: .10; mix-blend-mode: overlay; }
+  background-image: var(--grain); background-size: 160px; opacity: .06; mix-blend-mode: overlay; }
 .luxe .tb > *, .luxe .panel > * { position: relative; z-index: 1; }
 .luxe .tb { box-shadow: inset 0 -1px 0 var(--edge); }
 .luxe .panel { box-shadow: 0 18px 44px rgba(0,0,0,.45), 0 0 0 .5px var(--edge), inset 0 1px 0 rgba(255,255,255,.07); }
 .luxe .tb .tab.on, .luxe .b.main, .luxe .seg span.on, .luxe .menu .i.hl {
   position: relative; overflow: hidden;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.55), inset 0 -1px 0 rgba(0,0,0,.18), 0 4px 16px var(--glow); }
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.28), inset 0 -1px 0 rgba(0,0,0,.18), 0 2px 10px var(--glow); }
 .luxe .tb .tab.on::before { content: ""; position: absolute; inset: 0; pointer-events: none;
-  background-image: var(--grain); background-size: 120px; opacity: .14; mix-blend-mode: overlay; }
+  background-image: var(--grain); background-size: 120px; opacity: .08; mix-blend-mode: overlay; }
 .luxe .tb .tab.on::after { content: ""; position: absolute; top: 0; bottom: 0; width: 60%; left: -70%; pointer-events: none;
-  background: linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.5) 50%, rgba(255,255,255,0) 100%);
-  animation: sheen 9s ease-in-out infinite; }
-@keyframes sheen { 0%, 78% { left: -70%; } 92%, 100% { left: 130%; } }
+  background: linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.2) 50%, rgba(255,255,255,0) 100%);
+  animation: sheen 14s ease-in-out infinite; }
+@keyframes sheen { 0%, 86% { left: -70%; } 96%, 100% { left: 130%; } }
 .luxe .tb .tab.on > *, .luxe .b.main, .luxe .menu .i.hl > * { position: relative; z-index: 1; }
-.luxe .tb .tab.on .nm, .luxe .b.main { text-shadow: 0 1px 0 rgba(255,255,255,.25); }
-.luxe .tb .cat svg { filter: drop-shadow(0 0 6px var(--glow)); }
+.luxe .tb .tab.on .nm, .luxe .b.main { text-shadow: 0 1px 0 rgba(255,255,255,.12); }
+.luxe .tb .cat svg { filter: drop-shadow(0 0 3px var(--glow)); }
 @media (prefers-reduced-motion: reduce) { .luxe .tb .tab.on::after { animation: none; display: none; } }
 .cap { position: absolute; left: 24px; bottom: 10px; z-index: 5; color: rgba(255,255,255,.8); font-size: 11.5px; }
 @media (max-width: 760px) {
@@ -227,26 +227,26 @@ var THEMES = {
   // Temi Tabby: sfumature a più punti (come macchie di luce, non una riga), grana
   // leggerissima, luce sul bordo alto e bagliore morbido sotto; sfondi con un bagliore tenue
   tabby: {group: 'tabby', name: 'Tabby', d: 'miele e ambra (di serie)',
-    bar: 'radial-gradient(55% 260% at 0% 50%, rgba(244,182,62,.22), rgba(244,182,62,0) 62%), radial-gradient(40% 220% at 100% 0%, rgba(224,118,52,.12), rgba(224,118,52,0) 70%), linear-gradient(180deg, #17130C, #0A0907)',
-    surface: 'radial-gradient(90% 70% at 0% 0%, rgba(246,190,80,.12), rgba(246,190,80,0) 60%), radial-gradient(70% 60% at 100% 100%, rgba(226,112,48,.09), rgba(226,112,48,0) 70%), linear-gradient(180deg, #1F1A11, #141009)',
-    surface2: 'rgba(255,236,190,.05)', text: '#F5F0E3', sub: '#ABA28C', line: 'rgba(255,226,160,.10)', hover: 'rgba(255,212,120,.08)', edge: 'rgba(255,214,120,.14)',
-    accent: '#F4C04A', onAccent: '#1C1505', cat: '#F6C85A', glow: 'rgba(240,168,48,.42)',
-    accentFill: 'radial-gradient(110% 160% at 12% 0%, #FFF4C8 0%, rgba(255,244,200,0) 46%), radial-gradient(80% 140% at 100% 100%, #D8741E 0%, rgba(216,116,30,0) 62%), radial-gradient(70% 120% at 68% 22%, #FFD566 0%, rgba(255,213,102,0) 72%), #F1B03C',
-    orb: 'radial-gradient(60% 60% at 30% 25%, rgba(255,214,110,.35), rgba(255,214,110,0) 70%), radial-gradient(circle at 50% 60%, #3A2C10, #0C0A06 76%)', orbRing: 'rgba(246,196,80,.65)', c1: '#F6C85A', c2: '#E0752E'},
+    bar: 'radial-gradient(55% 260% at 0% 50%, rgba(236,172,60,.11), rgba(236,172,60,0) 62%), radial-gradient(40% 220% at 100% 0%, rgba(210,110,50,.06), rgba(210,110,50,0) 70%), linear-gradient(180deg, #15120C, #0A0907)',
+    surface: 'radial-gradient(90% 70% at 0% 0%, rgba(236,180,80,.06), rgba(236,180,80,0) 60%), radial-gradient(70% 60% at 100% 100%, rgba(210,104,48,.05), rgba(210,104,48,0) 70%), linear-gradient(180deg, #1C1812, #13100A)',
+    surface2: 'rgba(255,236,190,.045)', text: '#F2EDE1', sub: '#A69E8B', line: 'rgba(255,226,160,.09)', hover: 'rgba(255,212,120,.07)', edge: 'rgba(255,214,120,.09)',
+    accent: '#E9B44A', onAccent: '#1C1505', cat: '#EDBF58', glow: 'rgba(220,150,40,.22)',
+    accentFill: 'radial-gradient(100% 150% at 12% 0%, rgba(251,226,160,.85) 0%, rgba(251,226,160,0) 44%), radial-gradient(80% 140% at 100% 100%, #B9661E 0%, rgba(185,102,30,0) 62%), radial-gradient(70% 120% at 66% 24%, #EDBD52 0%, rgba(237,189,82,0) 72%), #DDA23A',
+    orb: 'radial-gradient(60% 60% at 30% 25%, rgba(240,200,110,.22), rgba(240,200,110,0) 70%), radial-gradient(circle at 50% 60%, #33280F, #0C0A06 76%)', orbRing: 'rgba(233,180,74,.45)', c1: '#EDBF58', c2: '#C86B2A'},
   tramonto: {group: 'tabby', name: 'Tramonto', d: 'pesca, corallo e magenta',
-    bar: 'radial-gradient(55% 260% at 0% 50%, rgba(255,128,110,.20), rgba(255,128,110,0) 62%), radial-gradient(45% 220% at 100% 0%, rgba(186,64,156,.18), rgba(186,64,156,0) 70%), linear-gradient(180deg, #210F24, #100713)',
-    surface: 'radial-gradient(90% 70% at 0% 0%, rgba(255,150,120,.12), rgba(255,150,120,0) 60%), radial-gradient(70% 60% at 100% 100%, rgba(186,64,156,.12), rgba(186,64,156,0) 70%), linear-gradient(180deg, #27142C, #190C1E)',
-    surface2: 'rgba(255,200,220,.05)', text: '#FAEEF3', sub: '#BC9EB3', line: 'rgba(255,180,215,.11)', hover: 'rgba(255,150,195,.08)', edge: 'rgba(255,160,190,.15)',
-    accent: '#FF7A72', onAccent: '#2B0716', cat: '#FFB48A', glow: 'rgba(255,104,124,.42)',
-    accentFill: 'radial-gradient(110% 160% at 10% 0%, #FFE0B8 0%, rgba(255,224,184,0) 44%), radial-gradient(85% 140% at 100% 100%, #B43C9C 0%, rgba(180,60,156,0) 62%), radial-gradient(70% 120% at 58% 28%, #FF7C6E 0%, rgba(255,124,110,0) 72%), #F2607E',
-    orb: 'radial-gradient(60% 60% at 30% 25%, rgba(255,160,130,.35), rgba(255,160,130,0) 70%), radial-gradient(circle at 50% 60%, #45193D, #10071A 76%)', orbRing: 'rgba(255,122,114,.6)', c1: '#FFB48A', c2: '#C2489E'},
+    bar: 'radial-gradient(55% 260% at 0% 50%, rgba(240,120,108,.10), rgba(240,120,108,0) 62%), radial-gradient(45% 220% at 100% 0%, rgba(170,60,146,.09), rgba(170,60,146,0) 70%), linear-gradient(180deg, #1E0F21, #100713)',
+    surface: 'radial-gradient(90% 70% at 0% 0%, rgba(240,140,116,.06), rgba(240,140,116,0) 60%), radial-gradient(70% 60% at 100% 100%, rgba(170,60,146,.06), rgba(170,60,146,0) 70%), linear-gradient(180deg, #241327, #170B1C)',
+    surface2: 'rgba(255,200,220,.045)', text: '#F6ECF1', sub: '#B49AAC', line: 'rgba(255,180,215,.09)', hover: 'rgba(255,150,195,.07)', edge: 'rgba(255,160,190,.09)',
+    accent: '#EE7470', onAccent: '#2B0716', cat: '#F0A783', glow: 'rgba(230,96,116,.22)',
+    accentFill: 'radial-gradient(100% 150% at 10% 0%, rgba(250,208,172,.8) 0%, rgba(250,208,172,0) 42%), radial-gradient(85% 140% at 100% 100%, #973488 0%, rgba(151,52,136,0) 62%), radial-gradient(70% 120% at 58% 28%, #EC7268 0%, rgba(236,114,104,0) 72%), #D9586F',
+    orb: 'radial-gradient(60% 60% at 30% 25%, rgba(240,150,125,.2), rgba(240,150,125,0) 70%), radial-gradient(circle at 50% 60%, #3B1534, #10071A 76%)', orbRing: 'rgba(238,116,112,.45)', c1: '#F0A783', c2: '#A84092'},
   aurora: {group: 'tabby', name: 'Aurora', d: 'menta, ghiaccio e indaco',
-    bar: 'radial-gradient(55% 260% at 0% 50%, rgba(86,232,198,.17), rgba(86,232,198,0) 62%), radial-gradient(45% 220% at 100% 0%, rgba(122,98,255,.17), rgba(122,98,255,0) 70%), linear-gradient(180deg, #0B1822, #060B12)',
-    surface: 'radial-gradient(90% 70% at 0% 0%, rgba(90,230,200,.10), rgba(90,230,200,0) 60%), radial-gradient(70% 60% at 100% 100%, rgba(122,98,255,.12), rgba(122,98,255,0) 70%), linear-gradient(180deg, #0F202D, #09141D)',
-    surface2: 'rgba(170,255,240,.045)', text: '#EAF7F6', sub: '#8FB2B8', line: 'rgba(130,240,225,.11)', hover: 'rgba(130,240,225,.08)', edge: 'rgba(120,230,220,.15)',
-    accent: '#52DEC4', onAccent: '#03201E', cat: '#7CF2D2', glow: 'rgba(72,214,206,.38)',
-    accentFill: 'radial-gradient(110% 160% at 10% 0%, #D4FFEF 0%, rgba(212,255,239,0) 42%), radial-gradient(85% 140% at 100% 100%, #7460FF 0%, rgba(116,96,255,0) 62%), radial-gradient(70% 120% at 55% 35%, #40D9CF 0%, rgba(64,217,207,0) 72%), #4BBEE2',
-    orb: 'radial-gradient(60% 60% at 30% 25%, rgba(120,240,210,.3), rgba(120,240,210,0) 70%), radial-gradient(circle at 50% 60%, #12364A, #050C14 76%)', orbRing: 'rgba(82,222,196,.6)', c1: '#7CF2D2', c2: '#7460FF'}
+    bar: 'radial-gradient(55% 260% at 0% 50%, rgba(80,214,184,.09), rgba(80,214,184,0) 62%), radial-gradient(45% 220% at 100% 0%, rgba(110,90,230,.09), rgba(110,90,230,0) 70%), linear-gradient(180deg, #0B1720, #060B12)',
+    surface: 'radial-gradient(90% 70% at 0% 0%, rgba(84,214,186,.05), rgba(84,214,186,0) 60%), radial-gradient(70% 60% at 100% 100%, rgba(110,90,230,.06), rgba(110,90,230,0) 70%), linear-gradient(180deg, #0E1E2A, #09131B)',
+    surface2: 'rgba(170,255,240,.04)', text: '#E7F4F3', sub: '#8CADB2', line: 'rgba(130,240,225,.09)', hover: 'rgba(130,240,225,.07)', edge: 'rgba(120,230,220,.09)',
+    accent: '#4CCBB4', onAccent: '#03201E', cat: '#6EDEC2', glow: 'rgba(64,196,190,.2)',
+    accentFill: 'radial-gradient(100% 150% at 10% 0%, rgba(196,246,226,.8) 0%, rgba(196,246,226,0) 40%), radial-gradient(85% 140% at 100% 100%, #5C4CD6 0%, rgba(92,76,214,0) 62%), radial-gradient(70% 120% at 55% 35%, #3BC2BA 0%, rgba(59,194,186,0) 72%), #42A8C8',
+    orb: 'radial-gradient(60% 60% at 30% 25%, rgba(110,220,195,.18), rgba(110,220,195,0) 70%), radial-gradient(circle at 50% 60%, #102F40, #050C14 76%)', orbRing: 'rgba(76,203,180,.42)', c1: '#6EDEC2', c2: '#5C4CD6'}
 };
 // I colori principali di macOS (Impostazioni di Sistema → Aspetto)
 var ACC = [['Blu','#0A84FF','#fff'],['Viola','#BF5AF2','#fff'],['Rosa','#FF375F','#fff'],['Rosso','#FF453A','#fff'],
