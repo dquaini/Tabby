@@ -35,6 +35,7 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 .themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .th { cursor: pointer; text-align: center; }
 .th .sw { height: 58px; border-radius: 11px; position: relative; overflow: hidden; box-shadow: 0 0 0 .5px rgba(0,0,0,.18); }
+.th.lx .sw .a { box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 3px 10px var(--glow); }
 .th.on .sw { box-shadow: 0 0 0 2.5px #0A84FF, 0 0 0 4px #fff inset; }
 .th .sw .a { position: absolute; left: 10px; right: 10px; bottom: 10px; height: 14px; border-radius: 5px; }
 .th .sw .t { position: absolute; left: 10px; top: 10px; width: 22px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.35); }
@@ -96,16 +97,36 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 .btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 .b { padding: 5px 16px; border-radius: 8px; font-size: 13px; background: var(--surface2); color: var(--text); box-shadow: 0 0 0 .5px var(--line); }
 .b.main { background: var(--accentFill); color: var(--onAccent); box-shadow: none; }
-.toast { position: absolute; right: 22px; top: 290px; width: 320px; padding: 12px 14px; border-radius: 16px; z-index: 4; display: flex; gap: 11px; }
+.toast { position: absolute; right: 22px; top: 290px; width: 340px; padding: 12px 14px; border-radius: 16px; z-index: 4; display: flex; gap: 11px; }
 .toast .gl { width: 32px; height: 32px; border-radius: 8px; flex: none; background: #EA4335; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; }
 .toast .t { font-weight: 600; } .toast .s2 { color: var(--sub); font-size: 12px; }
-.toast .btns { margin-top: 8px; justify-content: flex-start; gap: 6px; } .toast .b { padding: 3px 10px; font-size: 12px; }
+.toast .btns { margin-top: 8px; justify-content: flex-start; gap: 6px; } .toast .b { padding: 3px 10px; font-size: 12px; white-space: nowrap; }
 .orb { position: absolute; right: 56px; bottom: 44px; width: 62px; height: 62px; border-radius: 50%; z-index: 4; overflow: hidden;
   background: var(--orb); box-shadow: 0 6px 18px rgba(0,0,0,.45), 0 0 0 1.5px var(--orbRing); display: flex; align-items: center; justify-content: center; }
 .orb svg { width: 34px; height: 34px; fill: var(--orbCat); position: relative; z-index: 2; }
 .orb .blob { position: absolute; width: 40px; height: 40px; border-radius: 50%; filter: blur(9px); opacity: var(--blobs); animation: spin 9s linear infinite; }
 .orb .b1 { background: var(--c1); left: 4px; top: 6px; } .orb .b2 { background: var(--c2); right: 2px; bottom: 2px; animation-duration: 12s; animation-direction: reverse; }
 @keyframes spin { from { transform: rotate(0) translateX(6px); } to { transform: rotate(360deg) translateX(6px); } }
+/* ---- temi Tabby: grana, luce, profondità, riflesso lento ---- */
+.luxe .tb::before, .luxe .panel::before, .th.lx .sw::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 0;
+  background-image: var(--grain); background-size: 160px; opacity: .10; mix-blend-mode: overlay; }
+.luxe .tb > *, .luxe .panel > * { position: relative; z-index: 1; }
+.luxe .tb { box-shadow: inset 0 -1px 0 var(--edge); }
+.luxe .panel { box-shadow: 0 18px 44px rgba(0,0,0,.45), 0 0 0 .5px var(--edge), inset 0 1px 0 rgba(255,255,255,.07); }
+.luxe .tb .tab.on, .luxe .b.main, .luxe .seg span.on, .luxe .menu .i.hl {
+  position: relative; overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.55), inset 0 -1px 0 rgba(0,0,0,.18), 0 4px 16px var(--glow); }
+.luxe .tb .tab.on::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image: var(--grain); background-size: 120px; opacity: .14; mix-blend-mode: overlay; }
+.luxe .tb .tab.on::after { content: ""; position: absolute; top: 0; bottom: 0; width: 60%; left: -70%; pointer-events: none;
+  background: linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.5) 50%, rgba(255,255,255,0) 100%);
+  animation: sheen 9s ease-in-out infinite; }
+@keyframes sheen { 0%, 78% { left: -70%; } 92%, 100% { left: 130%; } }
+.luxe .tb .tab.on > *, .luxe .b.main, .luxe .menu .i.hl > * { position: relative; z-index: 1; }
+.luxe .tb .tab.on .nm, .luxe .b.main { text-shadow: 0 1px 0 rgba(255,255,255,.25); }
+.luxe .tb .cat svg { filter: drop-shadow(0 0 6px var(--glow)); }
+@media (prefers-reduced-motion: reduce) { .luxe .tb .tab.on::after { animation: none; display: none; } }
 .cap { position: absolute; left: 24px; bottom: 10px; z-index: 5; color: rgba(255,255,255,.8); font-size: 11.5px; }
 @media (max-width: 760px) {
   .mac { height: 880px; } .sheet { left: 14px; right: 14px; width: auto; top: 320px; }
@@ -203,28 +224,41 @@ var THEMES = {
     bar: '#141313', surface: '#1C1B1B', surface2: '#252423', text: '#EEEBE8', sub: '#A19C97', line: 'rgba(255,240,230,.09)', hover: 'rgba(255,240,230,.07)',
     accent: '#A894F5', accentFill: '#A894F5', onAccent: '#18122E', cat: '#EEEBE8',
     orb: 'radial-gradient(circle at 50% 60%, #2C2638, #100E12 75%)', orbRing: 'rgba(168,148,245,.45)', c1: '#A894F5', c2: '#E59BB8'},
-  tabby: {group: 'tabby', name: 'Tabby', d: 'nero e giallo (di serie)',
-    bar: 'linear-gradient(180deg, #17150F, #0A0908)', surface: 'linear-gradient(180deg, #1F1C15, #17150F)', surface2: '#26231B', text: '#F3EFE4', sub: '#A8A190', line: 'rgba(255,230,170,.11)', hover: 'rgba(255,215,120,.08)',
-    accent: '#F4C443', accentFill: 'linear-gradient(135deg, #FDE58A 0%, #F4C443 45%, #EC9F2E 100%)', onAccent: '#1A1405', cat: '#F4C443',
-    orb: 'radial-gradient(circle at 50% 55%, #3A2E12, #0D0B07 75%)', orbRing: 'rgba(244,196,67,.6)', c1: '#F4C443', c2: '#E07A3F'},
-  tramonto: {group: 'tabby', name: 'Tramonto', d: 'prugna, arancio e rosa',
-    bar: 'linear-gradient(180deg, #23122A, #120A17)', surface: 'linear-gradient(180deg, #2A1631, #1C0F22)', surface2: '#30193A', text: '#F7ECF2', sub: '#B79DB0', line: 'rgba(255,180,220,.12)', hover: 'rgba(255,150,200,.09)',
-    accent: '#FF7A6B', accentFill: 'linear-gradient(135deg, #FFB067 0%, #FF6F7A 55%, #E2509E 100%)', onAccent: '#2A0A16', cat: '#FFB067',
-    orb: 'radial-gradient(circle at 50% 55%, #4A1E3E, #12091A 75%)', orbRing: 'rgba(255,122,107,.55)', c1: '#FFB067', c2: '#E2509E'},
-  aurora: {group: 'tabby', name: 'Aurora', d: 'notte boreale, verde e viola',
-    bar: 'linear-gradient(180deg, #0C1A24, #070E16)', surface: 'linear-gradient(180deg, #102230, #0B1620)', surface2: '#132A3A', text: '#E8F6F5', sub: '#8FB1B6', line: 'rgba(120,240,220,.12)', hover: 'rgba(120,240,220,.08)',
-    accent: '#4FE3C1', accentFill: 'linear-gradient(135deg, #5CF0C4 0%, #45C6E6 50%, #8A78FF 100%)', onAccent: '#04201C', cat: '#5CF0C4',
-    orb: 'radial-gradient(circle at 50% 55%, #123A44, #060D14 75%)', orbRing: 'rgba(79,227,193,.55)', c1: '#5CF0C4', c2: '#8A78FF'}
+  // Temi Tabby: sfumature a più punti (come macchie di luce, non una riga), grana
+  // leggerissima, luce sul bordo alto e bagliore morbido sotto; sfondi con un bagliore tenue
+  tabby: {group: 'tabby', name: 'Tabby', d: 'miele e ambra (di serie)',
+    bar: 'radial-gradient(55% 260% at 0% 50%, rgba(244,182,62,.22), rgba(244,182,62,0) 62%), radial-gradient(40% 220% at 100% 0%, rgba(224,118,52,.12), rgba(224,118,52,0) 70%), linear-gradient(180deg, #17130C, #0A0907)',
+    surface: 'radial-gradient(90% 70% at 0% 0%, rgba(246,190,80,.12), rgba(246,190,80,0) 60%), radial-gradient(70% 60% at 100% 100%, rgba(226,112,48,.09), rgba(226,112,48,0) 70%), linear-gradient(180deg, #1F1A11, #141009)',
+    surface2: 'rgba(255,236,190,.05)', text: '#F5F0E3', sub: '#ABA28C', line: 'rgba(255,226,160,.10)', hover: 'rgba(255,212,120,.08)', edge: 'rgba(255,214,120,.14)',
+    accent: '#F4C04A', onAccent: '#1C1505', cat: '#F6C85A', glow: 'rgba(240,168,48,.42)',
+    accentFill: 'radial-gradient(110% 160% at 12% 0%, #FFF4C8 0%, rgba(255,244,200,0) 46%), radial-gradient(80% 140% at 100% 100%, #D8741E 0%, rgba(216,116,30,0) 62%), radial-gradient(70% 120% at 68% 22%, #FFD566 0%, rgba(255,213,102,0) 72%), #F1B03C',
+    orb: 'radial-gradient(60% 60% at 30% 25%, rgba(255,214,110,.35), rgba(255,214,110,0) 70%), radial-gradient(circle at 50% 60%, #3A2C10, #0C0A06 76%)', orbRing: 'rgba(246,196,80,.65)', c1: '#F6C85A', c2: '#E0752E'},
+  tramonto: {group: 'tabby', name: 'Tramonto', d: 'pesca, corallo e magenta',
+    bar: 'radial-gradient(55% 260% at 0% 50%, rgba(255,128,110,.20), rgba(255,128,110,0) 62%), radial-gradient(45% 220% at 100% 0%, rgba(186,64,156,.18), rgba(186,64,156,0) 70%), linear-gradient(180deg, #210F24, #100713)',
+    surface: 'radial-gradient(90% 70% at 0% 0%, rgba(255,150,120,.12), rgba(255,150,120,0) 60%), radial-gradient(70% 60% at 100% 100%, rgba(186,64,156,.12), rgba(186,64,156,0) 70%), linear-gradient(180deg, #27142C, #190C1E)',
+    surface2: 'rgba(255,200,220,.05)', text: '#FAEEF3', sub: '#BC9EB3', line: 'rgba(255,180,215,.11)', hover: 'rgba(255,150,195,.08)', edge: 'rgba(255,160,190,.15)',
+    accent: '#FF7A72', onAccent: '#2B0716', cat: '#FFB48A', glow: 'rgba(255,104,124,.42)',
+    accentFill: 'radial-gradient(110% 160% at 10% 0%, #FFE0B8 0%, rgba(255,224,184,0) 44%), radial-gradient(85% 140% at 100% 100%, #B43C9C 0%, rgba(180,60,156,0) 62%), radial-gradient(70% 120% at 58% 28%, #FF7C6E 0%, rgba(255,124,110,0) 72%), #F2607E',
+    orb: 'radial-gradient(60% 60% at 30% 25%, rgba(255,160,130,.35), rgba(255,160,130,0) 70%), radial-gradient(circle at 50% 60%, #45193D, #10071A 76%)', orbRing: 'rgba(255,122,114,.6)', c1: '#FFB48A', c2: '#C2489E'},
+  aurora: {group: 'tabby', name: 'Aurora', d: 'menta, ghiaccio e indaco',
+    bar: 'radial-gradient(55% 260% at 0% 50%, rgba(86,232,198,.17), rgba(86,232,198,0) 62%), radial-gradient(45% 220% at 100% 0%, rgba(122,98,255,.17), rgba(122,98,255,0) 70%), linear-gradient(180deg, #0B1822, #060B12)',
+    surface: 'radial-gradient(90% 70% at 0% 0%, rgba(90,230,200,.10), rgba(90,230,200,0) 60%), radial-gradient(70% 60% at 100% 100%, rgba(122,98,255,.12), rgba(122,98,255,0) 70%), linear-gradient(180deg, #0F202D, #09141D)',
+    surface2: 'rgba(170,255,240,.045)', text: '#EAF7F6', sub: '#8FB2B8', line: 'rgba(130,240,225,.11)', hover: 'rgba(130,240,225,.08)', edge: 'rgba(120,230,220,.15)',
+    accent: '#52DEC4', onAccent: '#03201E', cat: '#7CF2D2', glow: 'rgba(72,214,206,.38)',
+    accentFill: 'radial-gradient(110% 160% at 10% 0%, #D4FFEF 0%, rgba(212,255,239,0) 42%), radial-gradient(85% 140% at 100% 100%, #7460FF 0%, rgba(116,96,255,0) 62%), radial-gradient(70% 120% at 55% 35%, #40D9CF 0%, rgba(64,217,207,0) 72%), #4BBEE2',
+    orb: 'radial-gradient(60% 60% at 30% 25%, rgba(120,240,210,.3), rgba(120,240,210,0) 70%), radial-gradient(circle at 50% 60%, #12364A, #050C14 76%)', orbRing: 'rgba(82,222,196,.6)', c1: '#7CF2D2', c2: '#7460FF'}
 };
 // I colori principali di macOS (Impostazioni di Sistema → Aspetto)
 var ACC = [['Blu','#0A84FF','#fff'],['Viola','#BF5AF2','#fff'],['Rosa','#FF375F','#fff'],['Rosso','#FF453A','#fff'],
            ['Arancione','#FF9F0A','#1D1D1F'],['Giallo','#FFD60A','#1D1D1F'],['Verde','#30D158','#06210F'],['Grafite','#8E8E93','#fff']];
+var GRAIN = 'url("data:image/svg+xml;utf8,<svg xmlns=%27http://www.w3.org/2000/svg%27 width=%27160%27 height=%27160%27><filter id=%27n%27><feTurbulence type=%27fractalNoise%27 baseFrequency=%270.9%27 numOctaves=%272%27 stitchTiles=%27stitch%27/><feColorMatrix values=%270 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1 0%27/></filter><rect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23n)%27/></svg>")';
 var st = {mode: 'notte', theme: 'tabby', acc: 0, sys: 'light'};
 function el(id) { return document.getElementById(id); }
 function swatch(k) {
   var t = THEMES[k];
   var d = document.createElement('div');
-  d.className = 'th' + (st.theme === k ? ' on' : ''); d.dataset.t = k;
+  d.className = 'th' + (st.theme === k ? ' on' : '') + (t.group === 'tabby' ? ' lx' : ''); d.dataset.t = k;
+  d.style.setProperty('--grain', GRAIN); d.style.setProperty('--glow', t.glow || 'transparent');
   d.innerHTML = '<div class="sw" style="background:' + t.bar + '"><span class="t"></span><span class="t2"></span><span class="a" style="background:' + t.accentFill + '"></span></div>' +
     '<div class="n">' + t.name + '</div><div class="d">' + t.d + '</div>';
   d.onclick = function () { st.theme = k; render(); };
@@ -239,11 +273,14 @@ function render() {
   for (var k in THEMES) el(THEMES[k].group).appendChild(swatch(k));
   if (st.mode === 'notte') {
     var t = THEMES[st.theme];
-    apply({bar: t.bar, surface: t.surface, surface2: t.surface2, text: t.text, sub: t.sub, line: t.line, hover: t.hover,
+    el('mac').classList.toggle('luxe', t.group === 'tabby');
+    apply({grain: GRAIN, glow: t.glow || 'transparent', edge: t.edge || 'transparent',
+      bar: t.bar, surface: t.surface, surface2: t.surface2, text: t.text, sub: t.sub, line: t.line, hover: t.hover,
       accent: t.accent, accentFill: t.accentFill, mark: t.accentFill, onAccent: t.onAccent, cat: t.cat, blur: 'none', barLine: 'none', barR: '14px',
       tabShadow: 'none', orb: t.orb, orbRing: t.orbRing, orbCat: t.cat, c1: t.c1, c2: t.c2, blobs: '.6'});
     el('cap').textContent = 'Notte · ' + t.name;
   } else {
+    el('mac').classList.remove('luxe');
     var a = ACC[st.acc], dark = st.sys === 'dark';
     apply({bar: dark ? 'rgba(30,30,32,.72)' : 'rgba(246,246,248,.72)', surface: dark ? 'rgba(38,38,40,.9)' : 'rgba(242,242,245,.9)',
       surface2: dark ? 'rgba(255,255,255,.07)' : 'rgba(255,255,255,.9)', text: dark ? '#F5F5F7' : '#1D1D1F', sub: dark ? '#98989D' : '#6E6E73',
