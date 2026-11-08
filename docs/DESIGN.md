@@ -258,3 +258,29 @@ Prototipo: `docs/design-aperture.html`.
   del Mac. Pulsanti piccoli come quelli di macOS (principale nel colore principale del Mac). Il
   tema di Tabby si vede sulla barra, sui simboli e sulla sfera, non sullo sfondo delle finestre.
   *(Sostituisce gli angoli 18 e gli sfondi del tema per le finestre decisi al punto 2.3.)*
+
+### 3.4 Fogli ✅ (8/11/2026)
+Prototipo: `docs/design-fogli.html`. Stile di 3.3 (identici ai menu, dal centro, velo).
+**Regole comuni:** in cima simbolo nel colore del tema + titolo + una riga di spiegazione;
+righe da 22 con titoli di sezione e separatori; in fondo i tasti (↵ · esc) e due pulsanti
+piccoli (principale nel colore del Mac, spento finché manca qualcosa). Larghi 320. Invio =
+principale, Esc o clic sul velo = Annulla. Ricordano l'ultima scelta dove ha senso.
+
+**Scegliere le schede** (Concentrazione, nuova/modifica cartella): la barra resta **sopra il
+velo e cliccabile**. Due modi, tutti e due validi (Daniele):
+- **clic** sulla scheda nella barra: scelta/tolta;
+- **trascinarla dalla barra dentro il foglio** (il foglio si illumina mentre ci passi sopra).
+Scheda scelta = **contorno nel colore del tema + piccola spunta** (la scheda attiva resta
+riconoscibile dal suo riempimento). Nel foglio le scelte compaiono come etichette con una ✕.
+
+1. **Concentrazione** — Durata (25 · 50 · 90 min) · Schede da tenere · Cartelle (una cartella
+   sceglie tutte le sue schede) · Non disturbare (interruttore) · Annulla / **Inizia** (spento
+   senza schede).
+2. **Nuova cartella** — si sceglie *prima* cosa c'è dentro (la scheda in cui sei parte già
+   scelta), *poi* il nome in fondo · Annulla / **Crea**. Lo stesso foglio per **modificare** una
+   cartella. (Prima: nome, poi un riquadro dove trascinare.)
+3. **Personalizza i Lampi** — un **foglio** (non più un sottomenu): i Lampi in righe con icona,
+   nome, scorciatoia a tasti veri e ✕; **trascinare per riordinare** (l'ordine è anche quello
+   della riga dei Lampi in ⚡︎); clic sui tasti e premi una lettera per cambiare la scorciatoia
+   (se è già usata lo dice); «Aggiungi un Lampo…» apre l'elenco delle app (menu); «Lampi di
+   serie» · **Fatto**.
