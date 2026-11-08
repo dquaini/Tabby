@@ -54,11 +54,14 @@ h2 { font-size: 15px; margin: 22px 0 8px; }
     <div class="tab"><span class="ic" style="background:#EA4335">M</span>Gmail</div>
     <div class="bb" data-f="Nuova app (+)"></div>
     <div class="sp"></div>
-    <div class="bb" data-f="Batteria"></div><div class="sep"></div>
+    <div class="bb" data-f="Batteria"></div>
     <div class="bb" data-f="Dividi lo schermo (⊞)"></div><div class="bb on" data-f="Lampi (⚡︎)"></div><div class="bb" data-f="Impostazioni (⚙︎)"></div>
   </div>
   <div class="sections" id="sections"></div>
+  <div style="padding:8px 18px 0;color:rgba(255,255,255,.7);font-size:11.5px">(Solo un'anteprima delle icone: le cinque sezioni stanno nella finestra di Tabby, che si apre al primo avvio e da Impostazioni, non sotto la barra.)</div>
 </div>
+<div style="display:flex;gap:8px;align-items:center;margin:6px 0 4px"><button id="copy" style="border:0;border-radius:9px;padding:8px 14px;font:inherit;background:#0A84FF;color:#fff;cursor:pointer">Copia le mie scelte</button><span id="copied" style="color:#6E6E73;font-size:12px"></span></div>
+<textarea id="out" readonly style="width:100%;height:0;opacity:0;border:0;padding:0;font:12px ui-monospace,Menlo,monospace;border-radius:9px;transition:height .2s"></textarea>
 <div id="cards"></div>
 <p class="foot">Le icone si adattano da sole a grandezza e peso (in Swift: SF Symbols). Il gatto è il disegno di Tabby; le icone delle app e i loghi dei siti restano quelli veri.</p>
 </div>
@@ -101,5 +104,16 @@ function render() {
 }
 document.getElementById('themes').addEventListener('click', function (e) { if (e.target.tagName === 'BUTTON') { theme = e.target.textContent; render(); } });
 document.getElementById('cards').addEventListener('click', function (e) { var o = e.target.closest('.opt'); if (o) { pick[o.dataset.f] = o.dataset.n; render(); } });
+document.getElementById('copy').onclick = function () {
+  var lines = ['Le mie icone per Tabby:'];
+  GROUPS.forEach(function (g) { g[1].forEach(function (f) { lines.push('- ' + f[0] + ': ' + pick[f[0]] + (pick[f[0]] === f[1][0] ? ' (proposta)' : '')); }); });
+  var txt = lines.join('\n'), out = document.getElementById('out');
+  out.value = txt; out.style.height = '220px'; out.style.opacity = '1'; out.style.padding = '10px'; out.style.border = '.5px solid rgba(0,0,0,.15)';
+  out.select();
+  var ok = false;
+  try { ok = document.execCommand('copy'); } catch (e) {}
+  if (navigator.clipboard) navigator.clipboard.writeText(txt).then(function () { document.getElementById('copied').textContent = 'Copiato: incollalo nella chat.'; }, function () {});
+  document.getElementById('copied').textContent = ok ? 'Copiato: incollalo nella chat.' : 'Seleziona il testo qui sotto e copialo (⌘C).';
+};
 render();
 </script></body></html>

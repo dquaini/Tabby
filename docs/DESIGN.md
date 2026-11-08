@@ -95,6 +95,9 @@ del Mac. Una scelta tra 5 caratteri (SF Pro, SF Pro Rounded, un graziato stile C
   `arrow.left.arrow.right`, Scrivania `menubar.dock.rectangle`.
 - **Il gatto è l'unico disegno di Tabby**: il marchio (barra, sfera, icona dell'app).
 - **Icone delle app e loghi dei siti**: quelli veri, come oggi.
+- Le icone vere, con le alternative per ogni funzione: `docs/design-icone.html` (scelta
+  finale di Daniele da riportare qui).
+- **Barra: niente riga verticale** tra la batteria e i tasti ⊞ ⚡︎ ⚙︎ (8/11/2026, Daniele).
 
 ### 2.3 Forme, spazio, ombre, movimento ✅ (8/11/2026)
 Prototipo: `docs/design-forme.html`. Non sono scelte per l'utente: sono le misure fisse.
