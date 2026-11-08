@@ -95,3 +95,21 @@ del Mac. Una scelta tra 5 caratteri (SF Pro, SF Pro Rounded, un graziato stile C
   `arrow.left.arrow.right`, Scrivania `menubar.dock.rectangle`.
 - **Il gatto è l'unico disegno di Tabby**: il marchio (barra, sfera, icona dell'app).
 - **Icone delle app e loghi dei siti**: quelli veri, come oggi.
+
+### 2.3 Forme, spazio, ombre, movimento ✅ (8/11/2026)
+Prototipo: `docs/design-forme.html`. Non sono scelte per l'utente: sono le misure fisse.
+Scelta di Daniele: **Morbidi · Compatto · Profonde · Elastiche**.
+
+| Cosa | Valore |
+|---|---|
+| **Angoli** (morbidi, come macOS di oggi) | barra 14 (solo dal lato delle app) · scheda 9 · menu 11 (voce 6) · finestra/foglio/avviso 18 · riquadro interno 11 · pulsante 8 · icona piccola 5 |
+| **Spazio** (compatto) | barra alta 38 (in alto) · scheda alta 28, margine interno 8 · tra le schede 1 · voci di menu 3 sopra/sotto · righe dei riquadri 7 · margine interno dei fogli 16 |
+| **Ombre** (profonde) | menu, fogli, avvisi: `0 22 54` nero al 55% + filo di luce interno in alto (bianco 6%) |
+| **Animazioni** (elastiche) | durata 0,38 s, curva con un piccolo rimbalzo finale (`0.3, 1.45, 0.45, 1`; in Swift una molla con smorzamento ~0,72) |
+
+Regole del movimento:
+- **Entrano** con il rimbalzo: menu (dall'alto, da 97%), fogli (dal centro, da 96%), avvisi
+  (scivolano da destra), la scheda attiva che **scivola** da una scheda all'altra.
+- **Escono** senza rimbalzo, più veloci (~0,2 s), per non far aspettare.
+- Il cambio di scheda non aspetta l'animazione: l'app arriva subito, il disegno la segue.
+- Con «Riduci movimento» di macOS: solo dissolvenze brevi, niente rimbalzi né riflessi.
