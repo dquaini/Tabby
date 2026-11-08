@@ -333,12 +333,14 @@ sulla Scrivania · batteria (verde, rossa, fulmine) · tempo della Concentrazion
 si vede solo sulla scheda attiva e su quella sotto il mouse (come Safari) · niente riga dopo
 il gatto (solo spazio; già tolta quella tra batteria e tasti).
 
-### 3.8 La sfera (in corso, 8/11/2026)
+### 3.8 La sfera (decisa, 8/11/2026)
 Prototipo: `docs/design-sfera.html` (tutti gli stati, coi temi). Resta com'è oggi (v9.54): 60
 punti, in basso a destra a 60 dai bordi, colori che girano dentro, il gatto di Daniele,
 reagisce al mouse; clic = le scelte del gatto (Casa). **Deciso (Daniele):** i colori seguono
 il tema (Tabby oro e rame, Tramonto corallo, Aurora verde acqua, Grafite blu, Mono argento,
 Nativo il colore principale del Mac) · al clic il **ventaglio** di piccole sfere, nei colori
-del tema, coi nomi nello stile dei menu. Ancora da decidere: numerino delle notifiche · pausa
-con colori fermi e segno ❙❙ · anello della Concentrazione nel colore del tema · comparsa
-(barra che sale 0,2 s, sfera elastica 0,38 s; ferma con «Riduci movimento»).
+del tema, coi nomi nello stile dei menu. Poi: un **numerino rosso** col totale delle notifiche delle app (nuovo; nel ventaglio le app
+con notifiche vengono prima) · **pausa** con colori quasi spenti e fermi e il segno ❙❙ ·
+**Concentrazione** con l'anello nel colore del tema che si consuma, il tempo passandoci sopra ·
+**comparsa**: la barra sale e sparisce (0,2 s), la sfera nasce elastica (0,38 s), al contrario
+quando torna una finestra; con «Riduci movimento» la sfera è ferma.
