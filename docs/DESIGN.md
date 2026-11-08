@@ -310,13 +310,24 @@ registri), «Lampi di serie» (si vede nel foglio), «Questa app non può essere
 un Lampo» (non compaiono nell'elenco), «Cartella aggiornata» (si vede nella barra), «Nessuna app
 nuova», «Tabby vX attiva». La **fine della Concentrazione** resta un foglio.
 
-### 3.6 La barra che cerca tutto (in corso, 8/11/2026)
+### 3.6 La barra che cerca tutto (decisa, 8/11/2026)
 Prototipo: `docs/design-cerca.html`. **Deciso:** una **barra sola** per cercare tutto (Daniele),
 scorciatoia **⌃⌥Spazio** (sostituisce la ricerca ⌃⌥F e il pannello «Tabby…» ⌃⌥,; dal menu ⚙︎
 «Tabby…» apre la stessa barra con scritto «Tabby»). **A barra vuota non mostra niente** — in
 futuro un agente potrà proporre cosa serve in base a come si usa Tabby. Tastiera: ↑↓ scegli ·
 ↵ apri · ⌘↵ azione alternativa · esc cancella il testo, di nuovo chiude.
-Proposta da confermare: gruppi nell'ordine Il migliore · Schede e app · Nelle finestre (con il
+Gruppi (confermati da Daniele), nell'ordine Il migliore · Schede e app · Nelle finestre (con il
 pezzo di testo evidenziato) · Cartelle · Lampi · Azioni · Impostazioni di Tabby; massimo 3 per
 gruppo, 8 in tutto; ⌘↵ = finestra: apri e cerca dentro (⌘F) · impostazione: apri la sezione ·
 Lampo: apri accanto; azioni forti confermate con un secondo ↵.
+
+### 3.7 La barra di Tabby in tutti i suoi stati (in corso, 8/11/2026)
+Prototipo: `docs/design-barra.html` (tutti gli stati, coi temi da cambiare).
+Restano come oggi, nei mattoni decisi: scheda normale · sotto il mouse · attiva (riempimento
+del tema che scivola) · notifiche (numerino rosso, pallino se manca il numero) · compatta
+(solo icona, l'attiva col nome, «+N») · scheda-cartella · vista divisa (⇄, scomponi) · scelta
+(contorno + spunta) · trascinata (fantasma + lineetta) · rinomina sul posto · gatto acceso
+sulla Scrivania · batteria (verde, rossa, fulmine) · tempo della Concentrazione · Lampi coperti
+(⚡︎ allargato) · ⊞ acceso · vista cartella (← e nome ▾) · notch · Tabby di lato.
+Proposte da decidere: finestra ridotta attenuata · ✕ solo sulla scheda attiva e sotto il
+mouse · niente riga dopo il gatto.
