@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tabby — come si aprono le finestre</title>
+<!--
+  Componenti (8/11/2026): animazione d'apertura e posizione precisa delle finestre di Tabby
+  (fogli, domande, avvisi, pannello «Tabby…»/ricerca). I menu sono di macOS: si apre attaccato
+  al tasto, con l'animazione di macOS. Principio proposto: ogni finestra arriva da dove nasce.
+  Movimento deciso: entrata 0,38 s elastica (0.3, 1.45, 0.45, 1), uscita 0,2 s.
+  Tema dell'anteprima: Notte · Tabby. Misure compatte.
+-->
+<style>
+* { box-sizing: border-box; }
+html, body { margin: 0; font: 13px/1.4 -apple-system, system-ui, sans-serif; background: #ECECEF; color: #1D1D1F; }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 20px 16px 50px; }
+h1 { font-size: 20px; margin: 0 0 4px; } .lead { margin: 0 0 12px; color: #6E6E73; max-width: 860px; }
+.ctl { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; align-items: center; }
+.ctl .lbl { color: #6E6E73; min-width: 128px; }
+.ctl button { border: 0; border-radius: 999px; padding: 6px 12px; font: inherit; background: rgba(0,0,0,.07); cursor: pointer; }
+.ctl button.on { background: #0A84FF; color: #fff; }
+.ctl button.act { background: #1D1D1F; color: #fff; }
+.hint { color: #6E6E73; font-size: 12px; margin: 2px 0 10px; min-height: 18px; }
+.mac { position: relative; height: 560px; border-radius: 16px; overflow: hidden; box-shadow: 0 14px 40px rgba(0,0,0,.28);
+  background: radial-gradient(ellipse at 25% 20%, #4E7FAE, #22405F 55%, #111D2B); }
+.bar { position: absolute; z-index: 6; display: flex; align-items: center; gap: 1px; color: #F2EDE1;
+  background: radial-gradient(55% 260% at 0% 50%, rgba(236,172,60,.11), rgba(236,172,60,0) 62%), linear-gradient(180deg,#15120C,#0A0907); }
+.top .bar { left: 0; right: 0; top: 0; height: 38px; padding: 0 2px; border-radius: 0 0 14px 14px; flex-direction: row; }
+.side .bar { right: 0; top: 0; bottom: 0; width: 150px; flex-direction: column; padding: 4px 0; border-radius: 14px 0 0 14px; align-items: stretch; }
+.cat { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; flex: none; }
+.side .cat { width: 100%; height: 44px; }
+.cat svg { width: 20px; height: 20px; fill: #EDBF58; }
+.tab { height: 28px; padding: 0 8px; border-radius: 9px; display: flex; align-items: center; gap: 7px; color: #A69E8B; font-size: 12.5px; white-space: nowrap; flex: none; }
+.side .tab { margin: 1px 6px; }
+.tab.on { color: #1C1505; font-weight: 600; background: radial-gradient(100% 150% at 12% 0%, rgba(251,226,160,.85), rgba(251,226,160,0) 44%), radial-gradient(80% 140% at 100% 100%, #B9661E, rgba(185,102,30,0) 62%), radial-gradient(70% 120% at 66% 24%, #EDBD52, rgba(237,189,82,0) 72%), #DDA23A; box-shadow: inset 0 1px 0 rgba(255,255,255,.28); }
+.tab .ic { width: 16px; height: 16px; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 9px; font-weight: 700; }
+.sp { flex: 1; }
+.btns { display: flex; } .side .btns { justify-content: space-around; padding: 4px 0; }
+.bb { width: 36px; height: 38px; display: flex; align-items: center; justify-content: center; color: #A69E8B; font-size: 15px; }
+.bb.hot { color: #E9B44A; }
+.sym { display: inline-block; width: 15px; height: 15px; background-color: currentColor; -webkit-mask: var(--u) center/contain no-repeat; mask: var(--u) center/contain no-repeat; }
+/* lo spazio delle app e le linee guida */
+.area { position: absolute; z-index: 1; border: 1px dashed rgba(255,255,255,.0); transition: border-color .2s; }
+.guides .area { border-color: rgba(255,255,255,.35); }
+.gl { position: absolute; z-index: 2; pointer-events: none; opacity: 0; transition: opacity .2s; font-size: 10.5px; color: rgba(255,255,255,.8); }
+.guides .gl { opacity: 1; }
+.gl.h { left: 0; right: 0; border-top: 1px dashed rgba(255,214,120,.65); }
+.gl.h span { position: absolute; left: 6px; top: -16px; }
+.veil { position: absolute; inset: 0; z-index: 5; background: rgba(6,7,10,.45); opacity: 0; pointer-events: none; transition: opacity .2s; }
+.veil.on { opacity: 1; pointer-events: auto; transition: opacity .3s; }
+/* le finestre */
+.w { position: absolute; z-index: 7; color: #F2EDE1; border: .5px solid rgba(255,214,120,.1); border-radius: 18px;
+  background: radial-gradient(90% 70% at 0% 0%, rgba(236,180,80,.06), rgba(236,180,80,0) 60%), linear-gradient(180deg,#1C1812,#13100A);
+  box-shadow: 0 22px 54px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.06); visibility: hidden; }
+.w h3 { margin: 0 0 2px; font-size: 14px; } .w .s { color: #A69E8B; font-size: 12px; }
+.sheet { width: 330px; padding: 16px; }
+.sheet .row { display: flex; justify-content: space-between; padding: 7px 11px; background: rgba(255,236,190,.045); font-size: 12.5px; }
+.sheet .row:first-of-type { border-radius: 11px 11px 0 0; margin-top: 10px; } .sheet .row:last-of-type { border-radius: 0 0 11px 11px; }
+.sheet .row + .row { border-top: .5px solid rgba(255,226,160,.09); } .sheet .row i { font-style: normal; color: #A69E8B; }
+.sheet .bt { display: flex; justify-content: flex-end; gap: 7px; margin-top: 12px; }
+.b { padding: 4px 14px; border-radius: 8px; background: rgba(255,236,190,.07); box-shadow: inset 0 0 0 .5px rgba(255,226,160,.12); cursor: pointer; font-size: 12.5px; }
+.b.pri { color: #1C1505; background: #DDA23A; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,.28); }
+.toast { width: 270px; padding: 10px 12px; display: flex; gap: 9px; align-items: center; }
+.toast .g { width: 28px; height: 28px; border-radius: 8px; background: #EA4335; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; flex: none; }
+.toast .t { font-weight: 600; font-size: 12.5px; }
+.pal { width: 440px; max-width: calc(100% - 40px); padding: 0; overflow: hidden; }
+.pal .f { padding: 11px 14px; font-size: 17px; color: #A69E8B; border-bottom: .5px solid rgba(255,226,160,.1); }
+.pal .it { display: flex; gap: 9px; padding: 7px 14px; font-size: 13px; } .pal .it.on { background: rgba(221,162,58,.9); color: #1C1505; margin: 4px 6px; border-radius: 8px; padding: 6px 8px; }
+.pal .it .k { margin-left: auto; color: #A69E8B; } .pal .it.on .k { color: rgba(28,21,5,.7); }
+.cap { position: absolute; left: 14px; bottom: 8px; color: rgba(255,255,255,.8); font-size: 11px; z-index: 8; }
+.side .cap { right: 160px; }
+</style></head><body><div class="wrap">
+<h1>Tabby — come si aprono le finestre</h1>
+<p class="lead">Scegli come arrivano i fogli (es. Concentrazione), poi apri le finestre con i pulsanti. Le linee tratteggiate mostrano le posizioni precise: lo spazio delle app (senza la barra), il centro ottico al 45% e il terzo alto di Spotlight. I menu sono di macOS: si aprono attaccati al tasto con l'animazione di macOS.</p>
+<div class="ctl" id="pos"><span class="lbl">Tabby:</span><button data-p="top" class="on">in alto</button><button data-p="side">a destra</button></div>
+<div class="ctl" id="mode"><span class="lbl">I fogli arrivano:</span><button data-m="center">1 · dal centro</button><button data-m="origin">2 · dal tasto</button><button data-m="drop" class="on">3 · scendono dalla barra</button></div>
+<div class="ctl" id="open"><span class="lbl">Apri:</span><button class="act" data-o="sheet">Foglio (da ⚡︎ → Concentrazione)</button><button class="act" data-o="toast">Avviso</button><button class="act" data-o="pal">Pannello «Tabby…» / ricerca</button><button data-o="guides">Linee guida</button></div>
+<div class="hint" id="hint"></div>
+<div class="mac top guides" id="mac">
+  <div class="area" id="area"></div>
+  <div class="gl h" id="g45"><span>centro ottico · 45%</span></div>
+  <div class="gl h" id="g33"><span>terzo alto · Spotlight</span></div>
+  <div class="veil" id="veil"></div>
+  <div class="bar" id="bar">
+    <div class="cat"><svg viewBox="0 0 24 24"><path d="M4 3l4 4.2c1.2-.4 2.6-.7 4-.7s2.8.3 4 .7L20 3v8.5c0 4.9-3.6 9-8 9s-8-4.1-8-9V3zm5 9.5a1.2 1.2 0 100 2.4 1.2 1.2 0 000-2.4zm6 0a1.2 1.2 0 100 2.4 1.2 1.2 0 000-2.4z"/></svg></div>
+    <div class="tab on"><span class="ic" style="background:#4A154B">S</span>Slack</div>
+    <div class="tab"><span class="ic" style="background:#111">N</span>Notion</div>
+    <div class="tab"><span class="ic" style="background:#EA4335">M</span>Gmail</div>
+    <div class="sp"></div>
+    <div class="btns"><div class="bb"><span class="sym" style="--u:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGIAAABMCAYAAACWA2JIAAAAAXNSR0IArs4c6QAAAGxlWElmTU0AKgAAAAgABAEaAAUAAAABAAAAPgEbAAUAAAABAAAARgEoAAMAAAABAAIAAIdpAAQAAAABAAAATgAAAAAAAACQAAAAAQAAAJAAAAABAAKgAgAEAAAAAQAAAGKgAwAEAAAAAQAAAEwAAAAAExTkigAAAAlwSFlzAAAWJQAAFiUBSVIk8AAABY1JREFUeAHtXEuPFUUUviCiAoMaAuEVMuBj4SBi+AskRAYCJLghMcadGxa6YGEUTIx/wEdcuhFUYuICFQKJQgYIjxUJQQHNiARimCCMgqKA+H0ynfScruqqutOn+kLOST7urarTp776TvVjuurS6ZiZAqaAKWAKmAKmgClgCoQVmBR2qXgsRc0aYAB4HJgCaNi/CDoKnAX2AgeBFCM/8iTfHDx/RD/kOQSoWh+ifwrcaQkc4EIgZDPgsB1oi+ch9L0oRLLbdp45e4C2Blf0exocOCF8Rp5fA4V/W588i2f6SE6kfl0PDK4Q9c2agfBSVPi1/bmthmfXTTt7aIDf14yizUunTPyZGp6Vptib9TCO7BdH70L5Q+C6qG+q+BACbQReFQE54EeBP0Q9i7xhPiHqv0H5feCaqG+qOBWB1gObHQH5kHDVUd91FcWWGX+s62jxB3KinHf0vcQT4neH7yyPb9PVnKxSo6diO5kc6ThN+P2JcqOZFvGLIgd2oSiUPiWfoknW/42Gy0Wj8udFR3zJx+Fytyo2Ed4ALTX4Lqm++pZodqL53KuJaEtYtX4tEWrSpgW2RKTppeZtiVCTNi2wJSJNLzVvS4SatGmBLRFpeql5WyLUpE0LbIlI00vN2xKhJm1aYEtEml5q3pYINWnTAlsi0vRS875XE8HX4y7z1bt8c9RF84lNBNcfysb37LkWhhaUOx77LvkULrKeq3y5FobmFyRKn5JPqWn819g9SZdwWP/4Qzsfo/wBoLUE+TBivwjILTScZSOAy8hT7vIgz/cA19KqK0ZqHZO9Aeh3HEg+jdrniEYBegGnaka2o0c4Uidu/Ym22EvTJ9ER9R3ruNS16TMb34MKFy757QbaPiN+AAfu5PMZeX4FtM2TW2lUNphx4Lz2fga0NciD6FveL1BVMSaqzUvUYfSfvOWSMyjVluGAtcBSgPt2HgQ07DaCjgKcXXuBA0CKPQtn8uRnDp7FZun96M/MFDAFTAFTwBQwBe43Bbp5anoAIjwPFE9NU5RE4U+3uL+WTyPHgBtAipHncqB4atLkyae7gudfKSS79X0FB/4C5P5b4gr63ApQ3Bh7GU5t8OTEeRvQSjpC3+0gdwJkf1/8z6T+n7fQLI/LXf4SHLq52tSPDK3PAbxU5B6Qq79NNWx5GeIfgq7jcte9VMOz66aPemRwFHOoZhR8LZ9bcF9/fNURbbGnz0lE5O+Wy3YOhZ2A5k+3ViM+z8ay/YMCX6jxRyjSTqCCr2DKdh4FvsbXWjeZitirgBVA2W6h0AekPmSUY1S+86lAZv7pilfzFXyBxxu17Nv3Uu03h+8zzdOqRHwENZcdfS+ueE6wQt4fsjyijXE+7higPDuL4d0Uvjx7ctkRdCQnjDw7vVxiF4bkJYyJyWW8+Urz8Zb1vcpTjqcjiVccrCKPApaIPDoHe7FEBCXK42CJyKNzsBdLRFCiPA6WiDw6B3uxRAQlyuNgicijc7AXS0RQojwOlog8Ogd7sUQEJcrjYInIo3OwF0tEUKI8DpaIPDoHe4lNhHyvz1/JaG0+lqS5yiXNtTpHH8mTHLmClsO4iCXNx1P6RZd/hadc9NiCOs1tI5wkGwC5KEUeswGX8f//kzzfQJ3mpOFazSDg2rQwF/VRJhd8fAftQ8NKRyM7b3RNttQHZ7JLQE6KeSW/8tc9KHD9WJomT99ZNwIScyQRXzl2Ru9CAFciuOFrui+4Uj25+IxtrkT0Gk8f/2A9r3/DgDztc5e5E+PJGracFD/1AE/ubFHbXMHNWz+3OEjuJHkBCNkAHNqcNPxPgAdDJCfazieY14HvgBFA7ppo8gzhdZ3bY44C7wC++wKaKkaerwHfApeAHDyPoZ93gfmAmSlgCpgCpoApYArcbwr8B1oQU0NbmYziAAAAAElFTkSuQmCC)"></span></div><div class="bb hot" id="bolt"><span class="sym" style="--u:url(data:image/png;base64,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)"></span></div><div class="bb"><span class="sym" style="--u:url(data:image/png;base64,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)"></span></div></div>
+  </div>
+  <div class="w sheet" id="sheet"><h3>Concentrazione</h3><div class="s">Le altre app si nascondono e tornano alla fine.</div>
+    <div class="row">Durata<i>50 min</i></div><div class="row">Schede da tenere<i>2 scelte</i></div><div class="row">Non disturbare<i>Si attiva da solo</i></div>
+    <div class="bt"><span class="b" data-x>Annulla</span><span class="b pri" data-x>Inizia</span></div></div>
+  <div class="w toast" id="toast"><div class="g">M</div><div><div class="t">Gmail è già aperto in un'altra finestra</div><div class="s">Lascia · Vai a quella · Chiudi questa</div></div></div>
+  <div class="w pal" id="pal"><div class="f">Cerca in Tabby…</div><div class="it on">Impostazioni<span class="k">posizione, finestre</span></div><div class="it">Design<span class="k">aspetto, temi</span></div><div class="it">Documentazione</div><div class="it">Automazione</div><div class="it">Kat</div></div>
+  <div class="cap" id="cap"></div>
+</div>
+</div>
+<script>
+var st = {p: 'top', m: 'drop'};
+var mac = document.getElementById('mac');
+var IN = 'cubic-bezier(.3,1.45,.45,1)', OUT = 'cubic-bezier(.4,0,1,1)';
+var HINT = {center: 'Compare al centro ingrandendosi appena (come le finestre di avviso di macOS).',
+            origin: 'Esce dal tasto da cui l\'hai aperta (qui ⚡︎) e si allarga fino al suo posto.',
+            drop: 'Scivola giù dalla barra di Tabby, come i fogli delle app Mac scendono dalla barra del titolo.'};
+function area() {   // lo spazio delle app (senza la barra), in coordinate dello schermo finto
+  var W = mac.clientWidth, H = mac.clientHeight;
+  return st.p === 'top' ? {x: 0, y: 38, w: W, h: H - 38} : {x: 0, y: 0, w: W - 150, h: H};
+}
+function layout() {
+  mac.classList.toggle('top', st.p === 'top'); mac.classList.toggle('side', st.p === 'side');
+  var a = area(), ar = document.getElementById('area');
+  ar.style.left = a.x + 8 + 'px'; ar.style.top = a.y + 8 + 'px'; ar.style.width = a.w - 16 + 'px'; ar.style.height = a.h - 16 + 'px';
+  var g45 = document.getElementById('g45'), g33 = document.getElementById('g33');
+  g45.style.top = (a.y + a.h * .45) + 'px'; g33.style.top = (a.y + a.h / 3) + 'px';
+  g45.style.right = g33.style.right = (st.p === 'side' ? 150 : 0) + 'px';
+  document.querySelectorAll('#pos button').forEach(function (b) { b.classList.toggle('on', b.dataset.p === st.p); });
+  document.querySelectorAll('#mode button').forEach(function (b) { b.classList.toggle('on', b.dataset.m === st.m); });
+  document.getElementById('hint').textContent = HINT[st.m];
+}
+// il posto finale di ogni finestra
+function target(el) {
+  var a = area(), w = el.offsetWidth, h = el.offsetHeight;
+  if (el.id === 'sheet') return {x: a.x + (a.w - w) / 2, y: a.y + a.h * .45 - h / 2};
+  if (el.id === 'pal') return {x: a.x + (a.w - w) / 2, y: a.y + a.h / 3 - 40};
+  if (el.id === 'toast') return st.p === 'top' ? {x: a.x + a.w - w - 12, y: a.y + 8} : {x: a.x + a.w - w - 10, y: a.y + 10};
+}
+function boltRect() { var b = document.getElementById('bolt').getBoundingClientRect(), m = mac.getBoundingClientRect(); return {x: b.left - m.left, y: b.top - m.top, w: b.width, h: b.height}; }
+function show(id) {
+  var el = document.getElementById(id);
+  el.style.transition = 'none'; el.style.visibility = 'visible'; el.style.opacity = 0;
+  var t = target(el); el.style.left = t.x + 'px'; el.style.top = t.y + 'px';
+  var from;
+  if (id === 'toast') from = st.p === 'top' ? 'translateY(-14px) scale(.98)' : 'translateX(16px) scale(.98)';     // dalla barra
+  else if (id === 'pal') from = 'translateY(-10px) scale(.97)';
+  else if (st.m === 'center') from = 'scale(.94)';
+  else if (st.m === 'origin') { var b = boltRect(), w = el.offsetWidth, h = el.offsetHeight;
+    var dx = (b.x + b.w / 2) - (t.x + w / 2), dy = (b.y + b.h / 2) - (t.y + h / 2); from = 'translate(' + dx + 'px,' + dy + 'px) scale(.12)'; }
+  else from = st.p === 'top' ? 'translateY(' + (-(t.y - 38) - el.offsetHeight * .6) + 'px) scaleY(.9)' : 'translateX(' + (area().w - t.x) * .55 + 'px) scaleX(.9)';
+  el.style.transformOrigin = (id === 'sheet' && st.m === 'drop') ? (st.p === 'top' ? 'top center' : 'center right') : 'center';
+  el.style.transform = from;
+  void el.offsetWidth;
+  el.style.transition = 'transform .38s ' + IN + ', opacity .22s ease-out';
+  el.style.transform = 'none'; el.style.opacity = 1;
+  if (id !== 'toast') document.getElementById('veil').classList.add('on');
+  if (id === 'toast') { clearTimeout(window.tt); window.tt = setTimeout(function () { hide('toast'); }, 3200); }
+  document.getElementById('cap').textContent = id === 'sheet' ? 'Foglio: al centro dello spazio delle app, centro ottico al 45%' : id === 'pal' ? 'Pannello: in alto, al terzo dello spazio (come Spotlight)' : 'Avviso: sotto la barra, a destra (di lato: in alto accanto alla barra)';
+}
+function hide(id) {
+  var el = document.getElementById(id); if (el.style.visibility !== 'visible') return;
+  el.style.transition = 'transform .2s ' + OUT + ', opacity .2s'; el.style.opacity = 0;
+  el.style.transform = id === 'toast' ? (st.p === 'top' ? 'translateY(-8px)' : 'translateX(10px)') : (st.m === 'drop' && id === 'sheet' ? (st.p === 'top' ? 'translateY(-16px)' : 'translateX(16px)') : 'scale(.97)');
+  setTimeout(function () { el.style.visibility = 'hidden'; }, 210);
+}
+function closeAll() { ['sheet', 'pal'].forEach(hide); document.getElementById('veil').classList.remove('on'); }
+document.getElementById('pos').onclick = function (e) { if (e.target.dataset.p) { closeAll(); hide('toast'); st.p = e.target.dataset.p; layout(); } };
+document.getElementById('mode').onclick = function (e) { if (e.target.dataset.m) { st.m = e.target.dataset.m; layout(); } };
+document.getElementById('open').onclick = function (e) {
+  var o = e.target.dataset.o; if (!o) return;
+  if (o === 'guides') { mac.classList.toggle('guides'); e.target.classList.toggle('on', mac.classList.contains('guides')); return; }
+  if (o === 'toast') { show('toast'); return; }
+  closeAll(); setTimeout(function () { show(o); }, 60);
+};
+document.getElementById('veil').onclick = closeAll;
+document.querySelectorAll('[data-x]').forEach(function (b) { b.onclick = closeAll; });
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeAll(); });
+window.addEventListener('resize', layout);
+document.querySelector('[data-o=guides]').classList.add('on');
+layout();
+</script></body></html>
