@@ -127,7 +127,7 @@ Scelta di Daniele: **Morbidi · Compatto · Profonde · Elastiche**.
 
 | Cosa | Valore |
 |---|---|
-| **Angoli** (morbidi, come macOS di oggi) | barra 14 (solo dal lato delle app) · scheda 9 · menu 11 (voce 6) · finestra/foglio/avviso 18 · riquadro interno 11 · pulsante 8 · icona piccola 5 |
+| **Angoli** (morbidi, come macOS di oggi) | barra 14 (solo dal lato delle app) · scheda 9 · menu, fogli, avvisi, pannelli 12 come i menu di macOS (voce 6; vedi 3.3) · pulsante 6 · icona piccola 5 |
 | **Spazio** (compatto) | barra alta 38 (in alto) · scheda alta 28, margine interno 8 · tra le schede 1 · voci di menu 3 sopra/sotto · righe dei riquadri 7 · margine interno dei fogli 16 |
 | **Ombre** (profonde) | menu, fogli, avvisi: `0 22 54` nero al 55% + filo di luce interno in alto (bianco 6%) |
 | **Animazioni** (elastiche) | durata 0,38 s, curva con un piccolo rimbalzo finale (`0.3, 1.45, 0.45, 1`; in Swift una molla con smorzamento ~0,72) |
@@ -238,3 +238,23 @@ margine 16; simbolo dell'azione in alto nel colore del tema (rosso se distruttiv
 una riga di spiegazione, al massimo due pulsanti. Invio = pulsante evidenziato, Esc = Annulla;
 se distruttiva, pulsante rosso e Invio non la fa (serve il clic). Entra col rimbalzo (0,38 s),
 esce veloce (0,2 s).
+
+### 3.3 Come si aprono le finestre, e il loro aspetto ✅ (8/11/2026)
+Prototipo: `docs/design-aperture.html`.
+- **Menu**: di macOS, attaccati al tasto, con l'animazione di macOS.
+- **Fogli e domande**: arrivano **dal centro** (compaiono ingrandendosi appena, da 94%, col
+  rimbalzo elastico 0,38 s; escono in 0,2 s). Posizione: al centro dello **spazio delle app**
+  (senza la barra di Tabby), un po' sopra la metà — **centro ottico al 45%** dall'alto.
+- **Pannello «Tabby…» e ricerca ⌃⌥F**: in alto, a **un terzo** dello spazio delle app, come
+  Spotlight; arrivano con una piccola discesa.
+- **Avvisi**: sotto la barra, a destra (con Tabby di lato: in alto, accanto alla barra), lontani
+  dalle notifiche di macOS; scivolano dalla barra e se ne vanno da soli.
+- **Il velo**: quando si apre un foglio, una domanda, il pannello o la ricerca, **lo sfondo si
+  scurisce come con Spotlight** — un velo solo, uguale per tutta Tabby (scuro ~78%; la barra di
+  Tabby resta sopra). Gli avvisi non hanno velo.
+- **Aspetto: identico ai menu di macOS** (Daniele) — fogli, pannelli, avvisi e domande usano lo
+  stesso vetro dei menu (scuro in Notte, come il Mac in Nativo), angoli 12, ombra dei menu, righe
+  alte 22 con margine 10, titoli di sezione e separatori dei menu, scelta col colore principale
+  del Mac. Pulsanti piccoli come quelli di macOS (principale nel colore principale del Mac). Il
+  tema di Tabby si vede sulla barra, sui simboli e sulla sfera, non sullo sfondo delle finestre.
+  *(Sostituisce gli angoli 18 e gli sfondi del tema per le finestre decisi al punto 2.3.)*
