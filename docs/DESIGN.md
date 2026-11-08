@@ -85,3 +85,13 @@ del Mac. Una scelta tra 5 caratteri (SF Pro, SF Pro Rounded, un graziato stile C
   medio per la scheda attiva, grassetto per i titoli). Il dettaglio va con i componenti.
 - I numeri che cambiano (tempo della Concentrazione, «3 di 5») a cifre di uguale larghezza,
   così non "ballano".
+
+### 2.2 Icone ✅ (8/11/2026)
+- **Tasti e azioni di Tabby: i simboli di Apple (SF Symbols)**, gli stessi di macOS, disegnati
+  per stare con SF Pro e che si adattano da soli a grandezza e peso. Proposta di partenza
+  (da confermare con i componenti): dividi `rectangle.split.2x1`, Lampi `bolt.fill`,
+  impostazioni `gearshape`, nuova app `plus`, chiudi `xmark`, Concentrazione `moon.fill`,
+  ricerca `magnifyingglass`, cartella `folder`, batteria `battery.75`, scambia
+  `arrow.left.arrow.right`, Scrivania `menubar.dock.rectangle`.
+- **Il gatto è l'unico disegno di Tabby**: il marchio (barra, sfera, icona dell'app).
+- **Icone delle app e loghi dei siti**: quelli veri, come oggi.
