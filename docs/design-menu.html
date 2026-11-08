@@ -55,6 +55,20 @@ h1 { font-size: 20px; margin: 0 0 4px; } .lead { margin: 0 0 14px; color: #6E6E7
 .pal span { display: flex; width: 34px; height: 34px; margin: 0 auto 3px; border-radius: 9px; align-items: center; justify-content: center; }
 .m.l .pal span { background: rgba(0,0,0,.06); } .m.d .pal span { background: rgba(255,255,255,.09); }
 .pal div:hover span { background: var(--sel); } .pal div:hover .sym { background-color: #fff; }
+/* firme */
+kbd { font: 500 10.5px -apple-system, system-ui; min-width: 15px; height: 16px; padding: 0 4px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; margin-left: 2px; }
+.m.l kbd { background: rgba(0,0,0,.07); box-shadow: inset 0 -1px 0 rgba(0,0,0,.12); color: #3A3A3C; }
+.m.d kbd { background: rgba(255,255,255,.1); box-shadow: inset 0 -1px 0 rgba(0,0,0,.35); color: #D8D8DC; }
+.mi:hover:not(.dis) kbd, .mi.hl kbd { background: rgba(255,255,255,.22); color: #fff; box-shadow: none; }
+.kk { margin-left: auto; display: inline-flex; opacity: 1 !important; }
+.hd { display: flex; align-items: center; gap: 8px; padding: 6px 10px 7px; }
+.hd svg { width: 15px; height: 15px; fill: var(--acc); flex: none; }
+.hd b { font-weight: 600; font-size: 12.5px; } .hd span { opacity: .55; font-size: 12px; }
+.chip { margin-left: auto; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 8px; color: var(--acc); box-shadow: inset 0 0 0 1px var(--acc); }
+.mi:hover .chip, .mi.hl .chip { color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.7); }
+.stack { display: inline-flex; margin-left: auto; } .stack .ai { width: 14px; height: 14px; border-radius: 4px; margin-left: -4px; box-shadow: 0 0 0 1.5px var(--stackRing); }
+.pal .on-dot { position: absolute; }
+.pal span { position: relative; } .pal span i { position: absolute; right: 2px; bottom: 2px; width: 7px; height: 7px; border-radius: 50%; background: #34C759; box-shadow: 0 0 0 1.5px var(--stackRing); }
 .cap { width: 100%; text-align: center; color: rgba(255,255,255,.8); font-size: 11.5px; margin-top: -4px; }
 .notes { margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 @media (max-width: 860px) { .notes { grid-template-columns: 1fr; } }
@@ -66,6 +80,7 @@ h1 { font-size: 20px; margin: 0 0 4px; } .lead { margin: 0 0 14px; color: #6E6E7
 <div class="ctl" id="which"><span class="lbl">Menu:</span><button data-w="bolt" class="on">⚡︎ Lampi</button><button data-w="cat">Il gatto</button><button data-w="tab">Tasto destro su una scheda</button><button data-w="gear">Impostazioni</button></div>
 <div class="ctl" id="look"><span class="lbl">Aspetto:</span><button data-l="notte" class="on">Notte (tema Tabby)</button><button data-l="chiaro">Nativo · Mac chiaro</button><button data-l="scuro">Nativo · Mac scuro</button></div>
 <div class="ctl" id="acc"><span class="lbl">Colore principale del Mac:</span><button data-a="#0A84FF" class="on">Blu</button><button data-a="#BF5AF2">Viola</button><button data-a="#FF9F0A">Arancione</button><button data-a="#8E8E93">Grafite</button></div>
+<div class="ctl" id="sig"><span class="lbl">Firme di Tabby:</span><button data-s="kc" class="on">Tasti veri</button><button data-s="live" class="on">Stato vivo</button><button data-s="head" class="on">Intestazione</button><button data-s="opt">Tieni premuto ⌥</button></div>
 <div class="cols">
   <div class="col"><h2>Oggi <small>· menu standard, così come sono</small></h2><div class="desk" id="d1"></div></div>
   <div class="col"><h2>Ritoccati per Tabby <small>· sempre menu veri di macOS</small></h2><div class="desk" id="d2"></div></div>
@@ -78,7 +93,7 @@ h1 { font-size: 20px; margin: 0 0 4px; } .lead { margin: 0 0 14px; color: #6E6E7
     <li><b>Un simbolo per ogni azione</b> (le icone scelte), le app con la loro icona; i simboli di Tabby col colore del tema.</li>
     <li><b>Numerini</b> come in Mail (es. notifiche delle schede nascoste).</li>
     <li><b>Riga di icone in cima</b> per le cose più usate (i Lampi), come le etichette del Finder.</li>
-    <li>Testi più corti: niente «…» superflui, nomi coerenti.</li></ul></div>
+    <li>Testi più corti: niente «…» superflui, nomi coerenti.</li></ul><b style="display:block;margin:10px 0 4px">Le firme di Tabby (accendile e spegnile in alto)</b><ul><li><b>Tasti veri</b>: le scorciatoie come piccoli tasti.</li><li><b>Stato vivo</b>: puntino sui Lampi aperti, «50 min» della Concentrazione in corso, le app dentro ogni cartella, i numerini.</li><li><b>Intestazione</b>: il gatto e il contesto in cima («Notion · 3 finestre»).</li><li><b>Tieni premuto ⌥</b>: le voci diventano le versioni "potenti" (Chiudi la finestra → Chiudi l'app).</li></ul></div>
   <div><b>Cosa non si cambia (resta di macOS)</b><ul>
     <li>Il colore della voce sotto il mouse: è il colore principale del Mac (provalo qui sopra).</li>
     <li>Angoli, ombra, vetro e animazione di apertura del menu.</li>
@@ -103,21 +118,41 @@ var OLD = {
   gear: [{t: 'Posizione di Tabby', sub: 1}, {t: 'App preferite', sub: 1}, {t: 'Finestre separate', sub: 1}, {t: 'Comportamento', sub: 1}, {t: 'Scorciatoie   ⌃⌥/'}, {t: 'Cartelle', sub: 1}, {t: 'Mostra il file del Memo nel Finder'}, 'S', {t: 'Chiudi tutte le app…'}, {t: 'Chiudi Tabby (resta solo il cerchio)'}, 'S', {t: 'Ricarica Tabby'}, {t: 'Apri la console di Hammerspoon'}]
 };
 // --- ritoccati ---
+var F = {kc: true, live: true, head: true, opt: false};
+var CAT = '<svg viewBox="0 0 24 24"><path d="M4 3l4 4.2c1.2-.4 2.6-.7 4-.7s2.8.3 4 .7L20 3v8.5c0 4.9-3.6 9-8 9s-8-4.1-8-9V3zm5 9.5a1.2 1.2 0 100 2.4 1.2 1.2 0 000-2.4zm6 0a1.2 1.2 0 100 2.4 1.2 1.2 0 000-2.4z"/></svg>';
+function K(k) {   // la scorciatoia: testo come in macOS, oppure tasti veri
+  if (!k) return '';
+  if (!F.kc || k.indexOf('.') > 0) return k;
+  var keys = k.match(/⌃|⌥|⇧|⌘|⇥|[^⌃⌥⇧⌘⇥]+/g);
+  return '<span class="kk">' + keys.map(function (x) { return '<kbd>' + x + '</kbd>'; }).join('') + '</span>';
+}
+function it2(o) {
+  var right = '';
+  if (o.chip && F.live) right = '<span class="chip">' + o.chip + '</span>';
+  else if (o.stack && F.live) right = '<span class="stack">' + o.stack + '</span>';
+  else if (o.k) right = F.kc && o.k.indexOf('.') < 0 ? K(o.k) : '<span class="k">' + o.k + '</span>';
+  return '<div class="mi' + (o.hl ? ' hl' : '') + '">' + (o.ck !== undefined ? '<span class="ck">' + (o.ck ? '✓' : '') + '</span>' : '') + (o.ic || '') + '<span>' + o.t + '</span>' +
+    right + (o.badge && F.live ? '<span class="badge"' + (right ? ' style="margin-left:6px"' : '') + '>' + o.badge + '</span>' : '') + (o.sub ? '<span class="ar">▶</span>' : '') + '</div>';
+}
+function H(b, t) { return F.head ? '<div class="hd">' + CAT + '<b>' + b + '</b><span>' + t + '</span></div>' + SEP : ''; }
 function NEW(w) {
-  if (w === 'bolt') return '<div class="pal">' + [['note.text','Memo'],['plus.app','Calcol.'],['clock.arrow.2.circlepath','Promem.'],['command','Termin.']].map(function (x, i) {
-      var c = ['#FFD60A','#8E8E93','#FF453A','#333'][i];
-      return '<div><span>' + (i === 0 ? S('note.text', 1) : A(c, '')) + '</span>' + x[1] + '</div>'; }).join('') + '</div>' + SEP +
-    T('Strumenti') + it({t: 'Concentrazione', ic: S('target', 1)}) + it({t: 'Cerca nelle finestre', ic: S('text.magnifyingglass', 1), k: '⌃⌥F', hl: 1}) + SEP +
-    T('App') + it({t: 'Claude · chat rapida', ic: A('#D97757',''), k: '⌃⌥L'}) + it({t: 'Notion · cerca', ic: A('#111','N'), k: '⌃⌥N'}) + it({t: 'Tutte le App', ic: S('ellipsis'), sub: 1}) + SEP +
-    it({t: 'Personalizza i Lampi', ic: S('slider.horizontal.3'), sub: 1});
-  if (w === 'cat') return it({t: 'Torna a Notion', ic: S('arrow.uturn.backward', 1), k: '⌃⌥⇥'}) + it({t: 'Nuova app', ic: S('plus.app', 1)}) + it({t: 'Scrivania', ic: S('macwindow', 1), k: '⌃⌥0', hl: 1}) + SEP +
-    T('Cartelle') + it({t: 'Lavoro', ic: S('square.stack.3d.up'), k: '⌃⌥⇧1', badge: '3'}) + it({t: 'Daily', ic: S('square.stack.3d.up'), k: '⌃⌥⇧2'});
-  if (w === 'tab') return it({t: 'Rinomina', ic: S('square.and.pencil', 1), hl: 1}) + it({t: 'Torna al nome di prima', ic: S('arrow.uturn.backward')}) + SEP +
-    T('Mostra come') + it({t: 'Gmail', ic: A('#EA4335','M'), ck: 1, k: 'mail.google.com'}) + it({t: 'Drive', ic: A('#1FA463','D'), ck: 0, k: 'drive.google.com'}) + SEP +
-    it({t: 'Chiudi la finestra', ic: S('xmark.circle.fill'), k: '⌃⌥W'});
-  if (w === 'gear') return it({t: 'Apri Tabby', ic: S('slider.horizontal.3', 1), k: '⌘,', hl: 1}) + it({t: 'Scorciatoie', ic: S('command', 1), k: '⌃⌥/'}) + SEP +
-    T('Posizione') + it({t: 'In alto', ck: 1}) + it({t: 'A destra', ck: 0}) + it({t: 'A sinistra', ck: 0}) + it({t: 'In basso', ck: 0}) + SEP +
-    it({t: 'Chiudi tutte le app…', ic: S('xmark.circle.fill')}) + it({t: 'Metti in pausa Tabby', ic: S('macwindow')});
+  var O = F.opt;
+  if (w === 'bolt') return H('Lampi', '1 aperto') + '<div class="pal">' + [['Memo','#FFD60A',1],['Calcol.','#8E8E93',0],['Promem.','#FF453A',0],['Termin.','#333',0]].map(function (x, i) {
+      return '<div><span>' + (i === 0 ? S('note.text', 1) : A(x[1], '')) + (x[2] && F.live ? '<i></i>' : '') + '</span>' + x[0] + '</div>'; }).join('') + '</div>' + SEP +
+    T('Strumenti') + it2(O ? {t: 'Concentrazione rapida · 25 min', ic: S('target', 1)} : {t: 'Concentrazione', ic: S('target', 1), chip: '50 min'}) +
+    it2({t: 'Cerca nelle finestre', ic: S('text.magnifyingglass', 1), k: '⌃⌥F', hl: 1}) + SEP +
+    T('App') + it2({t: 'Claude · chat rapida', ic: A('#D97757',''), k: '⌃⌥L'}) + it2({t: 'Notion · cerca', ic: A('#111','N'), k: '⌃⌥N'}) + it2({t: 'Tutte le App', ic: S('ellipsis'), sub: 1}) + SEP +
+    it2({t: 'Personalizza i Lampi', ic: S('slider.horizontal.3'), sub: 1});
+  if (w === 'cat') return H('Casa', 'sei su Slack') + it2({t: 'Torna a Notion', ic: S('arrow.uturn.backward', 1), k: '⌃⌥⇥'}) +
+    it2(O ? {t: 'Nuova finestra di Slack', ic: S('plus.app', 1), k: '⌘N'} : {t: 'Nuova app', ic: S('plus.app', 1)}) + it2({t: 'Scrivania', ic: S('macwindow', 1), k: '⌃⌥0', hl: 1}) + SEP +
+    T('Cartelle') + it2({t: 'Lavoro', ic: S('square.stack.3d.up'), k: '⌃⌥⇧1', badge: '3', stack: A('#4A154B','S') + A('#111','N') + A('#EA4335','M')}) +
+    it2({t: 'Daily', ic: S('square.stack.3d.up'), k: '⌃⌥⇧2', stack: A('#D97757','') + A('#0078D4','W')});
+  if (w === 'tab') return H('Notion', '3 finestre') + it2({t: 'Rinomina', ic: S('square.and.pencil', 1), hl: 1}) + it2({t: 'Torna al nome di prima', ic: S('arrow.uturn.backward')}) + SEP +
+    T('Mostra come') + it2({t: 'Gmail', ic: A('#EA4335','M'), ck: 1, k: 'mail.google.com'}) + it2({t: 'Drive', ic: A('#1FA463','D'), ck: 0, k: 'drive.google.com'}) + SEP +
+    it2(O ? {t: 'Chiudi l\'app Notion', ic: S('xmark.circle.fill'), k: '⌘Q'} : {t: 'Chiudi la finestra', ic: S('xmark.circle.fill'), k: '⌃⌥W'});
+  if (w === 'gear') return H('Tabby', 'Notte · tema Tabby') + it2({t: 'Tabby…', ic: S('slider.horizontal.3', 1), k: '⌃⌥,', hl: 1}) + it2({t: 'Scorciatoie', ic: S('command', 1), k: '⌃⌥/'}) + SEP +
+    T('Posizione') + it2({t: 'In alto', ck: 1}) + it2({t: 'A destra', ck: 0}) + it2({t: 'A sinistra', ck: 0}) + it2({t: 'In basso', ck: 0}) + SEP +
+    it2({t: 'Chiudi tutte le app…', ic: S('xmark.circle.fill')}) + it2(O ? {t: 'Esci da Tabby', ic: S('macwindow'), k: '⌘Q'} : {t: 'Metti in pausa Tabby', ic: S('macwindow')});
 }
 var st = {w: 'bolt', l: 'notte', a: '#0A84FF'};
 function render() {
@@ -129,9 +164,12 @@ function render() {
   var oldCls = 'm ' + (st.l === 'scuro' ? 'd' : 'l');
   document.getElementById('d1').innerHTML = '<div class="' + oldCls + '">' + old + '</div><div class="cap">' + (st.l === 'notte' ? 'Tabby è scura, ma il menu segue il Mac (qui chiaro)' : '') + '</div>';
   document.getElementById('d2').innerHTML = '<div class="' + cls + '">' + NEW(st.w) + '</div><div class="cap">' + (st.l === 'notte' ? 'In Notte il menu è scuro come Tabby; i simboli nel colore del tema' : 'In Nativo: come il Mac; i simboli nel colore principale') + '</div>';
+  document.querySelectorAll('#sig button').forEach(function (b) { b.classList.toggle('on', !!F[b.dataset.s]); });
+  ['d1','d2'].forEach(function (id) { document.getElementById(id).style.setProperty('--stackRing', st.l === 'chiaro' ? 'rgba(240,240,242,.95)' : 'rgba(38,38,40,.95)'); });
   [['which','w'],['look','l'],['acc','a']].forEach(function (p) {
     document.querySelectorAll('#' + p[0] + ' button').forEach(function (b) { b.classList.toggle('on', b.dataset[p[1]] === st[p[1]]); }); });
 }
+document.getElementById('sig').onclick = function (e) { if (e.target.dataset.s) { F[e.target.dataset.s] = !F[e.target.dataset.s]; render(); } };
 document.getElementById('which').onclick = function (e) { if (e.target.dataset.w) { st.w = e.target.dataset.w; render(); } };
 document.getElementById('look').onclick = function (e) { if (e.target.dataset.l) { st.l = e.target.dataset.l; render(); } };
 document.getElementById('acc').onclick = function (e) { if (e.target.dataset.a) { st.a = e.target.dataset.a; render(); } };
