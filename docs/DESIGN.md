@@ -95,7 +95,8 @@ del Mac. Una scelta tra 5 caratteri (SF Pro, SF Pro Rounded, un graziato stile C
   |---|---|
   | Dividi lo schermo (tasto della barra) | `rectangle.grid.2x2` |
   | Lampi (tasto della barra) | `sparkles` |
-  | Impostazioni (tasto della barra **e** sezione Impostazioni: un'icona sola) | `slider.horizontal.3` |
+  | Impostazioni — tasto della barra | `slider.horizontal.3` |
+  | Impostazioni — sezione della finestra di Tabby | `gearshape` |
   | Nuova app | `plus.app` |
   | Chiudi (sulla scheda) | `xmark.circle.fill` |
   | Batteria | `battery.75percent` (e le sue varianti di carica) |
@@ -156,3 +157,24 @@ alla fine; cambiare la scorciatoia di un Lampo premendo la combinazione invece d
 **La famiglia (proposta):** menu · domanda · foglio · avviso · velo · schermata piena; più la
 barra, la sfera e la **finestra di Tabby** (le cinque sezioni: si apre al primo avvio e da
 Impostazioni; non sta sotto la barra).
+
+### 3.1 Menu (in corso)
+Prototipo: `docs/design-menu.html`. **Deciso (8/11/2026):** i **menu standard di macOS**
+(NSMenu), **ritoccati il giusto per Tabby**: chi li apre deve pensare «è macOS, una versione
+particolare», non «un design a parte». E devono essere **originali**: niente che faccia dire
+«fatto con un'AI» — l'originalità viene da dettagli che solo Tabby può avere, non da effetti.
+- Ritocchi approvati: in Notte menu scuri (anche col Mac chiaro), in Nativo come il Mac ·
+  titoli di sezione veri · scorciatoie allineate a destra · un simbolo per ogni azione (di
+  Tabby nel colore del tema, le app con la loro icona) · numerini come in Mail.
+- Restano di macOS: colore della voce sotto il mouse (= colore principale del Mac), angoli,
+  vetro, animazione, tastiera, sottomenu.
+- Da decidere: la riga di icone dei Lampi in cima a ⚡︎ · le quattro "firme" (tasti veri ·
+  stato vivo · intestazione · tieni premuto ⌥) · il nuovo menu ⚙︎.
+
+### Decisioni trasversali (8/11/2026)
+- **Niente «Apri Tabby»**: da Tabby già avviata, al centro un **pannello come Spotlight**
+  («Tabby…», proposta ⌃⌥,) per andare nelle cinque sezioni e cercare un'impostazione
+  scrivendo. La **pagina iniziale** (le cinque sezioni) si vede solo al primo avvio. Da
+  disegnare come componente.
+- **Lingua: quella del Mac** per tutti i nomi e le frasi di Tabby (Lampi, menu, sezioni,
+  avvisi). Proposta: italiano e inglese; con altre lingue, inglese.
