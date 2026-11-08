@@ -132,9 +132,11 @@ GitHub, poi `git clone git@github.com:dquaini/Tabby.git` e `init.lua` che punta 
 
 ## Versione attuale
 
-**v9.69** (storia in `docs/STORIA.md`). Piano (31/10/2026, `docs/ROADMAP-v1.md`): 1) ordine
-nella UX, 2) sistema di design (decisioni e prototipi; realizzazione in Swift), 3) seconda
-settimana di prova (2–8/11), 4) app Swift. Nell'app Swift Tabby avrà cinque sezioni:
-Impostazioni, Design, Documentazione, Automazione (apertura delle cartelle da sole), Kat
-(una cartella del Mac collegata a Tabby con tutti i suoi file, Memo compreso, e in futuro
-i file generati dagli agenti).
+**v9.69** (storia in `docs/STORIA.md`): ultima versione Hammerspoon. Piano (8/11/2026,
+`docs/ROADMAP-v1.md`): prima il **sistema di design** (direzione → mattoni → componenti, in
+`docs/DESIGN.md`; prototipo delle direzioni `docs/design-direzioni.html`), poi l'**app Swift**
+in `app/`, a tappe. Regola di Daniele: ogni scelta nuova (design o funzionamento che
+Hammerspoon non ha) si decide insieme prima di costruirla. Nell'app Swift Tabby avrà
+cinque sezioni: Impostazioni, Design, Documentazione, Automazione (apertura delle
+cartelle da sole), Kat (una cartella del Mac collegata a Tabby con tutti i suoi file,
+Memo compreso, e in futuro i file generati dagli agenti).

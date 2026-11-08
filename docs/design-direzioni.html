@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tabby — tre direzioni di design</title>
+<!--
+  Sistema di design, passo 1 (8/11/2026): la stessa Tabby in tre "caratteri".
+  Le stesse schermate (barra, menu ⚡︎, una finestra come la Concentrazione, un avviso, il
+  gatto) cambiano solo nei "mattoni" (colori, materiali, angoli, accento), per scegliere
+  la direzione prima di definire tutto il resto.
+-->
+<style>
+* { box-sizing: border-box; }
+html, body { margin: 0; font: 13px/1.4 -apple-system, system-ui, sans-serif; background: #E6E6EA; color: #1D1D1F; }
+body.dark { background: #161618; color: #F5F5F7; }
+header { max-width: 1060px; margin: 0 auto; padding: 22px 16px 4px; }
+h1 { margin: 0 0 4px; font-size: 21px; }
+header p { margin: 0; opacity: .7; max-width: 760px; }
+.bar0 { max-width: 1060px; margin: 14px auto 0; padding: 0 16px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.bar0 button { border: 0; border-radius: 999px; padding: 7px 14px; font: inherit; cursor: pointer; background: rgba(127,127,127,.16); color: inherit; }
+.bar0 button.on { background: #0A84FF; color: #fff; }
+.bar0 .sp { flex: 1; }
+.desc { max-width: 1060px; margin: 12px auto 0; padding: 0 16px; }
+.desc div { border-radius: 12px; padding: 12px 14px; background: rgba(127,127,127,.1); }
+.desc b { font-size: 14px; }
+.desc ul { margin: 6px 0 0; padding-left: 18px; opacity: .85; }
+
+/* ================= la scena: un Mac con Tabby ================= */
+.scene { max-width: 1060px; margin: 14px auto 50px; padding: 0 16px; }
+.mac { position: relative; height: 640px; border-radius: 16px; overflow: hidden; box-shadow: 0 14px 40px rgba(0,0,0,.28);
+  background: radial-gradient(ellipse at 25% 20%, #4E7FAE, #22405F 55%, #111D2B); }
+.mac .win { position: absolute; left: 28px; right: 28px; top: 62px; bottom: 26px; border-radius: 12px;
+  background: linear-gradient(#fff, #f3f3f5); opacity: .2; }
+.mac .veil { position: absolute; inset: 0; background: var(--veil); }
+
+/* la barra */
+.tb { position: absolute; left: 0; right: 0; top: 0; height: 44px; display: flex; align-items: center; padding: 0 4px; gap: 2px;
+  background: var(--bar); color: var(--barText); backdrop-filter: var(--barBlur); -webkit-backdrop-filter: var(--barBlur);
+  border-bottom: var(--barLine); border-radius: 0 0 var(--barRadius) var(--barRadius); z-index: 3; }
+.tb .cat { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
+.tb .cat svg { width: 24px; height: 24px; fill: var(--catColor); }
+.tb .tab { height: 32px; padding: 0 10px 0 9px; border-radius: var(--tabRadius); display: flex; align-items: center; gap: 8px; min-width: 0;
+  color: var(--tabText); font-size: 12.5px; position: relative; max-width: 190px; }
+.tb .tab .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tb .tab.on { background: var(--tabOnBg); color: var(--tabOnText); box-shadow: var(--tabOnShadow); }
+.tb .tab.on::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 2px; height: 2px; border-radius: 1px; background: var(--indicator); opacity: var(--indicatorOn); }
+.tb .ic { width: 18px; height: 18px; border-radius: 5px; flex: none; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: 700; }
+.tb .badge { margin-left: auto; min-width: 17px; height: 16px; padding: 0 5px; border-radius: 8px; background: #FF453A; color: #fff; font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+.tb .plus { width: 32px; text-align: center; opacity: .55; font-size: 17px; }
+.tb .sp { flex: 1; }
+.tb .btn { width: 40px; height: 44px; display: flex; align-items: center; justify-content: center; color: var(--btnText); font-size: 15px; }
+.tb .btn.on { color: var(--accent); }
+.tb .bat { width: 22px; height: 11px; border: 1px solid var(--btnText); border-radius: 3px; position: relative; margin: 0 8px; opacity: .9; }
+.tb .bat::before { content: ""; position: absolute; left: 1.5px; top: 1.5px; bottom: 1.5px; width: 62%; border-radius: 1.5px; background: var(--btnText); }
+.tb .sep { width: 1px; height: 22px; background: var(--sepColor); }
+
+/* menu ⚡︎ */
+.menu { position: absolute; top: 50px; right: 46px; width: 260px; padding: 5px; z-index: 4;
+  background: var(--menuBg); color: var(--menuText); border-radius: var(--menuRadius);
+  backdrop-filter: var(--panelBlur); -webkit-backdrop-filter: var(--panelBlur); box-shadow: var(--shadow); border: var(--panelLine); }
+.menu .h { font-size: 11px; font-weight: 600; opacity: .55; padding: 6px 9px 2px; }
+.menu .i { display: flex; align-items: center; gap: 8px; padding: 4px 9px; border-radius: var(--itemRadius); }
+.menu .i .k { margin-left: auto; opacity: .55; font-size: 12px; }
+.menu .i.hl { background: var(--accent); color: var(--onAccent); }
+.menu .i.hl .k { opacity: .85; }
+.menu .s { height: 1px; background: var(--line); margin: 5px 7px; }
+.menu .gl { width: 16px; height: 16px; border-radius: 4px; flex: none; }
+
+/* finestra (come la Concentrazione) */
+.sheet { position: absolute; left: 50%; top: 150px; transform: translateX(-62%); width: 380px; padding: 20px; z-index: 4;
+  background: var(--sheetBg); color: var(--sheetText); border-radius: var(--sheetRadius);
+  backdrop-filter: var(--panelBlur); -webkit-backdrop-filter: var(--panelBlur); box-shadow: var(--shadow); border: var(--panelLine); }
+.sheet h2 { margin: 0 0 2px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.sheet h2 .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); display: var(--titleDot); }
+.sheet .sub { opacity: .6; font-size: 12px; margin-bottom: 14px; }
+.sheet .grp { background: var(--groupBg); border-radius: var(--groupRadius); box-shadow: 0 0 0 .5px var(--line); }
+.sheet .row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; }
+.sheet .row + .row { border-top: .5px solid var(--line); }
+.sheet .row .l { flex: 1; }
+.seg { display: inline-flex; background: var(--segBg); border-radius: 7px; padding: 2px; }
+.seg span { padding: 2px 10px; border-radius: 5px; font-size: 12px; }
+.seg span.on { background: var(--segOn); color: var(--segOnText); box-shadow: 0 .5px 2px rgba(0,0,0,.2); }
+.sheet .note { opacity: .6; font-size: 12px; }
+.sheet .btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.b { padding: 5px 16px; border-radius: var(--btnRadius); font-size: 13px; background: var(--btnBg); color: var(--btnTextS); box-shadow: 0 0 0 .5px var(--line), 0 .5px 1.5px rgba(0,0,0,.12); }
+.b.main { background: var(--accent); color: var(--onAccent); box-shadow: none; }
+
+/* avviso */
+.toast { position: absolute; right: 24px; top: 300px; width: 330px; padding: 12px 14px; z-index: 4; display: flex; gap: 11px;
+  background: var(--sheetBg); color: var(--sheetText); border-radius: var(--sheetRadius);
+  backdrop-filter: var(--panelBlur); -webkit-backdrop-filter: var(--panelBlur); box-shadow: var(--shadow); border: var(--panelLine); }
+.toast .gl { width: 32px; height: 32px; border-radius: 8px; flex: none; background: #EA4335; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.toast .t { font-weight: 600; }
+.toast .s2 { opacity: .6; font-size: 12px; }
+.toast .btns { display: flex; gap: 6px; margin-top: 8px; }
+.toast .b { padding: 3px 10px; font-size: 12px; }
+
+/* la sfera col gatto */
+.orb { position: absolute; right: 60px; bottom: 50px; width: 62px; height: 62px; border-radius: 50%; z-index: 4; overflow: hidden;
+  background: var(--orbBg); box-shadow: var(--orbShadow); display: flex; align-items: center; justify-content: center; }
+.orb svg { width: 34px; height: 34px; fill: var(--orbCat); position: relative; z-index: 2; }
+.orb .blob { position: absolute; width: 40px; height: 40px; border-radius: 50%; filter: blur(9px); opacity: var(--orbBlobs); animation: spin 9s linear infinite; }
+.orb .b1 { background: var(--orbC1); left: 4px; top: 6px; } .orb .b2 { background: var(--orbC2); right: 2px; bottom: 2px; animation-duration: 12s; animation-direction: reverse; }
+@keyframes spin { from { transform: rotate(0) translateX(6px); } to { transform: rotate(360deg) translateX(6px); } }
+.lbl { position: absolute; z-index: 5; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: rgba(255,255,255,.75); }
+
+/* Tabby di lato (anteprima piccola) */
+.side { position: absolute; right: 0; top: 0; bottom: 0; width: 0; }
+
+@media (max-width: 760px) {
+  .mac { height: 900px; }
+  .sheet { left: 16px; right: 16px; width: auto; transform: none; top: 330px; }
+  .menu { right: 8px; left: auto; width: min(260px, calc(100% - 16px)); }
+  .toast { left: 16px; right: 16px; width: auto; top: 640px; }
+  .tb .tab:nth-child(n+5) { display: none; }
+}
+
+/* ================= le tre direzioni (i "mattoni") ================= */
+/* A · Notte — l'evoluzione della Tabby di oggi: tutto scuro, sempre; accento blu */
+.dirA {
+  --bar: #000; --barText: #E8E9EC; --barBlur: none; --barLine: none; --barRadius: 12px; --catColor: #fff;
+  --tabRadius: 8px; --tabText: #B9BDC6; --tabOnBg: #2C2F36; --tabOnText: #fff; --tabOnShadow: none; --indicator: #4C8DFF; --indicatorOn: 1;
+  --btnText: #7D828C; --sepColor: #2A2D33; --accent: #4C8DFF; --onAccent: #fff;
+  --menuBg: #1E2026; --menuText: #E8E9EC; --menuRadius: 10px; --itemRadius: 5px; --line: rgba(255,255,255,.09);
+  --sheetBg: #15161A; --sheetText: #EDEDF0; --sheetRadius: 16px; --groupBg: #1E2026; --groupRadius: 10px;
+  --segBg: rgba(255,255,255,.08); --segOn: #3A3D45; --segOnText: #fff; --btnBg: #2A2D33; --btnTextS: #EDEDF0; --btnRadius: 8px;
+  --panelBlur: none; --panelLine: .5px solid rgba(255,255,255,.08); --shadow: 0 18px 44px rgba(0,0,0,.5); --titleDot: none;
+  --veil: rgba(6,7,10,.0); --orbBg: radial-gradient(circle at 50% 60%, #2B2F6E, #0B0C1C 75%); --orbShadow: 0 6px 18px rgba(0,0,0,.5);
+  --orbCat: #fff; --orbBlobs: .9; --orbC1: #F2A541; --orbC2: #8B7CFF;
+}
+/* B · Nativo — come un'app di Apple: materiali traslucidi, chiaro o scuro col sistema, blu di sistema */
+.dirB {
+  --bar: rgba(246,246,248,.72); --barText: #1D1D1F; --barBlur: blur(24px) saturate(1.6); --barLine: .5px solid rgba(0,0,0,.12); --barRadius: 0; --catColor: #1D1D1F;
+  --tabRadius: 7px; --tabText: #4A4A4F; --tabOnBg: rgba(255,255,255,.9); --tabOnText: #1D1D1F; --tabOnShadow: 0 .5px 2px rgba(0,0,0,.18); --indicator: #0A84FF; --indicatorOn: 0;
+  --btnText: #6E6E73; --sepColor: rgba(0,0,0,.12); --accent: #0A84FF; --onAccent: #fff;
+  --menuBg: rgba(246,246,248,.82); --menuText: #1D1D1F; --menuRadius: 10px; --itemRadius: 5px; --line: rgba(0,0,0,.1);
+  --sheetBg: rgba(240,240,243,.88); --sheetText: #1D1D1F; --sheetRadius: 16px; --groupBg: rgba(255,255,255,.85); --groupRadius: 10px;
+  --segBg: rgba(0,0,0,.06); --segOn: #fff; --segOnText: #1D1D1F; --btnBg: #fff; --btnTextS: #1D1D1F; --btnRadius: 6px;
+  --panelBlur: blur(30px) saturate(1.8); --panelLine: .5px solid rgba(0,0,0,.12); --shadow: 0 14px 36px rgba(0,0,0,.25); --titleDot: none;
+  --veil: rgba(0,0,0,0); --orbBg: rgba(255,255,255,.75); --orbShadow: 0 6px 18px rgba(0,0,0,.25), inset 0 0 0 .5px rgba(0,0,0,.1);
+  --orbCat: #1D1D1F; --orbBlobs: 0; --orbC1: transparent; --orbC2: transparent;
+}
+body.dark .dirB {
+  --bar: rgba(30,30,32,.7); --barText: #F5F5F7; --barLine: .5px solid rgba(255,255,255,.1); --catColor: #F5F5F7;
+  --tabText: #B0B0B5; --tabOnBg: rgba(255,255,255,.14); --tabOnText: #fff; --btnText: #98989D; --sepColor: rgba(255,255,255,.12);
+  --menuBg: rgba(40,40,42,.82); --menuText: #F5F5F7; --line: rgba(255,255,255,.1);
+  --sheetBg: rgba(36,36,38,.88); --sheetText: #F5F5F7; --groupBg: rgba(255,255,255,.07);
+  --segBg: rgba(255,255,255,.08); --segOn: #636366; --segOnText: #fff; --btnBg: #4A4A4D; --btnTextS: #F5F5F7;
+  --panelLine: .5px solid rgba(255,255,255,.1); --orbBg: rgba(40,40,42,.8); --orbCat: #F5F5F7;
+}
+/* C · Tabby — identità propria: barra nera col gatto e il giallo del logo; finestre native chiare/scure con accento giallo */
+.dirC {
+  --bar: #0D0D0F; --barText: #EDEBE6; --barBlur: none; --barLine: none; --barRadius: 14px; --catColor: #F4C443;
+  --tabRadius: 9px; --tabText: #A9A59C; --tabOnBg: #F4C443; --tabOnText: #16130A; --tabOnShadow: none; --indicator: #F4C443; --indicatorOn: 0;
+  --btnText: #8A867C; --sepColor: #26241F; --accent: #F4C443; --onAccent: #16130A;
+  --menuBg: rgba(248,247,244,.9); --menuText: #1D1B16; --menuRadius: 12px; --itemRadius: 7px; --line: rgba(0,0,0,.09);
+  --sheetBg: rgba(248,247,244,.94); --sheetText: #1D1B16; --sheetRadius: 18px; --groupBg: #fff; --groupRadius: 12px;
+  --segBg: rgba(0,0,0,.06); --segOn: #F4C443; --segOnText: #16130A; --btnBg: #fff; --btnTextS: #1D1B16; --btnRadius: 9px;
+  --panelBlur: blur(26px) saturate(1.4); --panelLine: .5px solid rgba(0,0,0,.1); --shadow: 0 16px 40px rgba(0,0,0,.28); --titleDot: block;
+  --veil: rgba(0,0,0,0); --orbBg: radial-gradient(circle at 50% 60%, #2A2416, #0D0D0F 75%); --orbShadow: 0 6px 18px rgba(0,0,0,.45), 0 0 0 1.5px rgba(244,196,67,.5);
+  --orbCat: #F4C443; --orbBlobs: .55; --orbC1: #F4C443; --orbC2: #E07A3F;
+}
+body.dark .dirC {
+  --menuBg: rgba(36,34,30,.92); --menuText: #F1EEE6; --line: rgba(255,255,255,.09);
+  --sheetBg: rgba(30,28,25,.94); --sheetText: #F1EEE6; --groupBg: rgba(255,255,255,.06);
+  --segBg: rgba(255,255,255,.08); --btnBg: #3A3731; --btnTextS: #F1EEE6; --panelLine: .5px solid rgba(255,255,255,.09);
+}
+</style></head>
+<body>
+<header>
+  <h1>Tabby — tre direzioni di design</h1>
+  <p>La stessa Tabby (barra, menu ⚡︎, una finestra come la Concentrazione, un avviso, il gatto) in tre "caratteri". Scegli la direzione: poi definiamo insieme colori, caratteri, angoli, animazioni e tutti i componenti nello stesso stile.</p>
+</header>
+<div class="bar0" id="sel">
+  <button data-d="A" class="on">A · Notte</button>
+  <button data-d="B">B · Nativo</button>
+  <button data-d="C">C · Tabby</button>
+  <span class="sp"></span>
+  <button id="mode">Prova in modalità scura</button>
+</div>
+<div class="desc" id="desc"></div>
+<div class="scene">
+  <div class="mac dirA" id="mac">
+    <div class="win"></div>
+    <div class="tb">
+      <div class="cat"><svg viewBox="0 0 24 24"><path d="M4 3l4 4.2c1.2-.4 2.6-.7 4-.7s2.8.3 4 .7L20 3v8.5c0 4.9-3.6 9-8 9s-8-4.1-8-9V3zm5 9.5a1.2 1.2 0 100 2.4 1.2 1.2 0 000-2.4zm6 0a1.2 1.2 0 100 2.4 1.2 1.2 0 000-2.4z"/></svg></div>
+      <div class="sep"></div>
+      <div class="tab on"><span class="ic" style="background:#4A154B">S</span><span class="nm">Slack</span><span class="badge">3</span></div>
+      <div class="tab"><span class="ic" style="background:#111">N</span><span class="nm">Notion</span></div>
+      <div class="tab"><span class="ic" style="background:#EA4335">M</span><span class="nm">Gmail</span></div>
+      <div class="tab"><span class="ic" style="background:#D97757">✳</span><span class="nm">Claude</span></div>
+      <div class="tab"><span class="ic" style="background:#0078D4">W</span><span class="nm">Windows App</span></div>
+      <div class="plus">+</div>
+      <div class="sp"></div>
+      <div class="bat"></div>
+      <div class="sep"></div>
+      <div class="btn">⊞</div>
+      <div class="btn on">⚡︎</div>
+      <div class="btn">⚙︎</div>
+    </div>
+    <span class="lbl" style="left:28px; top:70px">la barra · menu ⚡︎ · una finestra · un avviso · la sfera</span>
+    <div class="menu">
+      <div class="h">Lampi</div>
+      <div class="i"><span class="gl" style="background:#FFD60A"></span>Memo<span class="k">⌃⌥M</span></div>
+      <div class="i hl"><span class="gl" style="background:#8E8E93"></span>Calcolatrice<span class="k">⌃⌥C</span></div>
+      <div class="i"><span class="gl" style="background:#FF453A"></span>Calendario<span class="k">⌃⌥A</span></div>
+      <div class="s"></div>
+      <div class="h">Strumenti</div>
+      <div class="i"><span class="gl" style="background:var(--accent)"></span>Concentrazione…</div>
+      <div class="i"><span class="gl" style="background:#5E5CE6"></span>Cerca nelle finestre…<span class="k">⌃⌥F</span></div>
+    </div>
+    <div class="sheet">
+      <h2><span class="dot"></span>Concentrazione</h2>
+      <div class="sub">Le altre app si nascondono e tornano alla fine.</div>
+      <div class="grp">
+        <div class="row"><span class="l">Durata</span><span class="seg"><span>25</span><span class="on">50</span><span>90</span></span></div>
+        <div class="row"><span class="l">Schede da tenere</span><span class="note">2 scelte</span></div>
+        <div class="row"><span class="l">Non disturbare</span><span class="note">Si attiva da solo</span></div>
+      </div>
+      <div class="btns"><span class="b">Annulla</span><span class="b main">Inizia</span></div>
+    </div>
+    <div class="toast">
+      <div class="gl">M</div>
+      <div><div class="t">Gmail è già aperto in un'altra finestra</div><div class="s2">Hai due finestre con lo stesso sito.</div>
+        <div class="btns"><span class="b">Lascia</span><span class="b">Vai a quella</span><span class="b main">Chiudi questa</span></div></div>
+    </div>
+    <div class="orb"><span class="blob b1"></span><span class="blob b2"></span>
+      <svg viewBox="0 0 24 24"><path d="M4 3l4 4.2c1.2-.4 2.6-.7 4-.7s2.8.3 4 .7L20 3v8.5c0 4.9-3.6 9-8 9s-8-4.1-8-9V3zm5 9.5a1.2 1.2 0 100 2.4 1.2 1.2 0 000-2.4zm6 0a1.2 1.2 0 100 2.4 1.2 1.2 0 000-2.4z"/></svg></div>
+  </div>
+</div>
+<script>
+var D = {
+  A: ['A · Notte', 'L\'evoluzione della Tabby di oggi: tutto scuro, sempre (anche se il Mac è in modalità chiara). Barra nera, schede grafite, accento blu. Le finestre diventano scure come la barra.',
+      ['Continuità: è la Tabby che usi già', 'Molto coerente: un solo mondo scuro', 'Meno "Apple": non segue il chiaro/scuro del Mac', 'Il giallo del logo resta fuori']],
+  B: ['B · Nativo', 'Come un\'app di Apple: materiali traslucidi (si intravede lo sfondo), chiaro o scuro insieme al Mac, blu di sistema, menu e finestre standard.',
+      ['Sembra parte di macOS, familiare a tutti', 'Si adatta al chiaro e allo scuro', 'Poca personalità: Tabby si riconosce meno', 'La barra chiara si "vede" di più sopra le app']],
+  C: ['C · Tabby', 'Un\'identità propria: la barra nera col gatto e il giallo del logo (la scheda attiva è gialla), le finestre in stile Apple chiare o scure ma con l\'accento giallo e angoli più morbidi.',
+      ['Si riconosce subito: il marchio è ovunque', 'Barra discreta sopra le app, finestre native', 'Il giallo va usato con misura (solo le cose importanti)', 'Più lavoro per tenerlo coerente in Swift']]
+};
+var cur = 'A';
+function set(d) {
+  cur = d;
+  document.getElementById('mac').className = 'mac dir' + d;
+  document.querySelectorAll('#sel [data-d]').forEach(function (b) { b.classList.toggle('on', b.dataset.d === d); });
+  var x = D[d];
+  document.getElementById('desc').innerHTML = '<div><b>' + x[0] + '</b><br>' + x[1] + '<ul>' + x[2].map(function (s) { return '<li>' + s + '</li>'; }).join('') + '</ul></div>';
+}
+document.getElementById('sel').addEventListener('click', function (e) { if (e.target.dataset.d) set(e.target.dataset.d); });
+document.getElementById('mode').addEventListener('click', function () {
+  var dk = document.body.classList.toggle('dark');
+  this.textContent = dk ? 'Prova in modalità chiara' : 'Prova in modalità scura';
+});
+set('A');
+</script>
+</body></html>

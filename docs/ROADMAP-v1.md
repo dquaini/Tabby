@@ -9,18 +9,27 @@ zone (nel codice "gruppo") · **Lampi** = le app piccole del menu ⚡︎ (nel co
 
 ---
 
-## ▶ Il piano, in ordine (deciso il 31/10/2026)
+## ▶ Il piano, in ordine (deciso il 31/10/2026, aggiornato l'8/11/2026)
 
-1. **Ordine nella UX** *(adesso, in Hammerspoon)*: decidere insieme come si comporta Tabby
-   dove oggi è incoerente (vedi sotto), scriverlo nella specifica e, dove non cambia
-   abitudini senza che Daniele lo voglia, sistemarlo già qui.
-2. **Sistema di design** *(decisioni adesso, realizzazione in Swift)*: carattere di Tabby,
-   colori, componenti (schede, menu, finestre, veli), poche schermate chiave. Con 2–3
-   prototipi cliccabili in HTML tra cui scegliere, come per la sfera.
-3. **Seconda settimana di prova** sui due Mac (2–8/11/2026; la prima è stata quella del
-   26/10). Correzioni piccole qui; il resto si annota per Swift.
-4. **App Swift**: prima il motore con lo stesso comportamento (dalla specifica), poi design,
-   le sezioni di Tabby, avvio, configurazione guidata, Dock.
+1. ✅ **Ordine nella UX** (v9.66–9.68).
+2. ✅ **Due settimane di prova** sui due Mac (26/10–8/11/2026).
+3. **Sistema di design, prima di costruire** (8/11/2026, Daniele: «stabilire prima un design
+   system da memorizzare in Design, in modo che tutte le funzioni di Tabby abbiano lo stesso
+   stile, e poi costruire in modo fluido»). In tre passi, decisi insieme:
+   1. la **direzione** (carattere di Tabby) tra 3 proposte: `docs/design-direzioni.html`
+      (A Notte · B Nativo · C Tabby);
+   2. i **mattoni**: colori chiaro/scuro, accento, caratteri, angoli, spazi, ombre, veli,
+      animazioni, icone;
+   3. i **componenti**: scheda, tasti della barra, menu, finestre/fogli, ricerca, avvisi,
+      veli, sfera, finestra delle sezioni.
+   Si salva in `docs/DESIGN.md` (con i valori in un file che l'app legge): diventa la
+   sezione **Design** di Tabby.
+4. **App Swift** (in `app/` di questo progetto; firmata con un certificato «Tabby» del
+   Mac), a tappe, ognuna usabile: fondamenta (permessi, diario, importazione delle
+   impostazioni) → barra → finestre come schede → browser → vista divisa → cartelle →
+   Lampi e strumenti → le cinque sezioni, avvio, configurazione guidata, Dock. **Regola:**
+   tutto ciò che la Tabby di Hammerspoon non fa già (scelte nuove di design o di
+   funzionamento) si propone e si decide insieme prima di costruirlo.
 
 ### 1. Ordine nella UX — i punti da decidere
 1. **Tre stili diversi**: barra, menu e riquadro delle cartelle scuri "nostri"; Concentrazione,
