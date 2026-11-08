@@ -309,3 +309,14 @@ sono). **Spariscono:** «⌃⌥X è già usata» e «Memo: ⌃⌥M» (lo dice la
 registri), «Lampi di serie» (si vede nel foglio), «Questa app non può essere un Lampo» e «X è già
 un Lampo» (non compaiono nell'elenco), «Cartella aggiornata» (si vede nella barra), «Nessuna app
 nuova», «Tabby vX attiva». La **fine della Concentrazione** resta un foglio.
+
+### 3.6 La barra che cerca tutto (in corso, 8/11/2026)
+Prototipo: `docs/design-cerca.html`. **Deciso:** una **barra sola** per cercare tutto (Daniele),
+scorciatoia **⌃⌥Spazio** (sostituisce la ricerca ⌃⌥F e il pannello «Tabby…» ⌃⌥,; dal menu ⚙︎
+«Tabby…» apre la stessa barra con scritto «Tabby»). **A barra vuota non mostra niente** — in
+futuro un agente potrà proporre cosa serve in base a come si usa Tabby. Tastiera: ↑↓ scegli ·
+↵ apri · ⌘↵ azione alternativa · esc cancella il testo, di nuovo chiude.
+Proposta da confermare: gruppi nell'ordine Il migliore · Schede e app · Nelle finestre (con il
+pezzo di testo evidenziato) · Cartelle · Lampi · Azioni · Impostazioni di Tabby; massimo 3 per
+gruppo, 8 in tutto; ⌘↵ = finestra: apri e cerca dentro (⌘F) · impostazione: apri la sezione ·
+Lampo: apri accanto; azioni forti confermate con un secondo ↵.
