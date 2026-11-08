@@ -158,18 +158,49 @@ alla fine; cambiare la scorciatoia di un Lampo premendo la combinazione invece d
 barra, la sfera e la **finestra di Tabby** (le cinque sezioni: si apre al primo avvio e da
 Impostazioni; non sta sotto la barra).
 
-### 3.1 Menu (in corso)
-Prototipo: `docs/design-menu.html`. **Deciso (8/11/2026):** i **menu standard di macOS**
-(NSMenu), **ritoccati il giusto per Tabby**: chi li apre deve pensare «è macOS, una versione
-particolare», non «un design a parte». E devono essere **originali**: niente che faccia dire
-«fatto con un'AI» — l'originalità viene da dettagli che solo Tabby può avere, non da effetti.
-- Ritocchi approvati: in Notte menu scuri (anche col Mac chiaro), in Nativo come il Mac ·
-  titoli di sezione veri · scorciatoie allineate a destra · un simbolo per ogni azione (di
-  Tabby nel colore del tema, le app con la loro icona) · numerini come in Mail.
-- Restano di macOS: colore della voce sotto il mouse (= colore principale del Mac), angoli,
-  vetro, animazione, tastiera, sottomenu.
-- Da decidere: la riga di icone dei Lampi in cima a ⚡︎ · le quattro "firme" (tasti veri ·
-  stato vivo · intestazione · tieni premuto ⌥) · il nuovo menu ⚙︎.
+### 3.1 Menu ✅ (8/11/2026)
+Prototipo: `docs/design-menu.html`. I **menu standard di macOS** (NSMenu), **ritoccati il
+giusto per Tabby**: chi li apre deve pensare «è macOS, una versione particolare», non «un
+design a parte». E **originali**: l'originalità viene da dettagli che solo Tabby può avere,
+non da effetti (niente che faccia dire «fatto con un'AI»).
+
+**Ritocchi:**
+- in **Notte** menu **scuri** (anche col Mac chiaro), in **Nativo** come il Mac;
+- **titoli di sezione** veri (piccoli, grigi) invece di voci spente;
+- **un simbolo per ogni azione** (quelli scelti), di Tabby nel colore del tema (in Nativo nel
+  colore principale), le app e i siti con la loro icona;
+- **numerini** come in Mail;
+- testi corti e coerenti, niente «…» superflui (solo dove si apre una finestra che chiede
+  qualcosa).
+
+**Le quattro firme di Tabby** (tutte, Daniele):
+1. **Tasti veri** — le scorciatoie a destra, disegnate come piccoli tasti (⌃ ⌥ M).
+2. **Stato vivo** — il menu mostra cosa succede adesso: puntino verde sui Lampi aperti, tempo
+   rimasto accanto alla Concentrazione in corso («50 min»), le icone delle app dentro ogni
+   cartella, i numerini delle notifiche.
+3. **Intestazione** — in cima a ogni menu il gatto e il contesto: «Casa · sei su Slack»,
+   «Notion · 3 finestre», «Lampi · 1 aperto», «Tabby · Notte · tema Tabby».
+4. **Tieni premuto ⌥** — le voci diventano le versioni "potenti" (voci alternative di
+   macOS): Chiudi la finestra → Chiudi l'app; Nuova app → Nuova finestra di [app];
+   Concentrazione → Concentrazione rapida · 25 min; Metti in pausa Tabby → Esci da Tabby.
+
+**Menu ⚡︎:** in cima **la riga dei Lampi** (icone grandi con il nome, come le etichette del
+Finder; un clic apre/chiude) · Strumenti (Concentrazione, Cerca nelle finestre) · App (quelle
+con scorciatoia; le altre in «Tutte le App ▸») · Personalizza i Lampi ▸.
+
+**Menu del gatto («Casa»):** Torna a [ultima] · Nuova app · Scrivania · Cartelle.
+
+**Tasto destro su una scheda:** Rinomina · Torna al nome di prima · Mostra come (siti della
+finestra) · Chiudi la finestra.
+
+**Menu ⚙︎ (nuovo):** Tabby… (⌃⌥,: il pannello al centro per le sezioni) · Scorciatoie (⌃⌥/) ·
+Posizione (In alto / A destra / A sinistra / In basso, direttamente nel menu) · Chiudi tutte
+le app… · **Metti in pausa Tabby** (al posto di «Chiudi Tabby (resta solo il cerchio)»).
+Spariscono «Ricarica Tabby» e «Console» (servivano solo con Hammerspoon); tutte le altre
+impostazioni passano nella sezione Impostazioni.
+
+**Restano di macOS:** colore della voce sotto il mouse (= colore principale del Mac), angoli,
+vetro, animazione, tastiera, sottomenu, ricerca nei menu.
 
 ### Decisioni trasversali (8/11/2026)
 - **Niente «Apri Tabby»**: da Tabby già avviata, al centro un **pannello come Spotlight**
@@ -177,4 +208,5 @@ particolare», non «un design a parte». E devono essere **originali**: niente 
   scrivendo. La **pagina iniziale** (le cinque sezioni) si vede solo al primo avvio. Da
   disegnare come componente.
 - **Lingua: quella del Mac** per tutti i nomi e le frasi di Tabby (Lampi, menu, sezioni,
-  avvisi). Proposta: italiano e inglese; con altre lingue, inglese.
+  avvisi). **Italiano e inglese**; con altre lingue, inglese. (In Swift: tutto scritto in
+  più lingue fin dall'inizio.)
