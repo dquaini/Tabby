@@ -138,6 +138,10 @@ GitHub, poi `git clone git@github.com:dquaini/Tabby.git` e `init.lua` che punta 
   Firma col certificato «Tabby» del Portachiavi se c'è, altrimenti provvisoria (il permesso
   Accessibilità va ridato a ogni costruzione). Prova senza finestre:
   `app/build/Tabby.app/Contents/MacOS/Tabby --prova`.
+- Certificato «Tabby» (autofirmato, Firma codice, 10 anni): creato dal Terminale il 9/11/2026
+  sul Mac di casa (openssl + `security import` nel Portachiavi «login»; su macOS 26 la voce
+  «Assistente Certificati» non si trova facilmente). macOS lo segna «non fidato», ma basta
+  per firmare e per far ricordare il permesso Accessibilità. Su un altro Mac va rifatto.
 - Il diario è lo stesso file (`~/Library/Logs/Tabby.log`, righe `Tabby ·`); `misura(...)`
   scrive `Tabby · lento:` sopra i 150 ms. Impostazioni in `com.dquaini.Tabby` con le chiavi
   storiche `tabbar.*`, importate una volta da Hammerspoon.
