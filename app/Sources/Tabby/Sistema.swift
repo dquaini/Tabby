@@ -13,12 +13,11 @@ func _AXUIElementGetWindow(_ e: AXUIElement, _ id: UnsafeMutablePointer<CGWindow
 @MainActor
 enum Sistema {
     static let mioBid = Bundle.main.bundleIdentifier ?? "com.dquaini.Tabby"
-    /// App che non sono mai schede (oltre a Tabby): Hammerspoon e i Lampi.
-    static func ignorate() -> Set<String> {
-        var s: Set<String> = [mioBid, "org.hammerspoon.Hammerspoon"]
-        for l in Impostazioni.shared.lampi { if let b = l["bid"] as? String, l["menubar"] == nil { s.insert(b) } }
-        return s
-    }
+    /// Le app aperte come Lampo in questo momento (le tiene aggiornate GestoreLampi).
+    static var veloci = Set<String>()
+    /// App che non sono schede: Tabby, Hammerspoon e i Lampi aperti come Lampo (aperte in un
+    /// altro modo, Calcolatrice & co. sono app normali, Q-1).
+    static func ignorate() -> Set<String> { veloci.union([mioBid, "org.hammerspoon.Hammerspoon"]) }
 
     static func elemento(_ pid: pid_t) -> AXUIElement {
         let e = AXUIElementCreateApplication(pid)

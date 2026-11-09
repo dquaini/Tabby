@@ -128,11 +128,11 @@ final class Palco: NSPanel {
     override var canBecomeKey: Bool { true }
 
     /// Apre `foglio` sopra il velo. `annulla` si chiama per un clic sul velo.
-    func apri<V: View>(_ foglio: V, sopra barra: NSWindow?, posizione: String, annulla: @escaping () -> Void) {
+    func apri<V: View>(_ foglio: V, sopra barra: NSWindow?, posizione: String, inAlto: Bool = false, annulla: @escaping () -> Void) {
         appPrima = NSWorkspace.shared.frontmostApplication
         chiudi = annulla
         setFrame(Sistema.spazioApp(posizione: posizione), display: false)
-        contentView = VistaOspite(rootView: ScenaPalco(foglio: foglio, palco: self, annulla: annulla))
+        contentView = VistaOspite(rootView: ScenaPalco(foglio: foglio, palco: self, inAlto: inAlto, annulla: annulla))
         alphaValue = 1
         makeKeyAndOrderFront(nil)
         NSApp.activate()
@@ -156,6 +156,7 @@ final class Palco: NSPanel {
 private struct ScenaPalco<V: View>: View {
     let foglio: V
     let palco: Palco
+    let inAlto: Bool
     let annulla: () -> Void
     @State private var dentro = false
 
@@ -169,9 +170,11 @@ private struct ScenaPalco<V: View>: View {
                         Color.clear.onAppear { palco.ricordaCornice(f.frame(in: .global)) }
                             .onChange(of: f.frame(in: .global)) { _, r in palco.ricordaCornice(r) }
                     })
-                    .scaleEffect(dentro ? 1 : 0.94)
+                    .scaleEffect(inAlto ? 1 : (dentro ? 1 : 0.94))
+                    .offset(y: inAlto && !dentro ? -10 : 0)
                     .opacity(dentro ? 1 : 0)
-                    .alignmentGuide(.top) { d in -(g.size.height * 0.45 - d.height / 2) }
+                    // i fogli al centro ottico (45%); la ricerca a un terzo, come Spotlight (3.3)
+                    .alignmentGuide(.top) { d in inAlto ? -(g.size.height * 0.22) : -(g.size.height * 0.45 - d.height / 2) }
             }
             .frame(width: g.size.width, height: g.size.height)
         }

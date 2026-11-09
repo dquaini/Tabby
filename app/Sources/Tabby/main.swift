@@ -6,11 +6,16 @@ import TabbyCore
 // Tappa 3: le finestre come schede (Finestre.swift nel motore).
 // Tappa 4: i browser, i loghi dei siti, le notifiche (Browser.swift).
 // Tappa 5: la vista divisa (Divisa.swift nel motore, Divisione.swift, ControlloreDivisa.swift).
+// Tappa 6: le cartelle (Cartelle.swift nel motore, ControlloreCartelle.swift, Componenti.swift).
+// Tappa 7: Lampi, Memo, Concentrazione, la barra che cerca tutto (Strumenti.swift nel motore).
+// Tappa 8: la finestra di Tabby, la guida del primo avvio, la sfera, la pausa, i temi.
+//
+// In sviluppo, per riavviare senza le animazioni:  open Tabby.app --args --senza-avvio
 // Tabby non ha icona nel Dock (è "accessoria", come le app della barra dei menu).
 //
 // Prova dal Terminale senza aprire niente:  Tabby.app/Contents/MacOS/Tabby --prova
 
-let versione = "0.6"
+let versione = "0.8"
 
 if CommandLine.arguments.contains("--prova") {
     let n = Importazione.daHammerspoon()
@@ -26,21 +31,23 @@ if CommandLine.arguments.contains("--prova") {
 
 @MainActor
 final class Avvio: NSObject, NSApplicationDelegate {
-    let attesa = AttesaPermesso()
     let inizio = Date()
     let controllore = Controllore()
 
     func applicationDidFinishLaunching(_ n: Notification) {
         diario("avvio \(versione) · macOS \(ProcessInfo.processInfo.operatingSystemVersionString)")
-        Importazione.daHammerspoon()
+        // chi arriva da Hammerspoon ha già fatto tutto: niente guida del primo avvio
+        if Importazione.daHammerspoon() > 0 { Impostazioni.shared.imposta("primoAvvioFatto", true) }
+        let fatto = Impostazioni.shared.valore("primoAvvioFatto") as? Bool ?? false
+        // ogni volta che l'app si apre da zero: le due animazioni (intanto Tabby si prepara dietro)
+        if !CommandLine.arguments.contains("--senza-avvio") { controllore.finestraTabby.avvio() }
         if Permessi.accessibilita {
             pronta()
         } else {
-            // La guida del primo avvio (tappa più avanti) spiegherà il perché; per ora la
-            // richiesta di macOS, e Tabby aspetta da sola che il permesso arrivi.
-            diario("manca il permesso Accessibilità: lo chiedo")
-            Permessi.chiediAccessibilita()
-            attesa.aspetta { [weak self] in self?.pronta() }
+            // la guida spiega il perché; chi l'ha già vista riceve subito la richiesta di macOS
+            diario("manca il permesso Accessibilità")
+            if fatto { Permessi.chiediAccessibilita() }
+            controllore.attesaPermesso.aspetta { [weak self] in self?.pronta() }
         }
     }
 

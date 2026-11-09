@@ -28,6 +28,17 @@ final class StatoBarra {
     var nomeFoglio = ""
     var cartellaInModifica: Int?
     var foglioIlluminato = false
+    // strumenti
+    var ricerca: String?
+    var sceltaRicerca = 0
+    var confermaForte: String?
+    var versioneTesti = 0
+    var concentrazione: StatoConcentrazione?
+    var minutiConc = 50
+    var nonDisturbare = true
+    var lampiCoperti: [String] = []
+    var lampiInModifica: [Lampo] = []
+    var inPausa = Impostazioni.shared.valore("paused") as? Bool ?? false
     var verticale: Bool { posizione == "left" || posizione == "right" }
 }
 
@@ -64,11 +75,17 @@ final class Controllore {
     let palco = Palco()
     let avvisi = Avvisi()
     lazy var schermata = Schermata(stato: stato) { [weak self] in self?.chiudiApertura() }
+    lazy var lampi = GestoreLampi(self)
+    let testi = LettoreTesti()
+    lazy var sfera = Sfera(self)
+    lazy var finestraTabby = FinestraTabby(self)
+    let attesaPermesso = AttesaPermesso()
+    var sferaDopo: DispatchWorkItem?
     /// Le finestre ridotte da Tabby stessa (U-2): non fanno scattare «scheda accanto».
     private var ridotteDaTabby: [UInt32: Date] = [:]
     /// Le ultime schede attive con l'istante del cambio (C-4: macOS a volte attiva un'altra
     /// app un attimo prima di dire che la finestra è chiusa).
-    private var storia: [(chiave: String, quando: Date)] = []
+    var storia: [(chiave: String, quando: Date)] = []
     /// L'ultima volta che hai scelto tu una scheda (clic o scorciatoia).
     private var sceltaTua = Date.distantPast
     private(set) var precedente: Scheda?
@@ -78,6 +95,12 @@ final class Controllore {
         velo = VeloDivisione(controllore: self)
         stato.cartelle = cartelle
         avvisi.posizione = { [weak self] in self?.stato.posizione ?? "top" }
+        avvisi.silenzio = { [weak self] in self?.stato.concentrazione != nil }
+        testi.letto = { [weak self] in self?.stato.versioneTesti += 1 }
+        Sistema.veloci = lampi.veloci
+        registraLampi()
+        riprendiConcentrazione()
+        Tasti.spente = stato.inPausa
         stato.batteria = batteria.stato
         batteria.cambiata = { [weak self] b in self?.stato.batteria = b }
         browser.cambiato = { [weak self] in self?.ricostruisciPresto() }
@@ -87,8 +110,9 @@ final class Controllore {
         ascoltaMacOS()
         registraTasti()
         ricostruisci()
-        pannello.mostra()
+        if !stato.inPausa { pannello.mostra() }
         if let a = NSWorkspace.shared.frontmostApplication { siAttiva(a) }
+        controllaSfera()
     }
 
     // MARK: - Ascoltare macOS
@@ -193,11 +217,12 @@ final class Controllore {
             var m: [String: [Scheda]] = [:]
             for v in viste { m[v.chiave] = v.membri.compactMap { k in nuove.first { $0.chiave == k } } }
             if m != stato.membri { stato.membri = m }
-            let visibili = applicaCartelle(vis)
+            let visibili = filtraConcentrazione(applicaCartelle(vis))
             let prima = stato.schede
             if visibili != stato.schede { stato.schede = visibili }
             controllaChiusura(prima: prima)
             aggiornaAttiva()
+            controllaSfera()
         }
     }
 
@@ -262,8 +287,11 @@ final class Controllore {
 
     /// Quando un'app viene in primo piano (P-3): scheda attiva, una scheda alla volta, adatta.
     func siAttiva(_ app: NSRunningApplication) {
-        guard let bid = app.bundleIdentifier, bid != Sistema.mioBid else { return }
+        guard !stato.inPausa, let bid = app.bundleIdentifier, bid != Sistema.mioBid else { return }
+        ascoltaEscLampo(app)
+        defer { lampi.aggiornaCoperti(); controllaSfera() }
         if Sistema.ignorate().contains(bid) { return }                  // un Lampo: non tocca niente
+        if controllaAppFuori(app) { return }                            // fuori dalla Concentrazione
         if stato.scrivania && bid == "com.apple.finder" { return }
         stato.scrivania = false
         aggiornaAttiva()
@@ -382,6 +410,7 @@ final class Controllore {
         withAnimationMolla { stato.posizione = p }
         pannello.mostra()
         if let a = NSWorkspace.shared.frontmostApplication { Sistema.adatta(a, posizione: p) }
+        lampi.disponi()
         diario("posizione: \(p)")
     }
 
@@ -401,6 +430,8 @@ final class Controllore {
         tasti.aggiungi(kVK_Tab) { [weak self] in self?.tornaIndietro() }
         tasti.aggiungi(kVK_ANSI_W) { [weak self] in self?.chiudiFinestraDavanti() }
         tasti.aggiungi(kVK_ANSI_S) { [weak self] in self?.scambia() }
+        tasti.aggiungi(kVK_Space) { [weak self] in self?.apriRicerca() }
+        tasti.aggiungi(kVK_ANSI_Slash) { [weak self] in self?.apriFinestraTabby(sezione: "doc") }
         // ⌃⌥⇧1…9: le cartelle, nel loro ordine
         for (i, t) in numeri.enumerated() {
             tasti.aggiungi(t, maiuscolo: true) { [weak self] in

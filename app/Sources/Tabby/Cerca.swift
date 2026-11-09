@@ -1,0 +1,253 @@
+import AppKit
+@preconcurrency import ApplicationServices
+import SwiftUI
+import TabbyCore
+
+/// Il testo dentro le finestre (16c E-2): letto con l'Accessibilità **in sottofondo**, una finestra
+/// alla volta (al massimo 5000 elementi e 60 000 caratteri), tenuto **solo in memoria**.
+@MainActor
+final class LettoreTesti {
+    private(set) var testi: [UInt32: (testo: String, quando: Date)] = [:]
+    private var inLettura = Set<UInt32>()
+    private var elettron = Set<pid_t>()
+    private let coda = DispatchQueue(label: "tabby.testi", qos: .utility)
+    var letto: (() -> Void)?
+
+    /// Legge le finestre lette da più di 30 s (prima le più usate).
+    func aggiorna(_ finestre: [(id: UInt32, pid: pid_t, w: AXUIElement)]) {
+        for f in finestre {
+            if let t = testi[f.id], Date().timeIntervalSince(t.quando) < 30 { continue }
+            guard inLettura.insert(f.id).inserted else { continue }
+            if elettron.insert(f.pid).inserted {    // Slack, Notion (Electron): il testo va chiesto una volta
+                AXUIElementSetAttributeValue(AXUIElementCreateApplication(f.pid), "AXManualAccessibility" as CFString, kCFBooleanTrue)
+            }
+            let w = f.w, id = f.id
+            coda.async { [weak self] in
+                let t = LettoreTesti.leggi(w)
+                DispatchQueue.main.async { MainActor.assumeIsolated {
+                    self?.inLettura.remove(id); self?.testi[id] = (t, Date()); self?.letto?()
+                } }
+            }
+        }
+    }
+
+    nonisolated static func leggi(_ radice: AXUIElement) -> String {
+        var visti = 0, parti: [String] = [], lunghezza = 0
+        let ruoli: Set<String> = ["AXStaticText", "AXTextArea", "AXTextField", "AXCell", "AXHeading"]
+        func a<T>(_ e: AXUIElement, _ n: String) -> T? {
+            var v: CFTypeRef?
+            return AXUIElementCopyAttributeValue(e, n as CFString, &v) == .success ? v as? T : nil
+        }
+        func giù(_ e: AXUIElement, _ p: Int) {
+            guard visti < 5000, lunghezza < 60_000, p < 40 else { return }
+            visti += 1
+            let r: String = a(e, kAXRoleAttribute) ?? ""
+            if ruoli.contains(r), let v: String = a(e, kAXValueAttribute) ?? a(e, kAXTitleAttribute) ?? a(e, kAXDescriptionAttribute), !v.isEmpty {
+                parti.append(v); lunghezza += v.count
+            }
+            for c in (a(e, kAXChildrenAttribute) as [AXUIElement]?) ?? [] { giù(c, p + 1) }
+        }
+        AXUIElementSetMessagingTimeout(radice, 0.5)
+        giù(radice, 0)
+        return parti.joined(separator: "\n")
+    }
+}
+
+/// Ciò che si sceglie dalla barra di ricerca.
+enum AzioneRicerca {
+    case scheda(String), cartella(Int), lampo(Lampo), comando(() -> Void), impostazione(String)
+}
+
+extension Controllore {
+    /// ⌃⌥Spazio: la barra che cerca tutto (DESIGN 3.6), a un terzo dello spazio delle app.
+    func apriRicerca(con testo: String = "") {
+        if palco.aperto && stato.ricerca != nil { chiudiRicerca(); return }
+        stato.ricerca = testo
+        stato.sceltaRicerca = 0
+        stato.confermaForte = nil
+        aggiornaTesti()
+        palco.apri(BarraRicerca(c: self, stato: stato), sopra: pannello, posizione: stato.posizione, inAlto: true) { [weak self] in
+            self?.chiudiRicerca()
+        }
+    }
+
+    func chiudiRicerca() { stato.ricerca = nil; palco.chiudiFoglio() }
+
+    private func aggiornaTesti() {
+        var f: [(id: UInt32, pid: pid_t, w: AXUIElement)] = []
+        for s in tutte { if let id = s.finestra, let w = elementi[s.chiave] { f.append((id, s.pid, w)) } }
+        testi.aggiorna(f)
+    }
+
+    /// Tutto quello che si può trovare, coi gruppi decisi.
+    func cercabili() -> [(Trovato, AzioneRicerca)] {
+        var out: [(Trovato, AzioneRicerca)] = []
+        let recenti = storiaUso
+        for s in tutte {
+            let app = NSRunningApplication(processIdentifier: s.pid)?.localizedName ?? ""
+            let uso = (recenti.firstIndex(of: s.chiave)).map { 30 - $0 } ?? 0
+            out.append((Trovato(id: "s:" + s.chiave, gruppo: .schede, titolo: s.nome, sotto: app, uso: uso), .scheda(s.chiave)))
+            if let id = s.finestra, let t = testi.testi[id]?.testo, !t.isEmpty {
+                out.append((Trovato(id: "w:" + s.chiave, gruppo: .finestre, titolo: s.titolo ?? s.nome, sotto: app, testo: t, uso: uso), .scheda(s.chiave)))
+            }
+        }
+        if let memo = try? String(contentsOf: Memo.file, encoding: .utf8) {
+            out.append((Trovato(id: "memo", gruppo: .finestre, titolo: "Memo", sotto: "Tabby", testo: memo), .lampo(lampi.lampi.first(where: \.memo) ?? lampiDiSerie[0])))
+        }
+        for f in cartelle {
+            out.append((Trovato(id: "f:\(f.id)", gruppo: .cartelle, titolo: f.nome, sotto: f.voci.map(\.nome).joined(separator: ", ")), .cartella(f.id)))
+        }
+        for l in lampi.lampi {
+            out.append((Trovato(id: "l:" + l.id, gruppo: .lampi, titolo: l.nome, sotto: "⌃⌥" + l.tasto.uppercased()), .lampo(l)))
+        }
+        let azioni: [(String, String, Bool, () -> Void)] = [
+            ("Nuova app", "Apri un'app con Spotlight", false, { [weak self] in self?.nuovaApp() }),
+            ("Scrivania", "Nascondi tutte le app · ⌃⌥0", false, { [weak self] in self?.scrivania() }),
+            ("Concentrazione", "25 · 50 · 90 min", false, { [weak self] in self?.apriFoglioConcentrazione() }),
+            ("Nuova cartella", "Scegli le schede, poi il nome", false, { [weak self] in self?.apriFoglioCartella() }),
+            ("Personalizza i Lampi", "Ordine, scorciatoie, aggiungi", false, { [weak self] in self?.apriFoglioLampi() }),
+            ("Dividi lo schermo", "Metà e metà", false, { [weak self] in self?.avviaDivisione("2-50") }),
+            ("Chiudi tutte le app", "Le app di sistema restano", true, { [weak self] in self?.chiudiTutteLeApp() }),
+            ("Metti in pausa Tabby", "Resta solo la sfera", true, { [weak self] in self?.pausa(true) }),
+        ]
+        for (t, s, forte, a) in azioni {
+            out.append((Trovato(id: "a:" + t, gruppo: .azioni, titolo: t, sotto: s, forte: forte), .comando(a)))
+        }
+        for (t, s, sezione) in impostazioniCercabili {
+            out.append((Trovato(id: "i:" + t, gruppo: .impostazioni, titolo: t, sotto: s, testo: "tabby impostazioni " + sezione), .impostazione(sezione)))
+        }
+        return out
+    }
+
+    /// Le impostazioni che si trovano scrivendo (aprono la finestra di Tabby su quella sezione).
+    var impostazioniCercabili: [(String, String, String)] {
+        [("Posizione", "Dove sta Tabby", "set"), ("Nascondi Tabby", "Compare col mouse sul bordo", "set"),
+         ("Una scheda alla volta", "Nasconde le altre app", "set"), ("Adatta le finestre a Tabby", "Spazio libero accanto alla barra", "set"),
+         ("Vista cartelle", "Una cartella attiva = una scheda", "set"), ("Barra dei menu e Dock", "Nascondili", "set"),
+         ("Apri Tabby all'accensione", "Elementi di login", "set"), ("Aspetto e temi", "Nativo · Notte", "des"),
+         ("Scorciatoie", "Tutte, con ⌃⌥", "doc")]
+    }
+
+    func esegui(_ a: AzioneRicerca, alternativa: Bool) {
+        let testo = stato.ricerca ?? ""
+        chiudiRicerca()
+        switch a {
+        case .scheda(let k):
+            let vis = conViste(tutte, viste)
+            guard let s = vis.first(where: { $0.chiave == k || stato.membri[$0.chiave]?.contains { $0.chiave == k } == true }) else { return }
+            vai(s)
+            if alternativa { cercaDentro(testo) }                       // ⌘↵: apri e cerca dentro (⌘F)
+        case .cartella(let id): attivaCartella(id)
+        case .lampo(let l): lampi.premi(l)
+        case .comando(let f): f()
+        case .impostazione(let sezione): apriFinestraTabby(sezione: sezione)
+        }
+    }
+
+    /// Dopo una scelta con ⌘↵: ⌘F nella finestra e le parole già scritte.
+    private func cercaDentro(_ testo: String) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            let src = CGEventSource(stateID: .hidSystemState)
+            for giù in [true, false] { let e = CGEvent(keyboardEventSource: src, virtualKey: 3, keyDown: giù); e?.flags = .maskCommand; e?.post(tap: .cghidEventTap) }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                let u = Array(testo.utf16)
+                let e = CGEvent(keyboardEventSource: src, virtualKey: 0, keyDown: true)
+                e?.keyboardSetUnicodeString(stringLength: u.count, unicodeString: u)
+                e?.post(tap: .cghidEventTap)
+            }
+        }
+    }
+}
+
+/// La barra: un campo come Spotlight e i risultati a gruppi. ↑↓ scegli · ↵ apri · ⌘↵ azione
+/// alternativa · esc cancella il testo, di nuovo chiude. Le azioni forti chiedono un secondo ↵.
+struct BarraRicerca: View {
+    let c: Controllore
+    @Bindable var stato: StatoBarra
+    @FocusState private var dentro: Bool
+
+    var body: some View {
+        let tutto = c.cercabili()
+        let r = cerca(stato.ricerca ?? "", in: tutto.map(\.0))
+        let elenco = (r.migliore.map { [$0] } ?? []) + r.gruppi.flatMap(\.1)
+        let azione = Dictionary(tutto.map { ($0.0.id, $0.1) }, uniquingKeysWith: { a, _ in a })
+        VStack(spacing: 0) {
+            HStack(spacing: 10) {
+                Image(systemName: "text.magnifyingglass").font(.system(size: 19)).foregroundStyle(Tema.accento)
+                TextField("Cerca schede, finestre, cartelle, azioni…", text: Binding(get: { stato.ricerca ?? "" }, set: { stato.ricerca = $0; stato.sceltaRicerca = 0; stato.confermaForte = nil }))
+                    .textFieldStyle(.plain).font(.system(size: 21)).foregroundStyle(.white).focused($dentro)
+                    .onSubmit { scegli(elenco, azione, alternativa: NSEvent.modifierFlags.contains(.command)) }
+            }
+            .padding(.horizontal, 16).frame(height: 52)
+            if !elenco.isEmpty {
+                Divider().overlay(Color.white.opacity(0.08))
+                VStack(alignment: .leading, spacing: 0) {
+                    if let m = r.migliore { TitoloSezione(testo: "Il migliore"); riga(m, 0) }
+                    ForEach(r.gruppi, id: \.0) { g, righe in
+                        TitoloSezione(testo: g.titolo)
+                        ForEach(righe) { x in
+                            let i = elenco.firstIndex(of: x) ?? 0
+                            riga(x, i)
+                        }
+                    }
+                }
+                .padding(.bottom, 6)
+            }
+        }
+        .frame(width: 640)
+        .vetroMenu()
+        .onAppear { dentro = true }
+        .onKeyPress(.upArrow) { stato.sceltaRicerca = max(0, stato.sceltaRicerca - 1); stato.confermaForte = nil; return .handled }
+        .onKeyPress(.downArrow) { stato.sceltaRicerca = min(max(0, elenco.count - 1), stato.sceltaRicerca + 1); stato.confermaForte = nil; return .handled }
+        .onKeyPress(.escape) {
+            if (stato.ricerca ?? "").isEmpty { c.chiudiRicerca() } else { stato.ricerca = "" }
+            return .handled
+        }
+    }
+
+    private func scegli(_ elenco: [Risultato], _ azione: [String: AzioneRicerca], alternativa: Bool) {
+        guard stato.sceltaRicerca < elenco.count else { return }
+        let x = elenco[stato.sceltaRicerca]
+        if x.t.forte && stato.confermaForte != x.id { stato.confermaForte = x.id; return }   // azione forte: un secondo ↵
+        if let a = azione[x.id] { c.esegui(a, alternativa: alternativa) }
+    }
+
+    private func riga(_ x: Risultato, _ i: Int) -> some View {
+        let su = stato.sceltaRicerca == i
+        let forte = stato.confermaForte == x.id
+        return HStack(spacing: 10) {
+            icona(x.t).frame(width: 20, height: 20)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(forte ? "Premi ↵ di nuovo per «\(x.t.titolo)»" : x.t.titolo).font(.system(size: 13.5, weight: .medium))
+                    .foregroundStyle(forte ? Color.red : .white).lineLimit(1)
+                if let p = x.pezzetto { Text(p).font(.system(size: 11.5)).foregroundStyle(.white.opacity(su ? 0.85 : 0.55)).lineLimit(1) }
+            }
+            Spacer()
+            Text(x.t.sotto).font(.system(size: 11.5)).foregroundStyle(.white.opacity(su ? 0.85 : 0.45)).lineLimit(1)
+        }
+        .padding(.horizontal, 10).frame(height: x.pezzetto == nil ? 30 : 40)
+        .background(su ? Color.accentColor : .clear, in: RoundedRectangle(cornerRadius: 6))
+        .padding(.horizontal, 6)
+        .contentShape(Rectangle())
+        .onTapGesture { stato.sceltaRicerca = i; scegli(elencoAttuale(), mappaAttuale(), alternativa: false) }
+    }
+
+    private func elencoAttuale() -> [Risultato] {
+        let r = cerca(stato.ricerca ?? "", in: c.cercabili().map(\.0))
+        return (r.migliore.map { [$0] } ?? []) + r.gruppi.flatMap(\.1)
+    }
+    private func mappaAttuale() -> [String: AzioneRicerca] { Dictionary(c.cercabili().map { ($0.0.id, $0.1) }, uniquingKeysWith: { a, _ in a }) }
+
+    @ViewBuilder private func icona(_ t: Trovato) -> some View {
+        let k = String(t.id.dropFirst(2))
+        switch t.gruppo {
+        case .schede, .finestre:
+            if let s = c.scheda(k), let i = s.sito.flatMap({ stato.loghi[$0] }) ?? stato.icone[s.bid] { Image(nsImage: i).resizable() }
+            else { Image(systemName: "note.text").foregroundStyle(Tema.accento) }
+        case .cartelle: Image(systemName: "square.stack.3d.up").foregroundStyle(Tema.accento)
+        case .lampi: Image(systemName: "sparkles").foregroundStyle(Tema.accento)
+        case .azioni: Image(systemName: t.forte ? "exclamationmark.triangle" : "command").foregroundStyle(t.forte ? Color.orange : Tema.accento)
+        case .impostazioni: Image(systemName: "gearshape").foregroundStyle(Tema.accento)
+        }
+    }
+}

@@ -33,7 +33,25 @@ final class PannelloBarra: NSPanel {
 
     func mostra() {
         setFrame(Sistema.cornice(posizione: controllore.stato.posizione), display: true)
+        alphaValue = 1
         orderFrontRegardless()
+    }
+
+    /// La barra sale (o scivola di lato) e sparisce: arriva la sfera (0,2 s).
+    func nascondiScivolando() {
+        guard isVisible else { return }
+        var f = frame
+        switch controllore.stato.posizione {
+        case "bottom": f.origin.y -= f.height
+        case "left": f.origin.x -= f.width
+        case "right": f.origin.x += f.width
+        default: f.origin.y += f.height
+        }
+        NSAnimationContext.runAnimationGroup { ctx in ctx.duration = 0.2; animator().setFrame(f, display: true); animator().alphaValue = 0 }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) { [weak self] in
+            guard let self, self.alphaValue < 0.5 else { return }
+            self.orderOut(nil)
+        }
     }
 }
 
@@ -122,7 +140,7 @@ struct BarraVista: View {
 
     private var riga: some View {
         GeometryReader { g in
-            let fisso = Misure.gatto + Misure.piu + Misure.tasto * 3 + 16
+            let fisso = Misure.gatto + Misure.piu + Misure.tasto * 4 + 16 + (stato.concentrazione != nil ? 20 : 0) + CGFloat(stato.lampiCoperti.count) * 22
             let sch = mostrate
             let att = sch.firstIndex { $0.chiave == stato.attiva && !stato.scrivania }
             let d = disponiOrizzontale(spazio: g.size.width - fisso, numero: sch.count, attiva: att)
@@ -137,8 +155,9 @@ struct BarraVista: View {
                 if d.altre > 0 { altre(d) }
                 piu
                 Spacer(minLength: 0)
-                batteria
+                batteriaOTempo
                 dividi
+                fulmine
                 impostazioni
             }
             .padding(.horizontal, 2)
@@ -163,8 +182,9 @@ struct BarraVista: View {
                 if d.altre > 0 { altre(DisposizioneOrizzontale(larghezza: 0, compatta: false, visibili: d.visibili, altre: d.altre), largo: true) }
                 piu.frame(maxWidth: .infinity, alignment: .leading).padding(.leading, 4)
                 Spacer(minLength: 0)
-                batteria
-                HStack(spacing: 0) { Spacer(); dividi; impostazioni; Spacer() }
+                batteriaOTempo
+                if !stato.lampiCoperti.isEmpty { fulmine.frame(maxWidth: .infinity).padding(.horizontal, 6) }
+                HStack(spacing: 0) { Spacer(); dividi; if stato.lampiCoperti.isEmpty { fulmine }; impostazioni; Spacer() }
             }
             .padding(.vertical, 6)
             .frame(width: g.size.width, height: g.size.height)
@@ -284,7 +304,7 @@ struct BarraVista: View {
                     .clipShape(RoundedRectangle(cornerRadius: Misure.angoloScheda))
                     .overlay(RoundedRectangle(cornerRadius: Misure.angoloScheda)
                         .strokeBorder(LinearGradient(colors: [.white.opacity(0.28), .clear], startPoint: .top, endPoint: .center), lineWidth: 0.5))
-                    .shadow(color: Tema.c(0xDC9628, 0.22), radius: 5, y: 2)
+                    .shadow(color: Tema.ombraAttiva, radius: 5, y: 2)
                     .matchedGeometryEffect(id: "riempimento", in: ns)
             } else if tr {
                 // la scheda in mano: fondo pieno e ombra, così si legge sopra le altre
@@ -369,6 +389,104 @@ struct BarraVista: View {
 
     private func simboloBatteria(_ l: Int) -> String {
         l >= 88 ? "battery.100percent" : l >= 63 ? "battery.75percent" : l >= 38 ? "battery.50percent" : l >= 13 ? "battery.25percent" : "battery.0percent"
+    }
+
+    /// Durante la Concentrazione, al posto della batteria il tempo che manca con una barretta (H-3).
+    @ViewBuilder private var batteriaOTempo: some View {
+        if let conc = stato.concentrazione {
+            Button { apriMenuTempo() } label: {
+                TimelineView(.periodic(from: .now, by: 1)) { ctx in
+                    let resto = conc.fine.map { $0.timeIntervalSince(ctx.date) }
+                    let tot = conc.fine.map { $0.timeIntervalSince(conc.inizio) } ?? 1
+                    VStack(spacing: 3) {
+                        Text(resto.map(tempoCheManca) ?? "∞").font(.system(size: 11.5, weight: .semibold)).monospacedDigit().foregroundStyle(Tema.testo)
+                        Capsule().fill(Tema.sopra).frame(width: 36, height: 3)
+                            .overlay(alignment: .leading) { Capsule().fill(Tema.accento).frame(width: 36 * max(0, min(1, 1 - (resto ?? 0) / tot))) }
+                    }
+                    .frame(width: 54, height: stato.verticale ? 38 : Misure.altezza)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .background(CorniceMenu(id: "tempo"))
+        } else { batteria }
+    }
+
+    private func apriMenuTempo() {
+        guard let conc = stato.concentrazione else { return }
+        let m = NSMenu()
+        m.addItem(NSMenuItem.sectionHeader(title: conc.fine.map { "Concentrazione · mancano " + tempoCheManca($0.timeIntervalSinceNow) } ?? "Concentrazione · senza tempo"))
+        m.addItem(Menu.voce("+5 minuti", simbolo: "plus") { c.prolunga(5) })
+        m.addItem(Menu.voce("+15 minuti", simbolo: "plus") { c.prolunga(15) })
+        m.addItem(.separator())
+        m.addItem(Menu.voce("Termina adesso", simbolo: "stop") { c.fineConcentrazione(suono: false) })
+        Menu.apri(m, sopra: CorniceMenu.cornici["tempo"] ?? .zero)
+    }
+
+    /// ⚡︎ i Lampi. Quando un Lampo è coperto da un'altra finestra il tasto si allarga con la sua
+    /// icona (e «Tutti» se sono due o più): un clic lo riporta davanti (Q-1).
+    private var fulmine: some View {
+        HStack(spacing: 4) {
+            Button { apriMenuLampi() } label: {
+                Image(systemName: "sparkles").font(.system(size: 14))
+                    .frame(width: stato.lampiCoperti.isEmpty ? Misure.tasto : 20, height: stato.verticale ? Misure.tasto : Misure.altezza)
+                    .foregroundStyle(Tema.accento).contentShape(Rectangle())
+            }.buttonStyle(.plain).background(CorniceMenu(id: "lampi"))
+            ForEach(stato.lampiCoperti, id: \.self) { b in
+                Button { c.lampi.riporta([b]) } label: {
+                    if let i = stato.icone[b] ?? NSWorkspace.shared.urlForApplication(withBundleIdentifier: b).map({ NSWorkspace.shared.icon(forFile: $0.path) }) {
+                        Image(nsImage: i).resizable().frame(width: 18, height: 18)
+                    }
+                }.buttonStyle(.plain)
+            }
+            if stato.lampiCoperti.count >= 2 {
+                Button("Tutti") { c.lampi.riporta(stato.lampiCoperti) }.buttonStyle(.plain).font(.system(size: 11.5)).foregroundStyle(Tema.testo)
+            }
+        }
+        .padding(.horizontal, stato.lampiCoperti.isEmpty ? 0 : 6)
+        .frame(height: Misure.altezzaScheda)
+        .background(stato.lampiCoperti.isEmpty ? .clear : Tema.sopra, in: RoundedRectangle(cornerRadius: Misure.angoloScheda))
+        .help("Lampi")
+    }
+
+    /// Il menu ⚡︎ (DESIGN 3.1): in cima la riga dei Lampi, poi Strumenti, App e Personalizza.
+    private func apriMenuLampi() {
+        let m = NSMenu()
+        let aperti = Set(c.lampi.aperti.map(\.id))
+        let riga = NSMenuItem()
+        let vista = NSHostingView(rootView: RigaLampi(lampi: c.lampi.lampi.filter { !$0.barraMenu }, aperti: aperti) { l in
+            m.cancelTracking(); c.lampi.premi(l)
+        })
+        vista.frame.size = vista.fittingSize
+        riga.view = vista
+        m.addItem(NSMenuItem.sectionHeader(title: "Lampi · \(aperti.count) \(aperti.count == 1 ? "aperto" : "aperti")"))
+        m.addItem(riga)
+        m.addItem(.separator())
+        m.addItem(NSMenuItem.sectionHeader(title: "Strumenti"))
+        if let conc = stato.concentrazione {
+            let v = Menu.voce("Concentrazione · " + (conc.fine.map { "mancano " + tempoCheManca($0.timeIntervalSinceNow) } ?? "senza tempo"), simbolo: "target") { apriMenuTempo() }
+            m.addItem(v)
+        } else {
+            m.addItem(Menu.voce("Concentrazione…", simbolo: "target") { c.apriFoglioConcentrazione() })
+        }
+        let cerca = Menu.voce("Cerca", simbolo: "text.magnifyingglass") { c.apriRicerca() }
+        cerca.keyEquivalent = " "; cerca.keyEquivalentModifierMask = [.control, .option]
+        m.addItem(cerca)
+        let app = c.lampi.lampi.filter(\.barraMenu)
+        if !app.isEmpty {
+            m.addItem(.separator())
+            m.addItem(NSMenuItem.sectionHeader(title: "App"))
+            for l in app {
+                let v = Menu.voce(l.nome, tasto: l.tasto) { c.lampi.premi(l) }
+                if let b = l.bid, let u = NSWorkspace.shared.urlForApplication(withBundleIdentifier: b) {
+                    let i = NSWorkspace.shared.icon(forFile: u.path); i.size = NSSize(width: 16, height: 16); v.image = i
+                }
+                m.addItem(v)
+            }
+        }
+        m.addItem(.separator())
+        m.addItem(Menu.voce("Personalizza i Lampi…", simbolo: "slider.horizontal.3") { c.apriFoglioLampi() })
+        Menu.apri(m, sopra: CorniceMenu.cornici["lampi"] ?? .zero)
     }
 
     /// ⊞ Dividi lo schermo: il menu con gli schemi. Acceso mentre dividi o su una vista divisa.
@@ -546,18 +664,31 @@ struct BarraVista: View {
         Menu.apri(m, sopra: CorniceMenu.cornici["altre"] ?? .zero)
     }
 
+    /// Il menu ⚙︎ (DESIGN 3.1): Tabby… · Impostazioni · Scorciatoie · Posizione · Chiudi tutte le
+    /// app (conferma col secondo clic) · Metti in pausa Tabby (con ⌥: Esci da Tabby).
     private func apriImpostazioni() {
         let m = NSMenu()
+        let tabby = Menu.voce("Tabby…", simbolo: "text.magnifyingglass") { c.apriRicerca(con: "Tabby ") }
+        m.addItem(tabby)
+        m.addItem(Menu.voce("Impostazioni", simbolo: "gearshape") { c.apriFinestraTabby(sezione: "set") })
+        m.addItem(Menu.voce("Scorciatoie", simbolo: "command", tasto: "/") { c.apriFinestraTabby(sezione: "doc") })
         let pos = NSMenu()
         for (k, t) in [("top", "In alto"), ("right", "A destra"), ("left", "A sinistra"), ("bottom", "In basso")] {
             pos.addItem(Menu.voce(t, segno: stato.posizione == k) { c.cambiaPosizione(k) })
         }
         let p = Menu.voce("Posizione", simbolo: "macwindow"); p.submenu = pos; p.isEnabled = true
         m.addItem(p)
-        m.addItem(Menu.voce("Una scheda alla volta", segno: c.imp.unaAllaVolta) { c.cambia("oneAtATime") })
-        m.addItem(Menu.voce("Adatta le finestre a Tabby", segno: c.imp.adatta) { c.cambia("fit") })
         m.addItem(.separator())
-        let esci = Menu.voce("Esci da Tabby") { NSApp.terminate(nil) }
+        let tutte = NSMenuItem()
+        let conferma = NSHostingView(rootView: VoceConferma(titolo: "Chiudi tutte le app…", conferma: "Clic di nuovo per chiudere tutte") {
+            m.cancelTracking(); c.chiudiTutteLeApp()
+        })
+        conferma.frame.size = NSSize(width: 250, height: 22)
+        tutte.view = conferma
+        m.addItem(tutte)
+        m.addItem(Menu.voce("Metti in pausa Tabby", simbolo: "pause.circle") { c.pausa(true) })
+        let esci = Menu.voce("Esci da Tabby", simbolo: "power") { NSApp.terminate(nil) }
+        esci.isAlternate = true; esci.keyEquivalentModifierMask = [.option]
         m.addItem(esci)
         Menu.apri(m, sopra: CorniceMenu.cornici["impostazioni"] ?? .zero)
     }
@@ -573,5 +704,55 @@ struct CorniceMenu: View {
                 .onChange(of: g.frame(in: .global)) { _, f in CorniceMenu.cornici[id] = f }
                 .onDisappear { CorniceMenu.cornici[id] = nil }
         }
+    }
+}
+
+/// La riga dei Lampi in cima al menu ⚡︎: icone grandi col nome, puntino verde su quelli aperti.
+struct RigaLampi: View {
+    let lampi: [Lampo]
+    let aperti: Set<String>
+    let premi: (Lampo) -> Void
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(lampi) { l in
+                Button { premi(l) } label: {
+                    VStack(spacing: 3) {
+                        Group {
+                            if l.memo { Image(systemName: "note.text").font(.system(size: 18)).foregroundStyle(Tema.accento) }
+                            else if let b = l.bid, let u = NSWorkspace.shared.urlForApplication(withBundleIdentifier: b) {
+                                Image(nsImage: NSWorkspace.shared.icon(forFile: u.path)).resizable()
+                            }
+                        }
+                        .frame(width: 28, height: 28)
+                        .overlay(alignment: .topTrailing) {
+                            if aperti.contains(l.id) { Circle().fill(Color.green).frame(width: 7, height: 7).offset(x: 2, y: -1) }
+                        }
+                        Text(l.nome).font(.system(size: 10.5)).lineLimit(1).frame(maxWidth: 58)
+                        Text("⌃⌥" + l.tasto.uppercased()).font(.system(size: 9.5)).foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 4).frame(width: 62).contentShape(Rectangle())
+                }.buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 10).padding(.vertical, 4)
+    }
+}
+
+/// Una voce di menu che chiede conferma col secondo clic (DESIGN 3.2): al primo diventa rossa.
+struct VoceConferma: View {
+    let titolo: String
+    let conferma: String
+    let azione: () -> Void
+    @State private var armata = false
+    @State private var sopra = false
+    var body: some View {
+        Text(armata ? conferma : titolo)
+            .font(.system(size: 13)).foregroundStyle(armata ? .white : (sopra ? .white : .primary))
+            .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 10).frame(height: 22)
+            .background(armata ? Color.red : (sopra ? Color.accentColor : .clear), in: RoundedRectangle(cornerRadius: 5))
+            .padding(.horizontal, 5)
+            .contentShape(Rectangle())
+            .onHover { sopra = $0 }
+            .onTapGesture { if armata { azione() } else { armata = true } }
     }
 }

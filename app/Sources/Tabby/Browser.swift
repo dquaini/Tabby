@@ -22,7 +22,22 @@ final class Browser {
 
     // DuckDuckGo
     private struct Vista { var sito: String?; var schede: Int?; var titolo: String; var quando: Date }
-    private var viste: [UInt32: Vista] = [:]
+    /// Ricordate anche dopo un riavvio di Tabby (solo sito, numero di schede e titolo): un
+    /// DuckDuckGo nascosto non si lascia guardare dentro.
+    private var viste: [UInt32: Vista] = {
+        var v: [UInt32: Vista] = [:]
+        for (k, x) in Impostazioni.shared.valore("ddgViste") as? [String: [String: Any]] ?? [:] {
+            guard let id = UInt32(k) else { continue }
+            v[id] = Vista(sito: x["sito"] as? String, schede: x["schede"] as? Int, titolo: x["titolo"] as? String ?? "", quando: .distantPast)
+        }
+        return v
+    }()
+
+    private func salvaViste() {
+        var d: [String: [String: Any]] = [:]
+        for (id, x) in viste.prefix(60) { d[String(id)] = ["sito": x.sito ?? "", "schede": x.schede ?? 0, "titolo": x.titolo] }
+        Impostazioni.shared.imposta("ddgViste", d)
+    }
 
     init() {
         // Le domande ai browser: ogni 3 s se ne stai usando uno, ogni 15 s se sono dietro;
@@ -135,6 +150,7 @@ final class Browser {
     /// cambiato o dopo 10 s. Ridotta o browser nascosto: vale l'ultima cosa vista.
     private func guarda(_ w: AXUIElement, id: UInt32, titolo: String, nascosta: Bool, ridotta: Bool) -> (sito: String?, schede: Int?) {
         if let v = viste[id], nascosta || ridotta || (v.titolo == titolo && Date().timeIntervalSince(v.quando) < 10) {
+            if v.sito?.isEmpty == true { return (nil, v.schede) }
             return (v.sito, v.schede)
         }
         if nascosta || ridotta { return (nil, nil) }
@@ -143,7 +159,9 @@ final class Browser {
             if viste[id]?.sito != r.sito || viste[id]?.schede != r.schede {
                 diario("DuckDuckGo «\(titolo.prefix(40))»: sito=\(r.sito.flatMap(dominio) ?? "?") · schede=\(r.schede ?? 0)")
             }
+            let cambiata = viste[id]?.sito != r.sito || viste[id]?.schede != r.schede || viste[id]?.titolo != titolo
             viste[id] = Vista(sito: r.sito, schede: r.schede, titolo: titolo, quando: Date())
+            if cambiata { salvaViste() }
             return r
         }
         if let v = viste[id] { return (v.sito, v.schede) }
