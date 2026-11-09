@@ -279,6 +279,10 @@ final class Controllore {
         segnaAttiva(s.chiave)
         let w = elementi[s.chiave]
         Sistema.portaDavanti(app, finestra: w)
+        // Non si aspetta l'avviso di macOS: se l'app era già davanti (es. dopo Scomponi) non
+        // arriverebbe, e la finestra resterebbe della misura di prima.
+        if imp.unaAllaVolta { Sistema.nascondiAltre(tranne: [s.bid]) }
+        if imp.adatta { Sistema.adatta(app, posizione: stato.posizione, tranne: finestreInViste()) }
         // Le altre finestre della stessa app restano aperte dietro (deciso con Daniele il
         // 9/11/2026, al posto di U-2 che le riduceva nel Dock): hanno tutte la stessa misura,
         // quindi quella davanti le copre.

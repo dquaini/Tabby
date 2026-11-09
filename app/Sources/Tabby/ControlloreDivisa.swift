@@ -72,6 +72,14 @@ extension Controllore {
         salvaViste()
         imp.imposta("order", sposta(chiave, davanti: nil, in: imp.ordine).filter { $0 != chiave })
         withAnimationMolla { ricostruisci() }
+        // tutte le finestre della vista tornano a tutto spazio, subito
+        if imp.adatta {
+            for k in v.membri {
+                if let x = scheda(k), let app = NSRunningApplication(processIdentifier: x.pid) {
+                    Sistema.adatta(app, posizione: stato.posizione, tranne: finestreInViste())
+                }
+            }
+        }
         if let s = scheda(v.attenzione ?? v.membri[0]) { vai(s) }
     }
 
