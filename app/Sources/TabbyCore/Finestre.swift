@@ -107,6 +107,12 @@ public func schedaAccanto(chiusa: String, prima: [String], dopo: [String]) -> St
     return candidati.first { dopo.contains($0) } ?? dopo.first
 }
 
+/// Una scheda è davvero chiusa (C-4)? Non lo è se è solo raccolta dentro una vista divisa o una
+/// scheda-cartella: `visibili` sono le schede in barra, `tutte` anche quelle raccolte.
+public func èChiusa(_ chiave: String, visibili: [Scheda], tutte: [Scheda]) -> Bool {
+    !(visibili + tutte).contains { $0.chiave == chiave && !$0.ridotta }
+}
+
 /// Dove andare quando si chiude (o si riduce) la scheda attiva: se la sua app ha altre
 /// finestre, anche ridotte, la più vicina di quelle (come C-3); altrimenti la scheda accanto.
 public func dopoLaChiusura(di chiusa: Scheda, prima: [Scheda], adesso: [Scheda]) -> String? {

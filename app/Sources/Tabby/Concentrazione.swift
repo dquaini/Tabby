@@ -55,13 +55,14 @@ extension Controllore {
                                     chiavi: Set(scelte + schede.map(\.chiave)), app: Set(schede.map(\.bid)),
                                     chiaviAllInizio: Set(tutte.map(\.chiave) + stato.schede.map(\.chiave)), notificheInizio: numeriniOra())
         stato.scelta = nil
-        palco.chiudiFoglio()
+        palco.chiudiFoglio(torna: false)
         stato.concentrazione = c
         salvaConcentrazione()
         if stato.nonDisturbare { esegui("/usr/bin/shortcuts", ["run", "Concentrazione on"]) }
         Sistema.nascondiAltre(tranne: c.app)
         ricostruisci()
-        if let a = stato.attiva, !c.chiavi.contains(a), let s = stato.schede.first { vai(s) }
+        // si resta sulla scheda in cui eri, se è tra le scelte; altrimenti la prima
+        if let s = stato.schede.first(where: { $0.chiave == stato.attiva }) ?? stato.schede.first { vai(s, daTe: false) }
         controllaConcentrazione()
         diario("concentrazione: \(minuti) min, \(c.chiavi.count) schede")
     }

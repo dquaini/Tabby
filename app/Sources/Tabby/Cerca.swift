@@ -71,7 +71,7 @@ extension Controllore {
         }
     }
 
-    func chiudiRicerca() { stato.ricerca = nil; palco.chiudiFoglio() }
+    func chiudiRicerca(torna: Bool = true) { stato.ricerca = nil; palco.chiudiFoglio(torna: torna) }
 
     private func aggiornaTesti() {
         var f: [(id: UInt32, pid: pid_t, w: AXUIElement)] = []
@@ -130,7 +130,7 @@ extension Controllore {
 
     func esegui(_ a: AzioneRicerca, alternativa: Bool) {
         let testo = stato.ricerca ?? ""
-        chiudiRicerca()
+        chiudiRicerca(torna: false)                 // si va altrove: niente ritorno all'app di prima
         switch a {
         case .scheda(let k):
             let vis = conViste(tutte, viste)
@@ -171,8 +171,9 @@ struct BarraRicerca: View {
         let r = cerca(stato.ricerca ?? "", in: tutto.map(\.0))
         let elenco = (r.migliore.map { [$0] } ?? []) + r.gruppi.flatMap(\.1)
         let azione = Dictionary(tutto.map { ($0.0.id, $0.1) }, uniquingKeysWith: { a, _ in a })
-        // Come Spotlight di macOS 26: una capsula di vetro, e sotto i risultati in un vetro a parte.
-        VStack(spacing: 10) {
+        // Come Spotlight di macOS 26: un vetro solo, che da capsula si allunga in giù coi risultati.
+        let aperta = !elenco.isEmpty
+        VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 12) {
                 Image(systemName: "magnifyingglass").font(.system(size: 20, weight: .medium)).foregroundStyle(.secondary)
                 TextField("Cerca con Tabby", text: Binding(get: { stato.ricerca ?? "" }, set: { stato.ricerca = $0; stato.sceltaRicerca = 0; stato.confermaForte = nil }))
@@ -180,8 +181,8 @@ struct BarraRicerca: View {
                     .onSubmit { scegli(elenco, azione, alternativa: NSEvent.modifierFlags.contains(.command)) }
             }
             .padding(.horizontal, 20).frame(height: 56)
-            .glassEffect(.regular, in: .capsule)
-            if !elenco.isEmpty {
+            if aperta {
+                Divider().padding(.horizontal, 16)
                 VStack(alignment: .leading, spacing: 0) {
                     if let m = r.migliore { titoletto("Il migliore"); riga(m, 0) }
                     ForEach(r.gruppi, id: \.0) { g, righe in
@@ -190,13 +191,15 @@ struct BarraRicerca: View {
                     }
                 }
                 .padding(.vertical, 8)
-                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 24))
-                .transition(.opacity.combined(with: .move(edge: .top)))
+                .transition(.opacity)
             }
         }
         .frame(width: 680)
-        .animation(.easeOut(duration: 0.15), value: elenco.count)
-        .onAppear { dentro = true }
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 28))
+        .animation(.spring(response: 0.3, dampingFraction: 0.86), value: aperta)
+        .animation(.easeOut(duration: 0.12), value: elenco.map(\.id))
+        // si scrive subito, senza cliccare
+        .onAppear { DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { dentro = true } }
         .onKeyPress(.upArrow) { stato.sceltaRicerca = max(0, stato.sceltaRicerca - 1); stato.confermaForte = nil; return .handled }
         .onKeyPress(.downArrow) { stato.sceltaRicerca = min(max(0, elenco.count - 1), stato.sceltaRicerca + 1); stato.confermaForte = nil; return .handled }
         .onKeyPress(.escape) {

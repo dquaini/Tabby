@@ -27,6 +27,13 @@ final class GestoreLampi {
     func salvaLampi() { c.imp.imposta("quick", lampi.map(\.dizionario)); c.registraLampi() }
 
     func èVeloce(_ bid: String) -> Bool { veloci.contains(bid) }
+
+    /// Un Lampo chiuso del tutto (⌘Q) torna un'app normale: riaperto da Spotlight è una scheda.
+    func dimenticaChiusi() {
+        let aperte = Set(NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier))
+        let chiusi = veloci.subtracting(aperte)
+        if !chiusi.isEmpty { veloci.subtract(chiusi); salvaVeloci() }
+    }
     var aperti: [Lampo] {
         lampi.filter { l in
             if l.memo { return memo.aperto }

@@ -596,10 +596,12 @@ struct BarraVista: View {
         withAnimationMolla { trascinata = nil; provvisorio = nil }
     }
 
-    /// La vista cartella (F-6): «←» per tornare a tutte le schede, e il nome col suo menu.
+    /// La vista cartella (F-6): «‹» per tornare a tutte le schede, e l'etichetta della cartella —
+    /// nel colore del tema, col simbolo della cartella e quante schede ha, così non sembra una
+    /// scheda (clic = il suo menu).
     @ViewBuilder private var testataCartella: some View {
         if let id = stato.cartellaAperta, let f = stato.cartelle.first(where: { $0.id == id }) {
-            HStack(spacing: 6) {
+            HStack(spacing: 4) {
                 Button { c.esciDallaVistaCartella() } label: {
                     Image(systemName: "chevron.left").font(.system(size: 12, weight: .semibold)).foregroundStyle(Tema.testo)
                         .frame(width: 28, height: Misure.altezzaScheda)
@@ -607,13 +609,19 @@ struct BarraVista: View {
                         .contentShape(Rectangle())
                 }.buttonStyle(.plain).onHover { sopra = $0 ? "←" : nil }.help("Tutte le schede")
                 Button { apriMenuCartella(f.chiave) } label: {
-                    HStack(spacing: 5) {
-                        Image(systemName: "square.stack.3d.up").foregroundStyle(Tema.accento)
-                        Text(f.nome).font(.system(size: 13, weight: .semibold)).foregroundStyle(Tema.testo)
-                    }.contentShape(Rectangle())
-                }.buttonStyle(.plain).background(CorniceMenu(id: "m:" + f.chiave))
+                    HStack(spacing: 6) {
+                        Image(systemName: "square.stack.3d.up.fill").font(.system(size: 12))
+                        Text(f.nome).font(.system(size: 13, weight: .semibold))
+                        Text("\(stato.schede.count)").font(.system(size: 10, weight: .bold)).monospacedDigit().opacity(0.7)
+                    }
+                    .foregroundStyle(Tema.accento)
+                    .padding(.horizontal, 10).frame(height: Misure.altezzaScheda - 4)
+                    .background(Capsule().fill(Tema.accento.opacity(sopra == "cartella" ? 0.24 : 0.15)))
+                    .overlay(Capsule().strokeBorder(Tema.accento.opacity(0.45), lineWidth: 0.75))
+                    .contentShape(Capsule())
+                }.buttonStyle(.plain).onHover { sopra = $0 ? "cartella" : nil }
             }
-            .padding(.trailing, 8)
+            .padding(.trailing, 6)
         }
     }
 

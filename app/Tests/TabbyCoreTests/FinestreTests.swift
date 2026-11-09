@@ -56,6 +56,16 @@ struct FinestreTests {
         #expect(dopoLaChiusura(di: a, prima: [a, f1], adesso: [f1]) == "finder")
     }
 
+    @Test func raccoltaInUnaCartellaNonEChiusa() {
+        // uscendo dalla vista cartella Claude finisce dentro la scheda «Daily»: non è chiuso (9/11/2026)
+        let claude = Scheda(chiave: "claude", bid: "claude", nome: "Claude", pid: 1, finestra: 1)
+        let daily = Scheda(chiave: "f:4", bid: "claude", nome: "Daily", pid: 1)
+        #expect(!èChiusa("claude", visibili: [daily], tutte: [claude]))
+        #expect(èChiusa("claude", visibili: [daily], tutte: []))
+        var ridotta = claude; ridotta.ridotta = true
+        #expect(èChiusa("claude", visibili: [], tutte: [ridotta]))
+    }
+
     @Test func spostareTrascinando() {
         #expect(sposta("c", davanti: "a", in: ["a", "b", "c", "x"]) == ["c", "a", "b", "x"])
         #expect(sposta("a", davanti: nil, in: ["a", "b"]) == ["b", "a"])

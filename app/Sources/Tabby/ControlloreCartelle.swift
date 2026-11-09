@@ -467,8 +467,11 @@ struct CercaApp: View {
             }
             .padding(.horizontal, 14).frame(height: 30)
             let q = normalizza(testo)
-            if !q.isEmpty {
-                ForEach(AppInstallate.tutte.filter { normalizza($0.nome).contains(q) }.prefix(5), id: \.bid) { a in
+            // prima quelle che iniziano con le lettere scritte, poi le altre
+            let trovate = q.isEmpty ? [] : Array(AppInstallate.tutte.filter { normalizza($0.nome).contains(q) }
+                .sorted { normalizza($0.nome).hasPrefix(q) && !normalizza($1.nome).hasPrefix(q) }.prefix(5))
+            VStack(spacing: 0) {
+                ForEach(trovate, id: \.bid) { a in
                     Button { scegli(Voce(bid: a.bid, nome: a.nome)) } label: {
                         HStack(spacing: 10) {
                             Image(nsImage: NSWorkspace.shared.icon(forFile: a.url.path)).resizable().frame(width: 20, height: 20)
@@ -478,8 +481,11 @@ struct CercaApp: View {
                         }
                         .padding(.horizontal, 14).frame(height: 30).contentShape(Rectangle())
                     }.buttonStyle(.plain)
+                    .transition(.opacity.combined(with: .offset(y: -4)))
                 }
             }
+            .clipped()
+            .animation(.spring(response: 0.32, dampingFraction: 0.9), value: trovate.map(\.bid))
         }
     }
 }

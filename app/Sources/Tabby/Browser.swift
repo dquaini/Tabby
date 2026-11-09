@@ -24,6 +24,8 @@ final class Browser {
     private struct Vista { var sito: String?; var schede: Int?; var titolo: String; var quando: Date }
     /// Ricordate anche dopo un riavvio di Tabby (solo sito, numero di schede e titolo): un
     /// DuckDuckGo nascosto non si lascia guardare dentro.
+    private var inLettura = Set<UInt32>()
+    private let coda = DispatchQueue(label: "tabby.duckduckgo", qos: .userInitiated)
     private var viste: [UInt32: Vista] = {
         var v: [UInt32: Vista] = [:]
         for (k, x) in Impostazioni.shared.valore("ddgViste") as? [String: [String: Any]] ?? [:] {
@@ -154,18 +156,29 @@ final class Browser {
             return (v.sito, v.schede)
         }
         if nascosta || ridotta { return (nil, nil) }
-        let r = misura("DuckDuckGo: guarda una finestra") { Browser.esplora(w) }
-        if r.sito != nil, r.schede != nil {
-            if viste[id]?.sito != r.sito || viste[id]?.schede != r.schede {
-                diario("DuckDuckGo «\(titolo.prefix(40))»: sito=\(r.sito.flatMap(dominio) ?? "?") · schede=\(r.schede ?? 0)")
+        // Guardare dentro una finestra può costare qualche decimo di secondo: si fa **in
+        // sottofondo** e intanto vale l'ultima cosa vista; quando arriva la risposta, se è
+        // cambiato qualcosa, le schede si ricostruiscono.
+        if !inLettura.contains(id) {
+            inLettura.insert(id)
+            coda.async { [weak self] in
+                let r = Browser.esplora(w)
+                DispatchQueue.main.async { MainActor.assumeIsolated { self?.letta(id, titolo: titolo, r) } }
             }
-            let cambiata = viste[id]?.sito != r.sito || viste[id]?.schede != r.schede || viste[id]?.titolo != titolo
-            viste[id] = Vista(sito: r.sito, schede: r.schede, titolo: titolo, quando: Date())
-            if cambiata { salvaViste() }
-            return r
         }
         if let v = viste[id] { return (v.sito, v.schede) }
-        return r
+        return (nil, nil)
+    }
+
+    private func letta(_ id: UInt32, titolo: String, _ r: (sito: String?, schede: Int?)) {
+        inLettura.remove(id)
+        guard r.sito != nil, r.schede != nil else { return }
+        let cambiata = viste[id]?.sito != r.sito || viste[id]?.schede != r.schede
+        if cambiata { diario("DuckDuckGo «\(titolo.prefix(40))»: sito=\(r.sito.flatMap(dominio) ?? "?") · schede=\(r.schede ?? 0)") }
+        let titoloCambiato = viste[id]?.titolo != titolo
+        viste[id] = Vista(sito: r.sito, schede: r.schede, titolo: titolo, quando: Date())
+        if cambiata || titoloCambiato { salvaViste() }
+        if cambiata { cambiato?() }
     }
 
     /// Guarda dentro la finestra (al massimo 800 elementi, profondità 14) senza entrare nella

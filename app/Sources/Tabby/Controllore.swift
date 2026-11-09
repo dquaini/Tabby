@@ -185,6 +185,7 @@ final class Controllore {
             let spazio = Sistema.spazioApp(posizione: stato.posizione)
             let aperti = Set(NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier))
             for b in browserNoti.keys where !aperti.contains(b) { browser.dimentica(b) }
+            lampi.dimenticaChiusi()
             for app in Sistema.appVere() {
                 osserva(app.processIdentifier)
                 var (i, e) = Sistema.leggi(app)
@@ -233,12 +234,15 @@ final class Controllore {
         guard !stato.scrivania else { return }
         let ora = Date()
         ridotteDaTabby = ridotteDaTabby.filter { ora.timeIntervalSince($0.value) < 2 }
-        let vive = Set(stato.schede.filter { !$0.ridotta }.map(\.chiave))
+        // vive: anche le schede dentro una vista divisa o una scheda-cartella (non sono chiuse,
+        // sono solo raccolte lì) — prima uscire da una cartella sembrava una chiusura e ci si
+        // ritrovava dentro (9/11/2026)
+        func chiusa(_ k: String) -> Bool { èChiusa(k, visibili: stato.schede, tutte: tutte) }
         // la scheda attiva, o quella di un attimo fa se nel frattempo macOS ha cambiato app
         var candidata: String?
-        if let k = stato.attiva, !vive.contains(k) { candidata = k }
+        if let k = stato.attiva, chiusa(k) { candidata = k }
         else if storia.count >= 2, ora.timeIntervalSince(storia[storia.count - 1].quando) < 1.5,
-                sceltaTua < storia[storia.count - 1].quando, !vive.contains(storia[storia.count - 2].chiave) {
+                sceltaTua < storia[storia.count - 1].quando, chiusa(storia[storia.count - 2].chiave) {
             candidata = storia[storia.count - 2].chiave
         }
         guard let chiusa = candidata, let vecchia = prima.first(where: { $0.chiave == chiusa }) else { return }
@@ -267,6 +271,8 @@ final class Controllore {
         }
         if let id = stato.diChi[k] {                                      // dentro una cartella attiva
             ultimaDi[id] = k
+            // stai guardando un'altra cartella: si passa alla vista di questa
+            if let a = stato.cartellaAperta, a != id { stato.cartellaAperta = id; ricostruisciPresto() }
             if vistaCartelle && stato.cartellaAperta == nil { k = "f:\(id)" }
         } else if stato.cartellaAperta != nil && !stato.schede.contains(where: { $0.chiave == k }) {
             stato.cartellaAperta = nil; ricostruisciPresto()              // un'app fuori dalla cartella: vista generale

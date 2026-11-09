@@ -132,6 +132,7 @@ struct TitoloSezione: View {
 @MainActor
 final class Palco: NSPanel {
     private var chiudi: (() -> Void)?
+    private var giro = 0
     private var appPrima: NSRunningApplication?
     private(set) var cornice: CGRect = .zero     // il foglio, in coordinate dello schermo
     var aperto: Bool { isVisible }
@@ -150,7 +151,9 @@ final class Palco: NSPanel {
 
     /// Apre `foglio` sopra il velo. `annulla` si chiama per un clic sul velo.
     func apri<V: View>(_ foglio: V, sopra barra: NSWindow?, posizione: String, inAlto: Bool = false, annulla: @escaping () -> Void) {
-        appPrima = NSWorkspace.shared.frontmostApplication
+        // l'app a cui tornare (se un foglio ne sostituisce un altro, resta quella di prima)
+        if let f = NSWorkspace.shared.frontmostApplication, f.bundleIdentifier != Sistema.mioBid { appPrima = f }
+        giro += 1
         chiudi = annulla
         setFrame(Sistema.spazioApp(posizione: posizione), display: false)
         contentView = VistaOspite(rootView: ScenaPalco(foglio: foglio, palco: self, inAlto: inAlto, annulla: annulla))
@@ -164,13 +167,18 @@ final class Palco: NSPanel {
         cornice = CGRect(x: frame.minX + r.minX, y: frame.maxY - r.maxY, width: r.width, height: r.height)
     }
 
-    /// Chiude il foglio (uscita veloce, 0,2 s) e ridà la tastiera all'app di prima.
-    func chiudiFoglio(tornaA app: NSRunningApplication? = nil) {
+    /// Chiude il foglio (uscita veloce, 0,2 s). `torna`: ridà la tastiera all'app di prima — no
+    /// quando subito dopo si va altrove (una scheda scelta nella ricerca, la Concentrazione…),
+    /// altrimenti le due cose si contendono il primo piano e vince l'app di prima.
+    func chiudiFoglio(torna: Bool = true) {
         guard isVisible else { return }
-        NSAnimationContext.runAnimationGroup({ $0.duration = 0.18; animator().alphaValue = 0 }) { [weak self] in
-            MainActor.assumeIsolated { self?.orderOut(nil); self?.contentView = nil }
+        let questo = giro
+        NSAnimationContext.runAnimationGroup { $0.duration = 0.18; animator().alphaValue = 0 }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+            guard let self, self.giro == questo else { return }        // nel frattempo si è aperto un altro foglio
+            self.orderOut(nil); self.contentView = nil
         }
-        if let a = app ?? appPrima, a.bundleIdentifier != Sistema.mioBid { a.activate() }
+        if torna, let a = appPrima, a.bundleIdentifier != Sistema.mioBid { a.activate() }
     }
 }
 
@@ -180,6 +188,7 @@ private struct ScenaPalco<V: View>: View {
     let inAlto: Bool
     let annulla: () -> Void
     @State private var dentro = false
+    @State private var cima: CGFloat?          // fissata alla prima misura: crescendo, il foglio si allunga in giù
 
     var body: some View {
         GeometryReader { g in
@@ -188,14 +197,17 @@ private struct ScenaPalco<V: View>: View {
                     .opacity(dentro ? 1 : 0)
                 foglio
                     .background(GeometryReader { f in
-                        Color.clear.onAppear { palco.ricordaCornice(f.frame(in: .global)) }
+                        Color.clear.onAppear {
+                            palco.ricordaCornice(f.frame(in: .global))
+                            if cima == nil { cima = max(24, g.size.height * 0.45 - f.size.height / 2) }
+                        }
                             .onChange(of: f.frame(in: .global)) { _, r in palco.ricordaCornice(r) }
                     })
                     .scaleEffect(inAlto ? 1 : (dentro ? 1 : 0.94))
                     .offset(y: inAlto && !dentro ? -10 : 0)
                     .opacity(dentro ? 1 : 0)
                     // i fogli al centro ottico (45%); la ricerca a un terzo, come Spotlight (3.3)
-                    .alignmentGuide(.top) { d in inAlto ? -(g.size.height * 0.22) : -(g.size.height * 0.45 - d.height / 2) }
+                    .alignmentGuide(.top) { d in inAlto ? -(g.size.height * 0.22) : -(cima ?? (g.size.height * 0.45 - d.height / 2)) }
             }
             .frame(width: g.size.width, height: g.size.height)
         }
