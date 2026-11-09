@@ -64,44 +64,65 @@ struct Foglio<Contenuto: View>: View {
     let spiegazione: String
     var principale = "Fatto"
     var principaleAcceso = true
-    var largo: CGFloat = 320
+    var annullaTitolo = "Annulla"
+    var largo: CGFloat = 460
     let annulla: () -> Void
     let conferma: () -> Void
     @ViewBuilder let contenuto: () -> Contenuto
 
+    // Lo stile della finestra di Tabby (rivisto con Daniele il 9/11/2026): nero, scritte grandi in
+    // SF Pro, i comandi come parole («Crea →»), niente pulsanti disegnati.
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .top, spacing: 10) {
-                Image(systemName: simbolo).font(.system(size: 17, weight: .medium)).foregroundStyle(Tema.accento)
-                    .frame(width: 22)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(titolo).font(.system(size: 13.5, weight: .semibold)).foregroundStyle(.white)
-                    Text(spiegazione).font(.system(size: 11.5)).foregroundStyle(.white.opacity(0.55)).fixedSize(horizontal: false, vertical: true)
-                }
+            VStack(alignment: .leading, spacing: 6) {
+                Image(systemName: simbolo).font(.system(size: 22, weight: .regular)).foregroundStyle(Tema.accento).padding(.bottom, 6)
+                Text(titolo).font(.system(size: 22, weight: .semibold)).foregroundStyle(.white)
+                Text(spiegazione).font(.system(size: 13.5)).foregroundStyle(.white.opacity(0.55)).fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.horizontal, 14).padding(.top, 14).padding(.bottom, 10)
-            Divider().overlay(Color.white.opacity(0.08))
-            contenuto().padding(.vertical, 6)
-            Divider().overlay(Color.white.opacity(0.08))
-            HStack(spacing: 8) {
-                Text("↵ · esc").font(.system(size: 11)).foregroundStyle(.white.opacity(0.35))
+            .padding(.horizontal, 28).padding(.top, 28).padding(.bottom, 14)
+            contenuto().padding(.horizontal, 14).padding(.bottom, 8)
+            HStack(spacing: 26) {
                 Spacer()
-                Pulsante(titolo: "Annulla", azione: annulla).keyboardShortcut(.cancelAction)
-                Pulsante(titolo: principale, principale: true, acceso: principaleAcceso, azione: conferma).keyboardShortcut(.defaultAction)
+                Button(annullaTitolo, action: annulla).buttonStyle(.plain).font(.system(size: 14)).foregroundStyle(.white.opacity(0.45))
+                    .keyboardShortcut(.cancelAction)
+                Button(principale + " →", action: conferma).buttonStyle(.plain).font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white.opacity(principaleAcceso ? 1 : 0.3)).disabled(!principaleAcceso)
+                    .keyboardShortcut(.defaultAction)
             }
-            .padding(10)
+            .padding(.horizontal, 28).padding(.top, 10).padding(.bottom, 24)
         }
         .frame(width: largo)
-        .vetroMenu()
+        .background(Color(white: 0.04).opacity(0.97), in: RoundedRectangle(cornerRadius: 22))
+        .overlay(RoundedRectangle(cornerRadius: 22).strokeBorder(Color.white.opacity(0.1), lineWidth: 0.5))
+        .shadow(color: .black.opacity(0.6), radius: 40, y: 20)
+        .environment(\.colorScheme, .dark)
     }
 }
 
-/// Un titolo di sezione dei menu (piccolo, grigio).
+/// Le scelte come parole (stile della finestra di Tabby): la scelta è bianca, le altre grigie.
+struct Parole: View {
+    let scelte: [String]
+    let scelta: String
+    var grandi = false
+    let scegli: (String) -> Void
+    var body: some View {
+        HStack(spacing: grandi ? 20 : 14) {
+            ForEach(scelte, id: \.self) { s in
+                Button { scegli(s) } label: {
+                    Text(s).font(.system(size: grandi ? 17 : 13, weight: s == scelta ? .semibold : .regular))
+                        .foregroundStyle(.white.opacity(s == scelta ? 1 : 0.35)).contentShape(Rectangle())
+                }.buttonStyle(.plain)
+            }
+        }
+    }
+}
+
+/// Un titolo di sezione nei fogli (piccolo, maiuscolo, grigio).
 struct TitoloSezione: View {
     let testo: String
     var body: some View {
-        Text(testo).font(.system(size: 11, weight: .semibold)).foregroundStyle(.white.opacity(0.42))
-            .padding(.horizontal, 14).padding(.top, 8).padding(.bottom, 2)
+        Text(testo.uppercased()).font(.system(size: 11, weight: .semibold)).tracking(0.6).foregroundStyle(.white.opacity(0.4))
+            .padding(.horizontal, 14).padding(.top, 16).padding(.bottom, 6)
     }
 }
 

@@ -40,7 +40,9 @@ final class Avvio: NSObject, NSApplicationDelegate {
         if Importazione.daHammerspoon() > 0 { Impostazioni.shared.imposta("primoAvvioFatto", true) }
         let fatto = Impostazioni.shared.valore("primoAvvioFatto") as? Bool ?? false
         // ogni volta che l'app si apre da zero: le due animazioni (intanto Tabby si prepara dietro)
-        if !CommandLine.arguments.contains("--senza-avvio") { controllore.finestraTabby.avvio() }
+        let arg = CommandLine.arguments
+        if let i = arg.firstIndex(of: "--sezione"), i + 1 < arg.count { controllore.finestraTabby.mostra(sezione: arg[i + 1]) }   // per provarla
+        else if !arg.contains("--senza-avvio") { controllore.finestraTabby.avvio() }
         if Permessi.accessibilita {
             pronta()
         } else {

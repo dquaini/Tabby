@@ -27,6 +27,8 @@ final class StatoBarra {
     var scelta: [String]?
     var nomeFoglio = ""
     var cartellaInModifica: Int?
+    var vociExtra: [Voce] = []                  // app non aperte aggiunte a una cartella
+    var cercaApp = ""
     var foglioIlluminato = false
     // strumenti
     var ricerca: String?

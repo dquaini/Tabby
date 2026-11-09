@@ -171,31 +171,31 @@ struct BarraRicerca: View {
         let r = cerca(stato.ricerca ?? "", in: tutto.map(\.0))
         let elenco = (r.migliore.map { [$0] } ?? []) + r.gruppi.flatMap(\.1)
         let azione = Dictionary(tutto.map { ($0.0.id, $0.1) }, uniquingKeysWith: { a, _ in a })
-        VStack(spacing: 0) {
-            HStack(spacing: 10) {
-                Image(systemName: "text.magnifyingglass").font(.system(size: 19)).foregroundStyle(Tema.accento)
-                TextField("Cerca schede, finestre, cartelle, azioni…", text: Binding(get: { stato.ricerca ?? "" }, set: { stato.ricerca = $0; stato.sceltaRicerca = 0; stato.confermaForte = nil }))
-                    .textFieldStyle(.plain).font(.system(size: 21)).foregroundStyle(.white).focused($dentro)
+        // Come Spotlight di macOS 26: una capsula di vetro, e sotto i risultati in un vetro a parte.
+        VStack(spacing: 10) {
+            HStack(spacing: 12) {
+                Image(systemName: "magnifyingglass").font(.system(size: 20, weight: .medium)).foregroundStyle(.secondary)
+                TextField("Cerca con Tabby", text: Binding(get: { stato.ricerca ?? "" }, set: { stato.ricerca = $0; stato.sceltaRicerca = 0; stato.confermaForte = nil }))
+                    .textFieldStyle(.plain).font(.system(size: 22)).focused($dentro)
                     .onSubmit { scegli(elenco, azione, alternativa: NSEvent.modifierFlags.contains(.command)) }
             }
-            .padding(.horizontal, 16).frame(height: 52)
+            .padding(.horizontal, 20).frame(height: 56)
+            .glassEffect(.regular, in: .capsule)
             if !elenco.isEmpty {
-                Divider().overlay(Color.white.opacity(0.08))
                 VStack(alignment: .leading, spacing: 0) {
-                    if let m = r.migliore { TitoloSezione(testo: "Il migliore"); riga(m, 0) }
+                    if let m = r.migliore { titoletto("Il migliore"); riga(m, 0) }
                     ForEach(r.gruppi, id: \.0) { g, righe in
-                        TitoloSezione(testo: g.titolo)
-                        ForEach(righe) { x in
-                            let i = elenco.firstIndex(of: x) ?? 0
-                            riga(x, i)
-                        }
+                        titoletto(g.titolo)
+                        ForEach(righe) { x in riga(x, elenco.firstIndex(of: x) ?? 0) }
                     }
                 }
-                .padding(.bottom, 6)
+                .padding(.vertical, 8)
+                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 24))
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .frame(width: 640)
-        .vetroMenu()
+        .frame(width: 680)
+        .animation(.easeOut(duration: 0.15), value: elenco.count)
         .onAppear { dentro = true }
         .onKeyPress(.upArrow) { stato.sceltaRicerca = max(0, stato.sceltaRicerca - 1); stato.confermaForte = nil; return .handled }
         .onKeyPress(.downArrow) { stato.sceltaRicerca = min(max(0, elenco.count - 1), stato.sceltaRicerca + 1); stato.confermaForte = nil; return .handled }
@@ -212,22 +212,26 @@ struct BarraRicerca: View {
         if let a = azione[x.id] { c.esegui(a, alternativa: alternativa) }
     }
 
+    private func titoletto(_ t: String) -> some View {
+        Text(t).font(.system(size: 11.5, weight: .semibold)).foregroundStyle(.secondary).padding(.horizontal, 22).padding(.top, 8).padding(.bottom, 3)
+    }
+
     private func riga(_ x: Risultato, _ i: Int) -> some View {
         let su = stato.sceltaRicerca == i
         let forte = stato.confermaForte == x.id
         return HStack(spacing: 10) {
-            icona(x.t).frame(width: 20, height: 20)
-            VStack(alignment: .leading, spacing: 0) {
-                Text(forte ? "Premi ↵ di nuovo per «\(x.t.titolo)»" : x.t.titolo).font(.system(size: 13.5, weight: .medium))
-                    .foregroundStyle(forte ? Color.red : .white).lineLimit(1)
-                if let p = x.pezzetto { Text(p).font(.system(size: 11.5)).foregroundStyle(.white.opacity(su ? 0.85 : 0.55)).lineLimit(1) }
+            icona(x.t).frame(width: 26, height: 26)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(forte ? "Premi ↵ di nuovo per «\(x.t.titolo)»" : x.t.titolo).font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(forte ? Color.red : (su ? .white : .primary)).lineLimit(1)
+                if let p = x.pezzetto { Text(p).font(.system(size: 12)).foregroundStyle(su ? .white.opacity(0.85) : .secondary).lineLimit(1) }
             }
             Spacer()
-            Text(x.t.sotto).font(.system(size: 11.5)).foregroundStyle(.white.opacity(su ? 0.85 : 0.45)).lineLimit(1)
+            Text(x.t.sotto).font(.system(size: 12)).foregroundStyle(su ? .white.opacity(0.85) : .secondary).lineLimit(1)
         }
-        .padding(.horizontal, 10).frame(height: x.pezzetto == nil ? 30 : 40)
-        .background(su ? Color.accentColor : .clear, in: RoundedRectangle(cornerRadius: 6))
-        .padding(.horizontal, 6)
+        .padding(.horizontal, 12).frame(height: x.pezzetto == nil ? 38 : 48)
+        .background(su ? Color.accentColor : .clear, in: RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal, 8)
         .contentShape(Rectangle())
         .onTapGesture { stato.sceltaRicerca = i; scegli(elencoAttuale(), mappaAttuale(), alternativa: false) }
     }

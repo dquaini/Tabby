@@ -172,21 +172,21 @@ struct FoglioConcentrazione: View {
                annulla: { stato.scelta = nil; c.palco.chiudiFoglio() }, conferma: { c.iniziaConcentrazione() }) {
             VStack(alignment: .leading, spacing: 0) {
                 TitoloSezione(testo: "Durata")
-                Picker("", selection: $stato.minutiConc) {
-                    Text("25 min").tag(25); Text("50 min").tag(50); Text("90 min").tag(90)
+                Parole(scelte: ["25 min", "50 min", "90 min"], scelta: "\(stato.minutiConc) min", grandi: true) { s in
+                    stato.minutiConc = Int(s.prefix(2)) ?? 50
                 }
-                .pickerStyle(.segmented).labelsHidden().padding(.horizontal, 14).padding(.bottom, 4)
+                .padding(.horizontal, 14)
                 TitoloSezione(testo: scelte.isEmpty ? "Schede da tenere: clicca nella barra" : "Schede da tenere · \(scelte.count)")
                 ForEach(scelte, id: \.self) { k in
                     HStack(spacing: 8) {
                         if let s = c.scheda(k), let i = s.sito.flatMap({ stato.loghi[$0] }) ?? stato.icone[s.bid] {
-                            Image(nsImage: i).resizable().frame(width: 16, height: 16)
+                            Image(nsImage: i).resizable().frame(width: 20, height: 20)
                         }
-                        Text(c.scheda(k)?.nome ?? k).font(.system(size: 13)).foregroundStyle(.white).lineLimit(1)
+                        Text(c.scheda(k)?.nome ?? k).font(.system(size: 14)).foregroundStyle(.white).lineLimit(1)
                         Spacer()
                         Button { c.scegli(k) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.white.opacity(0.45)) }.buttonStyle(.plain)
                     }
-                    .padding(.horizontal, 14).frame(height: 22)
+                    .padding(.horizontal, 14).frame(height: 32)
                 }
                 let cartelle = stato.cartelle.filter { f in c.attive.contains(f.id) }
                 if !cartelle.isEmpty {
@@ -197,15 +197,16 @@ struct FoglioConcentrazione: View {
                             withAnimationMolla { stato.scelta = Array(Set(scelte + sue)) }
                         } label: {
                             HStack { Image(systemName: "square.stack.3d.up").foregroundStyle(Tema.accento); Text(f.nome).foregroundStyle(.white); Spacer() }
-                                .font(.system(size: 13)).padding(.horizontal, 14).frame(height: 22).contentShape(Rectangle())
+                                .font(.system(size: 13)).padding(.horizontal, 14).frame(height: 32).contentShape(Rectangle())
                         }.buttonStyle(.plain)
                     }
                 }
-                Divider().overlay(Color.white.opacity(0.08)).padding(.vertical, 4)
-                Toggle(isOn: $stato.nonDisturbare) {
-                    Text("Non disturbare").font(.system(size: 13)).foregroundStyle(.white)
+                HStack {
+                    Text("Non disturbare").font(.system(size: 14)).foregroundStyle(.white)
+                    Spacer()
+                    Parole(scelte: ["Sì", "No"], scelta: stato.nonDisturbare ? "Sì" : "No") { stato.nonDisturbare = $0 == "Sì" }
                 }
-                .toggleStyle(.switch).controlSize(.small).padding(.horizontal, 14).frame(height: 24)
+                .padding(.horizontal, 14).padding(.top, 8).frame(height: 40)
             }
         }
     }
@@ -219,17 +220,14 @@ struct FoglioFatto: View {
     var body: some View {
         Foglio(simbolo: "checkmark.seal", titolo: "Fatto! \(minuti) minuti",
                spiegazione: arrivate.isEmpty ? "Nessuna notifica nel frattempo." : "Nel frattempo sono arrivate:",
-               principale: "Riapri tutto", annulla: { c.restaCosì() }, conferma: { c.riapriTutto() }) {
+               principale: "Riapri tutto", annullaTitolo: "Resta così", annulla: { c.restaCosì() }, conferma: { c.riapriTutto() }) {
             VStack(alignment: .leading, spacing: 0) {
                 if !arrivate.isEmpty {
                     Text(arrivate.map { "\($0.nome) \($0.quante)" }.joined(separator: " · "))
                         .font(.system(size: 13)).foregroundStyle(.white).padding(.horizontal, 14).padding(.vertical, 4)
                 }
-                HStack(spacing: 8) {
-                    Pulsante(titolo: "Altri 10 minuti") { c.altriDieci() }
-                    Pulsante(titolo: "Resta così") { c.restaCosì() }
-                }
-                .padding(.horizontal, 14).padding(.vertical, 6)
+                Button("Altri 10 minuti") { c.altriDieci() }.buttonStyle(.plain).font(.system(size: 14)).foregroundStyle(.white.opacity(0.75))
+                    .padding(.horizontal, 14).padding(.vertical, 8)
             }
         }
     }

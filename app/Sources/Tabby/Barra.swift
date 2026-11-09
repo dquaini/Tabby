@@ -70,14 +70,21 @@ enum Menu {
     static func apri(_ m: NSMenu, sopra cornice: CGRect) {
         guard let v = vista, let stato else { return }
         m.appearance = NSAppearance(named: .darkAqua)
-        let flip = v.isFlipped, h = v.bounds.height
+        let flip = v.isFlipped, h = v.bounds.height, w = v.bounds.width
         func y(_ yy: CGFloat) -> CGFloat { flip ? yy : h - yy }
+        // Il menu parte dal bordo della barra (non dal tasto), così non la copre mai. Se il tasto
+        // non ha ancora una posizione, si usa quella del puntatore.
+        var r = cornice
+        if r == .zero, let win = v.window {
+            let q = v.convert(win.convertPoint(fromScreen: NSEvent.mouseLocation), from: nil)
+            r = CGRect(x: q.x - 8, y: (flip ? q.y : h - q.y) - 8, width: 16, height: 16)
+        }
         var p: NSPoint
         switch stato.posizione {
-        case "right":  p = NSPoint(x: cornice.minX - m.size.width - 4, y: y(cornice.minY))
-        case "left":   p = NSPoint(x: cornice.maxX + 4, y: y(cornice.minY))
-        case "bottom": p = NSPoint(x: cornice.minX, y: y(cornice.minY - m.size.height - 4))
-        default:       p = NSPoint(x: cornice.minX, y: y(cornice.maxY + 4))
+        case "right":  p = NSPoint(x: -m.size.width - 4, y: y(r.minY))
+        case "left":   p = NSPoint(x: w + 4, y: y(r.minY))
+        case "bottom": p = NSPoint(x: r.minX, y: y(-m.size.height - 4))
+        default:       p = NSPoint(x: r.minX, y: y(h + 4))
         }
         m.popUp(positioning: nil, at: p, in: v)
     }
@@ -200,7 +207,7 @@ struct BarraVista: View {
     }
 
     private var gatto: some View {
-        Button { apriCasa() } label: {
+        Button { c.scrivania() } label: {
             Group {
                 if let i = immagineGatto("gatto-spento") { Image(nsImage: i).resizable().scaledToFit().frame(width: 20, height: 20) }
                 else { Image(systemName: "pawprint.fill") }
@@ -216,7 +223,7 @@ struct BarraVista: View {
     }
 
     private var gattoIntero: some View {
-        Button { apriCasa() } label: {
+        Button { c.scrivania() } label: {
             Group {
                 let lato = stato.posizione == "left" ? "sinistra" : "destra"
                 if let i = immagineGatto("gatto-intero-\(lato)-spento") { Image(nsImage: i).resizable().scaledToFit() }
@@ -484,6 +491,16 @@ struct BarraVista: View {
                 m.addItem(v)
             }
         }
+        // le cartelle (deciso con Daniele il 9/11/2026: dal gatto passano qui)
+        m.addItem(.separator())
+        m.addItem(NSMenuItem.sectionHeader(title: "Cartelle"))
+        for (n, f) in stato.cartelle.enumerated() {
+            let v = Menu.voce(f.nome, simbolo: "square.stack.3d.up", tasto: n < 9 ? "\(n + 1)" : "") { c.attivaCartella(f.id) }
+            if n < 9 { v.keyEquivalentModifierMask = [.control, .option, .shift] }
+            v.state = c.attive.contains(f.id) ? .on : .off
+            m.addItem(v)
+        }
+        m.addItem(Menu.voce("Nuova cartella…", simbolo: "plus") { c.apriFoglioCartella() })
         m.addItem(.separator())
         m.addItem(Menu.voce("Personalizza i Lampi…", simbolo: "slider.horizontal.3") { c.apriFoglioLampi() })
         Menu.apri(m, sopra: CorniceMenu.cornici["lampi"] ?? .zero)
@@ -584,13 +601,15 @@ struct BarraVista: View {
         if let id = stato.cartellaAperta, let f = stato.cartelle.first(where: { $0.id == id }) {
             HStack(spacing: 6) {
                 Button { c.esciDallaVistaCartella() } label: {
-                    Image(systemName: "chevron.left").font(.system(size: 12, weight: .semibold)).frame(width: 22, height: 26).contentShape(Rectangle())
-                }.buttonStyle(.plain).help("Tutte le schede")
+                    Image(systemName: "chevron.left").font(.system(size: 12, weight: .semibold)).foregroundStyle(Tema.testo)
+                        .frame(width: 28, height: Misure.altezzaScheda)
+                        .background(sopra == "←" ? Tema.sopra : .clear, in: RoundedRectangle(cornerRadius: Misure.angoloScheda))
+                        .contentShape(Rectangle())
+                }.buttonStyle(.plain).onHover { sopra = $0 ? "←" : nil }.help("Tutte le schede")
                 Button { apriMenuCartella(f.chiave) } label: {
                     HStack(spacing: 5) {
                         Image(systemName: "square.stack.3d.up").foregroundStyle(Tema.accento)
                         Text(f.nome).font(.system(size: 13, weight: .semibold)).foregroundStyle(Tema.testo)
-                        Image(systemName: "chevron.down").font(.system(size: 9, weight: .bold))
                     }.contentShape(Rectangle())
                 }.buttonStyle(.plain).background(CorniceMenu(id: "m:" + f.chiave))
             }
@@ -621,25 +640,6 @@ struct BarraVista: View {
     }
 
     // MARK: i menu
-
-    private func apriCasa() {
-        let m = NSMenu()
-        if let p = c.precedente {
-            m.addItem(Menu.voce("Torna a \(p.nome)", simbolo: "arrow.uturn.backward") { c.vai(p) })
-        }
-        m.addItem(Menu.voce("Nuova app…", simbolo: "plus.app") { c.nuovaApp() })
-        m.addItem(Menu.voce("Scrivania", simbolo: "macwindow", tasto: "0") { c.scrivania() })
-        m.addItem(.separator())
-        m.addItem(NSMenuItem.sectionHeader(title: "Cartelle"))
-        for (n, f) in stato.cartelle.enumerated() {
-            let v = Menu.voce(f.nome, simbolo: "square.stack.3d.up", tasto: n < 9 ? "\(n + 1)" : "") { c.attivaCartella(f.id) }
-            if n < 9 { v.keyEquivalentModifierMask = [.control, .option, .shift] }
-            v.state = c.attive.contains(f.id) ? .on : .off
-            m.addItem(v)
-        }
-        m.addItem(Menu.voce("Nuova cartella…", simbolo: "plus") { c.apriFoglioCartella() })
-        Menu.apri(m, sopra: CorniceMenu.cornici["gatto"] ?? .zero)
-    }
 
     private func apriChiudi(_ s: Scheda) {
         let m = NSMenu()

@@ -179,7 +179,15 @@ final class Memo: NSObject, WKScriptMessageHandler {
         p.isMovableByWindowBackground = true
         p.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         p.backgroundColor = NSColor(red: 0.106, green: 0.114, blue: 0.133, alpha: 1)
-        p.contentView = w
+        // il testo parte sotto i pallini della finestra (non ci finisce sotto)
+        let fondo = NSView()
+        w.translatesAutoresizingMaskIntoConstraints = false
+        fondo.addSubview(w)
+        NSLayoutConstraint.activate([w.topAnchor.constraint(equalTo: fondo.topAnchor, constant: 28),
+                                     w.bottomAnchor.constraint(equalTo: fondo.bottomAnchor),
+                                     w.leadingAnchor.constraint(equalTo: fondo.leadingAnchor),
+                                     w.trailingAnchor.constraint(equalTo: fondo.trailingAnchor)])
+        p.contentView = fondo
         p.hidesOnDeactivate = false
         finestra = p; web = w
         return p

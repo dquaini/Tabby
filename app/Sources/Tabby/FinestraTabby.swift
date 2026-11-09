@@ -114,37 +114,45 @@ private struct VistaFinestra: View {
     // MARK: la casa: sezioni in alto, riquadro di Spotlight al centro, cartelle ai lati
 
     private var casa: some View {
-        ZStack {
-            if let s = f.sezione {
-                ScrollView { Pagina(c: c, f: f, stato: stato, aspetto: aspetto, sezione: s).frame(width: 600).padding(.vertical, 90) }
-                    .scrollIndicators(.never)
-                    .transition(.scale(scale: 0.96).combined(with: .opacity))
-            } else {
-                riquadro.transition(.opacity)
+        VStack(spacing: 0) {
+            // le sezioni restano ferme in alto: le pagine scorrono sotto, senza passarci sopra
+            HStack(spacing: 22) {
+                ForEach([("set", "Impostazioni", "gearshape"), ("des", "Design", "paintpalette"), ("doc", "Documentazione", "book.closed"),
+                         ("aut", "Automazione", "clock.arrow.2.circlepath"), ("kat", "Kat", "tray.full")], id: \.0) { id, nome, simbolo in
+                    Button { withAnimation(Tema.molla) { f.sezione = f.sezione == id ? nil : id } } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: simbolo).font(.system(size: 13))
+                            Text(nome).font(.system(size: 13.5))
+                            if id == "aut" || id == "kat" { Text("presto").font(.system(size: 10)).foregroundStyle(.white.opacity(0.35)) }
+                        }
+                        .foregroundStyle(.white.opacity(f.sezione == id ? 1 : 0.45))
+                        .contentShape(Rectangle())
+                    }.buttonStyle(.plain)
+                }
             }
-            VStack {
-                HStack(spacing: 22) {
-                    ForEach([("set", "Impostazioni", "gearshape"), ("des", "Design", "paintpalette"), ("doc", "Documentazione", "book.closed"),
-                             ("aut", "Automazione", "clock.arrow.2.circlepath"), ("kat", "Kat", "tray.full")], id: \.0) { id, nome, simbolo in
-                        Button { withAnimation(Tema.molla) { f.sezione = f.sezione == id ? nil : id } } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: simbolo).font(.system(size: 13))
-                                Text(nome).font(.system(size: 13.5))
-                                if id == "aut" || id == "kat" { Text("presto").font(.system(size: 10)).foregroundStyle(.white.opacity(0.35)) }
-                            }
-                            .foregroundStyle(.white.opacity(f.sezione == id ? 1 : 0.45))
-                            .contentShape(Rectangle())
-                        }.buttonStyle(.plain)
+            .frame(maxWidth: .infinity)
+            .overlay(alignment: .trailing) {
+                Button { c.finestraTabby.chiudi() } label: { Image(systemName: "xmark").font(.system(size: 14)).foregroundStyle(.white.opacity(0.55)) }
+                    .buttonStyle(.plain).padding(.trailing, 24).help("Chiudi (esc)")
+            }
+            .padding(.top, 26).padding(.bottom, 10)
+            ZStack {
+                if let s = f.sezione {
+                    ScrollView {
+                        Pagina(c: c, f: f, stato: stato, aspetto: aspetto, sezione: s).frame(width: 640, alignment: .leading)
+                            .padding(.top, 60).padding(.bottom, 120)
+                            .frame(maxWidth: .infinity)
                     }
+                    .scrollIndicators(.never)
+                    .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.06),
+                                                 .init(color: .black, location: 0.92), .init(color: .clear, location: 1)],
+                                         startPoint: .top, endPoint: .bottom))
+                    .transition(.opacity.combined(with: .offset(y: 12)))
+                } else {
+                    riquadro.offset(y: -30).transition(.opacity)
                 }
-                .frame(maxWidth: .infinity)
-                .overlay(alignment: .trailing) {
-                    Button { c.finestraTabby.chiudi() } label: { Image(systemName: "xmark").font(.system(size: 14)).foregroundStyle(.white.opacity(0.55)) }
-                        .buttonStyle(.plain).padding(.trailing, 24).help("Chiudi (esc)")
-                }
-                .padding(.top, 26)
-                Spacer()
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 
@@ -242,30 +250,80 @@ private struct Riga<Destra: View>: View {
     }
 }
 
-private struct Parole: View {
+/// Una frase con una scelta dentro: «Tabby sta **in alto**.» Un clic sulla parola chiara e sotto
+/// compaiono le alternative; scelta una, la frase si richiude.
+private struct Frase<Dopo: View>: View {
+    let prima: String
     let scelte: [String]
     let scelta: String
+    let fine: String
     let scegli: (String) -> Void
+    let dopo: () -> Dopo
+    @State private var aperta = false
+
+    init(_ prima: String, _ scelte: [String], _ scelta: String, _ fine: String, scegli: @escaping (String) -> Void,
+         @ViewBuilder dopo: @escaping () -> Dopo = { EmptyView() }) {
+        self.prima = prima; self.scelte = scelte; self.scelta = scelta; self.fine = fine; self.scegli = scegli; self.dopo = dopo
+    }
+
     var body: some View {
-        HStack(spacing: 14) {
-            ForEach(scelte, id: \.self) { s in
-                Button { scegli(s) } label: {
-                    Text(s).font(.system(size: 13, weight: s == scelta ? .medium : .regular)).foregroundStyle(.white.opacity(s == scelta ? 1 : 0.35))
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline, spacing: 7) {
+                if !prima.isEmpty { Text(prima).foregroundStyle(.white.opacity(0.5)) }
+                Button { if scelte.count > 1 { withAnimation(Tema.molla) { aperta.toggle() } } } label: {
+                    Text(scelta).foregroundStyle(.white).fontWeight(.semibold)
+                        .overlay(alignment: .bottom) {
+                            if scelte.count > 1 { Rectangle().fill(.white.opacity(aperta ? 0.9 : 0.25)).frame(height: 1.5).offset(y: 3) }
+                        }
+                        .contentShape(Rectangle())
                 }.buttonStyle(.plain)
+                if !fine.isEmpty { Text(fine).foregroundStyle(.white.opacity(0.5)).padding(.leading, fine.first == "." || fine.first == "," || fine.first == ":" ? -7 : 0) }
+                dopo()
+            }
+            .font(.system(size: 22))
+            if aperta {
+                HStack(spacing: 22) {
+                    ForEach(scelte.filter { $0 != scelta }, id: \.self) { s in
+                        Button { scegli(s); withAnimation(Tema.molla) { aperta = false } } label: {
+                            Text(s).font(.system(size: 16)).foregroundStyle(.white.opacity(0.55)).contentShape(Rectangle())
+                        }.buttonStyle(.plain)
+                    }
+                }
+                .transition(.opacity.combined(with: .offset(y: -6)))
             }
         }
+        .padding(.vertical, 12)
     }
 }
 
-private struct Comando: View {
-    let testo: String
+/// Un'azione: un nome, una riga sotto, e il verbo da cliccare («modifica →»).
+private struct Azione: View {
+    let nome: String
+    let sotto: String?
+    let verbo: String
     var rosso = false
-    let azione: () -> Void
+    let fai: () -> Void
+    init(_ nome: String, _ sotto: String?, _ verbo: String, rosso: Bool = false, fai: @escaping () -> Void) {
+        self.nome = nome; self.sotto = sotto; self.verbo = verbo; self.rosso = rosso; self.fai = fai
+    }
     var body: some View {
-        Button(action: azione) { Text(testo + " ›").font(.system(size: 13)).foregroundStyle(rosso ? Color(red: 1, green: 0.41, blue: 0.38) : .white.opacity(0.75)) }
-            .buttonStyle(.plain)
+        HStack(alignment: .firstTextBaseline) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(nome).font(.system(size: 17, weight: .medium))
+                if let sotto { Text(sotto).font(.system(size: 13)).foregroundStyle(.white.opacity(0.42)).lineLimit(1) }
+            }
+            Spacer(minLength: 24)
+            Button(action: fai) {
+                Text(verbo + " →").font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(rosso ? Color(red: 1, green: 0.42, blue: 0.38) : .white.opacity(0.8))
+            }.buttonStyle(.plain)
+        }
+        .padding(.vertical, 11)
     }
 }
+
+private struct Spazio: View { var body: some View { Color.clear.frame(height: 34) } }
+
 
 private struct Pagina: View {
     let c: Controllore
@@ -287,89 +345,76 @@ private struct Pagina: View {
     }
 
     private func titolo(_ t: String, _ s: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(t).font(.system(size: 22, weight: .semibold))
-            Text(s).font(.system(size: 13)).foregroundStyle(.white.opacity(0.55))
-        }.padding(.bottom, 14)
+        VStack(alignment: .leading, spacing: 6) {
+            Text(t).font(.system(size: 34, weight: .bold))
+            Text(s).font(.system(size: 14)).foregroundStyle(.white.opacity(0.45))
+        }.padding(.bottom, 34)
     }
 
     private func sezioneTitolo(_ t: String) -> some View {
         Text(t.uppercased()).font(.system(size: 11, weight: .semibold)).tracking(0.6).foregroundStyle(.white.opacity(0.4)).padding(.top, 24).padding(.bottom, 4)
     }
 
-    private func sìNo(_ chiave: String, _ diSerie: Bool) -> some View {
-        let v = c.imp.valore(chiave) as? Bool ?? diSerie
-        return Parole(scelte: ["Sì", "No"], scelta: v ? "Sì" : "No") { s in c.imp.imposta(chiave, s == "Sì"); c.ricostruisci(); f.sezione = sezione }
+
+    // Le impostazioni come frasi, con la voce di Tabby (Daniele, 9/11/2026: più semplice e originale).
+    // La parola chiara è la scelta: un clic e compaiono le altre.
+    @ViewBuilder private var impostazioni: some View {
+        titolo("Impostazioni", "Clicca le parole chiare per cambiarle.")
+        let pos = ["top": "in alto", "right": "a destra", "left": "a sinistra", "bottom": "in basso"]
+        Frase("Tabby sta", ["in alto", "a destra", "a sinistra", "in basso"], pos[stato.posizione] ?? "in alto", ".") { s in
+            if let k = pos.first(where: { $0.value == s })?.key { c.cambiaPosizione(k) }
+        }
+        Frase("Quando accendi il Mac, Tabby", ["si apre", "resta chiusa"], SMAppService.mainApp.status == .enabled ? "si apre" : "resta chiusa", ".") {
+            c.accensione($0 == "si apre"); f.sezione = sezione
+        }
+        Frase("Quando scegli una scheda,", ["nascondo", "lascio in vista"], vero("oneAtATime", true) ? "nascondo" : "lascio in vista", "le altre app.") {
+            imposta("oneAtATime", $0 == "nascondo")
+        }
+        Frase("Le finestre", ["prendono", "non prendono"], vero("fit", true) ? "prendono" : "non prendono", "tutto lo spazio accanto a me.") {
+            imposta("fit", $0 == "prendono")
+        }
+        Frase("Le app aperte senza finestre", ["si vedono", "non si vedono"], vero("showWindowless", false) ? "si vedono" : "non si vedono", "tra le schede.") {
+            imposta("showWindowless", $0 == "si vedono")
+        }
+        Frase("Fuori dalla sua vista, una cartella attiva è", ["una scheda sola", "tante schede"], vero("folderView", true) ? "una scheda sola" : "tante schede", ".") {
+            imposta("folderView", $0 == "una scheda sola")
+        }
+        Frase("La barra dei menu del Mac", ["si nasconde", "resta in vista"], c.barraMenuNascosta ? "si nasconde" : "resta in vista", ".") { s in
+            c.nascondiBarraMenu(s == "si nasconde"); f.sezione = sezione
+        }
+        Frase("Il Dock", ["si nasconde", "resta in vista"], c.dockNascosto ? "si nasconde" : "resta in vista", ".") { s in
+            c.nascondiDock(s == "si nasconde"); f.sezione = sezione
+        }
+        Spazio()
+        Azione("I tuoi Lampi", c.lampi.lampi.map { "\($0.nome) ⌃⌥\($0.tasto.uppercased())" }.joined(separator: " · "), "personalizza") {
+            c.finestraTabby.chiudi(tornando: false); c.apriFoglioLampi()
+        }
+        ForEach(stato.cartelle, id: \.id) { x in
+            Azione("La cartella \(x.nome)", x.voci.map(\.nome).joined(separator: " · "), "modifica") {
+                c.finestraTabby.chiudi(tornando: false); c.apriFoglioCartella(x.id)
+            }
+        }
+        Azione("Una cartella nuova", "Scegli le schede, poi il nome", "crea") { c.finestraTabby.chiudi(tornando: false); c.apriFoglioCartella() }
+        Azione("Il Memo", "Documenti › Tabby Memo.txt", "mostra") { NSWorkspace.shared.activateFileViewerSelecting([Memo.file]) }
+        Spazio()
+        Azione("Una pausa", "Resta solo la sfera; un clic e riparto", "metti in pausa") { c.finestraTabby.chiudi(); c.pausa(true) }
+        Azione("Tutte le app", "Le app di sistema restano", "chiudi", rosso: true) { c.finestraTabby.chiudi(tornando: false); c.chiudiTutteLeApp() }
+        Azione("La guida del primo avvio", nil, "rivedi") { withAnimation { f.sezione = nil; f.fase = .guida(0) } }
+        Azione("Tabby", nil, "esci") { NSApp.terminate(nil) }
     }
 
-    @ViewBuilder private var impostazioni: some View {
-        titolo("Impostazioni", "Tutto quello che si sceglie dai menu di Tabby, in una pagina sola.")
-        sezioneTitolo("Dove sta Tabby")
-        let pos = ["top": "In alto", "right": "A destra", "left": "A sinistra", "bottom": "In basso"]
-        Riga(titolo: "Posizione", sotto: "Dove si vede la barra") {
-            Parole(scelte: ["In alto", "A destra", "A sinistra", "In basso"], scelta: pos[stato.posizione] ?? "In alto") { s in
-                if let k = pos.first(where: { $0.value == s })?.key { c.cambiaPosizione(k) }
-            }
-        }
-        Riga(titolo: "Apri Tabby all'accensione del Mac") {
-            Parole(scelte: ["Sì", "No"], scelta: SMAppService.mainApp.status == .enabled ? "Sì" : "No") { s in c.accensione(s == "Sì"); f.sezione = sezione }
-        }
-        sezioneTitolo("Come lavora")
-        Riga(titolo: "Una scheda alla volta", sotto: "Nasconde le altre app") { sìNo("oneAtATime", true) }
-        Riga(titolo: "Adatta le finestre a Tabby", sotto: "Le finestre occupano lo spazio accanto alla barra") { sìNo("fit", true) }
-        Riga(titolo: "Mostra anche le app aperte senza finestre") { sìNo("showWindowless", false) }
-        Riga(titolo: "Vista cartelle", sotto: "Una cartella attiva diventa una scheda sola") { sìNo("folderView", true) }
-        sezioneTitolo("Cartelle")
-        ForEach(stato.cartelle, id: \.id) { x in
-            Riga(titolo: x.nome, sotto: "\(x.voci.count) \(x.voci.count == 1 ? "voce" : "voci")") {
-                Comando(testo: "Modifica") { c.finestraTabby.chiudi(tornando: false); c.apriFoglioCartella(x.id) }
-            }
-        }
-        Riga(titolo: "Nuova cartella") { Comando(testo: "Nuova") { c.finestraTabby.chiudi(tornando: false); c.apriFoglioCartella() } }
-        sezioneTitolo("Lampi")
-        Riga(titolo: "I tuoi Lampi", sotto: c.lampi.lampi.map { "\($0.nome) ⌃⌥\($0.tasto.uppercased())" }.joined(separator: " · ")) {
-            Comando(testo: "Personalizza") { c.finestraTabby.chiudi(tornando: false); c.apriFoglioLampi() }
-        }
-        Riga(titolo: "Il file del Memo", sotto: "Documenti › Tabby Memo.txt") {
-            Comando(testo: "Mostra nel Finder") { NSWorkspace.shared.activateFileViewerSelecting([Memo.file]) }
-        }
-        sezioneTitolo("Barra dei menu e Dock")
-        Riga(titolo: "Nascondi la barra dei menu del Mac", sotto: "Ricompare col mouse in alto") {
-            Parole(scelte: ["Sì", "No"], scelta: c.barraMenuNascosta ? "Sì" : "No") { s in c.nascondiBarraMenu(s == "Sì"); f.sezione = sezione }
-        }
-        Riga(titolo: "Nascondi il Dock", sotto: "Ricompare col mouse sul bordo") {
-            Parole(scelte: ["Sì", "No"], scelta: c.dockNascosto ? "Sì" : "No") { s in c.nascondiDock(s == "Sì"); f.sezione = sezione }
-        }
-        sezioneTitolo("Tabby")
-        Riga(titolo: "Metti in pausa Tabby", sotto: "Resta solo la sfera; un clic e riparte") {
-            Comando(testo: "Metti in pausa") { c.finestraTabby.chiudi(); c.pausa(true) }
-        }
-        Riga(titolo: "Chiudi tutte le app", sotto: "Le app di sistema restano") {
-            Comando(testo: "Chiudi tutte", rosso: true) { c.finestraTabby.chiudi(tornando: false); c.chiudiTutteLeApp() }
-        }
-        Riga(titolo: "La guida del primo avvio") { Comando(testo: "Rivedi") { withAnimation { f.sezione = nil; f.fase = .guida(0) } } }
-        Riga(titolo: "Esci da Tabby", sotto: "Tabby si chiude del tutto") { Comando(testo: "Esci") { NSApp.terminate(nil) } }
-    }
+    private func vero(_ k: String, _ diSerie: Bool) -> Bool { c.imp.valore(k) as? Bool ?? diSerie }
+    private func imposta(_ k: String, _ v: Bool) { c.imp.imposta(k, v); c.ricostruisci(); f.sezione = sezione }
 
     @ViewBuilder private var design: some View {
-        titolo("Design", "Come appare Tabby. Poche scelte, tutte curate: SF Pro e i simboli di Apple restano sempre.")
-        sezioneTitolo("Aspetto")
-        Riga(titolo: "Aspetto", sotto: "Nativo: come macOS, col colore principale del Mac · Notte: scura, coi temi") {
-            Parole(scelte: ["Nativo", "Notte"], scelta: aspetto.nativo ? "Nativo" : "Notte") { aspetto.scegli(nativo: $0 == "Nativo") }
-        }
+        titolo("Design", "Poche scelte, tutte curate: SF Pro e i simboli di Apple restano sempre.")
+        Frase("Tabby è", ["nativa", "notte"], aspetto.nativo ? "nativa" : "notte", aspetto.nativo ? ", come macOS." : ".") { aspetto.scegli(nativo: $0 == "nativa") }
         if !aspetto.nativo {
-            sezioneTitolo("Tema")
-            Riga(titolo: "Base", sotto: "Tinte piene") {
-                Parole(scelte: ["Grafite", "Mono", "Fumo"], scelta: aspetto.tema) { aspetto.scegli(tema: $0) }
-            }
-            Riga(titolo: "Tabby", sotto: "Sfumature e un bagliore") {
-                Parole(scelte: ["Tabby", "Tramonto", "Aurora"], scelta: aspetto.tema) { aspetto.scegli(tema: $0) }
+            Frase("Il tema è", Aspetto.temi.map { $0.lowercased() }, aspetto.tema.lowercased(), ".") { t in
+                aspetto.scegli(tema: Aspetto.temi.first { $0.lowercased() == t })
             }
         }
-        sezioneTitolo("Movimento")
-        Riga(titolo: "Animazioni", sotto: "Segue «Riduci movimento» del Mac: senza rimbalzi e con la sfera ferma") {
-            Parole(scelte: ["Come il Mac"], scelta: "Come il Mac") { _ in }
-        }
+        Frase("Le animazioni", ["seguono il Mac"], "seguono il Mac", ": con «Riduci movimento» niente rimbalzi.") { _ in }
     }
 
     @ViewBuilder private var documentazione: some View {

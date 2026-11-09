@@ -63,19 +63,22 @@ extension Controllore {
         let vis = conViste(tutte, viste)
         let prova = TabbyCore.assegna([c], schede: vis.filter { stato.diChi[$0.chiave] == nil }, membri: stato.membri, legami: legami)
         let mancanti = c.voci.filter { prova.prese["\(c.id)|\($0.chiave)"] == nil }
-        let prima = NSWorkspace.shared.frontmostApplication
         let parti = {
             for v in mancanti { self.apri(v, legame: "\(c.id)|\(v.chiave)") }
-            // se un'app appena aperta ti porta via, Tabby ti riporta dov'eri (1,2 s e 2,5 s)
+            // se un'app appena aperta ti porta via, Tabby ti riporta nella cartella (1,2 s e 2,5 s)
             for t in [1.2, 2.5] {
-                DispatchQueue.main.asyncAfter(deadline: .now() + t) {
-                    if let p = prima, NSWorkspace.shared.frontmostApplication != p { p.activate() }
+                DispatchQueue.main.asyncAfter(deadline: .now() + t) { [weak self] in
+                    guard let self, self.stato.cartellaAperta == id else { return }
+                    self.ricostruisci()
+                    if let s = self.stato.schede.first(where: { $0.chiave == self.ultimaDi[id] }) ?? self.stato.schede.first,
+                       self.stato.attiva != s.chiave { self.vai(s, daTe: false) }
                 }
             }
         }
         attive.append(id); attivataIl[id] = Date(); salvaAttive()
         if mancanti.count >= 2 { apriConSchermata(c, parti) } else { parti() }
-        ricostruisciPresto()
+        // si entra sempre nella cartella, anche se le sue app erano già aperte (Daniele, 9/11/2026)
+        entraNellaCartella(id)
         diario("cartella «\(c.nome)»: \(mancanti.count) da aprire")
     }
 
@@ -120,15 +123,18 @@ extension Controllore {
 
     /// F-6: entri nella vista cartella, sull'ultima scheda usata (o la prima).
     func entraNellaCartella(_ id: Int, su chiave: String? = nil) {
-        if !vistaCartelle { if let s = schede(di: id).first { vai(s) }; return }
         withAnimationMolla { stato.cartellaAperta = id }
         ricostruisci()
         let sue = stato.schede
         if let s = sue.first(where: { $0.chiave == (chiave ?? ultimaDi[id]) }) ?? sue.first { vai(s) }
     }
 
+    /// ← : torni a tutte le schede. Con «Vista cartelle» spenta la cartella si chiude anche come
+    /// cartella (le schede tornano libere), altrimenti resta come scheda-cartella.
     func esciDallaVistaCartella() {
+        guard let id = stato.cartellaAperta else { return }
         withAnimationMolla { stato.cartellaAperta = nil }
+        if !vistaCartelle { attive.removeAll { $0 == id }; salvaAttive() }
         ricostruisci()
     }
 
@@ -191,9 +197,15 @@ extension Controllore {
     /// modificare una cartella.
     func apriFoglioCartella(_ id: Int? = nil) {
         let c = id.flatMap { i in cartelle.first { $0.id == i } }
-        var scelte: [String] = []
-        if let c { scelte = schede(di: c.id).map(\.chiave) }
-        else if let a = stato.attiva, !a.hasPrefix("f:") { scelte = [a] }
+        var scelte: [String] = [], extra: [Voce] = []
+        if let c {
+            scelte = schede(di: c.id).map(\.chiave)
+            // le voci senza una scheda aperta restano (app chiuse)
+            let prese = TabbyCore.assegna([c], schede: conViste(tutte, viste), membri: stato.membri, legami: legami).prese
+            extra = c.voci.filter { prese["\(c.id)|\($0.chiave)"] == nil }
+        } else if let a = stato.attiva, !a.hasPrefix("f:") { scelte = [a] }
+        stato.vociExtra = extra
+        stato.cercaApp = ""
         stato.scelta = scelte
         stato.cartellaInModifica = c?.id
         stato.nomeFoglio = c?.nome ?? ""
@@ -208,10 +220,12 @@ extension Controllore {
 
     func salvaFoglioCartella(modifica id: Int?) {
         let nome = stato.nomeFoglio.trimmingCharacters(in: .whitespaces)
-        guard let scelte = stato.scelta, !scelte.isEmpty, !nome.isEmpty else { return }
+        let scelte = stato.scelta ?? []
+        guard !scelte.isEmpty || !stato.vociExtra.isEmpty, !nome.isEmpty else { return }
         let schede = scelte.flatMap { k in stato.membri[k] ?? scheda(k).map { [$0] } ?? [] }
         let nuovoId = id ?? ((cartelle.map(\.id).max() ?? (imp.valore("folderSeq") as? Int ?? 0)) + 1)
-        let c = Cartella(id: nuovoId, nome: nome, voci: schede.map(vocePer))
+        let voci = schede.map(vocePer)
+        let c = Cartella(id: nuovoId, nome: nome, voci: voci + stato.vociExtra.filter { e in !voci.contains { $0.chiave == e.chiave } })
         cartelle = salva(c, in: cartelle); salvaCartelle()
         imp.imposta("folderSeq", max(nuovoId, imp.valore("folderSeq") as? Int ?? 0))
         for s in schede { if let f = s.finestra { legami["\(c.id)|\(vocePer(s).chiave)"] = f } }
@@ -277,42 +291,63 @@ struct FoglioCartella: View {
         Foglio(simbolo: "square.stack.3d.up", titolo: modifica ? "Modifica la cartella" : "Nuova cartella",
                spiegazione: "Clicca le schede nella barra, o trascinale qui. Poi dai un nome.",
                principale: modifica ? "Salva" : "Crea",
-               principaleAcceso: !scelte.isEmpty && !stato.nomeFoglio.trimmingCharacters(in: .whitespaces).isEmpty,
+               principaleAcceso: (!scelte.isEmpty || !stato.vociExtra.isEmpty) && !stato.nomeFoglio.trimmingCharacters(in: .whitespaces).isEmpty,
                annulla: { c.chiudiFoglioCartella() },
                conferma: { c.salvaFoglioCartella(modifica: stato.cartellaInModifica) }) {
             VStack(alignment: .leading, spacing: 0) {
-                TitoloSezione(testo: scelte.isEmpty ? "Nessuna scheda scelta" : "\(scelte.count) \(scelte.count == 1 ? "scheda" : "schede")")
+                let n = scelte.count + stato.vociExtra.count
+                TitoloSezione(testo: n == 0 ? "Nessuna scheda scelta" : "\(n) \(n == 1 ? "voce" : "voci")")
                 ScrollView {
                     VStack(spacing: 0) {
                         ForEach(scelte, id: \.self) { k in riga(k) }
+                        ForEach(stato.vociExtra, id: \.chiave) { v in rigaVoce(v) }
                     }
                 }
                 .frame(maxHeight: 260)
                 .fixedSize(horizontal: false, vertical: true)
+                TitoloSezione(testo: "Aggiungi un'app, anche chiusa")
+                CercaApp(testo: $stato.cercaApp) { v in
+                    if !stato.vociExtra.contains(where: { $0.bid == v.bid }) { withAnimationMolla { stato.vociExtra.append(v) } }
+                    stato.cercaApp = ""
+                }
                 TitoloSezione(testo: "Nome")
                 TextField("es. Lavoro, Studio", text: $stato.nomeFoglio)
-                    .textFieldStyle(.plain).font(.system(size: 13)).foregroundStyle(.white)
-                    .padding(.horizontal, 8).frame(height: 24)
-                    .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 6))
-                    .padding(.horizontal, 10).padding(.bottom, 6)
+                    .textFieldStyle(.plain).font(.system(size: 20, weight: .medium)).foregroundStyle(.white)
+                    .padding(.horizontal, 14).padding(.bottom, 4)
                     .focused($sulNome)
+                Rectangle().fill(.white.opacity(0.15)).frame(height: 1).padding(.horizontal, 14)
             }
             .background(RoundedRectangle(cornerRadius: 8).strokeBorder(Tema.accento.opacity(stato.foglioIlluminato ? 0.9 : 0), lineWidth: 2).padding(4))
         }
         .onAppear { sulNome = true }
     }
 
+    private func rigaVoce(_ v: Voce) -> some View {
+        HStack(spacing: 10) {
+            if let u = NSWorkspace.shared.urlForApplication(withBundleIdentifier: v.bid) {
+                Image(nsImage: NSWorkspace.shared.icon(forFile: u.path)).resizable().frame(width: 20, height: 20)
+            }
+            Text(v.nome).font(.system(size: 14)).foregroundStyle(.white).lineLimit(1)
+            Text("chiusa").font(.system(size: 12)).foregroundStyle(.white.opacity(0.35))
+            Spacer()
+            Button { withAnimationMolla { stato.vociExtra.removeAll { $0.chiave == v.chiave } } } label: {
+                Image(systemName: "xmark.circle.fill").foregroundStyle(.white.opacity(0.45))
+            }.buttonStyle(.plain)
+        }
+        .padding(.horizontal, 14).frame(height: 32)
+    }
+
     private func riga(_ k: String) -> some View {
         let s = c.scheda(k)
         return HStack(spacing: 8) {
             if let s, let i = s.sito.flatMap({ stato.loghi[$0] }) ?? stato.icone[s.bid] {
-                Image(nsImage: i).resizable().frame(width: 16, height: 16).clipShape(RoundedRectangle(cornerRadius: s.sito != nil ? 4 : 0))
+                Image(nsImage: i).resizable().frame(width: 20, height: 20).clipShape(RoundedRectangle(cornerRadius: s.sito != nil ? 4 : 0))
             }
-            Text(s?.nome ?? k).font(.system(size: 13)).foregroundStyle(.white).lineLimit(1)
+            Text(s?.nome ?? k).font(.system(size: 14)).foregroundStyle(.white).lineLimit(1)
             Spacer()
             Button { c.scegli(k) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.white.opacity(0.45)) }.buttonStyle(.plain)
         }
-        .padding(.horizontal, 14).frame(height: 24)
+        .padding(.horizontal, 14).frame(height: 32)
     }
 }
 
@@ -397,5 +432,54 @@ private struct VistaApertura: View {
         if let s = v.sito, let l = stato.loghi[s] { Image(nsImage: l).resizable().clipShape(RoundedRectangle(cornerRadius: 10)) }
         else if let u = NSWorkspace.shared.urlForApplication(withBundleIdentifier: v.bid) { Image(nsImage: NSWorkspace.shared.icon(forFile: u.path)).resizable() }
         else { Image(systemName: "app").resizable().foregroundStyle(.white) }
+    }
+}
+
+// MARK: - Le app installate (per aggiungerle anche chiuse)
+
+/// Le app del Mac (Applicazioni, Utility, quelle di sistema): lette una volta sola.
+@MainActor enum AppInstallate {
+    static let tutte: [(nome: String, bid: String, url: URL)] = {
+        let fm = FileManager.default
+        let cartelle = ["/Applications", "/Applications/Utilities", "/System/Applications", "/System/Applications/Utilities",
+                        fm.homeDirectoryForCurrentUser.appendingPathComponent("Applications").path]
+        var out: [(String, String, URL)] = [], visti = Set<String>()
+        for c in cartelle {
+            for f in (try? fm.contentsOfDirectory(atPath: c)) ?? [] where f.hasSuffix(".app") {
+                let u = URL(fileURLWithPath: c).appendingPathComponent(f)
+                guard let b = Bundle(url: u)?.bundleIdentifier, visti.insert(b).inserted else { continue }
+                out.append((String(f.dropLast(4)), b, u))
+            }
+        }
+        return out.sorted { $0.0.localizedCaseInsensitiveCompare($1.0) == .orderedAscending }
+    }()
+}
+
+/// Un campo per cercare un'app per nome: le prime 5 che corrispondono, con l'icona.
+struct CercaApp: View {
+    @Binding var testo: String
+    let scegli: (Voce) -> Void
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass").foregroundStyle(.white.opacity(0.4))
+                TextField("Cerca un'app", text: $testo).textFieldStyle(.plain).font(.system(size: 14)).foregroundStyle(.white)
+            }
+            .padding(.horizontal, 14).frame(height: 30)
+            let q = normalizza(testo)
+            if !q.isEmpty {
+                ForEach(AppInstallate.tutte.filter { normalizza($0.nome).contains(q) }.prefix(5), id: \.bid) { a in
+                    Button { scegli(Voce(bid: a.bid, nome: a.nome)) } label: {
+                        HStack(spacing: 10) {
+                            Image(nsImage: NSWorkspace.shared.icon(forFile: a.url.path)).resizable().frame(width: 20, height: 20)
+                            Text(a.nome).font(.system(size: 14)).foregroundStyle(.white)
+                            Spacer()
+                            Image(systemName: "plus").foregroundStyle(.white.opacity(0.5))
+                        }
+                        .padding(.horizontal, 14).frame(height: 30).contentShape(Rectangle())
+                    }.buttonStyle(.plain)
+                }
+            }
+        }
     }
 }

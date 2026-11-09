@@ -133,7 +133,7 @@ struct FoglioLampi: View {
                     Image(nsImage: NSWorkspace.shared.icon(forFile: u.path)).resizable()
                 }
             }.frame(width: 18, height: 18)
-            Text(l.nome).font(.system(size: 13)).foregroundStyle(.white).lineLimit(1)
+            Text(l.nome).font(.system(size: 14)).foregroundStyle(.white).lineLimit(1)
             Spacer()
             Button { inAscolto = l.id; giàUsata = nil } label: {
                 if inAscolto == l.id {
