@@ -11,11 +11,16 @@ public struct Scheda: Equatable, Identifiable, Sendable {
     public var finestra: UInt32?
     /// Finestra ridotta nel Dock: resta una scheda, attenuata (DESIGN.md 3.7).
     public var ridotta: Bool
+    /// Il sito, per le finestre di browser che sono una webapp (per il logo).
+    public var sito: String?
+    /// Il numerino delle notifiche («3», o «•» se l'app non dice quante).
+    public var notifica: String?
     public var id: String { chiave }
 
-    public init(chiave: String, bid: String, nome: String, pid: Int32, finestra: UInt32? = nil, ridotta: Bool = false) {
+    public init(chiave: String, bid: String, nome: String, pid: Int32, finestra: UInt32? = nil, ridotta: Bool = false,
+                sito: String? = nil, notifica: String? = nil) {
         self.chiave = chiave; self.bid = bid; self.nome = nome; self.pid = pid
-        self.finestra = finestra; self.ridotta = ridotta
+        self.finestra = finestra; self.ridotta = ridotta; self.sito = sito; self.notifica = notifica
     }
 }
 

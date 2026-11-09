@@ -83,6 +83,14 @@ enum Sistema {
         }
     }
 
+    /// Posizione e misura di una finestra, in coordinate dall'alto (come l'Accessibilità).
+    static func cornice(_ w: AXUIElement) -> CGRect? {
+        guard let pv: AXValue = attributo(w, kAXPositionAttribute), let dv: AXValue = attributo(w, kAXSizeAttribute) else { return nil }
+        var p = CGPoint.zero, d = CGSize.zero
+        AXValueGetValue(pv, .cgPoint, &p); AXValueGetValue(dv, .cgSize, &d)
+        return CGRect(origin: p, size: d)
+    }
+
     /// La finestra che ha l'attenzione in un'app.
     static func finestraAttiva(_ pid: pid_t) -> AXUIElement? {
         let e = elemento(pid)

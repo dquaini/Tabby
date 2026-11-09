@@ -62,7 +62,12 @@ zone (nel codice "gruppo") · **Lampi** = le app piccole del menu ⚡︎ (nel co
    stessa app ridotte quando ne scegli una, scheda accanto quando chiudi o riduci l'attiva,
    ⌃⌥W, ⌃⌥Tab, riordino trascinando con la lineetta; finestre delle app nascoste che macOS 26
    chiama «dialogo» tenute come prima. 25 test.
-4. Browser · 5. vista divisa · 6. cartelle · 7. Lampi e
+4. **Browser** (0.4, 9/11/2026, in prova): webapp `site:` con nome e logo del sito (loghi anche
+   su disco), DuckDuckGo con l'Accessibilità (solo il sito, mai la pagina), Chrome/Brave/Edge/
+   Safari con AppleScript in sottofondo e abbinamento delle finestre (B-3), finestrelle escluse,
+   numerini dal Dock e dai titoli. Da fare dopo: rinomina e scelta del sito (tasto destro),
+   avviso dei siti doppi (B-9), il browser con la miniatura video che non si nasconde.
+5. Vista divisa · 6. cartelle · 7. Lampi e
    strumenti · 8. le cinque sezioni, avvio, primo avvio, Dock.
 
 ### 1. Ordine nella UX — i punti da decidere

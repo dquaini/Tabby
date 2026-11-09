@@ -19,7 +19,7 @@ cp Info.plist "$APP/Contents/Info.plist"
 cp ../assets/gatto-spento.png ../assets/gatto-acceso.png ../assets/gatto-intero-*-spento.png ../assets/gatto-intero-*-acceso.png "$APP/Contents/Resources/"
 
 if security find-identity -p codesigning | grep -q '"Tabby"'; then   # autofirmato: macOS lo dice «non fidato», ma per firmare basta
-  codesign --force --options runtime --sign "Tabby" "$APP"
+  codesign --force --options runtime --entitlements Tabby.entitlements --sign "Tabby" "$APP"
   echo "Firmata col certificato Tabby."
 else
   codesign --force --sign - "$APP"

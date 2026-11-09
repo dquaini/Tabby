@@ -14,6 +14,7 @@ final class StatoBarra {
     var scrivania = false
     var batteria = Batteria.Stato()
     var icone: [String: NSImage] = [:]
+    var loghi: [String: NSImage] = [:]          // i loghi dei siti, per dominio
     var verticale: Bool { posizione == "left" || posizione == "right" }
 }
 
@@ -26,6 +27,9 @@ final class Controllore {
     private var pannello: PannelloBarra!
     private let batteria = Batteria()
     private let tasti = Tasti()
+    private let browser = Browser()
+    private let loghi = Loghi()
+    private let dock = NotificheDock()
     private var ricostruzione: DispatchWorkItem?
     private var osservatori: [pid_t: AXObserver] = [:]
     private var adattaDopo: DispatchWorkItem?
@@ -44,6 +48,10 @@ final class Controllore {
         pannello = PannelloBarra(controllore: self)
         stato.batteria = batteria.stato
         batteria.cambiata = { [weak self] b in self?.stato.batteria = b }
+        browser.cambiato = { [weak self] in self?.ricostruisciPresto() }
+        loghi.arrivato = { [weak self] d, i in self?.stato.loghi[d] = i }
+        dock.cambiate = { [weak self] _ in self?.ricostruisciPresto() }
+        dock.leggi()
         ascoltaMacOS()
         registraTasti()
         ricostruisci()
@@ -116,19 +124,28 @@ final class Controllore {
             let vivi = Set(NSWorkspace.shared.runningApplications.map(\.processIdentifier))
             for p in osservatori.keys where !vivi.contains(p) { osservatori[p] = nil }
             var infos: [InfoApp] = [], el: [UInt32: AXUIElement] = [:]
+            let spazio = Sistema.spazioApp(posizione: stato.posizione)
+            let aperti = Set(NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier))
+            for b in browserNoti.keys where !aperti.contains(b) { browser.dimentica(b) }
             for app in Sistema.appVere() {
                 osserva(app.processIdentifier)
-                let (i, e) = Sistema.leggi(app)
+                var (i, e) = Sistema.leggi(app)
+                if browserNoti[i.bid] != nil { i = browser.arricchisci(app, i, e, spazio: spazio) }
                 infos.append(i)
                 for (n, w) in e { el[n] = w; osservaFinestra(w, pid: app.processIdentifier) }
                 if stato.icone[i.bid] == nil, let ic = app.icon { stato.icone[i.bid] = ic }
             }
             let unite = imp.valore("joinWins") as? [String: Any] ?? [:]
-            let nuove = costruisciSchede(infos, separate: { unite[$0] == nil },
+            var nuove = costruisciSchede(infos, separate: { unite[$0] == nil },
                                          senzaFinestre: imp.valore("showWindowless") as? Bool ?? false,
                                          nomi: imp.valore("tabNames") as? [String: String] ?? [:])
             elementi = [:]
-            for s in nuove { if let f = s.finestra, let w = el[f] { elementi[s.chiave] = w } }
+            for (n, s) in nuove.enumerated() {
+                if let f = s.finestra, let w = el[f] { elementi[s.chiave] = w }
+                // N-1: i numerini del Dock vanno sulla prima scheda dell'app
+                if s.notifica == nil, s.chiave == s.bid, let d = dock.attuali[s.bid] { nuove[n].notifica = d }
+                if let d = s.sito, stato.loghi[d] == nil, let l = loghi.logo(d) { stato.loghi[d] = l }
+            }
             let r = ordina(nuove, ordine: imp.ordine, preferite: imp.preferite)
             if r.ordine != imp.ordine { imp.imposta("order", r.ordine) }
             let prima = stato.schede

@@ -213,10 +213,22 @@ struct BarraVista: View {
         let su = sopra == s.chiave || tr
         let rid = s.ridotta && !on
         return HStack(spacing: 7) {
-            if let i = stato.icone[s.bid] { Image(nsImage: i).resizable().frame(width: 16, height: 16).opacity(rid ? 0.45 : 1) }
+            if let i = s.sito.flatMap({ stato.loghi[$0] }) ?? stato.icone[s.bid] {
+                Image(nsImage: i).resizable().interpolation(.high).frame(width: 16, height: 16)
+                    .clipShape(RoundedRectangle(cornerRadius: s.sito != nil ? 4 : 0))
+                    .opacity(rid ? 0.45 : 1)
+                    .overlay(alignment: .topTrailing) {
+                        // compatta: un puntino rosso al posto del numerino (N-4)
+                        if soloIcona, s.notifica != nil {
+                            Circle().fill(Tema.notifica).frame(width: 7, height: 7)
+                                .overlay(Circle().stroke(Tema.c(0x0F0D09), lineWidth: 1.5)).offset(x: 4, y: -4)
+                        }
+                    }
+            }
             if !soloIcona {
                 Text(s.nome).lineLimit(1).truncationMode(.tail).italic(rid).opacity(rid ? 0.7 : 1)
                 Spacer(minLength: 0)
+                if let n = s.notifica { numerino(n) }
                 if on || su {
                     Button { apriChiudi(s) } label: {
                         Image(systemName: "xmark.circle.fill").font(.system(size: 11)).opacity(0.55)
@@ -258,6 +270,19 @@ struct BarraVista: View {
             .onChanged { v in muovi(s.chiave, v) }
             .onEnded { v in lascia(s.chiave, in: v.location) })
         .help(soloIcona ? s.nome : "")
+    }
+
+    /// Il numerino rosso delle notifiche, come in macOS (oltre 99: «99+»; senza numero: un pallino).
+    private func numerino(_ n: String) -> some View {
+        let t = (Int(n) ?? 0) > 99 ? "99+" : n
+        return Group {
+            if Int(t) == nil && t != "99+" { Circle().fill(Tema.notifica).frame(width: 7, height: 7) }
+            else {
+                Text(t).font(.system(size: 10, weight: .semibold)).monospacedDigit().foregroundStyle(.white)
+                    .padding(.horizontal, 4).frame(minWidth: 16, minHeight: 15)
+                    .background(Capsule().fill(Tema.notifica))
+            }
+        }
     }
 
     private func altre(_ d: DisposizioneOrizzontale, largo: Bool = false) -> some View {
