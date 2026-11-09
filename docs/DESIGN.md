@@ -344,3 +344,26 @@ con notifiche vengono prima) · **pausa** con colori quasi spenti e fermi e il s
 **Concentrazione** con l'anello nel colore del tema che si consuma, il tempo passandoci sopra ·
 **comparsa**: la barra sale e sparisce (0,2 s), la sfera nasce elastica (0,38 s), al contrario
 quando torna una finestra; con «Riduci movimento» la sfera è ferma.
+
+### 3.9 La finestra di Tabby e il primo avvio (decisa, 9/11/2026)
+Prototipo: `docs/design-finestra.html` (usa i video di `assets/avvio`: aprirlo dalla cartella del progetto). **Deciso
+(Daniele):** schermo nero; le due animazioni al centro (non a tutto schermo); poi al centro il
+riquadro tratteggiato col + (clic: la prima volta Spotlight per scegliere la prima app); **in
+alto le sezioni** Impostazioni · Design · Documentazione · Automazione · Kat; clic su una
+sezione = il riquadro sparisce ed esce un **foglio nero, testo bianco in SF Pro**, con la sua
+pagina. Pronte: **Impostazioni** (tutto ciò che si sceglie dai menu, una riga per
+impostazione con il divisore), **Design** (aspetto e temi), **Documentazione** (tutte le
+scorciatoie). Automazione e Kat: «presto», da sviluppare. Primo avvio a passi, con le
+richieste vere a macOS e le buone pratiche: Benvenuto · Accessibilità · Browser · Posizione e
+aspetto · Barra dei menu e Dock · Accensione · il riquadro.
+Ritocchi di Daniele (9/11/2026): il riquadro ha un'**ombra bianca** sotto · dal secondo accesso
+le **cartelle sono subito accanto al riquadro** (icone delle app e nome, senza scatola), il
+riquadro apre sempre Spotlight · nei video è **coperto il marchio** in basso a destra · nelle
+pagine (e nel primo avvio) **solo testo bianco su nero in SF Pro**: niente scatole, pulsanti,
+interruttori o tasti disegnati; la scelta è la parola bianca, le altre grigie; i comandi sono
+parole con «›» o «→»; restano solo le righe divisorie.
+Decisi poi (Daniele, 9/11/2026): le **due animazioni ogni volta** che l'app si apre da zero
+(intanto Tabby carica dietro), la guida dei permessi **solo al primo avvio** · il riquadro di
+Spotlight **sempre al centro**, le cartelle alternate a destra e a sinistra · si chiude con
+**✕ o esc** (esc chiude prima la pagina aperta) · Automazione e Kat con «presto» finché non si
+sviluppano · nell'app la pagina va rifinita in stile Apple, semplice ed efficace.

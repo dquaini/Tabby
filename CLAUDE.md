@@ -140,3 +140,5 @@ Hammerspoon non ha) si decide insieme prima di costruirla. Nell'app Swift Tabby 
 cinque sezioni: Impostazioni, Design, Documentazione, Automazione (apertura delle
 cartelle da sole), Kat (una cartella del Mac collegata a Tabby con tutti i suoi file,
 Memo compreso, e in futuro i file generati dagli agenti).
+**Principio dell'app Swift** (Daniele): estremamente integrata con macOS, semplice, veloce,
+col minimo di batteria; durante la costruzione si fanno ottimizzazione e debug generale.

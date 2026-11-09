@@ -30,6 +30,10 @@ zone (nel codice "gruppo") · **Lampi** = le app piccole del menu ⚡︎ (nel co
    Lampi e strumenti → le cinque sezioni, avvio, configurazione guidata, Dock. **Regola:**
    tutto ciò che la Tabby di Hammerspoon non fa già (scelte nuove di design o di
    funzionamento) si propone e si decide insieme prima di costruirlo.
+   **Principio dell'app (Daniele, 9/11/2026):** Tabby deve essere **estremamente integrata con
+   macOS, semplice, velocissima e usare il minimo possibile di batteria**. Mentre si costruisce,
+   a ogni tappa e alla fine, si fa un'**ottimizzazione e un debug generale** (memoria, processore,
+   batteria, tempi di risposta, niente lavori inutili in sottofondo), misurando sul Mac vero.
 
 ### 1. Ordine nella UX — i punti da decidere
 1. **Tre stili diversi**: barra, menu e riquadro delle cartelle scuri "nostri"; Concentrazione,
@@ -65,9 +69,10 @@ Nell'app Swift Tabby avrà cinque sezioni:
 ---
 
 ## 🛠 Direttamente nell'app Swift
-- **Animazione d'avvio** (storia di Daniele del 22/10: schermo nero, video del logo e del
-  gatto, poi il riquadro che porta a Spotlight o alle cartelle — prototipo
-  `docs/prototipo-avvio.html`, video in `assets/avvio/`).
+- **Animazione d'avvio** (storia di Daniele del 22/10, rivista il 9/11 in
+  `docs/design-finestra.html`): le due animazioni partono **ogni volta che l'app si apre da
+  zero**, e intanto Tabby carica tutto dietro, così è subito pronta; poi il riquadro di
+  Spotlight al centro con le cartelle ai lati. Video in `assets/avvio/` (marchio coperto).
 - **Configurazione guidata** al primo avvio: permessi (Accessibilità, Automazione per i
   browser), barra dei menu e Dock nascosti (con consenso), avvio al login, posizione.
 - **Tabby al posto del Dock** (confermato): lo nasconde da sola, ripristino dalle
