@@ -230,7 +230,7 @@ extension Controllore {
         let inVista = tutte.contains { s in
             !s.ridotta && !(NSRunningApplication(processIdentifier: s.pid)?.isHidden ?? true) && !lampi.èVeloce(s.bid)
         }
-        let serve = stato.inPausa || (!inVista && stato.divisione == nil && stato.apertura == nil && stato.scelta == nil && !finestraTabby.isVisible)
+        let serve = stato.inPausa || stato.tabbyChiusa || (!inVista && !stato.scrivania && stato.divisione == nil && stato.apertura == nil && stato.scelta == nil && !finestraTabby.isVisible)
         sferaDopo?.cancel()
         if serve == sfera.s.visibile { return }
         let w = DispatchWorkItem { [weak self] in

@@ -102,8 +102,8 @@ extension Controllore {
         }
         let azioni: [(String, String, Bool, () -> Void)] = [
             ("Nuova app", "Apri un'app con Spotlight", false, { [weak self] in self?.nuovaApp() }),
-            ("Chiudi Tabby", "La Scrivania del Mac; la sfera riapre tutto · ⌃⌥0", false, { [weak self] in self?.scrivania() }),
-            ("Scrivania nel Finder", "La cartella Scrivania", false, { [weak self] in self?.gatto() }),
+            ("Scrivania", "Il musetto del gatto · ⌃⌥0", false, { [weak self] in self?.gatto() }),
+            ("Chiudi Tabby", "Resta la sfera; un clic riapre tutto", false, { [weak self] in self?.chiudiTabby() }),
             ("Concentrazione", "25 · 50 · 90 min", false, { [weak self] in self?.apriFoglioConcentrazione() }),
             ("Nuova cartella", "Scegli le schede, poi il nome", false, { [weak self] in self?.apriFoglioCartella() }),
             ("Personalizza i Lampi", "Ordine, scorciatoie, aggiungi", false, { [weak self] in self?.apriFoglioLampi() }),

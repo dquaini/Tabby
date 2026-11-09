@@ -40,6 +40,7 @@ final class StatoBarra {
     var nonDisturbare = true
     var lampiCoperti: [String] = []
     var lampiInModifica: [Lampo] = []
+    var tabbyChiusa = false                     // «Chiudi Tabby»: barra via, resta la sfera
     var inPausa = Impostazioni.shared.valore("paused") as? Bool ?? false
     var verticale: Bool { posizione == "left" || posizione == "right" }
 }
@@ -301,7 +302,7 @@ final class Controllore {
         if Sistema.ignorate().contains(bid) { return }                  // un Lampo: non tocca niente
         if controllaAppFuori(app) { return }                            // fuori dalla Concentrazione
         if stato.scrivania && bid == "com.apple.finder" { return }
-        stato.scrivania = false
+        stato.scrivania = false; stato.tabbyChiusa = false
         aggiornaAttiva()
         if !tutte.contains(where: { $0.bid == bid }) { ricostruisciPresto() }
         if let k = stato.attiva, let v = viste.first(where: { $0.chiave == k }) {
@@ -336,14 +337,14 @@ final class Controllore {
         if s.chiave.hasPrefix("f:"), let id = Int(s.chiave.dropFirst(2)) { entraNellaCartella(id); return }
         if let v = viste.first(where: { $0.chiave == s.chiave }) {
             if daTe { sceltaTua = Date() }
-            stato.scrivania = false
+            stato.scrivania = false; stato.tabbyChiusa = false
             segnaAttiva(v.chiave)
             mostraVista(v, scelta: true)
             return
         }
         guard let app = NSRunningApplication(processIdentifier: s.pid) else { ricostruisci(); return }
         if daTe { sceltaTua = Date() }
-        stato.scrivania = false
+        stato.scrivania = false; stato.tabbyChiusa = false
         segnaAttiva(s.chiave)
         let w = elementi[s.chiave]
         Sistema.portaDavanti(app, finestra: w)
@@ -371,26 +372,31 @@ final class Controllore {
         vai(s)
     }
 
-    /// Chiudi Tabby (⚙︎ o ⌃⌥0; Daniele, 9/11/2026): le app si nascondono, resta la Scrivania del Mac
-    /// con la sfera; Tabby ricorda dov'eri. Un clic sulla sfera (o ⌃⌥0 di nuovo) e torna tutto.
-    func scrivania() {
-        if stato.scrivania { riapriDaScrivania(); return }
-        withAnimationMolla { stato.scrivania = true }
-        for s in stato.schede where s.bid == "com.apple.finder" { if let f = s.finestra { ridotteDaTabby[f] = Date() } }
+    /// ⌃⌥0: la scheda Scrivania (il musetto del gatto); ripremuto torna all'ultima scheda.
+    func scrivania() { if stato.scrivania { riapriDaScrivania() } else { gatto() } }
+
+    /// Il musetto del gatto **è** la scheda Scrivania (Daniele, 9/11/2026): le app si nascondono,
+    /// si vede la Scrivania del Mac, la barra resta col riempimento sul gatto.
+    func gatto() {
+        if stato.scrivania && !stato.tabbyChiusa { return }
+        withAnimationMolla { stato.scrivania = true; stato.tabbyChiusa = false }
+        for s in tutte where s.bid == "com.apple.finder" { if let f = s.finestra { ridotteDaTabby[f] = Date() } }
         Sistema.scrivania()
+        controllaSfera()
+    }
+
+    /// Chiudi Tabby (⚙︎): come la Scrivania, ma la barra sparisce e resta la sfera; un clic e torna tutto.
+    func chiudiTabby() {
+        gatto()
+        stato.tabbyChiusa = true
+        controllaSfera()
     }
 
     /// Dalla Scrivania del Mac si torna all'ultima scheda, come l'avevi lasciata.
     func riapriDaScrivania() {
         let s = stato.schede.first(where: { $0.chiave == stato.attiva }) ?? stato.schede.first
-        stato.scrivania = false
+        stato.scrivania = false; stato.tabbyChiusa = false
         if let s { vai(s) }
-    }
-
-    /// Il gatto: una finestra del Finder sulla cartella Scrivania, come una scheda normale.
-    func gatto() {
-        stato.scrivania = false
-        NSWorkspace.shared.open(FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Desktop"))
     }
 
     func nuovaApp() { Sistema.apriSpotlight() }

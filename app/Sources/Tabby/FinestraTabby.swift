@@ -421,7 +421,7 @@ private struct Pagina: View {
         titolo("Documentazione", "Tutte le scorciatoie di Tabby. Partono tutte da ⌃ ⌥ (control e option).")
         gruppo("Schede", [("⌃ ⌥ 1…9", "Vai alla scheda 1–9", nil), ("⌃ ⌥ ← →", "Scheda prima e dopo", "↑ ↓ con Tabby di lato"),
                           ("⌃ ⌥ Tab", "Torna alla scheda di prima", nil), ("⌃ ⌥ W", "Chiudi la finestra", "L'app resta aperta"),
-                          ("⌃ ⌥ 0", "Chiudi Tabby", "La Scrivania del Mac; ripremuto, torna tutto")])
+                          ("⌃ ⌥ 0", "Scrivania (il musetto del gatto)", "Ripremuto: torna all'ultima scheda")])
         gruppo("Cerca", [("⌃ ⌥ Spazio", "La barra che cerca tutto", "Schede, testo nelle finestre, cartelle, Lampi, azioni, impostazioni")])
         gruppo("Vista divisa", [("⌃ ⌥ S", "Scambia le zone", nil), ("↩", "Fatto, mentre dividi", nil), ("esc", "Annulla, mentre dividi", nil)])
         gruppo("Lampi", c.lampi.lampi.map { ("⌃ ⌥ \($0.tasto.uppercased())", $0.nome, nil) } + [("esc", "Chiudi il Lampo in primo piano", nil)])

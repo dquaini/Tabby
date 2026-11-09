@@ -212,10 +212,17 @@ struct BarraVista: View {
                 if let i = immagineGatto("gatto-spento") { Image(nsImage: i).resizable().scaledToFit().frame(width: 20, height: 20) }
                 else { Image(systemName: "pawprint.fill") }
             }
-            .foregroundStyle(stato.scrivania ? Tema.accento : Tema.tenue)
-            .shadow(color: stato.scrivania ? Tema.accento.opacity(0.5) : .clear, radius: 4)
+            .foregroundStyle(stato.scrivania ? Tema.suAttiva : Tema.tenue)
+            .frame(width: Misure.gatto - 4, height: Misure.altezzaScheda)
+            .background {
+                // la scheda Scrivania attiva: lo stesso riempimento delle schede, che scivola fin qui
+                if stato.scrivania {
+                    Tema.riempimento.clipShape(RoundedRectangle(cornerRadius: Misure.angoloScheda))
+                        .shadow(color: Tema.ombraAttiva, radius: 5, y: 2)
+                        .matchedGeometryEffect(id: "riempimento", in: ns)
+                }
+            }
             .frame(width: Misure.gatto, height: Misure.gatto)
-            .background(stato.scrivania ? Tema.sopra : .clear, in: RoundedRectangle(cornerRadius: Misure.angoloScheda))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -695,7 +702,7 @@ struct BarraVista: View {
         tutte.view = conferma
         m.addItem(tutte)
         m.addItem(Menu.voce("Metti in pausa Tabby", simbolo: "pause.circle") { c.pausa(true) })
-        m.addItem(Menu.voce("Chiudi Tabby", simbolo: "macwindow", tasto: "0") { c.scrivania() })
+        m.addItem(Menu.voce("Chiudi Tabby", simbolo: "macwindow") { c.chiudiTabby() })
         let esci = Menu.voce("Esci da Tabby", simbolo: "power") { NSApp.terminate(nil) }
         esci.isAlternate = true; esci.keyEquivalentModifierMask = [.option]
         m.addItem(esci)

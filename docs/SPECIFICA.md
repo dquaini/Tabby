@@ -598,8 +598,9 @@ vengono nascoste dalla scrivania.
 
 ## 13. Scrivania
 
-**[Swift, Daniele 9/11/2026]** Il **gatto** apre una finestra del Finder sulla cartella
-Scrivania (una scheda normale). **Chiudi Tabby** (⚙︎, sotto «Metti in pausa», o ⌃⌥0) nasconde
+**[Swift, Daniele 9/11/2026]** Il **musetto del gatto è la scheda Scrivania** (anche ⌃⌥0; ripremuto torna all'ultima
+scheda): le app si nascondono, la barra resta col riempimento sul gatto. **Chiudi Tabby** (⚙︎,
+sotto «Metti in pausa») nasconde
 le app: resta la Scrivania del Mac con la sfera, e Tabby ricorda dov'eri. **Clic sulla sfera**:
 se c'erano schede, si riaprono come le avevi lasciate (niente domande); il ventaglio (Nuova
 app, cartelle) solo se non c'è nessuna scheda. Nella ricerca, una scheda che sta in una
