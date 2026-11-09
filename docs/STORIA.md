@@ -214,4 +214,5 @@ v9.69: i pannelli piccoli (es. Notion «vuoi registrare il meeting?») non nasco
 app 0.1 (9/11/2026): nasce l'app Swift in `app/` (da macOS 26): fondamenta — diario in
     ~/Library/Logs/Tabby.log, permesso Accessibilità, impostazioni importate da Hammerspoon,
     5 test. Sul Mac di casa Tabby-Hammerspoon va in pensione.
+app 0.2 (9/11/2026): la barra, nello stile deciso (Notte · Tabby), con le schede delle app.
 ```

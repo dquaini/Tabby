@@ -53,7 +53,11 @@ zone (nel codice "gruppo") · **Lampi** = le app piccole del menu ⚡︎ (nel co
 1. **Fondamenta** ✅ (0.1, 9/11/2026): progetto in `app/`, `costruisci.sh`, diario, permesso
    Accessibilità (si accorge da sola quando arriva), importazione delle impostazioni di
    Hammerspoon (una volta, senza toccarle), test.
-2. Barra · 3. finestre come schede · 4. browser · 5. vista divisa · 6. cartelle · 7. Lampi e
+2. **Barra** ✅ (0.2, 9/11/2026): schede delle app nell'ordine di sempre, riempimento che
+   scivola, clic, ⌃⌥1…9 / ← → / 0, una scheda alla volta, adatta, gatto (Torna a, Nuova app,
+   Scrivania), +, batteria, ⚙︎ provvisorio (posizione, interruttori, Esci). Provata sul Mac:
+   6 schede, ~68 MB, processore 0% a riposo. Da migliorare: la prima ricostruzione 181 ms.
+3. Finestre come schede · 4. browser · 5. vista divisa · 6. cartelle · 7. Lampi e
    strumenti · 8. le cinque sezioni, avvio, primo avvio, Dock.
 
 ### 1. Ordine nella UX — i punti da decidere
