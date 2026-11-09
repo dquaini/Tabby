@@ -57,7 +57,12 @@ zone (nel codice "gruppo") · **Lampi** = le app piccole del menu ⚡︎ (nel co
    scivola, clic, ⌃⌥1…9 / ← → / 0, una scheda alla volta, adatta, gatto (Torna a, Nuova app,
    Scrivania), +, batteria, ⚙︎ provvisorio (posizione, interruttori, Esci). Provata sul Mac:
    6 schede, ~68 MB, processore 0% a riposo. Da migliorare: la prima ricostruzione 181 ms.
-3. Finestre come schede · 4. browser · 5. vista divisa · 6. cartelle · 7. Lampi e
+3. **Finestre come schede** (0.3, 9/11/2026, in prova): una scheda per finestra (nomi senza
+   il nome dell'app, doppioni numerati), finestre ridotte attenuate, altre finestre della
+   stessa app ridotte quando ne scegli una, scheda accanto quando chiudi o riduci l'attiva,
+   ⌃⌥W, ⌃⌥Tab, riordino trascinando con la lineetta; finestre delle app nascoste che macOS 26
+   chiama «dialogo» tenute come prima. 25 test.
+4. Browser · 5. vista divisa · 6. cartelle · 7. Lampi e
    strumenti · 8. le cinque sezioni, avvio, primo avvio, Dock.
 
 ### 1. Ordine nella UX — i punti da decidere

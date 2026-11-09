@@ -33,7 +33,7 @@ public enum Importazione {
     /// Restituisce quante impostazioni ha copiato (0 se era già fatta o non c'era niente).
     @discardableResult
     public static func daHammerspoon(sorgente: UserDefaults? = UserDefaults(suiteName: dominioHammerspoon),
-                                     in impostazioni: Impostazioni = .shared) -> Int {
+                                     in impostazioni: Impostazioni = .shared, diario d: Diario = .shared) -> Int {
         let dest = impostazioni.archivio
         guard !dest.bool(forKey: fatta), let sorgente else { return 0 }
         let vecchie = sorgente.dictionaryRepresentation().filter { $0.key.hasPrefix("tabbar.") }
@@ -41,7 +41,7 @@ public enum Importazione {
             dest.set(valore, forKey: chiave)
         }
         dest.set(true, forKey: fatta)
-        diario("importate \(vecchie.count) impostazioni da Hammerspoon")
+        d.scrivi("importate \(vecchie.count) impostazioni da Hammerspoon")
         return vecchie.count
     }
 }

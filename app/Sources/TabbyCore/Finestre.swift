@@ -1,0 +1,79 @@
+import Foundation
+
+/// Quello che Tabby sa di un'app aperta (lo legge dall'Accessibilità).
+public struct InfoApp: Sendable {
+    public var bid: String
+    public var nome: String
+    public var pid: Int32
+    public var finestre: [InfoFinestra]
+    public init(bid: String, nome: String, pid: Int32, finestre: [InfoFinestra]) {
+        self.bid = bid; self.nome = nome; self.pid = pid; self.finestre = finestre
+    }
+}
+
+public struct InfoFinestra: Sendable {
+    public var id: UInt32
+    public var titolo: String
+    public var ridotta: Bool
+    public init(id: UInt32, titolo: String, ridotta: Bool = false) { self.id = id; self.titolo = titolo; self.ridotta = ridotta }
+}
+
+/// Le schede di tutte le app (S-2, S-3, S-4, S-6):
+/// - 1 finestra → una scheda col nome dell'app (chiave = bundle ID);
+/// - 2 o più → una scheda per finestra, la più vecchia con chiave = bundle ID, le altre
+///   `win:<id>`; nome = titolo senza il nome dell'app; titoli uguali → «(2)», «(3)»…;
+/// - app con «una scheda sola» (`separate` falso) → una scheda per tutta l'app;
+/// - app senza finestre → una scheda solo se `senzaFinestre` (altrimenti niente);
+/// - `nomi`: i nomi dati dall'utente (Rinomina), per chiave.
+public func costruisciSchede(_ apps: [InfoApp], separate: (String) -> Bool = { _ in true },
+                             senzaFinestre: Bool = false, nomi: [String: String] = [:]) -> [Scheda] {
+    var schede: [Scheda] = []
+    var prese = Set<String>()
+    for a in apps {
+        let fin = a.finestre.sorted { $0.id < $1.id }
+        if fin.isEmpty {
+            if senzaFinestre, prese.insert(a.bid).inserted {
+                schede.append(Scheda(chiave: a.bid, bid: a.bid, nome: nomi[a.bid] ?? a.nome, pid: a.pid))
+            }
+            continue
+        }
+        if fin.count == 1 || !separate(a.bid) {
+            let f = fin.first { !$0.ridotta } ?? fin[0]
+            let k = prese.contains(a.bid) ? "win:\(f.id)" : a.bid
+            prese.insert(k)
+            schede.append(Scheda(chiave: k, bid: a.bid, nome: nomi[k] ?? a.nome, pid: a.pid,
+                                 finestra: fin.count == 1 ? f.id : nil, ridotta: fin.allSatisfy(\.ridotta)))
+            continue
+        }
+        var visti: [String: Int] = [:]
+        for (i, f) in fin.enumerated() {
+            var nome = nomeFinestra(titolo: f.titolo, app: a.nome)
+            visti[nome, default: 0] += 1
+            if let n = visti[nome], n > 1 { nome += " (\(n))" }
+            var k = i == 0 ? a.bid : "win:\(f.id)"
+            if prese.contains(k) { k = "win:\(f.id)" }          // S-6: chiave già presa
+            prese.insert(k)
+            schede.append(Scheda(chiave: k, bid: a.bid, nome: nomi[k] ?? nome, pid: a.pid, finestra: f.id, ridotta: f.ridotta))
+        }
+    }
+    return schede
+}
+
+/// La scheda accanto (C-4): quando la scheda attiva si chiude o si riduce si passa a quella
+/// alla sua sinistra, o a destra se era la prima. `prima` = le schede di prima, `dopo` = quelle
+/// di adesso. Restituisce la chiave della scheda dove andare (nil se non c'è niente).
+public func schedaAccanto(chiusa: String, prima: [String], dopo: [String]) -> String? {
+    guard let i = prima.firstIndex(of: chiusa) else { return dopo.first }
+    let candidati = (i > 0 ? Array(prima[..<i].reversed()) : []) + Array(prima[(i + 1)...])
+    return candidati.first { dopo.contains($0) } ?? dopo.first
+}
+
+/// Il riordino trascinando (T-1): sposta `chiave` prima di `davanti` (nil = in fondo)
+/// nell'ordine ricordato, che contiene anche schede non visibili.
+public func sposta(_ chiave: String, davanti: String?, in ordine: [String]) -> [String] {
+    var o = ordine.filter { $0 != chiave }
+    if let d = davanti, let i = o.firstIndex(of: d) { o.insert(chiave, at: i) }
+    else if let d = davanti, d == chiave { return ordine }
+    else { o.append(chiave) }
+    return o
+}

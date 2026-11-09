@@ -89,6 +89,10 @@ struct BarraVista: View {
     @Bindable var stato: StatoBarra
     @Namespace private var ns
     @State private var sopra: String?
+    // il trascinamento (T-1)
+    @State private var trascinata: String?
+    @State private var spostamento: CGSize = .zero
+    @State private var dove: CGFloat?        // dove cadrà: x (in alto) o y (di lato) della lineetta
 
     var body: some View {
         Group { if stato.verticale { colonna } else { riga } }
@@ -128,6 +132,7 @@ struct BarraVista: View {
             }
             .padding(.horizontal, 2)
             .frame(width: g.size.width, height: g.size.height)
+            .overlay(alignment: .topLeading) { lineetta(g.size) }
         }
         .background(Tema.sfondo(verticale: false).clipShape(forma))
     }
@@ -151,6 +156,7 @@ struct BarraVista: View {
             }
             .padding(.vertical, 6)
             .frame(width: g.size.width, height: g.size.height)
+            .overlay(alignment: .topLeading) { lineetta(g.size) }
         }
         .background(Tema.sfondo(verticale: true).clipShape(forma))
     }
@@ -196,10 +202,11 @@ struct BarraVista: View {
 
     private func scheda(_ s: Scheda, attiva on: Bool, larghezza w: Double, soloIcona: Bool, altezza h: Double = Misure.altezzaScheda) -> some View {
         let su = sopra == s.chiave
+        let rid = s.ridotta && !on
         return HStack(spacing: 7) {
-            if let i = stato.icone[s.bid] { Image(nsImage: i).resizable().frame(width: 16, height: 16) }
+            if let i = stato.icone[s.bid] { Image(nsImage: i).resizable().frame(width: 16, height: 16).opacity(rid ? 0.45 : 1) }
             if !soloIcona {
-                Text(s.nome).lineLimit(1).truncationMode(.tail)
+                Text(s.nome).lineLimit(1).truncationMode(.tail).italic(rid).opacity(rid ? 0.7 : 1)
                 Spacer(minLength: 0)
                 if on || su {
                     Button { apriChiudi(s) } label: {
@@ -228,8 +235,19 @@ struct BarraVista: View {
             }
         }
         .contentShape(Rectangle())
+        .background(CorniceMenu(id: "t:" + s.chiave))
+        .offset(trascinata == s.chiave ? spostamento : .zero)
+        .zIndex(trascinata == s.chiave ? 1 : 0)
+        .shadow(color: .black.opacity(trascinata == s.chiave ? 0.45 : 0), radius: 8, y: 4)
         .onHover { dentro in sopra = dentro ? s.chiave : (sopra == s.chiave ? nil : sopra) }
         .onTapGesture { c.vai(s) }
+        .gesture(DragGesture(minimumDistance: 8, coordinateSpace: .global)
+            .onChanged { v in
+                trascinata = s.chiave
+                spostamento = stato.verticale ? CGSize(width: 0, height: v.translation.height) : CGSize(width: v.translation.width, height: 0)
+                dove = puntoDiCaduta(v.location, tranne: s.chiave).linea
+            }
+            .onEnded { v in lascia(s.chiave, in: v.location) })
         .help(soloIcona ? s.nome : "")
     }
 
@@ -283,6 +301,40 @@ struct BarraVista: View {
         .buttonStyle(.plain)
         .onHover { sopra = $0 ? "⚙︎" : nil }
         .background(CorniceMenu(id: "impostazioni"))
+    }
+
+    // MARK: il trascinamento (T-1)
+
+    /// Le schede visibili in ordine, con la loro cornice (in coordinate della barra).
+    private func cornici(tranne k: String) -> [(chiave: String, f: CGRect)] {
+        CorniceMenu.cornici.compactMap { (id, f) in id.hasPrefix("t:") && id != "t:" + k ? (String(id.dropFirst(2)), f) : nil }
+            .sorted { stato.verticale ? $0.f.midY < $1.f.midY : $0.f.midX < $1.f.midX }
+    }
+
+    /// Davanti a quale scheda cadrà, e dove disegnare la lineetta.
+    private func puntoDiCaduta(_ p: CGPoint, tranne k: String) -> (davanti: String?, linea: CGFloat?) {
+        let cs = cornici(tranne: k)
+        guard let ultima = cs.last else { return (nil, nil) }
+        for x in cs where stato.verticale ? p.y < x.f.midY : p.x < x.f.midX {
+            return (x.chiave, stato.verticale ? x.f.minY - 1 : x.f.minX - 1)
+        }
+        return (nil, stato.verticale ? ultima.f.maxY + 1 : ultima.f.maxX + 1)
+    }
+
+    private func lascia(_ k: String, in p: CGPoint) {
+        let b = Menu.vista?.bounds ?? .zero
+        let dentro = b.insetBy(dx: -24, dy: -24).contains(p)    // fuori dalla barra (margine 24) → niente
+        let d = puntoDiCaduta(p, tranne: k)
+        withAnimationMolla { trascinata = nil; spostamento = .zero; dove = nil }
+        if dentro { c.riordina(k, davanti: d.davanti) }
+    }
+
+    @ViewBuilder private func lineetta(_ dim: CGSize) -> some View {
+        if let d = dove {
+            let r = RoundedRectangle(cornerRadius: 1).fill(Tema.accento).shadow(color: Tema.accento.opacity(0.6), radius: 3)
+            if stato.verticale { r.frame(width: dim.width - 20, height: 2).offset(x: 10, y: d - 1) }
+            else { r.frame(width: 2, height: 20).offset(x: d - 1, y: (dim.height - 20) / 2) }
+        }
     }
 
     // MARK: i menu
@@ -345,6 +397,7 @@ struct CorniceMenu: View {
         GeometryReader { g in
             Color.clear.onAppear { CorniceMenu.cornici[id] = g.frame(in: .global) }
                 .onChange(of: g.frame(in: .global)) { _, f in CorniceMenu.cornici[id] = f }
+                .onDisappear { CorniceMenu.cornici[id] = nil }
         }
     }
 }

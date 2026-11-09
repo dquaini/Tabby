@@ -3,11 +3,12 @@ import TabbyCore
 
 // Tabby, l'app. Tappa 1 (fondamenta): diario, impostazioni importate da Hammerspoon, permesso
 // Accessibilità. Tappa 2: la barra (Controllore.swift, Barra.swift).
+// Tappa 3: le finestre come schede (Finestre.swift nel motore).
 // Tabby non ha icona nel Dock (è "accessoria", come le app della barra dei menu).
 //
 // Prova dal Terminale senza aprire niente:  Tabby.app/Contents/MacOS/Tabby --prova
 
-let versione = "0.2"
+let versione = "0.3"
 
 if CommandLine.arguments.contains("--prova") {
     let n = Importazione.daHammerspoon()

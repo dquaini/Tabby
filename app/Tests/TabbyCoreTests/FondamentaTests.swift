@@ -43,7 +43,8 @@ struct FondamentaTests {
         nuovo.set(true, forKey: "tabbar.fit")
         let imp = Impostazioni(archivio: nuovo)
 
-        let n = Importazione.daHammerspoon(sorgente: vecchio, in: imp)
+        let prova = Diario(percorso: cartellaProvvisoria().appendingPathComponent("Tabby.log"))
+        let n = Importazione.daHammerspoon(sorgente: vecchio, in: imp, diario: prova)
         #expect(n == 3)
         #expect(imp.posizione == "right")
         #expect(imp.ordine == ["notion.id", "site:mail.proton.me"])
@@ -52,7 +53,7 @@ struct FondamentaTests {
 
         // La seconda volta non fa niente, anche se Hammerspoon cambia.
         vecchio.set("left", forKey: "tabbar.position")
-        #expect(Importazione.daHammerspoon(sorgente: vecchio, in: imp) == 0)
+        #expect(Importazione.daHammerspoon(sorgente: vecchio, in: imp, diario: prova) == 0)
         #expect(imp.posizione == "right")
     }
 

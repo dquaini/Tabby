@@ -2,6 +2,11 @@ import AppKit
 import ApplicationServices
 import TabbyCore
 
+/// Chiede a macOS il numero di una finestra (funzione interna di macOS, usata da tutte le app
+/// che gestiscono finestre, Hammerspoon compreso).
+@_silgen_name("_AXUIElementGetWindow")
+func _AXUIElementGetWindow(_ e: AXUIElement, _ id: UnsafeMutablePointer<CGWindowID>) -> AXError
+
 /// Tutto quello che Tabby chiede a macOS sulle app e le finestre, tramite l'Accessibilità.
 /// Ogni domanda a un'app ha un tempo massimo di 0,25 s: un'app impegnata (es. Chrome in una
 /// videochiamata) non deve mai bloccare Tabby.
@@ -31,28 +36,57 @@ enum Sistema {
         attributo(elemento(pid), kAXWindowsAttribute) ?? []
     }
 
-    /// Una finestra che conta come scheda: standard, oppure ridotta, oppure (macOS 26) una
-    /// finestra di un'app nascosta che macOS chiama «dialogo». Mai a schermo intero.
-    static func èScheda(_ w: AXUIElement, appNascosta: Bool) -> Bool {
-        if (attributo(w, "AXFullScreen") as Bool?) == true { return false }
-        let sub: String? = attributo(w, kAXSubroleAttribute)
-        if sub == kAXStandardWindowSubrole { return true }
-        if (attributo(w, kAXMinimizedAttribute) as Bool?) == true { return true }
-        return appNascosta && sub == kAXDialogSubrole
+    /// Il numero della finestra (lo stesso che usa macOS): serve a riconoscerla nel tempo.
+    static func numero(_ w: AXUIElement) -> UInt32? {
+        var id: CGWindowID = 0
+        return _AXUIElementGetWindow(w, &id) == .success && id != 0 ? id : nil
     }
 
-    /// Le app che sono schede (S-1, S-4): app "vere" (nel Dock) con almeno una finestra-scheda,
-    /// o anche senza finestre se l'impostazione lo chiede.
-    static func appSchede() -> [NSRunningApplication] {
-        let ign = ignorate()
-        let senza = Impostazioni.shared.valore("showWindowless") as? Bool ?? false
-        var viste = Set<String>()
-        return NSWorkspace.shared.runningApplications.filter { app in
-            guard app.activationPolicy == .regular, let bid = app.bundleIdentifier,
-                  !ign.contains(bid), !app.isTerminated, viste.insert(bid).inserted else { return false }
-            if senza { return true }
-            return finestre(app.processIdentifier).contains { èScheda($0, appNascosta: app.isHidden) }
+    /// Le finestre viste almeno una volta come "standard": macOS 26 chiama «dialogo» le
+    /// finestre ridotte o di app nascoste, e senza questa memoria sparirebbero dalla barra.
+    static var standardViste = Set<UInt32>()
+
+    /// Una finestra che conta come scheda: standard, ridotta, già vista standard, oppure
+    /// (macOS 26) una finestra di un'app nascosta che macOS chiama «dialogo». Mai a schermo
+    /// intero (Z-1).
+    static func èScheda(_ w: AXUIElement, appNascosta: Bool = false) -> Bool {
+        if (attributo(w, "AXFullScreen") as Bool?) == true { return false }
+        let sub: String? = attributo(w, kAXSubroleAttribute)
+        let n = numero(w)
+        if sub == kAXStandardWindowSubrole { if let n { standardViste.insert(n) }; return true }
+        if let n, standardViste.contains(n) { return true }
+        if appNascosta && sub == kAXDialogSubrole { return true }
+        return (attributo(w, kAXMinimizedAttribute) as Bool?) == true && sub != kAXFloatingWindowSubrole
+    }
+
+    /// Legge un'app: le sue finestre-scheda (numero, titolo, ridotta) e gli elementi per
+    /// agire su di esse.
+    static func leggi(_ app: NSRunningApplication) -> (InfoApp, [UInt32: AXUIElement]) {
+        var info: [InfoFinestra] = [], el: [UInt32: AXUIElement] = [:]
+        for w in finestre(app.processIdentifier) where èScheda(w, appNascosta: app.isHidden) {
+            guard let n = numero(w) else { continue }
+            info.append(InfoFinestra(id: n, titolo: attributo(w, kAXTitleAttribute) ?? "",
+                                     ridotta: (attributo(w, kAXMinimizedAttribute) as Bool?) == true))
+            el[n] = w
         }
+        let bid = app.bundleIdentifier ?? ""
+        return (InfoApp(bid: bid, nome: app.localizedName ?? bid, pid: app.processIdentifier, finestre: info), el)
+    }
+
+    /// Le app "vere" (nel Dock) che possono essere schede (S-1).
+    static func appVere() -> [NSRunningApplication] {
+        let ign = ignorate()
+        var viste = Set<String>()
+        return NSWorkspace.shared.runningApplications.filter { a in
+            guard a.activationPolicy == .regular, let b = a.bundleIdentifier, !ign.contains(b), !a.isTerminated else { return false }
+            return viste.insert(b).inserted
+        }
+    }
+
+    /// La finestra che ha l'attenzione in un'app.
+    static func finestraAttiva(_ pid: pid_t) -> AXUIElement? {
+        let e = elemento(pid)
+        return attributo(e, kAXFocusedWindowAttribute) ?? attributo(e, kAXMainWindowAttribute)
     }
 
     // MARK: - Lo spazio delle app
@@ -85,25 +119,32 @@ enum Sistema {
 
     // MARK: - Azioni
 
-    /// Porta davanti un'app (P-1/P-2): la mostra se nascosta, la mette in primo piano, alza la
-    /// sua finestra principale; se non ha finestre fa come il Dock (ne riapre una).
-    static func portaDavanti(_ app: NSRunningApplication) {
-        if app.isHidden { app.unhide() }
+    /// Porta davanti una scheda (P-1/P-2): mostra l'app se nascosta, riapre la finestra se
+    /// ridotta, la alza e le dà l'attenzione; senza finestre fa come il Dock (ne riapre una).
+    static func portaDavanti(_ app: NSRunningApplication, finestra: AXUIElement?) {
+        let nascosta = app.isHidden
+        if nascosta { app.unhide() }
         let e = elemento(app.processIdentifier)
-        let ws = finestre(app.processIdentifier).filter { èScheda($0, appNascosta: false) }
-        if let w = ws.first(where: { (attributo($0, kAXMainAttribute) as Bool?) == true }) ?? ws.first {
+        let tutte = finestre(app.processIdentifier).filter { èScheda($0, appNascosta: nascosta) }
+        let w = finestra ?? tutte.first { (attributo($0, kAXMinimizedAttribute) as Bool?) != true } ?? tutte.first
+        if let w {
             if (attributo(w, kAXMinimizedAttribute) as Bool?) == true {
                 AXUIElementSetAttributeValue(w, kAXMinimizedAttribute as CFString, kCFBooleanFalse)
             }
             AXUIElementPerformAction(w, kAXRaiseAction as CFString)
             AXUIElementSetAttributeValue(w, kAXMainAttribute as CFString, kCFBooleanTrue)
+            AXUIElementSetAttributeValue(e, kAXFocusedWindowAttribute as CFString, w)
         }
         AXUIElementSetAttributeValue(e, kAXFrontmostAttribute as CFString, kCFBooleanTrue)
         app.activate()
-        if ws.isEmpty, let url = app.bundleURL {
+        if w == nil, let url = app.bundleURL {
             let c = NSWorkspace.OpenConfiguration(); c.activates = true
             NSWorkspace.shared.openApplication(at: url, configuration: c)
         }
+    }
+
+    static func riduci(_ w: AXUIElement) {
+        AXUIElementSetAttributeValue(w, kAXMinimizedAttribute as CFString, kCFBooleanTrue)
     }
 
     /// Una scheda alla volta (U-1): nasconde tutte le altre app vere.
@@ -137,19 +178,13 @@ enum Sistema {
         AXUIElementSetAttributeValue(w, kAXPositionAttribute as CFString, p)   // alcune app lo vogliono dopo
     }
 
-    /// Chiude la finestra principale dell'app (C-1), premendo il suo pallino rosso.
-    static func chiudiFinestra(_ app: NSRunningApplication) {
-        let e = elemento(app.processIdentifier)
-        guard let w: AXUIElement = attributo(e, kAXFocusedWindowAttribute) ?? attributo(e, kAXMainWindowAttribute),
-              let b: AXUIElement = attributo(w, kAXCloseButtonAttribute) else { return }
+    /// Chiude una finestra (C-1, C-2) premendo il suo pallino rosso.
+    static func chiudi(_ w: AXUIElement) {
+        guard let b: AXUIElement = attributo(w, kAXCloseButtonAttribute) else { return }
         AXUIElementPerformAction(b, kAXPressAction as CFString)
     }
 
-    static func titoloFinestra(_ app: NSRunningApplication) -> String? {
-        let e = elemento(app.processIdentifier)
-        guard let w: AXUIElement = attributo(e, kAXFocusedWindowAttribute) ?? attributo(e, kAXMainWindowAttribute) else { return nil }
-        return attributo(w, kAXTitleAttribute)
-    }
+    static func titolo(_ w: AXUIElement) -> String? { attributo(w, kAXTitleAttribute) }
 
     /// Apre Spotlight (la scheda «+» e «Nuova app»), come premere ⌘Spazio.
     static func apriSpotlight() {
@@ -165,7 +200,7 @@ enum Sistema {
     static func scrivania() {
         nascondiAltre(tranne: "com.apple.finder")
         if let f = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.finder").first {
-            for w in finestre(f.processIdentifier) where èScheda(w, appNascosta: false) {
+            for w in finestre(f.processIdentifier) where èScheda(w) {
                 AXUIElementSetAttributeValue(w, kAXMinimizedAttribute as CFString, kCFBooleanTrue)
             }
             f.activate()

@@ -1,16 +1,21 @@
 import Foundation
 
-/// Una scheda della barra (SPECIFICA 1–2). Nella tappa 2 c'è una scheda per app; la chiave è
-/// il bundle ID. Nelle tappe dopo arrivano `win:<id>`, `site:<dominio>`, `g:<n>`, `f:<n>`.
+/// Una scheda della barra (SPECIFICA 1–2). Chiave: il bundle ID (l'app, o la sua finestra più
+/// vecchia) o `win:<id>` (le altre finestre). Più avanti: `site:<dominio>`, `g:<n>`, `f:<n>`.
 public struct Scheda: Equatable, Identifiable, Sendable {
     public var chiave: String
     public var bid: String
     public var nome: String
     public var pid: Int32
+    /// La finestra della scheda (nil = tutta l'app, es. un'app senza finestre o «una scheda sola»).
+    public var finestra: UInt32?
+    /// Finestra ridotta nel Dock: resta una scheda, attenuata (DESIGN.md 3.7).
+    public var ridotta: Bool
     public var id: String { chiave }
 
-    public init(chiave: String, bid: String, nome: String, pid: Int32) {
+    public init(chiave: String, bid: String, nome: String, pid: Int32, finestra: UInt32? = nil, ridotta: Bool = false) {
         self.chiave = chiave; self.bid = bid; self.nome = nome; self.pid = pid
+        self.finestra = finestra; self.ridotta = ridotta
     }
 }
 
