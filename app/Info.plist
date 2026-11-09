@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleIdentifier</key>
+	<string>com.dquaini.Tabby</string>
+	<key>CFBundleName</key>
+	<string>Tabby</string>
+	<key>CFBundleDisplayName</key>
+	<string>Tabby</string>
+	<key>CFBundleExecutable</key>
+	<string>Tabby</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.1</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>it</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>it</string>
+		<string>en</string>
+	</array>
+	<key>LSMinimumSystemVersion</key>
+	<string>26.0</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Tabby chiede al browser quali pagine sono aperte, per mostrare i siti come schede.</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Tabby di Daniele Quaini</string>
+</dict>
+</plist>

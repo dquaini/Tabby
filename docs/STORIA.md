@@ -211,4 +211,7 @@ v9.68: Lampi personalizzati (⚡︎ → Personalizza i Lampi): togliere, aggiung
 v9.69: i pannelli piccoli (es. Notion «vuoi registrare il meeting?») non nascondono più le
     altre app; la linea blu del trascinamento non resta più disegnata se il rilascio del
     clic si perde; il diario scrive ogni cambio di app con la sua finestra.
+app 0.1 (9/11/2026): nasce l'app Swift in `app/` (da macOS 26): fondamenta — diario in
+    ~/Library/Logs/Tabby.log, permesso Accessibilità, impostazioni importate da Hammerspoon,
+    5 test. Sul Mac di casa Tabby-Hammerspoon va in pensione.
 ```

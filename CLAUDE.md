@@ -130,6 +130,21 @@ dà "receive timeout": ripeterla. Collegato a GitHub il 22/10/2026 (chiave "Mac 
 Sul MacBook col notch la messa in funzione va rifatta: chiave SSH nuova da aggiungere su
 GitHub, poi `git clone git@github.com:dquaini/Tabby.git` e `init.lua` che punta lì.
 
+## L'app Swift (`app/`, dal 9/11/2026)
+
+- Pacchetto Swift: `TabbyCore` (il motore, senza finestre, provato coi test in `Tests/`) e
+  `Tabby` (l'app). Da macOS 26. Commenti e nomi in italiano, come nei file Lua.
+- Costruire: `app/costruisci.sh` (con `prova` esegue prima i test) → `app/build/Tabby.app`.
+  Firma col certificato «Tabby» del Portachiavi se c'è, altrimenti provvisoria (il permesso
+  Accessibilità va ridato a ogni costruzione). Prova senza finestre:
+  `app/build/Tabby.app/Contents/MacOS/Tabby --prova`.
+- Il diario è lo stesso file (`~/Library/Logs/Tabby.log`, righe `Tabby ·`); `misura(...)`
+  scrive `Tabby · lento:` sopra i 150 ms. Impostazioni in `com.dquaini.Tabby` con le chiavi
+  storiche `tabbar.*`, importate una volta da Hammerspoon.
+- **Mac di casa:** Tabby-Hammerspoon spenta (`dofile` commentato in `~/.hammerspoon/init.lua`).
+  **Mac di lavoro:** ancora Tabby-Hammerspoon; la cartella Lua resta come riferimento e
+  per i riscontri.
+
 ## Versione attuale
 
 **v9.69** (storia in `docs/STORIA.md`): ultima versione Hammerspoon. Piano (8/11/2026,

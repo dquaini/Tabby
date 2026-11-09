@@ -35,6 +35,27 @@ zone (nel codice "gruppo") · **Lampi** = le app piccole del menu ⚡︎ (nel co
    a ogni tappa e alla fine, si fa un'**ottimizzazione e un debug generale** (memoria, processore,
    batteria, tempi di risposta, niente lavori inutili in sottofondo), misurando sul Mac vero.
 
+### Decisioni per l'app (Daniele, 9/11/2026)
+- **Da macOS 26 in poi.**
+- **Mac di casa:** Tabby-Hammerspoon in pensione (in `~/.hammerspoon/init.lua` la riga `dofile`
+  è commentata; per riaccenderla basta togliere i `--`). Qui si usa e si prova l'app nuova.
+  **Mac di lavoro:** resta Tabby-Hammerspoon; i riscontri d'uso si riportano nell'app.
+- **Condivisione:** in futuro con amici e colleghi e come **progetto open source su GitHub**.
+  Per darla ad altri senza blocchi di macOS servirà l'iscrizione sviluppatore Apple (Developer
+  ID, 99 $ l'anno, notarizzazione). L'App Store non è possibile (Tabby muove le finestre delle
+  altre app). Prima di rendere pubblico il repository: scegliere la licenza e togliere i dati
+  personali (diari, nomi di siti, ecc.).
+- **Design e funzionamento**: il sistema di design è completo (`docs/DESIGN.md`); struttura,
+  percorsi, parole e rifiniture li decide Claude costruendo, mostrandoli a ogni tappa;
+  Automazione e Kat si decidono insieme quando ci si arriva.
+
+### Tappe dell'app
+1. **Fondamenta** ✅ (0.1, 9/11/2026): progetto in `app/`, `costruisci.sh`, diario, permesso
+   Accessibilità (si accorge da sola quando arriva), importazione delle impostazioni di
+   Hammerspoon (una volta, senza toccarle), test.
+2. Barra · 3. finestre come schede · 4. browser · 5. vista divisa · 6. cartelle · 7. Lampi e
+   strumenti · 8. le cinque sezioni, avvio, primo avvio, Dock.
+
 ### 1. Ordine nella UX — i punti da decidere
 1. **Tre stili diversi**: barra, menu e riquadro delle cartelle scuri "nostri"; Concentrazione,
    ricerca e avvisi in stile Apple; domande (Rinomina…) con le finestre di Hammerspoon (col
