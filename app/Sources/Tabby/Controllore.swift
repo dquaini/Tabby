@@ -155,8 +155,7 @@ final class Controllore {
         if let f = vecchia.finestra, ridotteDaTabby[f] != nil { return }
         if vecchia.ridotta { return }                       // era già ridotta: non è una chiusura adesso
         if ora.timeIntervalSince(sceltaTua) < 0.5 { return } // hai appena scelto tu dove andare
-        let dopo = stato.schede.filter { !$0.ridotta }.map(\.chiave)
-        guard let k = schedaAccanto(chiusa: chiusa, prima: prima.map(\.chiave), dopo: dopo),
+        guard let k = dopoLaChiusura(di: vecchia, prima: prima, adesso: stato.schede),
               let s = stato.schede.first(where: { $0.chiave == k }) else { return }
         diario("chiusa «\(vecchia.nome)» → «\(s.nome)»")
         vai(s, daTe: false)

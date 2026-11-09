@@ -68,6 +68,13 @@ public func schedaAccanto(chiusa: String, prima: [String], dopo: [String]) -> St
     return candidati.first { dopo.contains($0) } ?? dopo.first
 }
 
+/// Dove andare quando si chiude (o si riduce) la scheda attiva: se la sua app ha altre
+/// finestre, anche ridotte, la più vicina di quelle (come C-3); altrimenti la scheda accanto.
+public func dopoLaChiusura(di chiusa: Scheda, prima: [Scheda], adesso: [Scheda]) -> String? {
+    let stessa = adesso.filter { $0.bid == chiusa.bid }.map(\.chiave)
+    return schedaAccanto(chiusa: chiusa.chiave, prima: prima.map(\.chiave), dopo: stessa.isEmpty ? adesso.map(\.chiave) : stessa)
+}
+
 /// Il riordino trascinando (T-1): sposta `chiave` prima di `davanti` (nil = in fondo)
 /// nell'ordine ricordato, che contiene anche schede non visibili.
 public func sposta(_ chiave: String, davanti: String?, in ordine: [String]) -> [String] {

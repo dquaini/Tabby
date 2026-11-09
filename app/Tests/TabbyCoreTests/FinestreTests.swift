@@ -47,6 +47,15 @@ struct FinestreTests {
         #expect(schedaAccanto(chiusa: "c", prima: ["a", "b", "c"], dopo: []) == nil)
     }
 
+    @Test func chiusaUnaFinestraSiRiapreLAltraDellaStessaApp() {
+        // due finestre del Finder, la seconda ridotta; si chiude la prima → si va sull'altra del Finder
+        let a = Scheda(chiave: "slack", bid: "slack", nome: "Slack", pid: 1)
+        let f1 = Scheda(chiave: "finder", bid: "finder", nome: "A", pid: 2, finestra: 1)
+        let f2 = Scheda(chiave: "win:2", bid: "finder", nome: "B", pid: 2, finestra: 2, ridotta: true)
+        #expect(dopoLaChiusura(di: f1, prima: [a, f1, f2], adesso: [a, f2]) == "win:2")
+        #expect(dopoLaChiusura(di: a, prima: [a, f1], adesso: [f1]) == "finder")
+    }
+
     @Test func spostareTrascinando() {
         #expect(sposta("c", davanti: "a", in: ["a", "b", "c", "x"]) == ["c", "a", "b", "x"])
         #expect(sposta("a", davanti: nil, in: ["a", "b"]) == ["b", "a"])
