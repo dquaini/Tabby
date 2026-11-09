@@ -2,12 +2,12 @@ import AppKit
 import TabbyCore
 
 // Tabby, l'app. Tappa 1 (fondamenta): diario, impostazioni importate da Hammerspoon, permesso
-// Accessibilità. Ancora niente barra: arriva nella tappa 2.
+// Accessibilità. Tappa 2: la barra (Controllore.swift, Barra.swift).
 // Tabby non ha icona nel Dock (è "accessoria", come le app della barra dei menu).
 //
 // Prova dal Terminale senza aprire niente:  Tabby.app/Contents/MacOS/Tabby --prova
 
-let versione = "0.1"
+let versione = "0.2"
 
 if CommandLine.arguments.contains("--prova") {
     let n = Importazione.daHammerspoon()
@@ -25,6 +25,7 @@ if CommandLine.arguments.contains("--prova") {
 final class Avvio: NSObject, NSApplicationDelegate {
     let attesa = AttesaPermesso()
     let inizio = Date()
+    let controllore = Controllore()
 
     func applicationDidFinishLaunching(_ n: Notification) {
         diario("avvio \(versione) · macOS \(ProcessInfo.processInfo.operatingSystemVersionString)")
@@ -41,8 +42,9 @@ final class Avvio: NSObject, NSApplicationDelegate {
     }
 
     func pronta() {
+        controllore.avvia()
         let ms = Int(Date().timeIntervalSince(inizio) * 1000)
-        diario("pronta in \(ms) ms")
+        diario("pronta in \(ms) ms · \(controllore.stato.schede.count) schede")
     }
 }
 
