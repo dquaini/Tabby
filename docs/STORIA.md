@@ -219,4 +219,6 @@ app 0.3 (9/11/2026): le finestre come schede, scheda accanto, ⌃⌥W, ⌃⌥Tab
 app 0.4 (9/11/2026): i browser (siti come schede, loghi, DuckDuckGo) e i numerini delle notifiche.
 app 0.5 (9/11/2026): la vista divisa. Prima, le altre finestre della stessa app non si riducono più nel Dock.
 app 0.6 (9/11/2026): le cartelle, con la schermata d'apertura; velo, fogli e avvisi.
+app 0.8 (9/11/2026): Lampi e Memo, Concentrazione, la barra che cerca tutto, la finestra di Tabby
+    con le animazioni e la guida, la sfera, la pausa, i temi. A riposo 0% di processore.
 ```

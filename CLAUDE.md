@@ -145,6 +145,9 @@ GitHub, poi `git clone git@github.com:dquaini/Tabby.git` e `init.lua` che punta 
 - Il diario è lo stesso file (`~/Library/Logs/Tabby.log`, righe `Tabby ·`); `misura(...)`
   scrive `Tabby · lento:` sopra i 150 ms. Impostazioni in `com.dquaini.Tabby` con le chiavi
   storiche `tabbar.*`, importate una volta da Hammerspoon.
+- Riavviare in sviluppo **senza le animazioni** (che coprono tutto lo schermo): `open
+  app/build/Tabby.app --args --senza-avvio`. Daniele può essere in riunione: riavviare poco.
+- Versione dell'app: in `app/Sources/Tabby/main.swift` (`versione`) e in `app/Info.plist`.
 - **Mac di casa:** Tabby-Hammerspoon spenta (`dofile` commentato in `~/.hammerspoon/init.lua`).
   **Mac di lavoro:** ancora Tabby-Hammerspoon; la cartella Lua resta come riferimento e
   per i riscontri.

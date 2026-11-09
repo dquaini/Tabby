@@ -79,8 +79,24 @@ zone (nel codice "gruppo") · **Lampi** = le app piccole del menu ⚡︎ (nel co
    Modifica, Aggiorna, Esci, Chiudi con avviso «Riapri», Elimina con «Annulla»); vista cartella
    con «←»; foglio «Nuova cartella» (schede scelte con clic o trascinandole, poi il nome);
    componenti comuni: velo, foglio, avvisi.
-7. Lampi e
-   strumenti · 8. le cinque sezioni, avvio, primo avvio, Dock.
+7. **Lampi e strumenti** (0.7–0.8, 9/11/2026, in prova): Lampi aperti in fila in alto a destra
+   (veloci solo se aperti da Tabby, Esc li chiude), Memo con la pagina di sempre, ripiano dei
+   Lampi coperti (⚡︎ allargato), menu ⚡︎ con la riga dei Lampi, azioni nella barra dei menu
+   (Claude, Notion), foglio «Personalizza i Lampi» (riordino, scorciatoia premendo la lettera,
+   senza riavviare); Concentrazione (foglio, tempo al posto della batteria, «Aprire X?», foglio
+   «Fatto!», continua dopo un riavvio); la barra che cerca tutto ⌃⌥Spazio (schede, testo nelle
+   finestre letto in sottofondo e solo in memoria, cartelle, Lampi, azioni con secondo ↵,
+   impostazioni; ⌘↵ apre e cerca dentro); ⚙︎ nuovo (Tabby…, Impostazioni, Scorciatoie, Posizione,
+   Chiudi tutte le app col secondo clic, Metti in pausa / ⌥ Esci).
+8. **Le cinque sezioni, avvio, primo avvio, Dock** (0.8, 9/11/2026, in prova): finestra di
+   Tabby con le due animazioni a ogni avvio, riquadro di Spotlight al centro e cartelle ai lati,
+   sezioni Impostazioni · Design · Documentazione (solo testo bianco su nero) · Automazione e Kat
+   «presto»; guida del primo avvio (Accessibilità che si accorge da sola, browser, posizione e
+   aspetto, barra dei menu e Dock, accensione); temi (Nativo e Notte × 6); la sfera (colori del
+   tema, ventaglio, notifiche, anello della Concentrazione) e la pausa. Consumo a riposo: 0%.
+   **Rimandati** (prossime iterazioni): Nascondi Tabby (col mouse sul bordo), fascia del notch,
+   rinomina sul posto e tasto destro sulle schede, avviso dei siti doppi, app scoperte nella
+   barra dei menu (⚡︎ → Tutte le App), gesto a tre dita, lingua inglese.
 
 ### 1. Ordine nella UX — i punti da decidere
 1. **Tre stili diversi**: barra, menu e riquadro delle cartelle scuri "nostri"; Concentrazione,
