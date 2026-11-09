@@ -367,3 +367,19 @@ Decisi poi (Daniele, 9/11/2026): le **due animazioni ogni volta** che l'app si a
 Spotlight **sempre al centro**, le cartelle alternate a destra e a sinistra · si chiude con
 **✕ o esc** (esc chiude prima la pagina aperta) · Automazione e Kat con «presto» finché non si
 sviluppano · nell'app la pagina va rifinita in stile Apple, semplice ed efficace.
+
+### Revisione dopo le prime prove dell'app (Daniele, 9/11/2026)
+- **Il gatto** porta dritto alla **Scrivania** (niente menu Casa nella barra; la sfera tiene il
+  suo ventaglio). Le **cartelle** passano nel menu ⚡︎, con Lampi e Concentrazione.
+- **Fogli** (Nuova cartella, Concentrazione, Personalizza i Lampi, Fatto!): non più «identici ai
+  menu» (3.3/3.4) ma **nello stile della finestra di Tabby**: nero, larghi 460, titolo grande
+  (22), scelte come parole, comandi come parole («Crea →», «Annulla»), righe da 32. Più grandi
+  ed eleganti.
+- **La barra che cerca tutto**: come lo **Spotlight di macOS 26** — una capsula di vetro (Liquid
+  Glass) larga 680 e sotto i risultati in un vetro a parte, righe da 38 con icone da 26.
+- **Impostazioni a frasi** (proposta di Claude, da confermare): ogni impostazione è una frase con
+  la voce di Tabby («Tabby sta **in alto**.»); la parola chiara è la scelta, un clic mostra le
+  alternative. Le azioni sono un nome e un verbo («modifica →»). Le sezioni in alto restano
+  ferme, le pagine scorrono sotto con una sfumatura.
+- **Cartelle**: attivandole si entra sempre nella vista cartella; nella testata solo «‹» e il
+  nome (clic = menu); le app chiuse si aggiungono cercandole per nome.
