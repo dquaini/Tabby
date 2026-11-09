@@ -72,7 +72,14 @@ zone (nel codice "gruppo") · **Lampi** = le app piccole del menu ⚡︎ (nel co
    Fatto/Invio · Annulla/Esc, vista che nasce da sola a zone piene, scheda «A + B» con icone
    affiancate, ⇄ (⌃⌥S) e Scomponi, finestre nelle zone, viste salvate. Da fare con i Lampi:
    la fila dei Lampi aperti sopra il pannello.
-6. Cartelle · 7. Lampi e
+6. **Cartelle** (0.6, 9/11/2026, in prova): le cartelle di Hammerspoon importate; motore delle
+   voci (legami alle finestre, una voce = una scheda, una voce in una cartella sola); attivare
+   dal gatto o ⌃⌥⇧1…9 aprendo in sottofondo le voci che mancano, con la schermata d'apertura
+   (Scrivania sfocata, icone che si accendono) se sono due o più; scheda-cartella con ⋯ (Apri,
+   Modifica, Aggiorna, Esci, Chiudi con avviso «Riapri», Elimina con «Annulla»); vista cartella
+   con «←»; foglio «Nuova cartella» (schede scelte con clic o trascinandole, poi il nome);
+   componenti comuni: velo, foglio, avvisi.
+7. Lampi e
    strumenti · 8. le cinque sezioni, avvio, primo avvio, Dock.
 
 ### 1. Ordine nella UX — i punti da decidere

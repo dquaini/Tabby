@@ -17,6 +17,17 @@ final class StatoBarra {
     var loghi: [String: NSImage] = [:]          // i loghi dei siti, per dominio
     var divisione: Divisione?                   // mentre si divide lo schermo
     var membri: [String: [Scheda]] = [:]        // vista divisa → le sue schede
+    // cartelle
+    var cartelle: [Cartella] = []
+    var diChi: [String: Int] = [:]              // scheda → cartella attiva
+    var membriCartella: [String: [Scheda]] = [:]
+    var cartellaAperta: Int?                    // la vista cartella (F-6)
+    var apertura: StatoApertura?
+    // il foglio con le schede da scegliere (cartella, Concentrazione)
+    var scelta: [String]?
+    var nomeFoglio = ""
+    var cartellaInModifica: Int?
+    var foglioIlluminato = false
     var verticale: Bool { posizione == "left" || posizione == "right" }
 }
 
@@ -43,6 +54,16 @@ final class Controllore {
     /// Le viste divise salvate.
     var viste: [VistaDivisa] = (Impostazioni.shared.valore("groups") as? [[String: Any]] ?? []).compactMap(VistaDivisa.init)
     var dopoVista: DispatchWorkItem?
+    // cartelle (SPECIFICA 8)
+    var cartelle: [Cartella] = (Impostazioni.shared.valore("folders") as? [[String: Any]] ?? []).compactMap(Cartella.init)
+    var attive: [Int] = Impostazioni.shared.valore("activeFolders") as? [Int] ?? []
+    var legami: [String: UInt32] = (Impostazioni.shared.valore("itemWins") as? [String: Int] ?? [:]).mapValues { UInt32($0) }
+    var inArrivo: [String: (legame: String, quando: Date, note: Set<UInt32>)] = [:]
+    var attivataIl: [Int: Date] = [:]
+    var ultimaDi: [Int: String] = [:]            // l'ultima scheda usata di ogni cartella
+    let palco = Palco()
+    let avvisi = Avvisi()
+    lazy var schermata = Schermata(stato: stato) { [weak self] in self?.chiudiApertura() }
     /// Le finestre ridotte da Tabby stessa (U-2): non fanno scattare «scheda accanto».
     private var ridotteDaTabby: [UInt32: Date] = [:]
     /// Le ultime schede attive con l'istante del cambio (C-4: macOS a volte attiva un'altra
@@ -55,6 +76,8 @@ final class Controllore {
     func avvia() {
         pannello = PannelloBarra(controllore: self)
         velo = VeloDivisione(controllore: self)
+        stato.cartelle = cartelle
+        avvisi.posizione = { [weak self] in self?.stato.posizione ?? "top" }
         stato.batteria = batteria.stato
         batteria.cambiata = { [weak self] b in self?.stato.batteria = b }
         browser.cambiato = { [weak self] in self?.ricostruisciPresto() }
@@ -170,8 +193,9 @@ final class Controllore {
             var m: [String: [Scheda]] = [:]
             for v in viste { m[v.chiave] = v.membri.compactMap { k in nuove.first { $0.chiave == k } } }
             if m != stato.membri { stato.membri = m }
+            let visibili = applicaCartelle(vis)
             let prima = stato.schede
-            if vis != stato.schede { stato.schede = vis }
+            if visibili != stato.schede { stato.schede = visibili }
             controllaChiusura(prima: prima)
             aggiornaAttiva()
         }
@@ -213,6 +237,12 @@ final class Controllore {
         if let i = viste.firstIndex(where: { $0.membri.contains(k) }) {   // dentro una vista divisa
             if viste[i].attenzione != k { viste[i].attenzione = k; salvaViste() }
             k = viste[i].chiave
+        }
+        if let id = stato.diChi[k] {                                      // dentro una cartella attiva
+            ultimaDi[id] = k
+            if vistaCartelle && stato.cartellaAperta == nil { k = "f:\(id)" }
+        } else if stato.cartellaAperta != nil && !stato.schede.contains(where: { $0.chiave == k }) {
+            stato.cartellaAperta = nil; ricostruisciPresto()              // un'app fuori dalla cartella: vista generale
         }
         if k != stato.attiva { segnaAttiva(k) }
     }
@@ -266,6 +296,8 @@ final class Controllore {
 
     func vai(_ s: Scheda, daTe: Bool = true) {
         if stato.divisione != nil { assegna(s.chiave); return }          // mentre dividi: nella prima zona libera
+        if stato.scelta != nil { scegli(s.chiave); return }              // un foglio aperto: scegli la scheda
+        if s.chiave.hasPrefix("f:"), let id = Int(s.chiave.dropFirst(2)) { entraNellaCartella(id); return }
         if let v = viste.first(where: { $0.chiave == s.chiave }) {
             if daTe { sceltaTua = Date() }
             stato.scrivania = false
@@ -337,7 +369,10 @@ final class Controllore {
 
     /// T-1: la scheda trascinata va prima di `davanti` (nil = in fondo).
     func riordina(_ chiave: String, davanti: String?) {
-        let o = sposta(chiave, davanti: davanti, in: imp.ordine)
+        var o = imp.ordine
+        let dentro: [String] = chiave.hasPrefix("f:") ? stato.membriCartella[chiave]?.map(\.chiave) ?? [] : [chiave]
+        let prima = davanti.flatMap { d in d.hasPrefix("f:") ? stato.membriCartella[d]?.first?.chiave : d }
+        for k in dentro { o = sposta(k, davanti: prima, in: o) }
         imp.imposta("order", o)
         withAnimationMolla { ricostruisci() }
     }
@@ -366,6 +401,13 @@ final class Controllore {
         tasti.aggiungi(kVK_Tab) { [weak self] in self?.tornaIndietro() }
         tasti.aggiungi(kVK_ANSI_W) { [weak self] in self?.chiudiFinestraDavanti() }
         tasti.aggiungi(kVK_ANSI_S) { [weak self] in self?.scambia() }
+        // ⌃⌥⇧1…9: le cartelle, nel loro ordine
+        for (i, t) in numeri.enumerated() {
+            tasti.aggiungi(t, maiuscolo: true) { [weak self] in
+                guard let self, i < self.cartelle.count else { return }
+                self.attivaCartella(self.cartelle[i].id)
+            }
+        }
     }
 }
 

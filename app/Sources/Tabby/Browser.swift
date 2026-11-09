@@ -94,7 +94,11 @@ final class Browser {
         if B.tipo == .accessibilita {
             out.finestre = info.finestre.map { f in
                 var f = f
-                if let w = el[f.id] { let v = guarda(w, id: f.id, titolo: f.titolo, nascosta: app.isHidden, ridotta: f.ridotta); f.sito = v.schede == 1 ? v.sito.flatMap(dominio) : nil }
+                if let w = el[f.id] {
+                    let v = guarda(w, id: f.id, titolo: f.titolo, nascosta: app.isHidden, ridotta: f.ridotta)
+                    f.sito = v.schede == 1 ? v.sito.flatMap(dominio) : nil
+                    f.inVista = v.sito
+                }
                 return f
             }
             return out
@@ -117,6 +121,7 @@ final class Browser {
                 conosciute[f.id] = t
                 f.titoloBrowser = t.nome
                 f.sito = sitoDi(t.urls)
+                f.indirizzi = t.urls
             } else if risposte[info.bid] != nil, schermo.first(where: { $0.id == f.id })?.piccola == true {
                 continue                                            // finestrella: non è una scheda
             }

@@ -15,6 +15,11 @@ public struct Scheda: Equatable, Identifiable, Sendable {
     public var sito: String?
     /// Il numerino delle notifiche («3», o «•» se l'app non dice quante).
     public var notifica: String?
+    /// Per le cartelle: il titolo della finestra (senza il nome dell'app), gli indirizzi delle
+    /// sue schede (browser) e il sito in vista.
+    public var titolo: String?
+    public var indirizzi: [String]?
+    public var inVista: String?
     public var id: String { chiave }
 
     public init(chiave: String, bid: String, nome: String, pid: Int32, finestra: UInt32? = nil, ridotta: Bool = false,

@@ -218,4 +218,5 @@ app 0.2 (9/11/2026): la barra, nello stile deciso (Notte · Tabby), con le sched
 app 0.3 (9/11/2026): le finestre come schede, scheda accanto, ⌃⌥W, ⌃⌥Tab, riordino trascinando.
 app 0.4 (9/11/2026): i browser (siti come schede, loghi, DuckDuckGo) e i numerini delle notifiche.
 app 0.5 (9/11/2026): la vista divisa. Prima, le altre finestre della stessa app non si riducono più nel Dock.
+app 0.6 (9/11/2026): le cartelle, con la schermata d'apertura; velo, fogli e avvisi.
 ```

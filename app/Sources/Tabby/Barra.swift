@@ -128,6 +128,7 @@ struct BarraVista: View {
             let d = disponiOrizzontale(spazio: g.size.width - fisso, numero: sch.count, attiva: att)
             HStack(spacing: 2) {
                 gatto
+                if stato.cartellaAperta != nil { testataCartella }
                 ForEach(d.visibili.map { sch[$0] }) { s in
                     let i = sch.firstIndex(of: s), on = i == att
                     scheda(s, attiva: on, larghezza: d.compatta ? (on ? Misure.compattaAttiva : Misure.compatta) : d.larghezza,
@@ -155,6 +156,7 @@ struct BarraVista: View {
             let d = disponiVerticale(spazio: g.size.height - 74 - 30 - 34 - 34 - 24, numero: sch.count, attiva: att)
             VStack(spacing: 2) {
                 gattoIntero
+                if stato.cartellaAperta != nil { testataCartella.frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 6) }
                 ForEach(d.visibili.map { sch[$0] }) { s in
                     scheda(s, attiva: sch.firstIndex(of: s) == att, larghezza: g.size.width - 12, soloIcona: false, altezza: d.riga - 2)
                 }
@@ -214,11 +216,13 @@ struct BarraVista: View {
         let su = sopra == s.chiave || tr
         let rid = s.ridotta && !on
         let vista = stato.membri[s.chiave]
+        let cartella = stato.membriCartella[s.chiave]
+        let scelta = stato.scelta?.contains(s.chiave) == true
         return HStack(spacing: 7) {
-            if let vista {
-                // vista divisa: le icone delle sue app, sovrapposte (fino a 4)
+            if let gruppo = vista ?? cartella {
+                // vista divisa (fino a 4) o cartella (prime 3): le icone delle sue app, sovrapposte
                 HStack(spacing: -5) {
-                    ForEach(vista.prefix(4)) { m in
+                    ForEach(gruppo.prefix(cartella != nil ? 3 : 4)) { m in
                         if let i = m.sito.flatMap({ stato.loghi[$0] }) ?? stato.icone[m.bid] {
                             Image(nsImage: i).resizable().interpolation(.high).frame(width: 16, height: 16)
                                 .clipShape(RoundedRectangle(cornerRadius: m.sito != nil ? 4 : 0))
@@ -241,7 +245,16 @@ struct BarraVista: View {
                 Text(s.nome).lineLimit(1).truncationMode(.tail).italic(rid).opacity(rid ? 0.7 : 1)
                 Spacer(minLength: 0)
                 if let n = s.notifica { numerino(n) }
-                if vista != nil, on || su {
+                if let cartella {
+                    // la cartella: quante schede, e ⋯ per il suo menu
+                    Text("\(cartella.count)").font(.system(size: 9.5, weight: .bold)).monospacedDigit()
+                        .padding(.horizontal, 3).frame(minWidth: 15, minHeight: 14)
+                        .background(on ? Color.black.opacity(0.16) : Tema.sopra, in: RoundedRectangle(cornerRadius: 4))
+                    Button { apriMenuCartella(s.chiave) } label: {
+                        Image(systemName: "ellipsis").font(.system(size: 11, weight: .bold)).opacity(0.7)
+                            .frame(width: 18, height: 18).contentShape(Rectangle())
+                    }.buttonStyle(.plain).background(CorniceMenu(id: "m:" + s.chiave))
+                } else if vista != nil, on || su {
                     // ⇄ Scambia e Scomponi al posto della ✕
                     Button { c.scambia(s.chiave) } label: {
                         Image(systemName: "arrow.left.arrow.right").font(.system(size: 10.5, weight: .medium)).opacity(0.7)
@@ -279,6 +292,17 @@ struct BarraVista: View {
                     .overlay(RoundedRectangle(cornerRadius: Misure.angoloScheda).strokeBorder(Tema.c(0xFFE2A0, 0.14), lineWidth: 0.5))
             } else if su {
                 RoundedRectangle(cornerRadius: Misure.angoloScheda).fill(Tema.sopra)
+            }
+        }
+        .overlay {
+            // scelta in un foglio (cartella, Concentrazione): contorno del tema + spunta
+            if scelta {
+                RoundedRectangle(cornerRadius: Misure.angoloScheda).strokeBorder(Tema.accento, lineWidth: 1.5)
+                    .shadow(color: Tema.accento.opacity(0.5), radius: 4)
+                    .overlay(alignment: .topTrailing) {
+                        Image(systemName: "checkmark.circle.fill").font(.system(size: 11)).foregroundStyle(Tema.suAttiva, Tema.accento)
+                            .background(Circle().fill(Tema.c(0x0F0D09)).padding(-1)).offset(x: 4, y: -4)
+                    }
             }
         }
         .contentShape(Rectangle())
@@ -409,6 +433,7 @@ struct BarraVista: View {
 
     private func muovi(_ k: String, _ v: DragGesture.Value) {
         if stato.divisione != nil { c.trascinaInDivisione(k, schermo(v.location)); return }   // verso le zone
+        if stato.scelta != nil { c.trascinaNelFoglio(schermo(v.location)); return }          // verso il foglio
         if trascinata == nil, let f = CorniceMenu.cornici["t:" + k] {
             presa = stato.verticale ? v.startLocation.y - f.minY : v.startLocation.x - f.minX
             provvisorio = stato.schede.map(\.chiave)
@@ -427,12 +452,54 @@ struct BarraVista: View {
 
     private func lascia(_ k: String, in p: CGPoint) {
         if stato.divisione != nil { c.lasciaInDivisione(k, schermo(p)); return }
+        if stato.scelta != nil { c.lasciaNelFoglio(k, schermo(p)); return }
         let b = Menu.vista?.bounds ?? .zero
         let dentro = b.insetBy(dx: -24, dy: -24).contains(p)    // fuori dalla barra (margine 24) → niente
         if dentro, let o = provvisorio, let i = o.firstIndex(of: k) {
             c.riordina(k, davanti: i + 1 < o.count ? o[i + 1] : nil)
         }
         withAnimationMolla { trascinata = nil; provvisorio = nil }
+    }
+
+    /// La vista cartella (F-6): «←» per tornare a tutte le schede, e il nome col suo menu.
+    @ViewBuilder private var testataCartella: some View {
+        if let id = stato.cartellaAperta, let f = stato.cartelle.first(where: { $0.id == id }) {
+            HStack(spacing: 6) {
+                Button { c.esciDallaVistaCartella() } label: {
+                    Image(systemName: "chevron.left").font(.system(size: 12, weight: .semibold)).frame(width: 22, height: 26).contentShape(Rectangle())
+                }.buttonStyle(.plain).help("Tutte le schede")
+                Button { apriMenuCartella(f.chiave) } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: "square.stack.3d.up").foregroundStyle(Tema.accento)
+                        Text(f.nome).font(.system(size: 13, weight: .semibold)).foregroundStyle(Tema.testo)
+                        Image(systemName: "chevron.down").font(.system(size: 9, weight: .bold))
+                    }.contentShape(Rectangle())
+                }.buttonStyle(.plain).background(CorniceMenu(id: "m:" + f.chiave))
+            }
+            .padding(.trailing, 8)
+        }
+    }
+
+    /// Il menu ⋯ di una cartella (F-5).
+    private func apriMenuCartella(_ chiave: String) {
+        guard let id = Int(chiave.dropFirst(2)), let f = stato.cartelle.first(where: { $0.id == id }) else { return }
+        let m = NSMenu()
+        m.addItem(NSMenuItem.sectionHeader(title: f.nome))
+        for s in stato.membriCartella[chiave] ?? [] {
+            let v = Menu.voce(s.nome) { c.entraNellaCartella(id, su: s.chiave) }
+            v.image = (s.sito.flatMap { stato.loghi[$0] } ?? stato.icone[s.bid]).map { let x = $0.copy() as! NSImage; x.size = NSSize(width: 16, height: 16); return x }
+            v.state = c.ultimaDi[id] == s.chiave ? .on : .off
+            m.addItem(v)
+        }
+        m.addItem(.separator())
+        if stato.cartellaAperta != id { m.addItem(Menu.voce("Apri la cartella", simbolo: "arrow.up.forward.square") { c.entraNellaCartella(id) }) }
+        m.addItem(Menu.voce("Modifica le schede…", simbolo: "square.and.pencil") { c.apriFoglioCartella(id) })
+        m.addItem(Menu.voce("Aggiorna con le schede di adesso", simbolo: "arrow.clockwise") { c.aggiornaCartella(id) })
+        m.addItem(Menu.voce("Esci dalla cartella", simbolo: "arrow.uturn.backward") { c.esciDallaCartella(id) })
+        m.addItem(Menu.voce("Chiudi la cartella", simbolo: "xmark") { c.chiudiCartella(id) })
+        m.addItem(.separator())
+        m.addItem(Menu.voce("Elimina la cartella", simbolo: "trash") { c.eliminaCartella(id) })
+        Menu.apri(m, sopra: CorniceMenu.cornici["m:" + chiave] ?? .zero)
     }
 
     // MARK: i menu
@@ -444,6 +511,15 @@ struct BarraVista: View {
         }
         m.addItem(Menu.voce("Nuova app…", simbolo: "plus.app") { c.nuovaApp() })
         m.addItem(Menu.voce("Scrivania", simbolo: "macwindow", tasto: "0") { c.scrivania() })
+        m.addItem(.separator())
+        m.addItem(NSMenuItem.sectionHeader(title: "Cartelle"))
+        for (n, f) in stato.cartelle.enumerated() {
+            let v = Menu.voce(f.nome, simbolo: "square.stack.3d.up", tasto: n < 9 ? "\(n + 1)" : "") { c.attivaCartella(f.id) }
+            if n < 9 { v.keyEquivalentModifierMask = [.control, .option, .shift] }
+            v.state = c.attive.contains(f.id) ? .on : .off
+            m.addItem(v)
+        }
+        m.addItem(Menu.voce("Nuova cartella…", simbolo: "plus") { c.apriFoglioCartella() })
         Menu.apri(m, sopra: CorniceMenu.cornici["gatto"] ?? .zero)
     }
 

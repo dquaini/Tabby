@@ -21,8 +21,13 @@ public struct InfoFinestra: Sendable {
     public var sito: String?
     /// Browser: il titolo come lo dà il browser (senza il nome del profilo).
     public var titoloBrowser: String?
-    public init(id: UInt32, titolo: String, ridotta: Bool = false, sito: String? = nil, titoloBrowser: String? = nil) {
+    /// Browser: gli indirizzi delle schede (Chrome, Safari…) e il sito in vista (DuckDuckGo).
+    public var indirizzi: [String]?
+    public var inVista: String?
+    public init(id: UInt32, titolo: String, ridotta: Bool = false, sito: String? = nil, titoloBrowser: String? = nil,
+                indirizzi: [String]? = nil, inVista: String? = nil) {
         self.id = id; self.titolo = titolo; self.ridotta = ridotta; self.sito = sito; self.titoloBrowser = titoloBrowser
+        self.indirizzi = indirizzi; self.inVista = inVista
     }
 }
 
@@ -80,6 +85,15 @@ public func costruisciSchede(_ apps: [InfoApp], separate: (String) -> Bool = { _
             prese.insert(k)
             schede.append(Scheda(chiave: k, bid: a.bid, nome: nomi[k] ?? nome, pid: a.pid, finestra: f.id, ridotta: f.ridotta))
         }
+    }
+    // per le cartelle: titolo, indirizzi e sito in vista di ogni finestra
+    var info: [UInt32: (InfoFinestra, String)] = [:]
+    for a in apps { for f in a.finestre { info[f.id] = (f, a.breve ?? a.nome) } }
+    for i in schede.indices {
+        guard let f = schede[i].finestra, let (x, app) = info[f] else { continue }
+        schede[i].titolo = nomeFinestra(titolo: x.titoloBrowser ?? x.titolo, app: app)
+        schede[i].indirizzi = x.indirizzi
+        schede[i].inVista = x.inVista
     }
     return schede
 }
