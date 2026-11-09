@@ -15,6 +15,8 @@ final class StatoBarra {
     var batteria = Batteria.Stato()
     var icone: [String: NSImage] = [:]
     var loghi: [String: NSImage] = [:]          // i loghi dei siti, per dominio
+    var divisione: Divisione?                   // mentre si divide lo schermo
+    var membri: [String: [Scheda]] = [:]        // vista divisa → le sue schede
     var verticale: Bool { posizione == "left" || posizione == "right" }
 }
 
@@ -24,9 +26,10 @@ final class StatoBarra {
 final class Controllore {
     let stato = StatoBarra()
     let imp = Impostazioni.shared
-    private var pannello: PannelloBarra!
+    private(set) var pannello: PannelloBarra!
+    var velo: VeloDivisione!
     private let batteria = Batteria()
-    private let tasti = Tasti()
+    let tasti = Tasti()
     private let browser = Browser()
     private let loghi = Loghi()
     private let dock = NotificheDock()
@@ -34,7 +37,12 @@ final class Controllore {
     private var osservatori: [pid_t: AXObserver] = [:]
     private var adattaDopo: DispatchWorkItem?
     /// chiave → finestra (per agire sulla scheda)
-    private var elementi: [String: AXUIElement] = [:]
+    var elementi: [String: AXUIElement] = [:]
+    /// Tutte le schede, anche quelle dentro le viste divise (in barra c'è la vista al loro posto).
+    var tutte: [Scheda] = []
+    /// Le viste divise salvate.
+    var viste: [VistaDivisa] = (Impostazioni.shared.valore("groups") as? [[String: Any]] ?? []).compactMap(VistaDivisa.init)
+    var dopoVista: DispatchWorkItem?
     /// Le finestre ridotte da Tabby stessa (U-2): non fanno scattare «scheda accanto».
     private var ridotteDaTabby: [UInt32: Date] = [:]
     /// Le ultime schede attive con l'istante del cambio (C-4: macOS a volte attiva un'altra
@@ -46,6 +54,7 @@ final class Controllore {
 
     func avvia() {
         pannello = PannelloBarra(controllore: self)
+        velo = VeloDivisione(controllore: self)
         stato.batteria = batteria.stato
         batteria.cambiata = { [weak self] b in self?.stato.batteria = b }
         browser.cambiato = { [weak self] in self?.ricostruisciPresto() }
@@ -146,10 +155,23 @@ final class Controllore {
                 if s.notifica == nil, s.chiave == s.bid, let d = dock.attuali[s.bid] { nuove[n].notifica = d }
                 if let d = s.sito, stato.loghi[d] == nil, let l = loghi.logo(d) { stato.loghi[d] = l }
             }
+            tutte = nuove
+            // le viste divise: chi è chiuso esce, con meno di 2 app la vista si scioglie
+            let v2 = aggiornaViste(viste, presenti: Set(nuove.map(\.chiave)))
+            if v2 != viste { viste = v2; salvaViste() }
             let r = ordina(nuove, ordine: imp.ordine, preferite: imp.preferite)
-            if r.ordine != imp.ordine { imp.imposta("order", r.ordine) }
+            let ord = r.ordine.filter { k in !k.hasPrefix("g:") || viste.contains { $0.chiave == k } }
+            if ord != imp.ordine { imp.imposta("order", ord) }
+            // la scheda della vista al posto della sua prima app, poi l'ordine (anche della vista)
+            let posto = Dictionary(ord.enumerated().map { ($1, $0) }, uniquingKeysWith: { a, _ in a })
+            let vis = conViste(r.schede, viste).enumerated()
+                .sorted { (posto[$0.element.chiave] ?? .max, $0.offset) < (posto[$1.element.chiave] ?? .max, $1.offset) }
+                .map(\.element)
+            var m: [String: [Scheda]] = [:]
+            for v in viste { m[v.chiave] = v.membri.compactMap { k in nuove.first { $0.chiave == k } } }
+            if m != stato.membri { stato.membri = m }
             let prima = stato.schede
-            if r.schede != stato.schede { stato.schede = r.schede }
+            if vis != stato.schede { stato.schede = vis }
             controllaChiusura(prima: prima)
             aggiornaAttiva()
         }
@@ -184,10 +206,15 @@ final class Controllore {
     private func aggiornaAttiva() {
         guard !stato.scrivania, let app = NSWorkspace.shared.frontmostApplication,
               let bid = app.bundleIdentifier, !Sistema.ignorate().contains(bid) else { return }
-        var k = stato.schede.first { $0.bid == bid }?.chiave
+        var k = tutte.first { $0.bid == bid }?.chiave
         if let w = Sistema.finestraAttiva(app.processIdentifier), let n = Sistema.numero(w),
-           let s = stato.schede.first(where: { $0.finestra == n }) { k = s.chiave }
-        if let k, k != stato.attiva { segnaAttiva(k) }
+           let s = tutte.first(where: { $0.finestra == n }) { k = s.chiave }
+        guard var k else { return }
+        if let i = viste.firstIndex(where: { $0.membri.contains(k) }) {   // dentro una vista divisa
+            if viste[i].attenzione != k { viste[i].attenzione = k; salvaViste() }
+            k = viste[i].chiave
+        }
+        if k != stato.attiva { segnaAttiva(k) }
     }
 
     private func segnaAttiva(_ k: String) {
@@ -210,15 +237,24 @@ final class Controllore {
         if stato.scrivania && bid == "com.apple.finder" { return }
         stato.scrivania = false
         aggiornaAttiva()
-        if !stato.schede.contains(where: { $0.bid == bid }) { ricostruisciPresto() }
-        if imp.unaAllaVolta { Sistema.nascondiAltre(tranne: bid) }
+        if !tutte.contains(where: { $0.bid == bid }) { ricostruisciPresto() }
+        if let k = stato.attiva, let v = viste.first(where: { $0.chiave == k }) {
+            // una finestra di una vista divisa: si ridispone tutta la vista (D-4), dopo 0,6 s
+            if imp.unaAllaVolta { Sistema.nascondiAltre(tranne: bidDi(v)) }
+            dopoVista?.cancel()
+            let w = DispatchWorkItem { [weak self] in MainActor.assumeIsolated { self?.disponi(v) } }
+            dopoVista = w
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: w)
+            return
+        }
+        if imp.unaAllaVolta { Sistema.nascondiAltre(tranne: [bid]) }
         if imp.adatta {
-            Sistema.adatta(app, posizione: stato.posizione)
+            Sistema.adatta(app, posizione: stato.posizione, tranne: finestreInViste())
             adattaDopo?.cancel()                                          // alcune app creano la finestra in ritardo
             let w = DispatchWorkItem { [weak self] in
                 MainActor.assumeIsolated {
                     guard let self, NSWorkspace.shared.frontmostApplication == app else { return }
-                    Sistema.adatta(app, posizione: self.stato.posizione)
+                    Sistema.adatta(app, posizione: self.stato.posizione, tranne: self.finestreInViste())
                 }
             }
             adattaDopo = w
@@ -229,6 +265,14 @@ final class Controllore {
     // MARK: - Passare da una scheda all'altra
 
     func vai(_ s: Scheda, daTe: Bool = true) {
+        if stato.divisione != nil { assegna(s.chiave); return }          // mentre dividi: nella prima zona libera
+        if let v = viste.first(where: { $0.chiave == s.chiave }) {
+            if daTe { sceltaTua = Date() }
+            stato.scrivania = false
+            segnaAttiva(v.chiave)
+            mostraVista(v, scelta: true)
+            return
+        }
         guard let app = NSRunningApplication(processIdentifier: s.pid) else { ricostruisci(); return }
         if daTe { sceltaTua = Date() }
         stato.scrivania = false
@@ -317,6 +361,7 @@ final class Controllore {
         tasti.aggiungi(kVK_UpArrow) { [weak self] in if self?.stato.verticale == true { self?.scorri(-1) } }
         tasti.aggiungi(kVK_Tab) { [weak self] in self?.tornaIndietro() }
         tasti.aggiungi(kVK_ANSI_W) { [weak self] in self?.chiudiFinestraDavanti() }
+        tasti.aggiungi(kVK_ANSI_S) { [weak self] in self?.scambia() }
     }
 }
 

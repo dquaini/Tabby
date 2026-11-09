@@ -156,10 +156,11 @@ enum Sistema {
     }
 
     /// Una scheda alla volta (U-1): nasconde tutte le altre app vere.
-    static func nascondiAltre(tranne bid: String) {
+    static func nascondiAltre(tranne bid: String) { nascondiAltre(tranne: [bid]) }
+    static func nascondiAltre(tranne bids: Set<String>) {
         let ign = ignorate()
         for a in NSWorkspace.shared.runningApplications where a.activationPolicy == .regular {
-            guard let b = a.bundleIdentifier, b != bid, !ign.contains(b), !a.isHidden else { continue }
+            guard let b = a.bundleIdentifier, !bids.contains(b), !ign.contains(b), !a.isHidden else { continue }
             a.hide()
         }
     }
@@ -167,9 +168,10 @@ enum Sistema {
     /// Adatta (U-3): **tutte** le finestre dell'app (non ridotte) prendono esattamente lo
     /// spazio delle app, così quella davanti copre le altre. Le finestrelle (popup di accesso,
     /// miniature) restano come sono.
-    static func adatta(_ app: NSRunningApplication, posizione: String) {
+    static func adatta(_ app: NSRunningApplication, posizione: String, tranne: Set<UInt32> = []) {
         let r = spazioApp(posizione: posizione)
         for w in finestre(app.processIdentifier) {
+            if let n = numero(w), tranne.contains(n) { continue }            // nelle viste divise: hanno la loro zona
             guard (attributo(w, kAXSubroleAttribute) as String?) == kAXStandardWindowSubrole,
                   (attributo(w, kAXMinimizedAttribute) as Bool?) != true,
                   (attributo(w, "AXFullScreen") as Bool?) != true,
@@ -193,6 +195,13 @@ enum Sistema {
         AXUIElementSetAttributeValue(w, kAXSizeAttribute as CFString, d)
         AXUIElementSetAttributeValue(w, kAXPositionAttribute as CFString, p)   // alcune app lo vogliono dopo
     }
+
+    /// Da un rettangolo in coordinate dall'alto (Accessibilità) a quelle di macOS (dal basso).
+    static func dalBasso(_ r: CGRect) -> CGRect {
+        let h = NSScreen.screens.first?.frame.height ?? r.maxY
+        return CGRect(x: r.minX, y: h - r.maxY, width: r.width, height: r.height)
+    }
+    static func dallAlto(_ r: CGRect) -> CGRect { dalBasso(r) }      // è la stessa operazione, all'indietro
 
     /// Chiude una finestra (C-1, C-2) premendo il suo pallino rosso.
     static func chiudi(_ w: AXUIElement) {

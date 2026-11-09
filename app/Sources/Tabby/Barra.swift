@@ -122,7 +122,7 @@ struct BarraVista: View {
 
     private var riga: some View {
         GeometryReader { g in
-            let fisso = Misure.gatto + Misure.piu + Misure.tasto * 2 + 16
+            let fisso = Misure.gatto + Misure.piu + Misure.tasto * 3 + 16
             let sch = mostrate
             let att = sch.firstIndex { $0.chiave == stato.attiva && !stato.scrivania }
             let d = disponiOrizzontale(spazio: g.size.width - fisso, numero: sch.count, attiva: att)
@@ -137,6 +137,7 @@ struct BarraVista: View {
                 piu
                 Spacer(minLength: 0)
                 batteria
+                dividi
                 impostazioni
             }
             .padding(.horizontal, 2)
@@ -161,7 +162,7 @@ struct BarraVista: View {
                 piu.frame(maxWidth: .infinity, alignment: .leading).padding(.leading, 4)
                 Spacer(minLength: 0)
                 batteria
-                HStack(spacing: 0) { Spacer(); impostazioni; Spacer() }
+                HStack(spacing: 0) { Spacer(); dividi; impostazioni; Spacer() }
             }
             .padding(.vertical, 6)
             .frame(width: g.size.width, height: g.size.height)
@@ -212,8 +213,19 @@ struct BarraVista: View {
         let tr = trascinata == s.chiave
         let su = sopra == s.chiave || tr
         let rid = s.ridotta && !on
+        let vista = stato.membri[s.chiave]
         return HStack(spacing: 7) {
-            if let i = s.sito.flatMap({ stato.loghi[$0] }) ?? stato.icone[s.bid] {
+            if let vista {
+                // vista divisa: le icone delle sue app, sovrapposte (fino a 4)
+                HStack(spacing: -5) {
+                    ForEach(vista.prefix(4)) { m in
+                        if let i = m.sito.flatMap({ stato.loghi[$0] }) ?? stato.icone[m.bid] {
+                            Image(nsImage: i).resizable().interpolation(.high).frame(width: 16, height: 16)
+                                .clipShape(RoundedRectangle(cornerRadius: m.sito != nil ? 4 : 0))
+                        }
+                    }
+                }
+            } else if let i = s.sito.flatMap({ stato.loghi[$0] }) ?? stato.icone[s.bid] {
                 Image(nsImage: i).resizable().interpolation(.high).frame(width: 16, height: 16)
                     .clipShape(RoundedRectangle(cornerRadius: s.sito != nil ? 4 : 0))
                     .opacity(rid ? 0.45 : 1)
@@ -229,7 +241,17 @@ struct BarraVista: View {
                 Text(s.nome).lineLimit(1).truncationMode(.tail).italic(rid).opacity(rid ? 0.7 : 1)
                 Spacer(minLength: 0)
                 if let n = s.notifica { numerino(n) }
-                if on || su {
+                if vista != nil, on || su {
+                    // ⇄ Scambia e Scomponi al posto della ✕
+                    Button { c.scambia(s.chiave) } label: {
+                        Image(systemName: "arrow.left.arrow.right").font(.system(size: 10.5, weight: .medium)).opacity(0.7)
+                            .frame(width: 18, height: 18).contentShape(Rectangle())
+                    }.buttonStyle(.plain).help("Scambia  ⌃⌥S")
+                    Button { c.scomponi(s.chiave) } label: {
+                        Image(systemName: "rectangle.split.2x1").font(.system(size: 10.5, weight: .medium)).opacity(0.7)
+                            .frame(width: 18, height: 18).contentShape(Rectangle())
+                    }.buttonStyle(.plain).help("Scomponi")
+                } else if on || su {
                     Button { apriChiudi(s) } label: {
                         Image(systemName: "xmark.circle.fill").font(.system(size: 11)).opacity(0.55)
                             .frame(width: 16, height: 16).contentShape(Rectangle())
@@ -325,6 +347,32 @@ struct BarraVista: View {
         l >= 88 ? "battery.100percent" : l >= 63 ? "battery.75percent" : l >= 38 ? "battery.50percent" : l >= 13 ? "battery.25percent" : "battery.0percent"
     }
 
+    /// ⊞ Dividi lo schermo: il menu con gli schemi. Acceso mentre dividi o su una vista divisa.
+    private var dividi: some View {
+        let acceso = stato.divisione != nil || stato.attiva?.hasPrefix("g:") == true
+        return Button { apriDividi() } label: {
+            Image(systemName: "rectangle.grid.2x2").font(.system(size: 14))
+                .frame(width: Misure.tasto, height: stato.verticale ? Misure.tasto : Misure.altezza)
+                .foregroundStyle(acceso ? Tema.accento : sopra == "⊞" ? Tema.testo : Tema.tenue)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { sopra = $0 ? "⊞" : nil }
+        .background(CorniceMenu(id: "dividi"))
+        .help("Dividi lo schermo")
+    }
+
+    private func apriDividi() {
+        if stato.divisione != nil { c.annullaDivisione(); return }
+        let m = NSMenu()
+        for sc in schemi {
+            let v = Menu.voce(sc.nome) { c.avviaDivisione(sc.id) }
+            v.image = figurina(sc)
+            m.addItem(v)
+        }
+        Menu.apri(m, sopra: CorniceMenu.cornici["dividi"] ?? .zero)
+    }
+
     private var impostazioni: some View {
         Button { apriImpostazioni() } label: {
             Image(systemName: "slider.horizontal.3").font(.system(size: 14))
@@ -353,7 +401,14 @@ struct BarraVista: View {
     }
 
     /// Mentre trascini: la scheda segue il puntatore e le altre si spostano per farle posto.
+    /// Da un punto della barra (coordinate di SwiftUI, dall'alto) a un punto dello schermo.
+    private func schermo(_ p: CGPoint) -> NSPoint {
+        guard let w = Menu.vista?.window else { return p }
+        return NSPoint(x: w.frame.minX + p.x, y: w.frame.maxY - p.y)
+    }
+
     private func muovi(_ k: String, _ v: DragGesture.Value) {
+        if stato.divisione != nil { c.trascinaInDivisione(k, schermo(v.location)); return }   // verso le zone
         if trascinata == nil, let f = CorniceMenu.cornici["t:" + k] {
             presa = stato.verticale ? v.startLocation.y - f.minY : v.startLocation.x - f.minX
             provvisorio = stato.schede.map(\.chiave)
@@ -371,6 +426,7 @@ struct BarraVista: View {
     }
 
     private func lascia(_ k: String, in p: CGPoint) {
+        if stato.divisione != nil { c.lasciaInDivisione(k, schermo(p)); return }
         let b = Menu.vista?.bounds ?? .zero
         let dentro = b.insetBy(dx: -24, dy: -24).contains(p)    // fuori dalla barra (margine 24) → niente
         if dentro, let o = provvisorio, let i = o.firstIndex(of: k) {

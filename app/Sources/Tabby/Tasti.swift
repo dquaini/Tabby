@@ -7,6 +7,7 @@ import Foundation
 final class Tasti {
     static var azioni: [UInt32: () -> Void] = [:]
     private var registrate: [EventHotKeyRef] = []
+    private var temporanei: [(EventHotKeyRef, UInt32)] = []
     private var gestore: EventHandlerRef?
 
     init() {
@@ -19,6 +20,20 @@ final class Tasti {
             MainActor.assumeIsolated { Tasti.azioni[n]?() }
             return noErr
         }, 1, &tipo, nil, &gestore)
+    }
+
+    /// Un tasto senza ⌃⌥, solo per un momento (Esc e Invio mentre dividi lo schermo).
+    func temporaneo(_ tasto: Int, _ azione: @escaping () -> Void) {
+        let n = UInt32(Tasti.azioni.count + 1000)
+        Tasti.azioni[n] = azione
+        var ref: EventHotKeyRef?
+        RegisterEventHotKey(UInt32(tasto), 0, EventHotKeyID(signature: 0x54424259, id: n), GetApplicationEventTarget(), 0, &ref)
+        if let ref { temporanei.append((ref, n)) }
+    }
+
+    func togliTemporanei() {
+        for (r, n) in temporanei { UnregisterEventHotKey(r); Tasti.azioni[n] = nil }
+        temporanei = []
     }
 
     /// `aggiungi(kVK_ANSI_1) { … }` → ⌃⌥1

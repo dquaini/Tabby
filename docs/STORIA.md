@@ -217,4 +217,5 @@ app 0.1 (9/11/2026): nasce l'app Swift in `app/` (da macOS 26): fondamenta — d
 app 0.2 (9/11/2026): la barra, nello stile deciso (Notte · Tabby), con le schede delle app.
 app 0.3 (9/11/2026): le finestre come schede, scheda accanto, ⌃⌥W, ⌃⌥Tab, riordino trascinando.
 app 0.4 (9/11/2026): i browser (siti come schede, loghi, DuckDuckGo) e i numerini delle notifiche.
+app 0.5 (9/11/2026): la vista divisa. Prima, le altre finestre della stessa app non si riducono più nel Dock.
 ```

@@ -67,7 +67,12 @@ zone (nel codice "gruppo") · **Lampi** = le app piccole del menu ⚡︎ (nel co
    Safari con AppleScript in sottofondo e abbinamento delle finestre (B-3), finestrelle escluse,
    numerini dal Dock e dai titoli. Da fare dopo: rinomina e scelta del sito (tasto destro),
    avviso dei siti doppi (B-9), il browser con la miniatura video che non si nasconde.
-5. Vista divisa · 6. cartelle · 7. Lampi e
+5. **Vista divisa** (0.5, 9/11/2026, in prova): ⊞ con gli schemi (figurine), velo con le zone
+   (tratteggiate, illuminate, «clic per togliere»), schede trascinate dalla barra o cliccate,
+   Fatto/Invio · Annulla/Esc, vista che nasce da sola a zone piene, scheda «A + B» con icone
+   affiancate, ⇄ (⌃⌥S) e Scomponi, finestre nelle zone, viste salvate. Da fare con i Lampi:
+   la fila dei Lampi aperti sopra il pannello.
+6. Cartelle · 7. Lampi e
    strumenti · 8. le cinque sezioni, avvio, primo avvio, Dock.
 
 ### 1. Ordine nella UX — i punti da decidere
