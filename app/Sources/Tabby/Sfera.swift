@@ -172,7 +172,7 @@ private struct VistaSfera: View {
         var v: [(String, NSImage?, String?, () -> Void)] = []
         if let p = c.precedente { v.append(("Torna a \(p.nome)", stato.icone[p.bid], nil, { c.vai(p) })) }
         v.append(("Nuova app", nil, "plus", { c.nuovaApp() }))
-        v.append(("Scrivania", stato.icone["com.apple.finder"], nil, { c.scrivaniaFinder() }))
+        v.append(("Scrivania", stato.icone["com.apple.finder"], nil, { c.gatto() }))
         // le app con notifiche vengono prima (3.8)
         for f in stato.cartelle {
             v.append((f.nome, nil, "square.stack.3d.up", { c.attivaCartella(f.id) }))
@@ -242,16 +242,15 @@ extension Controllore {
         DispatchQueue.main.asyncAfter(deadline: .now() + (serve ? 0.4 : 0), execute: w)
     }
 
+    /// Clic sulla sfera: se c'erano schede aperte si riaprono come le avevi lasciate (niente
+    /// domande); il ventaglio (Nuova app, cartelle) solo se non c'è nessuna scheda.
     func cliccaSfera() {
         if stato.inPausa { pausa(false); return }
+        if !stato.schede.isEmpty { riapriDaScrivania(); return }
         sfera.s.ventaglio.toggle()
         sfera.aggiornaMisura()
     }
 
-    /// La Scrivania dalla sfera: il Finder sulla cartella Scrivania.
-    func scrivaniaFinder() {
-        NSWorkspace.shared.open(FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Desktop"))
-    }
 
     /// Metti in pausa Tabby (W-4): la barra sparisce e resta solo la sfera spenta; Tabby non
     /// nasconde e non ridimensiona più niente, le scorciatoie passano alle app. Un clic sulla

@@ -143,6 +143,7 @@ enum Sistema {
             AXUIElementSetAttributeValue(e, kAXFocusedWindowAttribute as CFString, w)
         }
         AXUIElementSetAttributeValue(e, kAXFrontmostAttribute as CFString, kCFBooleanTrue)
+        if NSApp.isActive { NSApp.yieldActivation(to: app) }          // da un foglio di Tabby: cede il primo piano
         app.activate()
         if w == nil, let url = app.bundleURL {
             let c = NSWorkspace.OpenConfiguration(); c.activates = true

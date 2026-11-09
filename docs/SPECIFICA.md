@@ -598,6 +598,13 @@ vengono nascoste dalla scrivania.
 
 ## 13. Scrivania
 
+**[Swift, Daniele 9/11/2026]** Il **gatto** apre una finestra del Finder sulla cartella
+Scrivania (una scheda normale). **Chiudi Tabby** (⚙︎, sotto «Metti in pausa», o ⌃⌥0) nasconde
+le app: resta la Scrivania del Mac con la sfera, e Tabby ricorda dov'eri. **Clic sulla sfera**:
+se c'erano schede, si riaprono come le avevi lasciate (niente domande); il ventaglio (Nuova
+app, cartelle) solo se non c'è nessuna scheda. Nella ricerca, una scheda che sta in una
+cartella attiva apre la vista di quella cartella. (Sotto, le regole della versione Hammerspoon.)
+
 **W-0 Il gatto = «casa»** (v9.66, deciso da Daniele il 31/10/2026; prima nella barra apriva
 subito il Finder e nella sfera tornava all'ultima finestra). Un clic sul muso del gatto,
 **nella barra o nella sfera**, mostra sempre le stesse scelte, in quest'ordine:

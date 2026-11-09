@@ -207,7 +207,7 @@ struct BarraVista: View {
     }
 
     private var gatto: some View {
-        Button { c.scrivania() } label: {
+        Button { c.gatto() } label: {
             Group {
                 if let i = immagineGatto("gatto-spento") { Image(nsImage: i).resizable().scaledToFit().frame(width: 20, height: 20) }
                 else { Image(systemName: "pawprint.fill") }
@@ -223,7 +223,7 @@ struct BarraVista: View {
     }
 
     private var gattoIntero: some View {
-        Button { c.scrivania() } label: {
+        Button { c.gatto() } label: {
             Group {
                 let lato = stato.posizione == "left" ? "sinistra" : "destra"
                 if let i = immagineGatto("gatto-intero-\(lato)-spento") { Image(nsImage: i).resizable().scaledToFit() }
@@ -695,6 +695,7 @@ struct BarraVista: View {
         tutte.view = conferma
         m.addItem(tutte)
         m.addItem(Menu.voce("Metti in pausa Tabby", simbolo: "pause.circle") { c.pausa(true) })
+        m.addItem(Menu.voce("Chiudi Tabby", simbolo: "macwindow", tasto: "0") { c.scrivania() })
         let esci = Menu.voce("Esci da Tabby", simbolo: "power") { NSApp.terminate(nil) }
         esci.isAlternate = true; esci.keyEquivalentModifierMask = [.option]
         m.addItem(esci)

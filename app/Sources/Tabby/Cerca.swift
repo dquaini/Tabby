@@ -102,7 +102,8 @@ extension Controllore {
         }
         let azioni: [(String, String, Bool, () -> Void)] = [
             ("Nuova app", "Apri un'app con Spotlight", false, { [weak self] in self?.nuovaApp() }),
-            ("Scrivania", "Nascondi tutte le app · ⌃⌥0", false, { [weak self] in self?.scrivania() }),
+            ("Chiudi Tabby", "La Scrivania del Mac; la sfera riapre tutto · ⌃⌥0", false, { [weak self] in self?.scrivania() }),
+            ("Scrivania nel Finder", "La cartella Scrivania", false, { [weak self] in self?.gatto() }),
             ("Concentrazione", "25 · 50 · 90 min", false, { [weak self] in self?.apriFoglioConcentrazione() }),
             ("Nuova cartella", "Scegli le schede, poi il nome", false, { [weak self] in self?.apriFoglioCartella() }),
             ("Personalizza i Lampi", "Ordine, scorciatoie, aggiungi", false, { [weak self] in self?.apriFoglioLampi() }),
@@ -135,8 +136,12 @@ extension Controllore {
         case .scheda(let k):
             let vis = conViste(tutte, viste)
             guard let s = vis.first(where: { $0.chiave == k || stato.membri[$0.chiave]?.contains { $0.chiave == k } == true }) else { return }
-            vai(s)
-            if alternativa { cercaDentro(testo) }                       // ⌘↵: apri e cerca dentro (⌘F)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+                guard let self else { return }
+                if let id = self.stato.diChi[s.chiave] { self.entraNellaCartella(id, su: s.chiave) }   // dentro una cartella: si entra
+                else { self.vai(s) }
+                if alternativa { self.cercaDentro(testo) }              // ⌘↵: apri e cerca dentro (⌘F)
+            }
         case .cartella(let id): attivaCartella(id)
         case .lampo(let l): lampi.premi(l)
         case .comando(let f): f()

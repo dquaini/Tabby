@@ -371,13 +371,26 @@ final class Controllore {
         vai(s)
     }
 
+    /// Chiudi Tabby (⚙︎ o ⌃⌥0; Daniele, 9/11/2026): le app si nascondono, resta la Scrivania del Mac
+    /// con la sfera; Tabby ricorda dov'eri. Un clic sulla sfera (o ⌃⌥0 di nuovo) e torna tutto.
     func scrivania() {
-        if stato.scrivania, let k = stato.attiva, let s = stato.schede.first(where: { $0.chiave == k }) {
-            vai(s); return                                                 // ripremuto: torna all'ultima scheda
-        }
+        if stato.scrivania { riapriDaScrivania(); return }
         withAnimationMolla { stato.scrivania = true }
         for s in stato.schede where s.bid == "com.apple.finder" { if let f = s.finestra { ridotteDaTabby[f] = Date() } }
         Sistema.scrivania()
+    }
+
+    /// Dalla Scrivania del Mac si torna all'ultima scheda, come l'avevi lasciata.
+    func riapriDaScrivania() {
+        let s = stato.schede.first(where: { $0.chiave == stato.attiva }) ?? stato.schede.first
+        stato.scrivania = false
+        if let s { vai(s) }
+    }
+
+    /// Il gatto: una finestra del Finder sulla cartella Scrivania, come una scheda normale.
+    func gatto() {
+        stato.scrivania = false
+        NSWorkspace.shared.open(FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Desktop"))
     }
 
     func nuovaApp() { Sistema.apriSpotlight() }
