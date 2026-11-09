@@ -247,7 +247,11 @@ passando a una scheda si nascondono tutte le altre app, tranne: quelle della sch
 (o della vista divisa), le app con una finestra a schermo intero, i browser con una
 miniatura video aperta. Le app restano aperte.
 
-**U-2 Ridurre le altre finestre della stessa app.** macOS nasconde solo app intere:
+**[Swift, deciso da Daniele il 9/11/2026] U-2 non c'è più:** scegliendo una finestra, le
+altre della stessa app **restano aperte dietro** (non si riducono nel Dock); Tabby adatta
+tutte le finestre dell'app allo spazio delle app, così quella davanti copre le altre. In
+corsivo/attenuate restano solo le finestre ridotte da te.
+**U-2 (Hammerspoon) Ridurre le altre finestre della stessa app.** macOS nasconde solo app intere:
 le altre finestre-scheda della stessa app si **riducono a icona** (tornano quando le
 scegli). Solo se:
 - la finestra in primo piano l'hai **scelta tu** (clic/scorciatoia su Tabby, o

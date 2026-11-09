@@ -164,14 +164,22 @@ enum Sistema {
         }
     }
 
-    /// Adatta (U-3): la finestra in primo piano dell'app prende esattamente lo spazio delle
-    /// app. Se la misura è già giusta (±1 punto) non chiede niente (ogni richiesta costa).
+    /// Adatta (U-3): **tutte** le finestre dell'app (non ridotte) prendono esattamente lo
+    /// spazio delle app, così quella davanti copre le altre. Le finestrelle (popup di accesso,
+    /// miniature) restano come sono.
     static func adatta(_ app: NSRunningApplication, posizione: String) {
-        let e = elemento(app.processIdentifier)
-        guard let w: AXUIElement = attributo(e, kAXFocusedWindowAttribute) ?? attributo(e, kAXMainWindowAttribute),
-              (attributo(w, kAXSubroleAttribute) as String?) == kAXStandardWindowSubrole,
-              (attributo(w, "AXFullScreen") as Bool?) != true else { return }
         let r = spazioApp(posizione: posizione)
+        for w in finestre(app.processIdentifier) {
+            guard (attributo(w, kAXSubroleAttribute) as String?) == kAXStandardWindowSubrole,
+                  (attributo(w, kAXMinimizedAttribute) as Bool?) != true,
+                  (attributo(w, "AXFullScreen") as Bool?) != true,
+                  let c = cornice(w), c.width >= r.width * 0.6 || browserNoti[app.bundleIdentifier ?? ""] == nil else { continue }
+            adattaFinestra(w, a: r)
+        }
+    }
+
+    /// Se la misura è già giusta (±1 punto) non chiede niente (ogni richiesta costa).
+    static func adattaFinestra(_ w: AXUIElement, a r: CGRect) {
         let altezzaPrincipale = NSScreen.screens.first?.frame.height ?? r.maxY
         var pos = CGPoint(x: r.minX, y: altezzaPrincipale - r.maxY)    // l'Accessibilità conta dall'alto
         var dim = CGSize(width: r.width, height: r.height)

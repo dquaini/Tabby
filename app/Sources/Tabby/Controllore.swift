@@ -235,14 +235,9 @@ final class Controllore {
         segnaAttiva(s.chiave)
         let w = elementi[s.chiave]
         Sistema.portaDavanti(app, finestra: w)
-        // U-2: le altre finestre-scheda della stessa app si riducono (tornano quando le scegli)
-        if daTe, s.finestra != nil {
-            for altra in stato.schede where altra.bid == s.bid && altra.chiave != s.chiave && !altra.ridotta {
-                guard let f = altra.finestra, let aw = elementi[altra.chiave] else { continue }
-                ridotteDaTabby[f] = Date()
-                Sistema.riduci(aw)
-            }
-        }
+        // Le altre finestre della stessa app restano aperte dietro (deciso con Daniele il
+        // 9/11/2026, al posto di U-2 che le riduceva nel Dock): hanno tutte la stessa misura,
+        // quindi quella davanti le copre.
     }
 
     func vaiNumero(_ n: Int) { if n < stato.schede.count { vai(stato.schede[n]) } }
