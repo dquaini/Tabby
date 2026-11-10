@@ -608,6 +608,7 @@ scrivania, di schermo intero.
 il clic è nei primi 120×60 punti della finestra attiva) o a **⌃⌘F**, Tabby sparisce
 **subito**, senza aspettare l'animazione; se dopo 2 s lo schermo intero non c'è,
 ricompare.
+*App Swift 0.9.6:* fatto (si guardano solo i clic, mai i movimenti; ⌃⌘F dall'intercettatore).
 
 **Z-4** Le app con una finestra a schermo intero non si nascondono (U-1) e non
 vengono nascoste dalla scrivania.
@@ -774,10 +775,12 @@ aprono solo dalla loro icona.
 
 **X-3** Premere l'icona di un'app spenta in macOS (parcheggiata fuori schermo) non
 apre niente: allora si apre l'app come dal Dock; per un'app solo icona, avviso.
+*App Swift 0.9.6:* fatto (avviso «X è solo un'icona nella barra dei menu»).
 
 **X-4 Durante un'azione** (3 s): il pannello che si apre non è una scheda, non si
 ingrandisce, e l'app in cui sei non viene nascosta. Sotto il pannello c'è il velo
 (16) finché torni alla finestra di prima o passi a una finestra "vera".
+*App Swift 0.9.6:* il velo sotto il pannello dell'app finché c'è (al massimo 3 s per comparire); il resto lo fa già X-5.
 
 **X-5 Pannelli** (v9.69, 5/11/2026: la finestrella di Notion «vuoi registrare il meeting?»):
 se l'app che diventa attiva ha in primo piano una finestra **piccola** (meno di metà
@@ -926,6 +929,7 @@ delle dita appoggiate). Il gesto va tolto a macOS (Impostazioni → Trackpad →
 gesti), altrimenti lo fanno entrambi. ⚙︎ → Comportamento (acceso di serie).
 **[Swift]** i tocchi grezzi richiedono API non pubbliche (MultitouchSupport) o
 eventi `NSEvent` di tipo gesture: da verificare presto.
+*App Swift 0.9.6:* fatto con gli eventi «gesture» pubblici di macOS (solo ascolto), come Hammerspoon; Impostazioni: «Tre dita sul trackpad cambiano scheda / non fanno niente».
 
 ## 19. Trascinare le schede
 

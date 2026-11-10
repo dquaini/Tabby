@@ -196,7 +196,20 @@ final class GestoreLampi {
               let icona = (Sistema.attributo(barra, kAXChildrenAttribute) as [AXUIElement]?)?.first else {
             diario("\(l.nome): icona nella barra dei menu non trovata"); app.activate(); return
         }
+        // X-3: un'icona che macOS ha parcheggiato fuori dallo schermo (barra dei menu piena, o
+        // spenta nelle Impostazioni) non apre niente: si apre l'app come dal Dock
+        if let r = Sistema.cornice(icona), r.maxX <= 0 || r.minY < -2 || r.minX >= (NSScreen.screens.first?.frame.width ?? .greatestFiniteMagnitude) {
+            diario("\(l.nome): icona fuori dallo schermo, apro l'app")
+            apriComeDalDock(b)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
+                guard let self, Sistema.finestre(app.processIdentifier).isEmpty else { return }
+                self.c.avvisi.mostra(Avviso(simbolo: "menubar.rectangle", titolo: "\(l.nome) è solo un'icona nella barra dei menu",
+                                            scelte: [.init(titolo: "Ho capito", principale: true) {}]))
+            }
+            return
+        }
         AXUIElementPerformAction(icona, kAXPressAction as CFString)
+        c.veloSpotlight.forse(app: app.localizedName)          // X-4: il velo sotto il suo pannello
         guard let voce = l.voceMenu else { return }
         // la voce del menu dell'icona, cercata per 1,5 s
         func cerca(_ resto: Int) {

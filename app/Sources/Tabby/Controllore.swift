@@ -104,6 +104,8 @@ final class Controllore {
     /// L'ultima volta che hai scelto tu una scheda (clic o scorciatoia).
     var finestraScrivania: UInt32?               // la finestra del Finder aperta dal musetto
     let veloSpotlight = VeloSpotlight()
+    let gesti = Gesti()
+    var monitorClic: Any?
     var sitiScelti: [UInt32: String] = [:]       // B-8: il sito scelto per una finestra di browser
     var scrivaniaDa = Date.distantPast           // quando si è andati sulla Scrivania (W-2)
     var ultimaFinestrella = Date.distantPast     // C-3
@@ -113,6 +115,9 @@ final class Controllore {
     func avvia() {
         tasti.riprovaIntercettatore()                   // se all'apertura mancava l'Accessibilità
         Tasti.suSpotlight = { [weak self] in self?.veloSpotlight.forse() }
+        gesti.scorri = { [weak self] d in self?.scorri(d) }
+        gesti.aggiorna()
+        osservaSchermoIntero()
         defer { osservaNotifiche() }
         pannello = PannelloBarra(controllore: self)
         velo = VeloDivisione(controllore: self)

@@ -14,6 +14,7 @@ final class Tasti {
     static var combinazioni: [Int: UInt32] = [:]
     /// ⌘Spazio visto dall'intercettatore (per il velo di Spotlight)
     static var suSpotlight: (() -> Void)?
+    static var suSchermoIntero: (() -> Void)?
     private static var ultime: [UInt32: (quando: Date, daIntercettatore: Bool)] = [:]
     private var intercettatore: CFMachPort?
     private var controllo: Timer?
@@ -63,6 +64,12 @@ final class Tasti {
             if f.contains(.maskCommand), !f.contains(.maskControl), !f.contains(.maskAlternate), !f.contains(.maskShift),
                evento.getIntegerValueField(.keyboardEventKeycode) == Int64(kVK_Space) {
                 DispatchQueue.main.async { MainActor.assumeIsolated { Tasti.suSpotlight?() } }
+                return Unmanaged.passUnretained(evento)
+            }
+            // ⌃⌘F: schermo intero (Z-3); il tasto va comunque all'app
+            if f.contains(.maskCommand), f.contains(.maskControl), !f.contains(.maskAlternate),
+               evento.getIntegerValueField(.keyboardEventKeycode) == Int64(kVK_ANSI_F) {
+                DispatchQueue.main.async { MainActor.assumeIsolated { Tasti.suSchermoIntero?() } }
                 return Unmanaged.passUnretained(evento)
             }
             // solo ⌃⌥ (con o senza ⇧), mai ⌘: tutto il resto passa senza guardarlo

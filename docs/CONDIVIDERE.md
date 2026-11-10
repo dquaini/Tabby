@@ -66,6 +66,39 @@ Lì Tabby va installata da GitHub, così si aggiorna con un comando:
 Oppure apri Claude Code nella cartella e chiedi: "metti in funzione Tabby su questo
 Mac" (le istruzioni sono in `CLAUDE.md`).
 
+## Il MacBook di lavoro con l'app Swift (guida del 10/11/2026)
+
+Da fare una volta, con calma (una ventina di minuti, quasi tutti di attesa). Se qualcosa va
+storto, il punto 8 riporta tutto come prima.
+
+1. **Xcode.** Dall'App Store installa **Xcode** (è grande: va lasciato scaricare). Aprilo una
+   volta e accetta la licenza; poi chiudilo. Nel Terminale controlla: `swift --version` deve
+   dire 6 o più.
+2. **Il progetto.** Se sul MacBook Tabby c'è già (`~/Progetti/Tabby`):
+   `cd ~/Progetti/Tabby && git pull`. Se non c'è, prima la chiave SSH come al punto 3 sopra,
+   poi `git clone git@github.com:dquaini/Tabby.git ~/Progetti/Tabby`.
+3. **Il certificato «Tabby»** (una volta per Mac): `~/Progetti/Tabby/app/crea-certificato.sh`.
+   Così macOS ricorda il permesso Accessibilità a ogni nuova versione.
+4. **Spegni Tabby-Hammerspoon** (le due Tabby insieme litigherebbero): in
+   `~/.hammerspoon/init.lua` metti `--` davanti alla riga `dofile(...)`, poi dal menu del
+   martello «Reload Config». Le tue impostazioni restano: l'app le copia da Hammerspoon la
+   prima volta (ordine delle schede, cartelle, Lampi, nomi), senza toccarle.
+5. **Costruisci l'app:** `cd ~/Progetti/Tabby/app && ./costruisci.sh`. Quando macOS chiede
+   la password per il certificato «Tabby»: scrivila e premi **«Consenti sempre»**.
+6. **Aprila:** `open ~/Progetti/Tabby/app/build/Tabby.app`. Partono le animazioni e poi la
+   guida: Accessibilità (Tabby si accorge da sola quando lo dai), browser (DuckDuckGo),
+   posizione (a destra), barra dei menu e Dock, accensione al login.
+7. **Prova le cose del lavoro:** ⌃⌥ + numero dentro Windows App; Tabby a destra col notch;
+   una notifica (deve stare a sinistra di Tabby); la finestrella di Notion per i meeting
+   (non deve nascondere il meeting); tre dita sul trackpad (prima togli il gesto a macOS:
+   Impostazioni di Sistema → Trackpad → Altri gesti → «Scorri tra le app a tutto schermo»
+   su quattro dita). Se qualcosa non va, il diario è `~/Library/Logs/Tabby.log`.
+8. **Tornare a Hammerspoon** (se serve): esci da Tabby (⚙︎ → con ⌥ premuto «Esci»), togli il
+   `--` dal `dofile` in `init.lua`, «Reload Config».
+
+Aggiornare dopo: `cd ~/Progetti/Tabby && git pull && cd app && ./costruisci.sh`, poi riapri
+Tabby. Oppure apri Claude Code nella cartella e chiedi «aggiorna e costruisci Tabby».
+
 ## Domani (app Swift)
 
 Con l'app Swift basterà **scaricare Tabby.app** e aprirla: niente Hammerspoon, niente

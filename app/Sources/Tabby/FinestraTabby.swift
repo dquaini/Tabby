@@ -375,6 +375,9 @@ private struct Pagina: View {
         Frase("Quando accendi il Mac, Tabby", ["si apre", "resta chiusa"], SMAppService.mainApp.status == .enabled ? "si apre" : "resta chiusa", ".") {
             c.accensione($0 == "si apre"); f.sezione = sezione
         }
+        Frase("Tre dita sul trackpad", ["cambiano scheda", "non fanno niente"], vero("gestures", true) ? "cambiano scheda" : "non fanno niente", ".") {
+            imposta("gestures", $0 == "cambiano scheda"); c.gesti.aggiorna()
+        }
         Frase("Con Spotlight aperto lo sfondo", ["si oscura", "resta com'è"], vero("spotlightDim", true) ? "si oscura" : "resta com'è", ".") {
             imposta("spotlightDim", $0 == "si oscura")
         }
@@ -432,7 +435,8 @@ private struct Pagina: View {
         titolo("Documentazione", "Tutte le scorciatoie di Tabby. Partono tutte da ⌃ ⌥ (control e option).")
         gruppo("Schede", [("⌃ ⌥ 1…9", "Vai alla scheda 1–9", nil), ("⌃ ⌥ ← →", "Scheda prima e dopo", "↑ ↓ con Tabby di lato"),
                           ("⌃ ⌥ Tab", "Torna alla scheda di prima", nil), ("⌃ ⌥ W", "Chiudi la finestra", "L'app resta aperta"),
-                          ("⌃ ⌥ 0", "Scrivania (il musetto del gatto)", "Ripremuto: torna all'ultima scheda")])
+                          ("⌃ ⌥ 0", "Scrivania (il musetto del gatto)", "Ripremuto: torna all'ultima scheda")]
+                          + (c.gesti.acceso ? [("Tre dita ← →", "Scheda dopo e prima, sul trackpad", "Togli il gesto a macOS: Trackpad → Altri gesti")] : []))
         gruppo("Cerca", [("⌃ ⌥ Spazio", "La barra che cerca tutto", "Schede, testo nelle finestre, cartelle, Lampi, azioni, impostazioni")])
         gruppo("Vista divisa", [("⌃ ⌥ S", "Scambia le zone", nil), ("↩", "Fatto, mentre dividi", nil), ("esc", "Annulla, mentre dividi", nil)])
         gruppo("Lampi", c.lampi.lampi.map { ("⌃ ⌥ \($0.tasto.uppercased())", $0.nome, nil) } + [("esc", "Chiudi il Lampo in primo piano", nil)])

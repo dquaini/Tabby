@@ -244,4 +244,7 @@ app 0.9.5 (10/11/2026): verso la parità con Hammerspoon: finestre separate per 
     da mostrare) dal tasto destro; velo con Spotlight o Raycast aperti; protezioni: rimbalzo dopo la
     Scrivania (W-2), rilascio del mouse perso (T-2), finestrella chiusa che riapre l'ultima ridotta (C-3),
     app a schermo intero mai nascoste (Z-4).
+app 0.9.6 (10/11/2026): parità con Hammerspoon v9.69: gesto a tre dita (G-1), Tabby che sparisce subito
+    al pallino verde o con ⌃⌘F (Z-3), icone della barra dei menu parcheggiate che aprono l'app (X-3), velo
+    sotto i pannelli delle azioni rapide (X-4). Guida per il MacBook di lavoro e `app/crea-certificato.sh`.
 ```

@@ -141,13 +141,14 @@ GitHub, poi `git clone git@github.com:dquaini/Tabby.git` e `init.lua` che punta 
 - Certificato «Tabby» (autofirmato, Firma codice, 10 anni): creato dal Terminale il 9/11/2026
   sul Mac di casa (openssl + `security import` nel Portachiavi «login»; su macOS 26 la voce
   «Assistente Certificati» non si trova facilmente). macOS lo segna «non fidato», ma basta
-  per firmare e per far ricordare il permesso Accessibilità. Su un altro Mac va rifatto.
+  per firmare e per far ricordare il permesso Accessibilità. Su un altro Mac: `app/crea-certificato.sh`
+  (guida completa per il MacBook di lavoro in `docs/CONDIVIDERE.md`).
 - Il diario è lo stesso file (`~/Library/Logs/Tabby.log`, righe `Tabby ·`); `misura(...)`
   scrive `Tabby · lento:` sopra i 150 ms. Impostazioni in `com.dquaini.Tabby` con le chiavi
   storiche `tabbar.*`, importate una volta da Hammerspoon.
 - Riavviare in sviluppo **senza le animazioni** (che coprono tutto lo schermo): `open
   app/build/Tabby.app --args --senza-avvio`. Daniele può essere in riunione: riavviare poco.
-- Versione dell'app: in `app/Sources/Tabby/main.swift` (`versione`) e in `app/Info.plist` (oggi **0.9.5**).
+- Versione dell'app: in `app/Sources/Tabby/main.swift` (`versione`) e in `app/Info.plist` (oggi **0.9.6**).
 - **Mac di casa:** Tabby-Hammerspoon spenta (`dofile` commentato in `~/.hammerspoon/init.lua`).
   **Mac di lavoro:** ancora Tabby-Hammerspoon; la cartella Lua resta come riferimento e
   per i riscontri.
