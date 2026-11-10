@@ -591,6 +591,10 @@ extension Controllore {
 
     func nascondiBarraMenu(_ sì: Bool) {
         esegui("/usr/bin/osascript", ["-e", "tell application \"System Events\" to set autohide menu bar of dock preferences to \(sì)"])
+        Sistema.rileggiBarraMenu()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in   // il tempo che macOS la cambi
+            Sistema.rileggiBarraMenu(); self?.aggiornaNascondi(); self?.cambiaPosizione(self?.stato.posizione ?? "top")
+        }
     }
 
     func accensione(_ sì: Bool) {

@@ -79,8 +79,6 @@ private struct VistaSfera: View {
     let c: Controllore
     @Bindable var s: StatoSfera
     @Bindable var stato: StatoBarra
-    @State private var giro = false
-    @State private var respiro = false
 
     var body: some View {
         let t = Tema.t
@@ -89,28 +87,29 @@ private struct VistaSfera: View {
             Color.clear
             if s.ventaglio { ventaglio }
             // la sfera esiste (e si anima) solo quando si vede: nascosta non consuma niente
+            // il movimento è lento: 10 immagini al secondo bastano, disegnate dalla scheda grafica
             if s.visibile {
-                sfera(colori.map { UInt32($0) })
-                    .frame(width: 60, height: 60)
-                    .padding(.trailing, 60).padding(.bottom, 60)
-                    .transition(.scale(scale: 0.4).combined(with: .opacity))
-                    .onAppear {
-                        withAnimation(.linear(duration: 12).repeatForever(autoreverses: false)) { giro = true }
-                        withAnimation(.easeInOut(duration: 2.5).repeatForever()) { respiro = true }
-                    }
-                    .onDisappear { giro = false; respiro = false }
+                let fermo = stato.inPausa || NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+                TimelineView(.animation(minimumInterval: 1.0 / 10, paused: fermo)) { ctx in
+                    sfera(colori.map { UInt32($0) }, tempo: fermo ? 0 : ctx.date.timeIntervalSinceReferenceDate)
+                }
+                .frame(width: 60, height: 60)
+                .padding(.trailing, 60).padding(.bottom, 60)
+                .transition(.scale(scale: 0.4).combined(with: .opacity))
             }
         }
     }
 
-    private func sfera(_ k: [UInt32]) -> some View {
-        let fermo = stato.inPausa || NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+    /// `tempo` fa girare i colori (un giro ogni 12 s) e respirare l'alone (2,5 s); 0 = ferma.
+    private func sfera(_ k: [UInt32], tempo: Double) -> some View {
+        let giro = tempo.truncatingRemainder(dividingBy: 120) / 12 * 360   // ogni 120 s tutti i colori tornano al via
+        let respiro = tempo == 0 ? 0 : (1 - cos(tempo / 2.5 * .pi)) / 2      // 0…1…0
         let px = s.verso.width, py = s.verso.height
         return ZStack {
             // l'alone che respira
             Circle().fill(RadialGradient(colors: [Tema.c(k[0], 0.6), Tema.c(k[1], 0.35), .clear], center: .center, startRadius: 0, endRadius: 40))
                 .frame(width: 80, height: 80).blur(radius: 9)
-                .opacity(stato.inPausa ? 0.15 : (respiro && !fermo ? 0.9 : 0.5))
+                .opacity(stato.inPausa ? 0.15 : 0.5 + respiro * 0.4)
                 .offset(x: px * 5, y: py * 5).scaleEffect(1 + s.vicino * 0.25)
             ZStack {
                 Circle().fill(RadialGradient(colors: [Tema.c(k[4]), Tema.c(0x08080C)], center: UnitPoint(x: 0.5, y: 0.6), startRadius: 0, endRadius: 45))
@@ -119,7 +118,7 @@ private struct VistaSfera: View {
                     Circle().fill(Tema.c(k[i])).frame(width: i == 3 ? 28 : 38, height: i == 3 ? 28 : 38).blur(radius: 8)
                         .opacity(i == 3 ? 0.55 : 0.85)
                         .offset(x: [13, 15, 12, 17][i])
-                        .rotationEffect(.degrees((giro && !fermo ? 360 : 0) * [1, -1, 1.4, -1.7][i] + Double(i) * 90))
+                        .rotationEffect(.degrees(giro * [1, -1, 1.4, -1.7][i] + Double(i) * 90))
                 }
                 .offset(x: px * 8, y: py * 8)
                 if let g = gatto { Image(nsImage: g).resizable().scaledToFill().scaleEffect(1.04).offset(x: -px * 2, y: -py * 2) }
@@ -129,6 +128,7 @@ private struct VistaSfera: View {
                 Circle().strokeBorder(.white.opacity(0.14), lineWidth: 1)
             }
             .clipShape(Circle())
+            .drawingGroup()
             .saturation(stato.inPausa ? 0.25 : 1).brightness(stato.inPausa ? -0.15 : 0)
             .shadow(color: .black.opacity(0.5), radius: 9, y: 6)
             .scaleEffect(1 + s.vicino * 0.1)
@@ -157,9 +157,24 @@ private struct VistaSfera: View {
         .onTapGesture { c.cliccaSfera() }
     }
 
-    private var gatto: NSImage? {
-        Bundle.main.url(forResource: "gatto-sfera", withExtension: "png").flatMap { NSImage(contentsOf: $0) }
-    }
+    private var gatto: NSImage? { Self.gattoPronto }
+
+    /// Il gatto si carica **una volta sola**, già alla misura della sfera (60 punti × 2): rileggerlo
+    /// a ogni immagine dell'animazione costava un terzo del processore.
+    private static let gattoPronto: NSImage? = {
+        guard let url = Bundle.main.url(forResource: "gatto-sfera", withExtension: "png"),
+              let grande = NSImage(contentsOf: url) else { return nil }
+        let lato = 120
+        guard let r = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: lato, pixelsHigh: lato, bitsPerSample: 8,
+                                       samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB,
+                                       bytesPerRow: 0, bitsPerPixel: 0) else { return grande }
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: r)
+        grande.draw(in: NSRect(x: 0, y: 0, width: lato, height: lato))
+        NSGraphicsContext.restoreGraphicsState()
+        let piccola = NSImage(size: NSSize(width: 60, height: 60)); piccola.addRepresentation(r)
+        return piccola
+    }()
 
     private var sommaNotifiche: String? {
         let n = c.tutte.compactMap { $0.notifica.flatMap(Int.init) }.reduce(0, +)

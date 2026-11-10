@@ -92,6 +92,9 @@ final class Controllore {
     var vistaLaPrimaVolta: [UInt32: Date] = [:]     // quando Tabby ha visto ogni finestra (siti doppi)
     var doppiAvvisati = Set<UInt32>()
     var monitorMouseLocale: Any?
+    var osservatoriMenu: [NSObjectProtocol] = []
+    var menuAperto = false                      // un menu di Tabby è aperto
+    var toccataLaCima: Date?                    // l'ultima volta che il mouse ha toccato la cima
     /// Le finestre ridotte da Tabby stessa (U-2): non fanno scattare «scheda accanto».
     private var ridotteDaTabby: [UInt32: Date] = [:]
     /// Le ultime schede attive con l'istante del cambio (C-4: macOS a volte attiva un'altra
@@ -317,6 +320,7 @@ final class Controllore {
     /// Quando un'app viene in primo piano (P-3): scheda attiva, una scheda alla volta, adatta.
     func siAttiva(_ app: NSRunningApplication) {
         guard !stato.inPausa, let bid = app.bundleIdentifier, bid != Sistema.mioBid else { return }
+        if stato.rinomina != nil { fineRinomina(salva: true, torna: false) }   // sei andato altrove: il nome scritto resta
         ascoltaEscLampo(app)
         defer { lampi.aggiornaCoperti(); controllaSfera() }
         if Sistema.ignorate().contains(bid) { return }                  // un Lampo: non tocca niente
@@ -352,6 +356,7 @@ final class Controllore {
     // MARK: - Passare da una scheda all'altra
 
     func vai(_ s: Scheda, daTe: Bool = true) {
+        if stato.rinomina != nil { fineRinomina(salva: true, torna: false) }   // cambi scheda: il nome scritto si salva
         if stato.divisione != nil { assegna(s.chiave); return }          // mentre dividi: nella prima zona libera
         if stato.scelta != nil { scegli(s.chiave); return }              // un foglio aperto: scegli la scheda
         if s.chiave.hasPrefix("f:"), let id = Int(s.chiave.dropFirst(2)) { entraNellaCartella(id); return }
@@ -439,7 +444,8 @@ final class Controllore {
     }
 
     /// Invio salva, Esc annulla, vuoto = torna al nome di prima. Per una cartella cambia il suo nome.
-    func fineRinomina(salva: Bool) {
+    /// Cambiando scheda (o app) mentre scrivi, quello che hai scritto si salva (`torna: false`).
+    func fineRinomina(salva: Bool, torna: Bool = true) {
         guard let k = stato.rinomina else { return }
         stato.rinomina = nil
         pannello.resignKey()
@@ -454,7 +460,7 @@ final class Controllore {
             }
             ricostruisci()
         }
-        if let a = appPrimaRinomina, a.bundleIdentifier != Sistema.mioBid { a.activate() }
+        if torna, let a = appPrimaRinomina, a.bundleIdentifier != Sistema.mioBid { a.activate() }
     }
 
     func tornaAlNome(_ k: String) {
@@ -498,7 +504,7 @@ final class Controllore {
     func cambiaPosizione(_ p: String) {
         imp.imposta("position", p)
         withAnimationMolla { stato.posizione = p }
-        mostraBarra()
+        aggiornaNascondi()
         if let a = NSWorkspace.shared.frontmostApplication { Sistema.adatta(a, posizione: p) }
         lampi.disponi()
         diario("posizione: \(p)")

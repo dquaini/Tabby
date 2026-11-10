@@ -124,6 +124,7 @@ enum Sistema {
 
     /// La barra dei menu si nasconde da sola? Si rilegge dalle preferenze al massimo ogni 30 s.
     private static var letturaBarraMenu: (quando: Date, nascosta: Bool) = (.distantPast, false)
+    static func rileggiBarraMenu() { letturaBarraMenu.quando = .distantPast }
     static var barraMenuNascosta: Bool {
         if Date().timeIntervalSince(letturaBarraMenu.quando) > 30 {
             let n = UserDefaults.standard.persistentDomain(forName: UserDefaults.globalDomain)?["_HIHideMenuBar"] as? Bool ?? false
@@ -131,6 +132,9 @@ enum Sistema {
         }
         return letturaBarraMenu.nascosta
     }
+
+    /// L'altezza della barra dei menu di Apple (più alta accanto al notch).
+    static var altezzaBarraMenu: CGFloat { max(NSStatusBar.system.thickness, schermo.safeAreaInsets.top, 24) }
 
     static func cornice(posizione: String) -> NSRect {
         let v = schermo.visibleFrame

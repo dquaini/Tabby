@@ -223,4 +223,8 @@ app 0.8 (9/11/2026): Lampi e Memo, Concentrazione, la barra che cerca tutto, la 
     con le animazioni e la guida, la sfera, la pausa, i temi. A riposo 0% di processore.
 app 0.9 (10/11/2026): rinomina sul posto e tasto destro sulle schede, Nascondi Tabby, fascia del
     notch, avviso dei siti doppi, ⚡︎ → Tutte le App (quelle nascoste nella barra dei menu).
+app 0.9.1 (10/11/2026): la rinomina si salva cambiando scheda; col menu di Apple che scende Tabby si
+    toglie di mezzo; «Tabby si nasconde» fa far posto alla finestra e in alto si apre toccando la cima e
+    scendendo; i menu tengono la barra in vista; nella ricerca le sezioni di Tabby e «Tabby sempre in
+    vista»; la sfera consuma 6% invece di 37% (gatto caricato una volta, 10 immagini al secondo).
 ```
