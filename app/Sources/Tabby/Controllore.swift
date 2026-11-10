@@ -433,6 +433,18 @@ final class Controllore {
             }
             adattaDopo = w
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: w)
+            // alcune app (Spotify) si rimettono la loro misura un attimo dopo: un ultimo controllo,
+            // e se ancora non va, una riga nel diario per capire perché
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) { [weak self] in
+                guard let self, !w.isCancelled, NSWorkspace.shared.frontmostApplication == app else { return }
+                Sistema.adatta(app, posizione: self.stato.posizione, tranne: self.finestreInViste())
+                let r = Sistema.dallAlto(Sistema.spazioApp(posizione: self.stato.posizione))
+                if let f = Sistema.finestraAttiva(app.processIdentifier), let c = Sistema.cornice(f),
+                   (Sistema.attributo(f, kAXSubroleAttribute) as String?) == kAXStandardWindowSubrole,
+                   abs(c.width - r.width) > 2 || abs(c.minX - r.minX) > 2 {
+                    diario("\(app.localizedName ?? "?") non si adatta: chiesto \(Int(r.minX)),\(Int(r.minY)) \(Int(r.width))×\(Int(r.height)), ha \(Int(c.minX)),\(Int(c.minY)) \(Int(c.width))×\(Int(c.height))")
+                }
+            }
         }
     }
 

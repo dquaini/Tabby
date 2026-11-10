@@ -72,7 +72,9 @@ final class GestoreLampi {
     }
 
     private func disponiPresto() {
-        for t in [0.15, 0.4, 0.9, 1.7] {                              // le app ci mettono un attimo a fare la finestra
+        // le app ci mettono un attimo a fare la finestra; aperte da zero (la Calcolatrice) anche 2-3 s,
+        // e se Tabby smette prima macOS la mette al centro
+        for t in [0.15, 0.4, 0.9, 1.7, 2.6, 3.8] {
             DispatchQueue.main.asyncAfter(deadline: .now() + t) { [weak self] in self?.disponi() }
         }
     }
@@ -125,9 +127,10 @@ final class GestoreLampi {
             // alcune app non scendono sotto una misura minima (il Calendario): la finestra viene più
             // grande del posto e uscirebbe dallo schermo → si sposta indietro, tutta dentro
             if let r = Sistema.cornice(w) {
-                let dx = min(0, spazio.maxX - r.maxX), dy = min(0, spazio.maxY - r.maxY)
+                // con lo stesso margine di 12 punti della fila: vicino al bordo, mai attaccato
+                let dx = min(0, spazio.maxX - 12 - r.maxX), dy = min(0, spazio.maxY - 12 - r.maxY)
                 if dx < -1 || dy < -1 {
-                    var q = CGPoint(x: max(spazio.minX, r.minX + dx), y: max(spazio.minY, r.minY + dy))
+                    var q = CGPoint(x: max(spazio.minX + 12, r.minX + dx), y: max(spazio.minY + 12, r.minY + dy))
                     AXUIElementSetAttributeValue(w, kAXPositionAttribute as CFString, AXValueCreate(.cgPoint, &q)!)
                 }
             }
