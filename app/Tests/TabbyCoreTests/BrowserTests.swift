@@ -16,8 +16,8 @@ struct BrowserTests {
         #expect(nomeSito(titolo: "Posta in arrivo (3) - io@x.it - Gmail", dominio: "mail.google.com") == "Gmail")
         #expect(nomeSito(titolo: "Inbox | Proton Mail", dominio: "mail.proton.me") == "Proton Mail")
         #expect(nomeSito(titolo: "Meet - abc-defg-hij", dominio: "meet.google.com") == "Meet")
-        #expect(nomeSito(titolo: "Una pagina qualsiasi", dominio: "youtube.com") == "Youtube")
-        #expect(nomeSito(titolo: "(2) Home / X", dominio: "x.com") == "Home / X")
+        #expect(nomeSito(titolo: "Una pagina qualsiasi", dominio: "youtube.com") == "YouTube")
+        #expect(nomeSito(titolo: "(2) Home / X", dominio: "x.com") == "X")
     }
 
     @Test func notificheNelTitolo() {
@@ -71,5 +71,15 @@ struct BrowserTests {
         let a = InfoApp(bid: "ddg", nome: "DuckDuckGo", pid: 1, finestre: [InfoFinestra(id: 1, titolo: "Qualcosa")], breve: "DuckDuckGo")
         let s = costruisciSchede([a])
         #expect(s.map(\.chiave) == ["ddg"] && s[0].nome == "DuckDuckGo")
+    }
+}
+
+/// Prove del 10/11/2026: il nome del servizio, mai l'indirizzo email.
+struct NomeServizioTests {
+    @Test func servizioConosciuto() {
+        #expect(nomeSito(titolo: "Posta in arrivo | daniele@proton.me", dominio: "mail.proton.me") == "Proton Mail")
+    }
+    @Test func maiUnaMail() {
+        #expect(nomeSito(titolo: "Posta in arrivo | io@esempio.it", dominio: "posta.esempio.it") == "Esempio")
     }
 }

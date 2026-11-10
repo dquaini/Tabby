@@ -53,13 +53,34 @@ public func dovèGiàAperto(_ sito: String, tranne finestra: UInt32, in altre: [
     }
 }
 
+/// I nomi dei servizi più comuni, per dominio (il titolo della pagina spesso dice altro:
+/// «Posta in arrivo», l'indirizzo email, il nome della chat).
+public let serviziNoti: [String: String] = [
+    "mail.proton.me": "Proton Mail", "calendar.proton.me": "Proton Calendar", "drive.proton.me": "Proton Drive",
+    "pass.proton.me": "Proton Pass", "account.proton.me": "Proton",
+    "mail.google.com": "Gmail", "calendar.google.com": "Google Calendar", "drive.google.com": "Google Drive",
+    "docs.google.com": "Google Docs", "meet.google.com": "Meet", "chat.google.com": "Google Chat",
+    "outlook.live.com": "Outlook", "outlook.office.com": "Outlook", "outlook.office365.com": "Outlook",
+    "teams.microsoft.com": "Teams", "teams.live.com": "Teams",
+    "web.whatsapp.com": "WhatsApp", "web.telegram.org": "Telegram", "app.slack.com": "Slack",
+    "notion.so": "Notion", "app.notion.com": "Notion", "claude.ai": "Claude", "chatgpt.com": "ChatGPT",
+    "github.com": "GitHub", "youtube.com": "YouTube", "music.youtube.com": "YouTube Music",
+    "open.spotify.com": "Spotify", "linkedin.com": "LinkedIn", "x.com": "X", "instagram.com": "Instagram",
+    "facebook.com": "Facebook", "messenger.com": "Messenger", "figma.com": "Figma", "trello.com": "Trello",
+    "app.asana.com": "Asana", "linear.app": "Linear", "icloud.com": "iCloud", "netflix.com": "Netflix",
+]
+
 /// Il nome di una webapp dal titolo della finestra e dal dominio (B-4):
 /// «Posta - io@x - Gmail» → «Gmail», «Inbox | Proton Mail» su mail.proton.me → «Proton Mail».
 public func nomeSito(titolo: String?, dominio dom: String) -> String {
+    // 0) i servizi conosciuti hanno il loro nome, qualunque cosa dica il titolo
+    if let n = serviziNoti[dom] { return n }
     var t = titolo ?? ""
     if let r = t.range(of: #"^\(\d+\)\s*"#, options: .regularExpression) { t.removeSubrange(r) }
     for sep in [" — ", " – ", " | ", " · ", " • ", " :: "] { t = t.replacingOccurrences(of: sep, with: " - ") }
-    let pezzi = t.components(separatedBy: " - ").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+    // mai un indirizzo email o web come nome («daniele@proton.me» non è il servizio)
+    let pezzi = t.components(separatedBy: " - ").map { $0.trimmingCharacters(in: .whitespaces) }
+        .filter { !$0.isEmpty && !$0.contains("@") && !$0.contains("://") && !$0.contains("/") }
     let etichette = dom.split(separator: ".").map(String.init)
     let principale = etichette.count >= 2 ? etichette[etichette.count - 2] : (etichette.first ?? dom)
     // 1) il pezzo che contiene il nome principale del dominio

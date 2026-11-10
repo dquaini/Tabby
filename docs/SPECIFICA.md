@@ -509,7 +509,7 @@ orizzontale, a sinistra in verticale), testo chiaro. Vista divisa: icone affianc
 ⇄ e Scomponi al posto della ✕. Cartella: 3 icone sovrapposte, ⋯ al posto della ✕.
 Compatta: solo l'icona, con puntino rosso (notifica) o un quadratino col numero di
 membri (vista/cartella).
-*App Swift 0.9.3:* un nome che non ci sta perde le ultime parole («Proton Mail» → «Proton»); i puntini solo se non basta la prima parola.
+*App Swift 0.9.3:* i servizi comuni hanno il loro nome per dominio (mail.proton.me → «Proton Mail», mail.google.com → «Gmail»…) e un indirizzo email o web non è mai il nome. Un nome che non ci sta perde le ultime parole («Proton Mail» → «Proton»); i puntini solo se non basta la prima parola.
 
 **L-4 Gatto (tasto scrivania)**: testa del gatto grigia a riposo, chiara con la
 scrivania attiva (`assets/gatto-spento.png`, `gatto-acceso.png`). Con Tabby
