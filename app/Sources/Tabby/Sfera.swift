@@ -245,7 +245,9 @@ extension Controllore {
         let inVista = tutte.contains { s in
             !s.ridotta && !(NSRunningApplication(processIdentifier: s.pid)?.isHidden ?? true) && !lampi.èVeloce(s.bid)
         }
-        let serve = stato.inPausa || stato.tabbyChiusa || (!inVista && !stato.scrivania && stato.divisione == nil && stato.apertura == nil && stato.scelta == nil && !finestraTabby.isVisible)
+        // la sfera compare solo e solamente se Tabby è chiusa o in pausa **e** sei sulla Scrivania
+        // (nessuna finestra in vista, niente schermo intero) — Daniele, 10/11/2026
+        let serve = (stato.inPausa || stato.tabbyChiusa) && !inVista && !davantiASchermoIntero() && !finestraTabby.isVisible
         sferaDopo?.cancel()
         if serve == sfera.s.visibile { return }
         let w = DispatchWorkItem { [weak self] in

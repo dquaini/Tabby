@@ -247,4 +247,6 @@ app 0.9.5 (10/11/2026): verso la parità con Hammerspoon: finestre separate per 
 app 0.9.6 (10/11/2026): parità con Hammerspoon v9.69: gesto a tre dita (G-1), Tabby che sparisce subito
     al pallino verde o con ⌃⌘F (Z-3), icone della barra dei menu parcheggiate che aprono l'app (X-3), velo
     sotto i pannelli delle azioni rapide (X-4). Guida per il MacBook di lavoro e `app/crea-certificato.sh`.
+app 0.9.7 (10/11/2026): velo anche con Raycast e via subito quando chiudi Spotlight; la sfera solo con Tabby
+    chiusa o in pausa e sulla Scrivania (mai a schermo intero); il musetto apre la Scrivania più in fretta.
 ```

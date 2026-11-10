@@ -643,6 +643,7 @@ sinistra, o sopra se a sinistra c'è un'altra sfera). Sono nella stessa pagina d
 sfera: la finestrella si allarga (420 punti) mentre il ventaglio è aperto e torna piccola
 quando si chiude (clic fuori, Esc, o di nuovo la sfera).
 *App Swift 0.9.3 (Daniele):* il musetto apre anche una finestra del Finder sulla cartella **Scrivania**; quella finestra è la scheda del gatto (non compare in barra) e si chiude quando vai su un'altra scheda.
+*App Swift 0.9.7:* più veloce: subito la finestra della Scrivania e via le altre app insieme; le finestre del Finder non si riducono più una per una.
 
 **W-3 Il cerchio sulla scrivania** (v9.51): quando non c'è **nessuna finestra in vista**
 (app tutte nascoste, ridotte o chiuse, o ⌃⌥0; Lampi, Memo e Hammerspoon non contano) per
@@ -660,6 +661,7 @@ trasparente (`tabby/cerchio.html`) in una finestrella che non ruba la tastiera; 
 di strati che ruotano e si spostano, consuma quasi niente (misurato: Hammerspoon ~0,7%).
 (Una versione disegnata dalla scheda grafica costava ~10%: scartata.) Clic = W-0. Appena compare una finestra torna la
 barra. Non a schermo intero, né durante la divisione o la creazione di una cartella.
+*App Swift 0.9.7 (Daniele):* la sfera compare **solo** se Tabby è chiusa o in pausa **e** sei sulla Scrivania (nessuna finestra in vista, niente schermo intero). Mai altrimenti (prima compariva anche con una finestra a schermo intero).
 
 **W-4 Chiudi Tabby** (v9.54): ⚙︎ → «Chiudi Tabby (resta solo il cerchio)». La barra
 sparisce e resta **solo la sfera** (con i colori più spenti); Tabby si ferma del tutto: non
@@ -804,6 +806,7 @@ di ritardo): Spotlight è aperto finché la finestra attiva è sua. Dopo 10 minu
 toglie comunque. ⚙︎ → Comportamento → "Oscura lo sfondo con Spotlight e le azioni
 rapide" (acceso di serie).
 *App Swift 0.9.5:* fatto, anche per **Raycast**; si accende con ⌘Spazio visto dall'intercettatore dei tasti; impostazione «Con Spotlight aperto lo sfondo si oscura / resta com'è».
+*App Swift 0.9.7:* aperto = Spotlight o Raycast **in primo piano** (Raycast, con qualunque scorciatoia: anche quando diventa l'app attiva); appena non lo sono più il velo va via subito. La finestra di Spotlight resta «sullo schermo», invisibile, anche da chiuso: non va usata.
 
 ## 16b. Concentrazione (v9.55)
 

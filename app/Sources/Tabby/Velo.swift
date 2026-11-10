@@ -2,7 +2,7 @@ import AppKit
 import Carbon.HIToolbox
 import TabbyCore
 
-/// V-1: con Spotlight (o Raycast) aperto lo schermo, Tabby compresa, si copre con un velo #0B0D12 all'85%,
+/// V-1: con Spotlight (o Raycast, con qualunque scorciatoia) aperto lo schermo, Tabby compresa, si copre con un velo #0B0D12 all'85%,
 /// così il testo dietro non si legge. Non prende i clic (un clic fuori chiude Spotlight come
 /// sempre) e compare senza dissolvenza. Si accende con ⌘Spazio (anche dalla scheda «+»); finché
 /// è acceso, 20 volte al secondo si guarda se Spotlight c'è ancora; dopo 10 minuti si toglie
@@ -21,10 +21,14 @@ final class VeloSpotlight {
         guard Impostazioni.shared.valore("spotlightDim") as? Bool ?? true else { return }
         da = Date(); visto = false; self.app = app
         controllo?.invalidate()
+        controllo?.invalidate()
         controllo = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.controlla() }
         }
     }
+
+    /// Un lanciatore che smette di essere in primo piano: il velo va via subito, senza aspettare.
+    func ricontrolla() { if controllo != nil { controlla() } }
 
     private func controlla() {
         let tempo = Date().timeIntervalSince(da)
@@ -66,14 +70,27 @@ final class VeloSpotlight {
         return nil
     }
 
-    /// Il livello della finestra di Spotlight, se è aperta (nome e livello si leggono senza permessi).
-    nonisolated static func livelloSpotlight() -> Int? {
-        guard let l = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else { return nil }
-        // anche Raycast, che molti (Daniele compreso) usano al posto di Spotlight con ⌘Spazio
-        for w in l where ["Spotlight", "Raycast"].contains(w[kCGWindowOwnerName as String] as? String ?? "") {
-            let b = w[kCGWindowBounds as String] as? [String: CGFloat] ?? [:]
-            if (b["Height"] ?? 0) > 40, (b["Width"] ?? 0) > 200 { return w[kCGWindowLayer as String] as? Int }
+    /// Spotlight o Raycast sono aperti? Si guarda se sono l'app in primo piano (Raycast aperto ha
+    /// anche una finestra per l'Accessibilità). Non basta «la finestra è sullo schermo»: Spotlight
+    /// la lascia lì, invisibile, anche da chiuso (per questo il velo si toglieva tardi).
+    static let lanciatori = ["com.apple.Spotlight": "Spotlight", "com.raycast.macos": "Raycast"]
+    static func livelloSpotlight() -> Int? {
+        for (bid, nome) in lanciatori {
+            guard let a = NSRunningApplication.runningApplications(withBundleIdentifier: bid).first else { continue }
+            let finestre = bid == "com.raycast.macos" ? Sistema.finestre(a.processIdentifier).count : 0
+            guard a.isActive || finestre > 0 else { continue }
+            return livelloFinestra(di: nome) ?? 22
         }
         return nil
+    }
+
+    /// Il livello della finestra più alta di un'app, fra quelle visibili e non minuscole.
+    nonisolated static func livelloFinestra(di nome: String) -> Int? {
+        guard let l = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else { return nil }
+        return l.filter { w in
+            let b = w[kCGWindowBounds as String] as? [String: CGFloat] ?? [:]
+            return (w[kCGWindowOwnerName as String] as? String) == nome && (w[kCGWindowAlpha as String] as? Double ?? 1) > 0.05
+                && (b["Width"] ?? 0) > 200 && (b["Height"] ?? 0) > 40
+        }.compactMap { $0[kCGWindowLayer as String] as? Int }.max()
     }
 }

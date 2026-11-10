@@ -115,6 +115,17 @@ final class Controllore {
     func avvia() {
         tasti.riprovaIntercettatore()                   // se all'apertura mancava l'Accessibilità
         Tasti.suSpotlight = { [weak self] in self?.veloSpotlight.forse() }
+        // Spotlight e Raycast in primo piano (qualunque scorciatoia): il velo; appena vanno via, via il velo
+        let ws = NSWorkspace.shared.notificationCenter
+        for (n, apre) in [(NSWorkspace.didActivateApplicationNotification, true), (NSWorkspace.didDeactivateApplicationNotification, false)] {
+            ws.addObserver(forName: n, object: nil, queue: .main) { [weak self] nota in
+                let b = (nota.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.bundleIdentifier ?? ""
+                MainActor.assumeIsolated {
+                    guard VeloSpotlight.lanciatori[b] != nil else { return }
+                    if apre { self?.veloSpotlight.forse() } else { self?.veloSpotlight.ricontrolla() }
+                }
+            }
+        }
         gesti.scorri = { [weak self] d in self?.scorri(d) }
         gesti.aggiorna()
         osservaSchermoIntero()
@@ -478,9 +489,10 @@ final class Controllore {
         if stato.scrivania && !stato.tabbyChiusa { return }
         withAnimationMolla { stato.scrivania = true; stato.tabbyChiusa = false }
         scrivaniaDa = Date()
-        for s in tutte where s.bid == "com.apple.finder" { if let f = s.finestra { ridotteDaTabby[f] = Date() } }
-        Sistema.scrivania()
+        // subito la finestra della Scrivania (porta davanti il Finder) e via le altre app nello
+        // stesso momento; le finestre del Finder non si riducono più una per una (era lento)
         apriCartellaScrivania()
+        Sistema.nascondiAltre(tranne: "com.apple.finder")
         controllaSfera()
     }
 
@@ -497,7 +509,7 @@ final class Controllore {
         }
         let già = Set(Sistema.finestre(pid).compactMap(Sistema.numero))
         NSWorkspace.shared.open(FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask)[0])
-        for t in [0.25, 0.6, 1.1] {          // il Finder ci mette un attimo a farla
+        for t in [0.08, 0.16, 0.3, 0.6, 1.1] {   // il Finder ci mette un attimo a farla
             DispatchQueue.main.asyncAfter(deadline: .now() + t) { [weak self] in
                 guard let self, self.stato.scrivania, self.finestraScrivania == nil,
                       let w = Sistema.finestraAttiva(pid), let n = Sistema.numero(w), !già.contains(n) else { return }

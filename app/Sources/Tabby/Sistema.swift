@@ -277,15 +277,4 @@ enum Sistema {
             ev?.post(tap: .cghidEventTap)
         }
     }
-
-    /// La Scrivania (W-1): nasconde tutte le app tranne il Finder, che resta davanti.
-    static func scrivania() {
-        nascondiAltre(tranne: "com.apple.finder")
-        if let f = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.finder").first {
-            for w in finestre(f.processIdentifier) where èScheda(w) {
-                AXUIElementSetAttributeValue(w, kAXMinimizedAttribute as CFString, kCFBooleanTrue)
-            }
-            f.activate()
-        }
-    }
 }
