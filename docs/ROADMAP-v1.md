@@ -138,6 +138,33 @@ Nell'app Swift Tabby avrà cinque sezioni:
 ---
 
 ## 🛠 Direttamente nell'app Swift
+- **Tabby come alternativa a Raycast e AltTab** (esplorazione del 10/11/2026 su manual.raycast.com/new-in-v2
+  e alt-tab.app/it/features; scelte di Claude, da decidere una per una con Daniele prima di costruirle;
+  dopo i punti del Mac di lavoro e la ricerca web). Tutto vive nella **barra che cerca tutto** (⌃⌥Spazio)
+  o in un tasto ⌃⌥, locale sul Mac, zero consumo a riposo.
+  *Da Raycast (le 10 più utili):*
+  1. **Storico degli appunti** (⌃⌥V): cercabile, solo sul Mac, salta i gestori di password.
+  2. **Calcolatrice e conversioni** nella ricerca: valute, unità, fusi orari («14:00 a New York»); ↵ copia.
+  3. **File nella ricerca** con l'indice di Spotlight: ↵ apre, ⌘↵ mostra nel Finder.
+  4. **Comandi del Mac**: blocca schermo, svuota Cestino, Non disturbare, stop, espelli dischi.
+  5. **Link rapidi** con un pezzo variabile («gh tabby», «m Barcellona»), insieme alla ricerca web.
+  6. **Testi pronti** (snippet): «;mail» → il testo salvato.
+  7. **Disposizioni delle finestre**: metà/terzi/centro/«torna com'era» con un tasto, disposizioni salvate
+     (anche una per cartella), accanto alla vista divisa.
+  8. **Scorciatoie e sigle per qualunque cosa** (cartella, sito, azione, impostazione), col registratore
+     dei tasti che avvisa dei conflitti.
+  9. **Chiedi a Claude** dalla ricerca: Tab quando Tabby non trova niente; contesto a scelta (finestra in
+     vista, testo selezionato); tramite l'app Claude, senza chiavi.
+  10. **Agenda e «Entra nel meeting»**: i prossimi impegni, un tasto per il link di Meet/Teams.
+  *Da AltTab:*
+  1. **Selettore vero**: ⌃⌥ tenuti + Tab ripetuto scorre le finestre per uso recente, rilasci e vai.
+  2. **Anteprime delle finestre** (miniatura al passaggio o nel selettore; serve «Registrazione schermo»:
+     scelta da accendere).
+  3. **Tutte le finestre** anche ridotte, nascoste, su altre Scrivanie, con l'etichetta di dove sono.
+  4. **Azioni dal selettore**: chiudi, riduci, schermo intero, esci dall'app.
+  5. **App escluse** dalla barra, scelte da te (macchine virtuali, app invadenti).
+  6. **Comandi dal Terminale** (`tabby …`): elenca e apri schede e cartelle — base dell'Automazione.
+  Lasciati fuori apposta: la dettatura (c'è quella di macOS) e le estensioni di terzi (progetto a sé).
 - **Ricerca web dalla barra di Tabby** (idea di Daniele, 10/11/2026; da fare **dopo** i quattro
   punti del Mac di lavoro: tasti dentro Windows App, fascia nera con Tabby di lato, notifiche di
   macOS, finestrelle tipo Notion):
