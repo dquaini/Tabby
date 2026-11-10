@@ -305,6 +305,7 @@ un'altra app un istante prima di dire che la finestra è chiusa. Un'app che si c
 (✕ → Chiudi app, ⌘Q) può metterci qualche secondo (Spotify, v9.42): le sue finestre non
 contano più e Tabby riprova fino a 4 s; se nel frattempo scegli tu un'altra scheda, non
 ti sposta.
+*App Swift 0.10.1:* una scheda comparsa da sola da meno di 20 s, della cui app non resta niente (un'app che si apre e si chiude da sé), chiusa → si torna alla scheda usata prima, non a quella accanto. Utility Compressione non è mai una scheda. Un'app chiusa con ⌘Q che lascia il Finder senza finestre (la Scrivania vuota) → si torna all'ultima scheda.
 
 **C-5 ⚙︎ → Chiudi tutte le app…** chiede conferma; chiude tutte le app (le app con
 documenti non salvati chiedono loro); del Finder chiude solo le finestre.

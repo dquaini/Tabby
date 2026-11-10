@@ -73,8 +73,11 @@ enum Sistema {
     }
 
     /// Le app "vere" (nel Dock) che possono essere schede (S-1).
+    /// App di passaggio di macOS che non sono mai schede (Utility Compressione apre gli zip e si chiude da sola).
+    static let diPassaggio: Set<String> = ["com.apple.archiveutility"]
+
     static func appVere() -> [NSRunningApplication] {
-        let ign = ignorate()
+        let ign = ignorate().union(diPassaggio)
         var viste = Set<String>()
         return NSWorkspace.shared.runningApplications.filter { a in
             guard a.activationPolicy == .regular, let b = a.bundleIdentifier, !ign.contains(b), !a.isTerminated else { return false }

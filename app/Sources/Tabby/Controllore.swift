@@ -104,7 +104,8 @@ final class Controllore {
     /// L'ultima volta che hai scelto tu una scheda (clic o scorciatoia).
     var finestraScrivania: UInt32?               // la finestra del Finder aperta dal musetto
     let veloSpotlight = VeloSpotlight()
-    var nellaCartella: (dominio: String, cartella: Int, quando: Date)?   // un sito aperto dalla ricerca dentro una cartella
+    var nellaCartella: (dominio: String, cartella: Int, quando: Date)?
+    var primaVolta: [String: Date] = [:]          // quando è comparsa ogni scheda   // un sito aperto dalla ricerca dentro una cartella
     let gesti = Gesti()
     var monitorClic: Any?
     var sitiScelti: [UInt32: String] = [:]       // B-8: il sito scelto per una finestra di browser
@@ -168,6 +169,11 @@ final class Controllore {
         }
         nc.addObserver(forName: NSWorkspace.didLaunchApplicationNotification, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.lampi.trovaAppBarraMenu(fra: 3) }
+        }
+        // un'app chiusa del tutto (⌘Q): se macOS ti lascia sulla Scrivania vuota, si torna all'ultima scheda
+        nc.addObserver(forName: NSWorkspace.didTerminateApplicationNotification, object: nil, queue: .main) { [weak self] n in
+            let b = (n.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.bundleIdentifier
+            MainActor.assumeIsolated { self?.appChiusa(b) }
         }
         nc.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { [weak self] n in
             let app = n.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
@@ -254,6 +260,9 @@ final class Controllore {
             }
             let cambi = chiaviCambiate(prima: tutte, adesso: nuove)
             if !cambi.isEmpty { cambiaChiavi(cambi) }
+            // quando è comparsa ogni scheda (quelle dei primi 15 s c'erano già)
+            if Date().timeIntervalSince(avviataIl) > 15 { for s in nuove where primaVolta[s.chiave] == nil { primaVolta[s.chiave] = Date() } }
+            primaVolta = primaVolta.filter { k, _ in nuove.contains { $0.chiave == k } }
             tutte = nuove
             mettiNellaCartella(nuove)
             controllaSitiDoppi(nuove)
@@ -306,6 +315,18 @@ final class Controllore {
         diario("stessa finestra, chiave nuova: " + cambi.map { "\($0.key) → \($0.value)" }.joined(separator: ", "))
     }
 
+    /// Chiusa un'app che era tra le schede: macOS a volte mette davanti il Finder senza finestre (la
+    /// Scrivania vuota, come chiudendo Goose). Allora si torna all'ultima scheda usata.
+    private func appChiusa(_ bid: String?) {
+        guard let bid, !stato.scrivania, !stato.tabbyChiusa, !stato.inPausa, stato.schede.contains(where: { $0.bid == bid }) else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
+            guard let self, !self.stato.scrivania, let f = NSWorkspace.shared.frontmostApplication,
+                  f.bundleIdentifier == "com.apple.finder", Sistema.finestraAttiva(f.processIdentifier) == nil else { return }
+            diario("chiusa l'app \(bid), macOS lascia la Scrivania vuota: torno all'ultima scheda")
+            self.tornaAllaScheda()
+        }
+    }
+
     /// C-3: chiusa una finestrella (accesso con Google, pagamento), all'app davanti restano solo
     /// finestre ridotte: 0,3 s dopo si riapre l'ultima usata, invece di lasciare il vuoto.
     private func controllaFinestrella() {
@@ -345,6 +366,15 @@ final class Controllore {
         if let f = vecchia.finestra, ridotteDaTabby[f] != nil { return }
         if vecchia.ridotta { return }                       // era già ridotta: non è una chiusura adesso
         if ora.timeIntervalSince(sceltaTua) < 0.5 { return } // hai appena scelto tu dove andare
+        // una scheda nata da sola da poco (un'app che si apre e si chiude da sé, una finestrella):
+        // si torna dov'eri prima, non sulla scheda accanto
+        // (solo se della sua app non resta niente: tra finestre della stessa app vale la più vicina)
+        if let nata = primaVolta[chiusa], ora.timeIntervalSince(nata) < 20, !stato.schede.contains(where: { $0.bid == vecchia.bid }),
+           let k = storiaUso.first(where: { k in k != chiusa && stato.schede.contains { $0.chiave == k } }),
+           let s = stato.schede.first(where: { $0.chiave == k }) {
+            diario("chiusa «\(vecchia.nome)», aperta da poco → torno a «\(s.nome)»")
+            vai(s, daTe: false); return
+        }
         guard let k = dopoLaChiusura(di: vecchia, prima: prima, adesso: stato.schede),
               let s = stato.schede.first(where: { $0.chiave == k }) else { return }
         diario("chiusa «\(vecchia.nome)» → «\(s.nome)»")
