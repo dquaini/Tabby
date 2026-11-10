@@ -121,10 +121,13 @@ final class Controllore {
         let ws = NSWorkspace.shared.notificationCenter
         for (n, apre) in [(NSWorkspace.didActivateApplicationNotification, true), (NSWorkspace.didDeactivateApplicationNotification, false)] {
             ws.addObserver(forName: n, object: nil, queue: .main) { [weak self] nota in
-                let b = (nota.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.bundleIdentifier ?? ""
+                let a = nota.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
                 MainActor.assumeIsolated {
-                    guard VeloSpotlight.lanciatori[b] != nil else { return }
-                    if apre { self?.veloSpotlight.forse() } else { self?.veloSpotlight.ricontrolla() }
+                    guard let self, let b = a?.bundleIdentifier, b != Sistema.mioBid else { return }
+                    if !apre { self.veloSpotlight.ricontrolla(); return }
+                    // qualunque app che apre un pannello sopra le finestre (Raycast, Claude…): il velo
+                    if VeloSpotlight.lanciatori[b] != nil { self.veloSpotlight.forse() }
+                    else { self.veloSpotlight.forse(app: a?.localizedName, pid: a?.processIdentifier) }
                 }
             }
         }
@@ -196,10 +199,11 @@ final class Controllore {
             MainActor.assumeIsolated {
                 if n == kAXFocusedWindowChangedNotification {
                     c.finestraCambiata()
-                    // la chat rapida di Claude (con la sua scorciatoia) prende la tastiera: il velo sotto
+                    // un pannello che prende la tastiera in un'app già davanti (la chat rapida di Claude con
+                    // la sua scorciatoia): il velo sotto
                     var p: pid_t = 0; AXUIElementGetPid(el, &p)
-                    if NSRunningApplication(processIdentifier: p)?.bundleIdentifier == "com.anthropic.claudefordesktop" {
-                        c.veloSpotlight.forse(app: "Claude")
+                    if let a = NSRunningApplication(processIdentifier: p), a.bundleIdentifier != Sistema.mioBid {
+                        c.veloSpotlight.forse(app: a.localizedName, pid: p)
                     }
                 }
                 c.ricostruisciPresto()

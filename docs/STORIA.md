@@ -257,4 +257,5 @@ app 0.10.2 (10/11/2026): clic sui risultati «Sul web» che funziona; velo di nu
 app 0.10.3 (10/11/2026): la ricerca web apre davvero il sito anche con DuckDuckGo (aspetta la finestra nuova e incolla l'indirizzo); nella barra il cerchio per scegliere il browser.
 app 0.10.4 (10/11/2026): «Apri Gmail» in cima quando nessuna tua scheda si chiama così (prima Invio portava su una finestra che conteneva la parola); velo sotto la barra di Tabby, anche con Raycast e Alfred.
 app 0.10.5 (10/11/2026): ricerca web con DuckDuckGo in una finestra con una scheda sola (Sposta scheda in una nuova finestra), Chrome più veloce (--new-window).
+app 0.10.6 (10/11/2026): il velo sotto il pannello di qualunque app (quello che ha la tastiera e sta sopra le finestre), Raycast compreso.
 ```

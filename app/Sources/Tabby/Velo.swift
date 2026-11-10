@@ -17,9 +17,12 @@ final class VeloSpotlight {
 
     /// ⌘Spazio premuto: Spotlight sta per aprirsi. Con `app`: un'azione rapida ha aperto il pannello
     /// di quell'app (X-4), il velo sta sotto il pannello finché c'è.
-    func forse(app: String? = nil) {
+    private var pid: pid_t?
+
+    func forse(app: String? = nil, pid: pid_t? = nil) {
         guard Impostazioni.shared.valore("spotlightDim") as? Bool ?? true else { return }
-        da = Date(); visto = false; self.app = app
+        if controllo != nil && visto && app != nil && app != self.app { return }   // un velo già acceso resta del suo pannello
+        da = Date(); visto = false; self.app = app; self.pid = pid
         controllo?.invalidate()
         controllo?.invalidate()
         controllo = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
@@ -32,13 +35,25 @@ final class VeloSpotlight {
 
     private func controlla() {
         let tempo = Date().timeIntervalSince(da)
-        let livello = app.map(VeloSpotlight.livelloPannello) ?? VeloSpotlight.livelloSpotlight()
+        // il pannello dell'app, e comunque Spotlight/Raycast (un'altra app non spegne il loro velo)
+        let livello = app.flatMap { pannelloConTastiera($0) } ?? VeloSpotlight.livelloSpotlight()
         if let livello, tempo < 600 {
             visto = true
             mostra(sotto: livello)
-        } else if visto || tempo > (app == nil ? 1.5 : 3) || tempo >= 600 {   // chiuso, o non si è mai aperto
+        } else if visto || tempo > (app == nil ? 1.5 : 1.2) || tempo >= 600 {   // chiuso, o non si è mai aperto
             spegni()
         }
+    }
+
+    /// Il pannello di un'app conta solo se ha la tastiera (Raycast, la chat rapida di Claude): è la
+    /// finestra con l'attenzione dell'app davanti. Una finestrella che sta sopra senza che tu ci
+    /// scriva (il video piccolo di un browser) no.
+    private func pannelloConTastiera(_ nome: String) -> Int? {
+        guard let p = VeloSpotlight.finestraPannello(di: nome) else { return nil }
+        guard let pid else { return p.livello }               // dalle azioni di Tabby: sì
+        guard NSWorkspace.shared.frontmostApplication?.processIdentifier == pid,
+              let w = Sistema.finestraAttiva(pid), let r = Sistema.cornice(w) else { return nil }
+        return abs(r.minX - p.cornice.minX) < 3 && abs(r.minY - p.cornice.minY) < 3 && abs(r.width - p.cornice.width) < 3 ? p.livello : nil
     }
 
     private func mostra(sotto livello: Int) {
@@ -63,7 +78,21 @@ final class VeloSpotlight {
 
     /// Il pannello di un'app aperto: una sua finestra sopra quelle normali (livello > 0) e visibile.
     /// La chat rapida di Claude è una finestra trasparente grande come lo schermo, al livello 1000.
-    nonisolated static func livelloPannello(_ app: String) -> Int? { livelloFinestra(di: app, sopraLeNormali: true) }
+    nonisolated static func livelloPannello(_ app: String) -> Int? { finestraPannello(di: app)?.livello }
+
+    /// La finestra-pannello più alta di un'app (livello > 0, ben visibile), con la sua cornice
+    /// (contata dall'alto, come l'Accessibilità).
+    nonisolated static func finestraPannello(di nome: String) -> (livello: Int, cornice: CGRect)? {
+        guard let l = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else { return nil }
+        let c = l.compactMap { w -> (Int, CGRect)? in
+            guard (w[kCGWindowOwnerName as String] as? String) == nome, (w[kCGWindowAlpha as String] as? Double ?? 1) > 0.5,
+                  let ly = w[kCGWindowLayer as String] as? Int, ly > 0, ly < 2000, ly != 101,
+                  let b = w[kCGWindowBounds as String] as? [String: CGFloat] else { return nil }
+            let r = CGRect(x: b["X"] ?? 0, y: b["Y"] ?? 0, width: b["Width"] ?? 0, height: b["Height"] ?? 0)
+            return r.width > 200 && r.height > 40 ? (ly, r) : nil
+        }
+        return c.max { $0.0 < $1.0 }.map { (livello: $0.0, cornice: $0.1) }
+    }
 
     /// Spotlight o Raycast aperti? Visto sul Mac il 10/11/2026: Spotlight non diventa mai l'app in
     /// primo piano; aperto ha una finestra visibile (livello 23), chiudendolo la finestra diventa
@@ -89,6 +118,7 @@ final class VeloSpotlight {
             return (w[kCGWindowOwnerName as String] as? String) == nome && (w[kCGWindowAlpha as String] as? Double ?? 1) > 0.5
                 && (b["Width"] ?? 0) > 200 && (b["Height"] ?? 0) > 40 && (!sopraLeNormali || ly > 0) && ly < 2000
                 && (!stretta || (b["Width"] ?? 0) < largo * 0.7)
+                && ly != 101                                   // i menu aperti non sono pannelli
         }.compactMap { $0[kCGWindowLayer as String] as? Int }.max()
     }
 }

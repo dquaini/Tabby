@@ -378,7 +378,7 @@ private struct Pagina: View {
         Frase("Tre dita sul trackpad", ["cambiano scheda", "non fanno niente"], vero("gestures", true) ? "cambiano scheda" : "non fanno niente", ".") {
             imposta("gestures", $0 == "cambiano scheda"); c.gesti.aggiorna()
         }
-        Frase("Con Spotlight aperto lo sfondo", ["si oscura", "resta com'è"], vero("spotlightDim", true) ? "si oscura" : "resta com'è", ".") {
+        Frase("Con Spotlight e i pannelli delle app lo sfondo", ["si oscura", "resta com'è"], vero("spotlightDim", true) ? "si oscura" : "resta com'è", ".") {
             imposta("spotlightDim", $0 == "si oscura")
         }
         Frase("Quando scegli una scheda,", ["nascondo", "lascio in vista"], vero("oneAtATime", true) ? "nascondo" : "lascio in vista", "le altre app.") {
