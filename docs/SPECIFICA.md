@@ -281,6 +281,7 @@ che si decidono quando il browser ha risposto).
 scheda-finestra proprio quella finestra; titolo accorciato a 40 lettere) e "Chiudi
 <app>" (l'app intera: "Chiudi Chrome", non "Chiudi Gmail"). Il Finder: "Il Finder non
 si può chiudere" (disattivato).
+*App Swift 0.9.8 (Daniele):* **doppio clic sulla ✕** chiude subito la finestra; il clic singolo apre il menu dopo un attimo (al massimo 0,3 s, il tempo di capire se arriva il secondo clic).
 
 **C-2 ⌃⌥W** chiude la finestra in primo piano, non l'app. In un browser chiude la
 finestra intera (⌘W chiuderebbe solo la scheda del browser). Mai app veloci,
@@ -718,6 +719,7 @@ lì**, senza domande; **nessun posto → non si apre** e al centro compare «Non
 mettere …». Chiudendone uno, **gli altri si spostano** a riempire il posto. I Lampi già al
 loro posto non si spostano.
 *App Swift 0.9.3:* Esc chiude **solo** il Lampo davanti; se ce ne sono altri aperti si passa all'ultimo (un altro Esc chiude il prossimo). Esc chiude anche il Memo. Un Lampo aperto ma senza finestre (Calendario) se ne fa una, come col Dock.
+*App Swift 0.9.8:* un Lampo che non scende sotto una sua misura minima (il Calendario) viene spostato indietro: resta tutto dentro lo schermo.
 
 **Q-1c Lampi personalizzati** (v9.68, 31/10/2026, Daniele: «così ognuno personalizza il suo
 ambiente»): ⚡︎ → **Personalizza i Lampi ▸**. Per ogni Lampo: «Cambia la scorciatoia…» e

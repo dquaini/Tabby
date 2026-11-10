@@ -122,6 +122,15 @@ final class GestoreLampi {
             guard let b = l.bid, let app = NSRunningApplication.runningApplications(withBundleIdentifier: b).first,
                   let w = Sistema.finestraAttiva(app.processIdentifier) else { continue }
             Sistema.adattaFinestra(w, a: Sistema.dalBasso(p))
+            // alcune app non scendono sotto una misura minima (il Calendario): la finestra viene più
+            // grande del posto e uscirebbe dallo schermo → si sposta indietro, tutta dentro
+            if let r = Sistema.cornice(w) {
+                let dx = min(0, spazio.maxX - r.maxX), dy = min(0, spazio.maxY - r.maxY)
+                if dx < -1 || dy < -1 {
+                    var q = CGPoint(x: max(spazio.minX, r.minX + dx), y: max(spazio.minY, r.minY + dy))
+                    AXUIElementSetAttributeValue(w, kAXPositionAttribute as CFString, AXValueCreate(.cgPoint, &q)!)
+                }
+            }
         }
         aggiornaCoperti()
     }

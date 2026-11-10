@@ -149,6 +149,7 @@ struct BarraVista: View {
     @FocusState private var scrivendo: Bool
     // il trascinamento (T-1)
     @State private var trascinata: String?
+    @State private var primoClicX: (chiave: String, quando: Date, menu: DispatchWorkItem)?
     @State private var provvisorio: [String]?   // l'ordine mentre trascini: le altre schede fanno posto dal vivo
     @State private var puntatore: CGPoint = .zero
     @State private var presa: CGFloat = 0        // dove hai preso la scheda (dal suo bordo)
@@ -382,7 +383,7 @@ struct BarraVista: View {
                             .frame(width: 18, height: 18).contentShape(Rectangle())
                     }.buttonStyle(.plain).help("Scomponi")
                 } else if on || su {
-                    Button { apriChiudi(s) } label: {
+                    Button { clicSullaX(s) } label: {
                         Image(systemName: "xmark.circle.fill").font(.system(size: 11)).opacity(0.55)
                             .frame(width: 16, height: 16).contentShape(Rectangle())
                     }
@@ -809,6 +810,21 @@ struct BarraVista: View {
     }
 
     // MARK: i menu
+
+    /// ✕: un clic apre il menu (C-1); **doppio clic** chiude subito la finestra (Daniele, 10/11/2026).
+    /// Il menu aspetta un attimo (al massimo 0,3 s) per capire se arriva il secondo clic.
+    private func clicSullaX(_ s: Scheda) {
+        let attesa = min(NSEvent.doubleClickInterval, 0.3)
+        if let p = primoClicX, p.chiave == s.chiave, Date().timeIntervalSince(p.quando) < attesa + 0.05 {
+            p.menu.cancel(); primoClicX = nil
+            c.chiudiFinestra(s)
+            return
+        }
+        primoClicX?.menu.cancel()
+        let m = DispatchWorkItem { apriChiudi(s); primoClicX = nil }
+        primoClicX = (s.chiave, Date(), m)
+        DispatchQueue.main.asyncAfter(deadline: .now() + attesa, execute: m)
+    }
 
     private func apriChiudi(_ s: Scheda) {
         let m = NSMenu()

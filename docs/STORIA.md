@@ -249,4 +249,5 @@ app 0.9.6 (10/11/2026): parità con Hammerspoon v9.69: gesto a tre dita (G-1), T
     sotto i pannelli delle azioni rapide (X-4). Guida per il MacBook di lavoro e `app/crea-certificato.sh`.
 app 0.9.7 (10/11/2026): velo anche con Raycast e via subito quando chiudi Spotlight; la sfera solo con Tabby
     chiusa o in pausa e sulla Scrivania (mai a schermo intero); il musetto apre la Scrivania più in fretta.
+app 0.9.8 (10/11/2026): doppio clic sulla ✕ chiude subito la finestra; il Lampo Calendario resta tutto dentro lo schermo.
 ```
