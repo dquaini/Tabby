@@ -127,6 +127,34 @@ final class GestoreLampi {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in self?.aggiornaCoperti() }
     }
 
+    // MARK: - Le app con un'icona nella barra dei menu (X-2)
+
+    /// Trovate da sole (5 s dopo l'avvio e 3 s dopo ogni app aperta), escluse quelle di sistema di
+    /// Apple; diventano «Apri X» in ⚡︎ → Tutte le App. La ricerca avviene in sottofondo.
+    private(set) var appBarraMenu: [(bid: String, nome: String)] = []
+    private var cercaBarraMenu: DispatchWorkItem?
+
+    func trovaAppBarraMenu(fra secondi: Double) {
+        cercaBarraMenu?.cancel()
+        let w = DispatchWorkItem { [weak self] in
+            let candidate = NSWorkspace.shared.runningApplications.compactMap { a -> (String, String, pid_t)? in
+                guard let b = a.bundleIdentifier, !b.hasPrefix("com.apple."), b != Sistema.mioBid, b != "org.hammerspoon.Hammerspoon" else { return nil }
+                return (b, a.localizedName ?? b, a.processIdentifier)
+            }
+            DispatchQueue.global(qos: .utility).async {
+                let trovate = candidate.filter { _, _, pid in
+                    let e = AXUIElementCreateApplication(pid)
+                    AXUIElementSetMessagingTimeout(e, 0.25)
+                    var v: CFTypeRef?
+                    return AXUIElementCopyAttributeValue(e, "AXExtrasMenuBar" as CFString, &v) == .success
+                }.map { ($0.0, $0.1) }.sorted { $0.1.localizedCaseInsensitiveCompare($1.1) == .orderedAscending }
+                DispatchQueue.main.async { MainActor.assumeIsolated { self?.appBarraMenu = trovate } }
+            }
+        }
+        cercaBarraMenu = w
+        DispatchQueue.main.asyncAfter(deadline: .now() + secondi, execute: w)
+    }
+
     // MARK: - Le azioni nella barra dei menu (X-1)
 
     /// Claude · chat rapida, Notion · cerca: si preme l'icona dell'app nella barra dei menu (e la

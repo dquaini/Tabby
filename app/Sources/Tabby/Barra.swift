@@ -28,10 +28,13 @@ final class PannelloBarra: NSPanel {
         Menu.stato = c.stato
     }
 
-    override var canBecomeKey: Bool { false }
+    /// Prende la tastiera solo mentre rinomini una scheda (si scrive sulla scheda).
+    override var canBecomeKey: Bool { controllore.stato.rinomina != nil }
     override var canBecomeMain: Bool { false }
 
     func mostra() {
+        // nella fascia del notch macOS spingerebbe giù una finestra normale: si sale di livello
+        level = controllore.stato.posizione == "top" && Sistema.fasciaNotch ? .statusBar : .floating
         setFrame(Sistema.cornice(posizione: controllore.stato.posizione), display: true)
         alphaValue = 1
         orderFrontRegardless()
@@ -114,6 +117,7 @@ struct BarraVista: View {
     @Bindable var stato: StatoBarra
     @Namespace private var ns
     @State private var sopra: String?
+    @FocusState private var scrivendo: Bool
     // il trascinamento (T-1)
     @State private var trascinata: String?
     @State private var provvisorio: [String]?   // l'ordine mentre trascini: le altre schede fanno posto dal vivo
@@ -150,12 +154,16 @@ struct BarraVista: View {
             let fisso = Misure.gatto + Misure.piu + Misure.tasto * 4 + 16 + (stato.concentrazione != nil ? 20 : 0) + CGFloat(stato.lampiCoperti.count) * 22
             let sch = mostrate
             let att = sch.firstIndex { $0.chiave == stato.attiva && !stato.scrivania }
-            let d = disponiOrizzontale(spazio: g.size.width - fisso, numero: sch.count, attiva: att)
+            let tacca = taccaNellaBarra()
+            let d = disponiOrizzontale(spazio: g.size.width - fisso - (tacca.map { $0.a - $0.da + 12 } ?? 0), numero: sch.count, attiva: att)
+            let salto = salto(d, sch: sch, att: att, tacca: tacca)
             HStack(spacing: 2) {
                 gatto
                 if stato.cartellaAperta != nil { testataCartella }
                 ForEach(d.visibili.map { sch[$0] }) { s in
                     let i = sch.firstIndex(of: s), on = i == att
+                    // nessuna scheda sotto la tacca della fotocamera (margine 6)
+                    if let salto, s.chiave == salto.chiave { Color.clear.frame(width: salto.largo) }
                     scheda(s, attiva: on, larghezza: d.compatta ? (on ? Misure.compattaAttiva : Misure.compatta) : d.larghezza,
                            soloIcona: d.compatta && !on)
                 }
@@ -171,6 +179,24 @@ struct BarraVista: View {
             .frame(width: g.size.width, height: g.size.height)
         }
         .background(Tema.sfondo(verticale: false).clipShape(forma))
+    }
+
+    /// Dove cade la tacca dentro la barra (coordinate della barra), se Tabby è nella fascia.
+    private func taccaNellaBarra() -> (da: CGFloat, a: CGFloat)? {
+        guard stato.posizione == "top", Sistema.fasciaNotch, let n = Sistema.notch, let w = Menu.vista?.window else { return nil }
+        return (n.da - w.frame.minX, n.a - w.frame.minX)
+    }
+
+    /// Prima di quale scheda mettere il vuoto della tacca, e quanto largo.
+    private func salto(_ d: DisposizioneOrizzontale, sch: [Scheda], att: Int?, tacca: (da: CGFloat, a: CGFloat)?) -> (chiave: String, largo: CGFloat)? {
+        guard let t = tacca else { return nil }
+        var x: CGFloat = 2 + Misure.gatto + 2 + (stato.cartellaAperta != nil ? 170 : 0)
+        for i in d.visibili {
+            let w = d.compatta ? (i == att ? Misure.compattaAttiva : Misure.compatta) : d.larghezza
+            if x + w > t.da - 6 { return (sch[i].chiave, max(0, t.a + 6 - x)) }
+            x += w + 2
+        }
+        return nil
     }
 
     // MARK: di lato
@@ -276,7 +302,20 @@ struct BarraVista: View {
                     }
             }
             if !soloIcona {
-                Text(s.nome).lineLimit(1).truncationMode(.tail).italic(rid).opacity(rid ? 0.7 : 1)
+                if stato.rinomina == s.chiave {
+                    // si scrive direttamente sulla scheda, come un file nel Finder (DESIGN 3.2)
+                    TextField("", text: $stato.nomeInModifica)
+                        .textFieldStyle(.plain).focused($scrivendo)
+                        .onSubmit { c.fineRinomina(salva: true) }
+                        .onKeyPress(.escape) { c.fineRinomina(salva: false); return .handled }
+                        .padding(.horizontal, 4).frame(height: 20)
+                        .background(RoundedRectangle(cornerRadius: 5).fill(.white.opacity(0.18)))
+                        .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(Tema.accento, lineWidth: 1.5))
+                        .help("↵ salva · esc annulla · vuoto: torna al nome di prima")
+                        .onAppear { DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { scrivendo = true } }
+                } else {
+                    Text(s.nome).lineLimit(1).truncationMode(.tail).italic(rid).opacity(rid ? 0.7 : 1)
+                }
                 Spacer(minLength: 0)
                 if let n = s.notifica { numerino(n) }
                 if let cartella {
@@ -345,11 +384,31 @@ struct BarraVista: View {
         .zIndex(tr ? 1 : 0)
         .background(CorniceMenu(id: "t:" + s.chiave))       // il posto della scheda (senza lo spostamento)
         .onHover { dentro in sopra = dentro ? s.chiave : (sopra == s.chiave ? nil : sopra) }
-        .onTapGesture { c.vai(s) }
+        // il doppio clic rinomina; si legge dal clic stesso, così il clic singolo resta immediato
+        .onTapGesture {
+            if NSApp.currentEvent?.clickCount == 2, !s.chiave.hasPrefix("g:") { c.iniziaRinomina(s.chiave) } else { c.vai(s) }
+        }
+        .contextMenu { menuScheda(s) }
         .gesture(DragGesture(minimumDistance: 8, coordinateSpace: .global)
             .onChanged { v in muovi(s.chiave, v) }
             .onEnded { v in lascia(s.chiave, in: v.location) })
         .help(soloIcona ? s.nome : "")
+    }
+
+    /// Il tasto destro su una scheda (DESIGN 3.1): Rinomina · Torna al nome di prima · Chiudi.
+    @ViewBuilder private func menuScheda(_ s: Scheda) -> some View {
+        if !s.chiave.hasPrefix("g:") {
+            Button { c.iniziaRinomina(s.chiave) } label: { Label("Rinomina", systemImage: "square.and.pencil") }
+        }
+        if c.haNomeTuo(s.chiave) {
+            Button { c.tornaAlNome(s.chiave) } label: { Label("Torna al nome di prima", systemImage: "arrow.uturn.backward") }
+        }
+        if s.chiave.hasPrefix("f:"), let id = Int(s.chiave.dropFirst(2)) {
+            Button { c.apriFoglioCartella(id) } label: { Label("Modifica la cartella", systemImage: "square.stack.3d.up") }
+        } else if !s.chiave.hasPrefix("g:") {
+            Divider()
+            Button { c.chiudiFinestra(s) } label: { Label("Chiudi la finestra", systemImage: "xmark") }
+        }
     }
 
     /// Il numerino rosso delle notifiche, come in macOS (oltre 99: «99+»; senza numero: un pallino).
@@ -487,7 +546,8 @@ struct BarraVista: View {
         cerca.keyEquivalent = " "; cerca.keyEquivalentModifierMask = [.control, .option]
         m.addItem(cerca)
         let app = c.lampi.lampi.filter(\.barraMenu)
-        if !app.isEmpty {
+        let scoperte = c.lampi.appBarraMenu.filter { a in !app.contains { $0.bid == a.bid } }
+        if !app.isEmpty || !scoperte.isEmpty {
             m.addItem(.separator())
             m.addItem(NSMenuItem.sectionHeader(title: "App"))
             for l in app {
@@ -496,6 +556,18 @@ struct BarraVista: View {
                     let i = NSWorkspace.shared.icon(forFile: u.path); i.size = NSSize(width: 16, height: 16); v.image = i
                 }
                 m.addItem(v)
+            }
+            if !scoperte.isEmpty {
+                let sotto = NSMenu()
+                for a in scoperte {
+                    let v = Menu.voce("Apri \(a.nome)") { c.lampi.premiNellaBarraDeiMenu(Lampo(bid: a.bid, nome: a.nome, tasto: "", barraMenu: true)) }
+                    if let u = NSWorkspace.shared.urlForApplication(withBundleIdentifier: a.bid) {
+                        let i = NSWorkspace.shared.icon(forFile: u.path); i.size = NSSize(width: 16, height: 16); v.image = i
+                    }
+                    sotto.addItem(v)
+                }
+                let t = Menu.voce("Tutte le App", simbolo: "menubar.rectangle"); t.submenu = sotto; t.isEnabled = true
+                m.addItem(t)
             }
         }
         // le cartelle (deciso con Daniele il 9/11/2026: dal gatto passano qui)

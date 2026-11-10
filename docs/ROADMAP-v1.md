@@ -94,9 +94,16 @@ zone (nel codice "gruppo") · **Lampi** = le app piccole del menu ⚡︎ (nel co
    «presto»; guida del primo avvio (Accessibilità che si accorge da sola, browser, posizione e
    aspetto, barra dei menu e Dock, accensione); temi (Nativo e Notte × 6); la sfera (colori del
    tema, ventaglio, notifiche, anello della Concentrazione) e la pausa. Consumo a riposo: 0%.
-   **Rimandati** (prossime iterazioni): Nascondi Tabby (col mouse sul bordo), fascia del notch,
-   rinomina sul posto e tasto destro sulle schede, avviso dei siti doppi, app scoperte nella
-   barra dei menu (⚡︎ → Tutte le App), gesto a tre dita, lingua inglese.
+9. **Rifiniture rimandate** (0.9, 10/11/2026, in prova): rinomina sul posto (doppio clic o
+   tasto destro → Rinomina, Invio/Esc, «Torna al nome»), menu col tasto destro sulle schede;
+   Nascondi Tabby (Impostazioni: «Tabby si nasconde», compare col mouse sul bordo; il mouse si
+   segue solo quando serve); fascia del notch («Accanto al notch, Tabby sale da sola / sempre /
+   non sale», con A-6: la barra si fa da parte quando il mouse va nella fascia, e le schede
+   saltano la tacca); avviso dei siti doppi (Lascia · Vai a quella · Chiudi questa, solo per
+   finestre nuove); ⚡︎ → Tutte le App (le app nascoste nella barra dei menu).
+   **Ancora rimandati:** gesto a tre dita (macOS non lo dà alle app senza trucchi privati:
+   fragile, da valutare con Daniele) e lingua inglese (tutte le parole da tradurre: meglio alla
+   fine, quando le parole sono ferme).
 
 ### 1. Ordine nella UX — i punti da decidere
 1. **Tre stili diversi**: barra, menu e riquadro delle cartelle scuri "nostri"; Concentrazione,

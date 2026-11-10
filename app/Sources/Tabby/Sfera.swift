@@ -236,7 +236,7 @@ extension Controllore {
         let w = DispatchWorkItem { [weak self] in
             guard let self else { return }
             if serve { self.pannello.nascondiScivolando(); self.sfera.mostra() }
-            else { self.sfera.nascondi(); self.pannello.mostra() }
+            else { self.sfera.nascondi(); self.mostraBarra() }
         }
         sferaDopo = w
         DispatchQueue.main.asyncAfter(deadline: .now() + (serve ? 0.4 : 0), execute: w)

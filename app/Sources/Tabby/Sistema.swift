@@ -102,8 +102,42 @@ enum Sistema {
     static var schermo: NSScreen { NSScreen.screens.first ?? NSScreen.main! }
 
     /// Dove sta la barra, secondo la posizione scelta.
+    // MARK: - Il notch (A-2)
+
+    /// Dove sta la tacca della fotocamera (in x, coordinate dello schermo), se lo schermo ce l'ha:
+    /// macOS dice quali parti in alto restano libere a sinistra e a destra.
+    static var notch: (da: CGFloat, a: CGFloat)? {
+        guard let s = NSScreen.screens.first, s.safeAreaInsets.top > 0,
+              let sx = s.auxiliaryTopLeftArea, let dx = s.auxiliaryTopRightArea else { return nil }
+        return (sx.maxX, dx.minX)
+    }
+
+    /// La fascia del notch: Tabby in alto sale nella striscia accanto alla tacca. Automatica se
+    /// c'è il notch **e** la barra dei menu si nasconde da sola; oppure accesa o spenta a mano.
+    static var fasciaNotch: Bool {
+        switch Impostazioni.shared.valore("notchBand") as? String {
+        case "on": return true
+        case "off": return false
+        default: return notch != nil && barraMenuNascosta
+        }
+    }
+
+    /// La barra dei menu si nasconde da sola? Si rilegge dalle preferenze al massimo ogni 30 s.
+    private static var letturaBarraMenu: (quando: Date, nascosta: Bool) = (.distantPast, false)
+    static var barraMenuNascosta: Bool {
+        if Date().timeIntervalSince(letturaBarraMenu.quando) > 30 {
+            let n = UserDefaults.standard.persistentDomain(forName: UserDefaults.globalDomain)?["_HIHideMenuBar"] as? Bool ?? false
+            letturaBarraMenu = (Date(), n)
+        }
+        return letturaBarraMenu.nascosta
+    }
+
     static func cornice(posizione: String) -> NSRect {
         let v = schermo.visibleFrame
+        if posizione == "top" && fasciaNotch {                  // in cima allo schermo, accanto alla tacca
+            let f = schermo.frame
+            return NSRect(x: f.minX, y: f.maxY - Misure.altezza, width: f.width, height: Misure.altezza)
+        }
         switch posizione {
         case "bottom": return NSRect(x: v.minX, y: v.minY, width: v.width, height: Misure.altezza)
         case "left":   return NSRect(x: v.minX, y: v.minY, width: Misure.larghezzaLato, height: v.height)
@@ -113,13 +147,19 @@ enum Sistema {
     }
 
     /// Lo spazio delle app: lo schermo utile meno la barra di Tabby dal suo lato.
+    /// Con «Nascondi Tabby» le app usano tutto lo schermo (A-3).
+    static var tabbyNascosta = Impostazioni.shared.valore("autohide") as? Bool ?? false
+
     static func spazioApp(posizione: String) -> NSRect {
         var v = schermo.visibleFrame
+        if tabbyNascosta { return v }
         switch posizione {
         case "bottom": v.origin.y += Misure.altezza; v.size.height -= Misure.altezza
         case "left":   v.origin.x += Misure.larghezzaLato; v.size.width -= Misure.larghezzaLato
         case "right":  v.size.width -= Misure.larghezzaLato
-        default:       v.size.height -= Misure.altezza
+        default:
+            if fasciaNotch { v.size.height = schermo.frame.maxY - Misure.altezza - v.minY }
+            else { v.size.height -= Misure.altezza }
         }
         return v
     }

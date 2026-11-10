@@ -221,4 +221,6 @@ app 0.5 (9/11/2026): la vista divisa. Prima, le altre finestre della stessa app 
 app 0.6 (9/11/2026): le cartelle, con la schermata d'apertura; velo, fogli e avvisi.
 app 0.8 (9/11/2026): Lampi e Memo, Concentrazione, la barra che cerca tutto, la finestra di Tabby
     con le animazioni e la guida, la sfera, la pausa, i temi. A riposo 0% di processore.
+app 0.9 (10/11/2026): rinomina sul posto e tasto destro sulle schede, Nascondi Tabby, fascia del
+    notch, avviso dei siti doppi, ⚡︎ → Tutte le App (quelle nascoste nella barra dei menu).
 ```

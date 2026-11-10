@@ -40,7 +40,9 @@ final class StatoBarra {
     var nonDisturbare = true
     var lampiCoperti: [String] = []
     var lampiInModifica: [Lampo] = []
-    var tabbyChiusa = false                     // «Chiudi Tabby»: barra via, resta la sfera
+    var tabbyChiusa = false
+    var rinomina: String?                       // la scheda che stai rinominando
+    var nomeInModifica = ""                     // «Chiudi Tabby»: barra via, resta la sfera
     var inPausa = Impostazioni.shared.valore("paused") as? Bool ?? false
     var verticale: Bool { posizione == "left" || posizione == "right" }
 }
@@ -84,6 +86,12 @@ final class Controllore {
     lazy var finestraTabby = FinestraTabby(self)
     let attesaPermesso = AttesaPermesso()
     var sferaDopo: DispatchWorkItem?
+    var appPrimaRinomina: NSRunningApplication?
+    var monitorMouse: Any?
+    let avviataIl = Date()
+    var vistaLaPrimaVolta: [UInt32: Date] = [:]     // quando Tabby ha visto ogni finestra (siti doppi)
+    var doppiAvvisati = Set<UInt32>()
+    var monitorMouseLocale: Any?
     /// Le finestre ridotte da Tabby stessa (U-2): non fanno scattare «scheda accanto».
     private var ridotteDaTabby: [UInt32: Date] = [:]
     /// Le ultime schede attive con l'istante del cambio (C-4: macOS a volte attiva un'altra
@@ -102,6 +110,7 @@ final class Controllore {
         testi.letto = { [weak self] in self?.stato.versioneTesti += 1 }
         Sistema.veloci = lampi.veloci
         registraLampi()
+        lampi.trovaAppBarraMenu(fra: 5)
         riprendiConcentrazione()
         Tasti.spente = stato.inPausa
         stato.batteria = batteria.stato
@@ -113,7 +122,8 @@ final class Controllore {
         ascoltaMacOS()
         registraTasti()
         ricostruisci()
-        if !stato.inPausa { pannello.mostra() }
+        if !stato.inPausa { mostraBarra() }
+        aggiornaNascondi()
         if let a = NSWorkspace.shared.frontmostApplication { siAttiva(a) }
         controllaSfera()
     }
@@ -128,12 +138,15 @@ final class Controllore {
                 MainActor.assumeIsolated { self?.ricostruisciPresto() }
             }
         }
+        nc.addObserver(forName: NSWorkspace.didLaunchApplicationNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.lampi.trovaAppBarraMenu(fra: 3) }
+        }
         nc.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { [weak self] n in
             let app = n.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
             MainActor.assumeIsolated { if let app { self?.siAttiva(app) } }
         }
         NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.pannello.mostra() }
+            MainActor.assumeIsolated { self?.mostraBarra() }
         }
     }
 
@@ -207,6 +220,13 @@ final class Controllore {
                 if let d = s.sito, stato.loghi[d] == nil, let l = loghi.logo(d) { stato.loghi[d] = l }
             }
             tutte = nuove
+            controllaSitiDoppi(nuove)
+            // i nomi dati alle finestre valgono finché la finestra è aperta
+            if var nomi = imp.valore("tabNames") as? [String: String] {
+                let n = nomi.count
+                nomi = nomi.filter { k, _ in !k.hasPrefix("win:") || nuove.contains { $0.chiave == k } }
+                if nomi.count != n { imp.imposta("tabNames", nomi) }
+            }
             // le viste divise: chi è chiuso esce, con meno di 2 app la vista si scioglie
             let v2 = aggiornaViste(viste, presenti: Set(nuove.map(\.chiave)))
             if v2 != viste { viste = v2; salvaViste() }
@@ -401,6 +421,49 @@ final class Controllore {
 
     func nuovaApp() { Sistema.apriSpotlight() }
 
+    // MARK: - Rinominare (B-8, DESIGN 3.2)
+
+    func haNomeTuo(_ k: String) -> Bool {
+        if k.hasPrefix("f:") { return false }
+        return (imp.valore("tabNames") as? [String: String])?[k] != nil
+    }
+
+    /// Doppio clic sul nome o tasto destro → Rinomina: si scrive sulla scheda.
+    func iniziaRinomina(_ k: String) {
+        guard let s = stato.schede.first(where: { $0.chiave == k }) else { return }
+        appPrimaRinomina = NSWorkspace.shared.frontmostApplication
+        stato.nomeInModifica = s.nome
+        stato.rinomina = k
+        NSApp.activate()
+        pannello.makeKey()
+    }
+
+    /// Invio salva, Esc annulla, vuoto = torna al nome di prima. Per una cartella cambia il suo nome.
+    func fineRinomina(salva: Bool) {
+        guard let k = stato.rinomina else { return }
+        stato.rinomina = nil
+        pannello.resignKey()
+        if salva {
+            let n = stato.nomeInModifica.trimmingCharacters(in: .whitespaces)
+            if k.hasPrefix("f:"), let id = Int(k.dropFirst(2)), let i = cartelle.firstIndex(where: { $0.id == id }), !n.isEmpty {
+                cartelle[i].nome = n; salvaCartelle()
+            } else {
+                var nomi = imp.valore("tabNames") as? [String: String] ?? [:]
+                nomi[k] = n.isEmpty ? nil : n
+                imp.imposta("tabNames", nomi)
+            }
+            ricostruisci()
+        }
+        if let a = appPrimaRinomina, a.bundleIdentifier != Sistema.mioBid { a.activate() }
+    }
+
+    func tornaAlNome(_ k: String) {
+        var nomi = imp.valore("tabNames") as? [String: String] ?? [:]
+        nomi[k] = nil
+        imp.imposta("tabNames", nomi)
+        ricostruisci()
+    }
+
     // MARK: - Chiudere
 
     func titolo(_ s: Scheda) -> String? { elementi[s.chiave].flatMap(Sistema.titolo) }
@@ -435,7 +498,7 @@ final class Controllore {
     func cambiaPosizione(_ p: String) {
         imp.imposta("position", p)
         withAnimationMolla { stato.posizione = p }
-        pannello.mostra()
+        mostraBarra()
         if let a = NSWorkspace.shared.frontmostApplication { Sistema.adatta(a, posizione: p) }
         lampi.disponi()
         diario("posizione: \(p)")
