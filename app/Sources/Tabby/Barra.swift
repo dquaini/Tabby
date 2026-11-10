@@ -32,17 +32,30 @@ final class PannelloBarra: NSPanel {
     override var canBecomeKey: Bool { controllore.stato.rinomina != nil }
     override var canBecomeMain: Bool { false }
 
-    func mostra() {
+    /// Conta le sparizioni: una barra che ricompare annulla quella in corso (prima, col mouse che
+    /// scendeva in fretta dal menu di Apple, l'animazione finiva e Tabby restava via).
+    private var giro = 0
+    var inUscita: Bool { isVisible && alphaValue < 0.99 }
+
+    /// `scendendo`: rientra scivolando dall'alto (dopo il menu di Apple).
+    func mostra(scendendo: Bool = false) {
+        giro += 1
         // nella fascia del notch macOS spingerebbe giù una finestra normale: si sale di livello
         level = controllore.stato.posizione == "top" && Sistema.fasciaNotch ? .statusBar : .floating
-        setFrame(Sistema.cornice(posizione: controllore.stato.posizione), display: true)
-        alphaValue = 1
+        let f = Sistema.cornice(posizione: controllore.stato.posizione)
+        if scendendo && !isVisible { setFrame(f.offsetBy(dx: 0, dy: f.height), display: false); alphaValue = 0 }
         orderFrontRegardless()
+        NSAnimationContext.runAnimationGroup { ctx in       // ferma anche un'animazione in corso
+            ctx.duration = scendendo ? 0.16 : 0
+            animator().setFrame(f, display: true); animator().alphaValue = 1
+        }
     }
 
     /// La barra sale (o scivola di lato) e sparisce: arriva la sfera (0,2 s).
     func nascondiScivolando() {
-        guard isVisible else { return }
+        guard isVisible, !inUscita else { return }
+        giro += 1
+        let questo = giro
         var f = frame
         switch controllore.stato.posizione {
         case "bottom": f.origin.y -= f.height
@@ -52,7 +65,7 @@ final class PannelloBarra: NSPanel {
         }
         NSAnimationContext.runAnimationGroup { ctx in ctx.duration = 0.2; animator().setFrame(f, display: true); animator().alphaValue = 0 }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) { [weak self] in
-            guard let self, self.alphaValue < 0.5 else { return }
+            guard let self, self.giro == questo else { return }   // nel frattempo è ricomparsa
             self.orderOut(nil)
         }
     }
@@ -64,6 +77,22 @@ final class VistaOspite<V: View>: NSHostingView<V> {
 }
 
 // MARK: - I menu (NSMenu di macOS, scuri in Notte, attaccati al tasto dal lato delle app)
+
+/// Il nome di una scheda che non ci sta: prima si tolgono le ultime parole («Proton Mail» →
+/// «Proton»), i puntini solo se non basta nemmeno la prima parola.
+struct NomeCorto: View {
+    let nome: String
+    var body: some View {
+        let parole = nome.split(separator: " ").map(String.init)
+        ViewThatFits(in: .horizontal) {
+            Text(nome).lineLimit(1).fixedSize()
+            ForEach((1..<max(parole.count, 1)).reversed(), id: \.self) { n in
+                Text(parole.prefix(n).joined(separator: " ").trimmingCharacters(in: CharacterSet(charactersIn: " -–—·|:,"))).lineLimit(1).fixedSize()
+            }
+            Text(nome).lineLimit(1).truncationMode(.tail)
+        }
+    }
+}
 
 @MainActor
 enum Menu {
@@ -314,7 +343,7 @@ struct BarraVista: View {
                         .help("↵ salva · esc annulla · vuoto: torna al nome di prima")
                         .onAppear { DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { scrivendo = true } }
                 } else {
-                    Text(s.nome).lineLimit(1).truncationMode(.tail).italic(rid).opacity(rid ? 0.7 : 1)
+                    NomeCorto(nome: s.nome).italic(rid).opacity(rid ? 0.7 : 1)
                 }
                 Spacer(minLength: 0)
                 if let n = s.notifica { numerino(n) }
@@ -464,19 +493,27 @@ struct BarraVista: View {
         l >= 88 ? "battery.100percent" : l >= 63 ? "battery.75percent" : l >= 38 ? "battery.50percent" : l >= 13 ? "battery.25percent" : "battery.0percent"
     }
 
-    /// Durante la Concentrazione, al posto della batteria il tempo che manca con una barretta (H-3).
+    /// Durante la Concentrazione, al posto della batteria un cerchio che si riempie col tempo
+    /// passato (come il consumo dei limiti di Claude; deciso con Daniele il 10/11/2026). Un clic:
+    /// quanto manca, aggiungi o togli minuti (H-3).
     @ViewBuilder private var batteriaOTempo: some View {
         if let conc = stato.concentrazione {
             Button { apriMenuTempo() } label: {
-                TimelineView(.periodic(from: .now, by: 1)) { ctx in
+                TimelineView(.periodic(from: .now, by: 5)) { ctx in
                     let resto = conc.fine.map { $0.timeIntervalSince(ctx.date) }
                     let tot = conc.fine.map { $0.timeIntervalSince(conc.inizio) } ?? 1
-                    VStack(spacing: 3) {
-                        Text(resto.map(tempoCheManca) ?? "∞").font(.system(size: 11.5, weight: .semibold)).monospacedDigit().foregroundStyle(Tema.testo)
-                        Capsule().fill(Tema.sopra).frame(width: 36, height: 3)
-                            .overlay(alignment: .leading) { Capsule().fill(Tema.accento).frame(width: 36 * max(0, min(1, 1 - (resto ?? 0) / tot))) }
+                    let fatto = resto.map { max(0, min(1, 1 - $0 / max(tot, 1))) } ?? 0
+                    ZStack {
+                        Circle().stroke(Tema.sopra, lineWidth: 3)
+                        Circle().trim(from: 0, to: fatto)
+                            .stroke(Tema.accento, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                            .rotationEffect(.degrees(-90))
+                            .animation(.easeOut(duration: 0.6), value: fatto)
+                        if resto == nil { Text("∞").font(.system(size: 9, weight: .semibold)).foregroundStyle(Tema.tenue) }
                     }
-                    .frame(width: 54, height: stato.verticale ? 38 : Misure.altezza)
+                    .frame(width: 17, height: 17)
+                    .frame(width: 34, height: stato.verticale ? 38 : Misure.altezza)
+                    .help(resto.map { "Concentrazione · mancano " + tempoCheManca($0) } ?? "Concentrazione · senza tempo")
                 }
                 .contentShape(Rectangle())
             }
@@ -491,6 +528,9 @@ struct BarraVista: View {
         m.addItem(NSMenuItem.sectionHeader(title: conc.fine.map { "Concentrazione · mancano " + tempoCheManca($0.timeIntervalSinceNow) } ?? "Concentrazione · senza tempo"))
         m.addItem(Menu.voce("+5 minuti", simbolo: "plus") { c.prolunga(5) })
         m.addItem(Menu.voce("+15 minuti", simbolo: "plus") { c.prolunga(15) })
+        if conc.fine.map({ $0.timeIntervalSinceNow > 6 * 60 }) == true {
+            m.addItem(Menu.voce("−5 minuti", simbolo: "minus") { c.prolunga(-5) })
+        }
         m.addItem(.separator())
         m.addItem(Menu.voce("Termina adesso", simbolo: "stop") { c.fineConcentrazione(suono: false) })
         Menu.apri(m, sopra: CorniceMenu.cornici["tempo"] ?? .zero)
@@ -580,6 +620,12 @@ struct BarraVista: View {
             m.addItem(v)
         }
         m.addItem(Menu.voce("Nuova cartella…", simbolo: "plus") { c.apriFoglioCartella() })
+        if !stato.cartelle.isEmpty {                 // modificare o eliminare anche le cartelle spente
+            let sotto = NSMenu()
+            for f in stato.cartelle { sotto.addItem(Menu.voce(f.nome, simbolo: "square.stack.3d.up") { c.apriFoglioCartella(f.id) }) }
+            let v = Menu.voce("Modifica o elimina…", simbolo: "square.and.pencil"); v.submenu = sotto
+            m.addItem(v)
+        }
         m.addItem(.separator())
         m.addItem(Menu.voce("Personalizza i Lampi…", simbolo: "slider.horizontal.3") { c.apriFoglioLampi() })
         Menu.apri(m, sopra: CorniceMenu.cornici["lampi"] ?? .zero)

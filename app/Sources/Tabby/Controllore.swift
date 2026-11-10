@@ -100,7 +100,8 @@ final class Controllore {
     /// app un attimo prima di dire che la finestra è chiusa).
     var storia: [(chiave: String, quando: Date)] = []
     /// L'ultima volta che hai scelto tu una scheda (clic o scorciatoia).
-    private var sceltaTua = Date.distantPast
+    var finestraScrivania: UInt32?               // la finestra del Finder aperta dal musetto
+    var sceltaTua = Date.distantPast             // l'ultima volta che hai scelto tu una scheda
     private(set) var precedente: Scheda?
 
     func avvia() {
@@ -220,6 +221,12 @@ final class Controllore {
                 if s.notifica == nil, s.chiave == s.bid, let d = dock.attuali[s.bid] { nuove[n].notifica = d }
                 if let d = s.sito, stato.loghi[d] == nil, let l = loghi.logo(d) { stato.loghi[d] = l }
             }
+            // la finestra della Scrivania aperta dal musetto è la scheda del gatto, non una scheda in più
+            if let n = finestraScrivania {
+                if nuove.contains(where: { $0.finestra == n }) { nuove.removeAll { $0.finestra == n } } else { finestraScrivania = nil }
+            }
+            let cambi = chiaviCambiate(prima: tutte, adesso: nuove)
+            if !cambi.isEmpty { cambiaChiavi(cambi) }
             tutte = nuove
             controllaSitiDoppi(nuove)
             // i nomi dati alle finestre valgono finché la finestra è aperta
@@ -249,6 +256,25 @@ final class Controllore {
             aggiornaAttiva()
             controllaSfera()
         }
+    }
+
+    /// Una finestra ha cambiato chiave (vedi `chiaviCambiate`): tutto quello che si ricordava
+    /// della vecchia passa alla nuova — posto, scheda attiva, viste divise, nome dato da te.
+    private func cambiaChiavi(_ cambi: [String: String]) {
+        imp.imposta("order", conChiaviNuove(imp.ordine, cambi))
+        if let a = stato.attiva, let n = cambi[a] { stato.attiva = n }
+        storia = storia.map { (cambi[$0.chiave] ?? $0.chiave, $0.quando) }
+        var v2 = viste
+        for i in v2.indices {
+            v2[i].membri = v2[i].membri.map { cambi[$0] ?? $0 }
+            if let a = v2[i].attenzione, let n = cambi[a] { v2[i].attenzione = n }
+        }
+        if v2 != viste { viste = v2; salvaViste() }
+        if var nomi = imp.valore("tabNames") as? [String: String] {
+            for (vecchia, nuova) in cambi where vecchia.hasPrefix("win:") { if let n = nomi.removeValue(forKey: vecchia) { nomi[nuova] = n } }
+            imp.imposta("tabNames", nomi)
+        }
+        diario("stessa finestra, chiave nuova: " + cambi.map { "\($0.key) → \($0.value)" }.joined(separator: ", "))
     }
 
     /// C-4: chiusa o ridotta la scheda attiva → scheda accanto, sempre.
@@ -324,7 +350,7 @@ final class Controllore {
         if Sistema.ignorate().contains(bid) { return }                  // un Lampo: non tocca niente
         if controllaAppFuori(app) { return }                            // fuori dalla Concentrazione
         if stato.scrivania && bid == "com.apple.finder" { return }
-        stato.scrivania = false; stato.tabbyChiusa = false
+        fuoriDallaScrivania()
         aggiornaAttiva()
         if !tutte.contains(where: { $0.bid == bid }) { ricostruisciPresto() }
         if let k = stato.attiva, let v = viste.first(where: { $0.chiave == k }) {
@@ -360,14 +386,14 @@ final class Controllore {
         if s.chiave.hasPrefix("f:"), let id = Int(s.chiave.dropFirst(2)) { entraNellaCartella(id); return }
         if let v = viste.first(where: { $0.chiave == s.chiave }) {
             if daTe { sceltaTua = Date() }
-            stato.scrivania = false; stato.tabbyChiusa = false
+            fuoriDallaScrivania()
             segnaAttiva(v.chiave)
             mostraVista(v, scelta: true)
             return
         }
         guard let app = NSRunningApplication(processIdentifier: s.pid) else { ricostruisci(); return }
         if daTe { sceltaTua = Date() }
-        stato.scrivania = false; stato.tabbyChiusa = false
+        fuoriDallaScrivania()
         segnaAttiva(s.chiave)
         let w = elementi[s.chiave]
         Sistema.portaDavanti(app, finestra: w)
@@ -405,20 +431,61 @@ final class Controllore {
         withAnimationMolla { stato.scrivania = true; stato.tabbyChiusa = false }
         for s in tutte where s.bid == "com.apple.finder" { if let f = s.finestra { ridotteDaTabby[f] = Date() } }
         Sistema.scrivania()
+        apriCartellaScrivania()
         controllaSfera()
     }
 
+    /// Il musetto porta sul Finder con la Scrivania scelta (Daniele, 10/11/2026): una finestra del
+    /// Finder sulla cartella Scrivania, che **è** la scheda del gatto (non compare in barra) e si
+    /// chiude quando vai su un'altra scheda.
+    private func apriCartellaScrivania() {
+        guard let finder = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.finder").first else { return }
+        let pid = finder.processIdentifier
+        if let n = finestraScrivania, let w = Sistema.finestre(pid).first(where: { Sistema.numero($0) == n }) {
+            AXUIElementSetAttributeValue(w, kAXMinimizedAttribute as CFString, kCFBooleanFalse)
+            AXUIElementPerformAction(w, kAXRaiseAction as CFString)
+            finder.activate(); return
+        }
+        let già = Set(Sistema.finestre(pid).compactMap(Sistema.numero))
+        NSWorkspace.shared.open(FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask)[0])
+        for t in [0.25, 0.6, 1.1] {          // il Finder ci mette un attimo a farla
+            DispatchQueue.main.asyncAfter(deadline: .now() + t) { [weak self] in
+                guard let self, self.stato.scrivania, self.finestraScrivania == nil,
+                      let w = Sistema.finestraAttiva(pid), let n = Sistema.numero(w), !già.contains(n) else { return }
+                self.finestraScrivania = n                       // solo una finestra nuova: mai una tua
+                Sistema.adattaFinestra(w, a: Sistema.spazioApp(posizione: self.stato.posizione))
+                self.ricostruisciPresto()
+            }
+        }
+    }
+
+    /// Si lascia la Scrivania (un'altra scheda, la sfera): via la finestra del musetto.
+    func fuoriDallaScrivania() {
+        stato.scrivania = false; stato.tabbyChiusa = false
+        guard let n = finestraScrivania else { return }
+        finestraScrivania = nil
+        if let f = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.finder").first,
+           let w = Sistema.finestre(f.processIdentifier).first(where: { Sistema.numero($0) == n }) { Sistema.chiudi(w) }
+    }
+
     /// Chiudi Tabby (⚙︎): come la Scrivania, ma la barra sparisce e resta la sfera; un clic e torna tutto.
+    /// Tutto sparisce **in un colpo** (Daniele, 10/11/2026: prima le finestre ci mettevano troppo):
+    /// macOS nasconde tutte le altre app con una sola richiesta, il Finder compreso, senza ridurre
+    /// le sue finestre una per una; barra via e sfera subito, senza attese.
     func chiudiTabby() {
-        gatto()
-        stato.tabbyChiusa = true
+        fuoriDallaScrivania()
+        withAnimationMolla { stato.scrivania = true; stato.tabbyChiusa = true }
+        NSApp.activate()
+        NSWorkspace.shared.hideOtherApplications()
+        pannello.nascondiScivolando()
+        sfera.mostra()
         controllaSfera()
     }
 
     /// Dalla Scrivania del Mac si torna all'ultima scheda, come l'avevi lasciata.
     func riapriDaScrivania() {
         let s = stato.schede.first(where: { $0.chiave == stato.attiva }) ?? stato.schede.first
-        stato.scrivania = false; stato.tabbyChiusa = false
+        fuoriDallaScrivania()
         if let s { vai(s) }
     }
 

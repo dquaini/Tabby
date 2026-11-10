@@ -70,17 +70,17 @@ extension Controllore {
         guard let i = viste.firstIndex(where: { $0.chiave == chiave }) else { return }
         let v = viste.remove(at: i)
         salvaViste()
+        // la vista che sparisce non è una scheda chiusa: niente «scheda accanto» (prima poteva
+        // portare sul Finder); si resta sulla scheda della vista che stavi usando
+        sceltaTua = Date()
         imp.imposta("order", sposta(chiave, davanti: nil, in: imp.ordine).filter { $0 != chiave })
         withAnimationMolla { ricostruisci() }
-        // tutte le finestre della vista tornano a tutto spazio, subito
-        if imp.adatta {
-            for k in v.membri {
-                if let x = scheda(k), let app = NSRunningApplication(processIdentifier: x.pid) {
-                    Sistema.adatta(app, posizione: stato.posizione, tranne: finestreInViste())
-                }
-            }
-        }
-        if let s = scheda(v.attenzione ?? v.membri[0]) { vai(s) }
+        // ogni finestra della vista torna a tutto spazio, subito (anche quelle dei browser, che
+        // nella loro zona erano strette e «adatta» le avrebbe prese per finestrelle)
+        let spazio = Sistema.spazioApp(posizione: stato.posizione)
+        for k in v.membri { if let w = elementi[k] { Sistema.adattaFinestra(w, a: spazio) } }
+        let dove = ([v.attenzione].compactMap { $0 } + v.membri).lazy.compactMap { self.scheda($0) }.first
+        if let s = dove { vai(s) }
     }
 
     // MARK: - Dividere lo schermo (D-2)

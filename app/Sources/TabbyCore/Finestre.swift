@@ -120,6 +120,33 @@ public func dopoLaChiusura(di chiusa: Scheda, prima: [Scheda], adesso: [Scheda])
     return schedaAccanto(chiusa: chiusa.chiave, prima: prima.map(\.chiave), dopo: stessa.isEmpty ? adesso.map(\.chiave) : stessa)
 }
 
+/// Le finestre la cui scheda ha cambiato chiave (vecchia → nuova): una finestra di browser che
+/// passa a un sito solo (`win:` → `site:`) o che ne apre altri, un'app che apre la seconda
+/// finestra. È la **stessa** scheda: non è una chiusura, e resta al suo posto.
+public func chiaviCambiate(prima: [Scheda], adesso: [Scheda]) -> [String: String] {
+    var diChi: [UInt32: String] = [:]
+    for s in adesso { if let f = s.finestra, diChi[f] == nil { diChi[f] = s.chiave } }
+    let ora = Set(adesso.map(\.chiave))
+    var m: [String: String] = [:]
+    for s in prima {
+        guard let f = s.finestra, let k = diChi[f], k != s.chiave, !ora.contains(s.chiave) else { continue }
+        m[s.chiave] = k
+    }
+    return m
+}
+
+/// Nell'ordine ricordato la chiave nuova prende il posto della vecchia (anche se un sito aveva
+/// già un suo posto da prima: la scheda che stai usando non salta altrove).
+public func conChiaviNuove(_ ordine: [String], _ cambi: [String: String]) -> [String] {
+    var o = ordine
+    for (vecchia, nuova) in cambi {
+        guard let i = o.firstIndex(of: vecchia) else { continue }
+        o[i] = nuova
+        if let j = o.indices.first(where: { $0 != i && o[$0] == nuova }) { o.remove(at: j) }
+    }
+    return o
+}
+
 /// Il riordino trascinando (T-1): sposta `chiave` prima di `davanti` (nil = in fondo)
 /// nell'ordine ricordato, che contiene anche schede non visibili.
 public func sposta(_ chiave: String, davanti: String?, in ordine: [String]) -> [String] {

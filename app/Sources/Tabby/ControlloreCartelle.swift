@@ -292,6 +292,7 @@ struct FoglioCartella: View {
                spiegazione: "Clicca le schede nella barra, o trascinale qui. Poi dai un nome.",
                principale: modifica ? "Salva" : "Crea",
                principaleAcceso: (!scelte.isEmpty || !stato.vociExtra.isEmpty) && !stato.nomeFoglio.trimmingCharacters(in: .whitespaces).isEmpty,
+               aSinistra: stato.cartellaInModifica.map { id in ("Elimina la cartella", { c.chiudiFoglioCartella(); c.eliminaCartella(id) }) },
                annulla: { c.chiudiFoglioCartella() },
                conferma: { c.salvaFoglioCartella(modifica: stato.cartellaInModifica) }) {
             VStack(alignment: .leading, spacing: 0) {
@@ -368,7 +369,8 @@ struct StatoApertura: Equatable {
 @MainActor
 final class Schermata: NSPanel {
     init(stato: StatoBarra, chiudi: @escaping () -> Void) {
-        super.init(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        // nasce già grande come lo schermo: se la misura cambia mentre compare, le icone scivolano
+        super.init(contentRect: Sistema.schermo.frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         level = .statusBar
         collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
         isOpaque = true
@@ -392,11 +394,11 @@ final class Schermata: NSPanel {
 private struct VistaApertura: View {
     @Bindable var stato: StatoBarra
     let chiudi: () -> Void
-    @State private var respiro = false
+    @State private var sfondo: NSImage?
 
     var body: some View {
         ZStack {
-            if let u = NSWorkspace.shared.desktopImageURL(for: Sistema.schermo), let i = NSImage(contentsOf: u) {
+            if let i = sfondo {
                 Image(nsImage: i).resizable().scaledToFill().blur(radius: 40).scaleEffect(1.1).overlay(Color.black.opacity(0.45))
             } else { Color.black }
             if let ap = stato.apertura {
@@ -406,8 +408,10 @@ private struct VistaApertura: View {
                     HStack(spacing: 18) {
                         ForEach(ap.voci.indices, id: \.self) { i in
                             let on = ap.arrivate.contains(i)
+                            // le icone stanno ferme al centro: respira solo la luce (prima l'animazione
+                            // infinita trascinava anche la posizione, dal centro verso l'angolo)
                             icona(ap.voci[i]).frame(width: 44, height: 44)
-                                .opacity(on ? 1 : (respiro ? 0.45 : 0.25))
+                                .phaseAnimator([0.25, 0.45]) { v, luce in v.opacity(on ? 1 : luce) } animation: { _ in .easeInOut(duration: 1.1) }
                                 .scaleEffect(on ? 1 : 0.92)
                                 .animation(Tema.molla, value: on)
                         }
@@ -425,7 +429,10 @@ private struct VistaApertura: View {
         }
         .contentShape(Rectangle())
         .onTapGesture(perform: chiudi)
-        .onAppear { withAnimation(.easeInOut(duration: 1.1).repeatForever()) { respiro = true } }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear {           // la Scrivania si legge una volta sola, non a ogni icona che si accende
+            sfondo = NSWorkspace.shared.desktopImageURL(for: Sistema.schermo).flatMap { NSImage(contentsOf: $0) }
+        }
     }
 
     @ViewBuilder private func icona(_ v: Voce) -> some View {

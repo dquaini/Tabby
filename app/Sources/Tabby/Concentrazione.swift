@@ -86,7 +86,8 @@ extension Controllore {
 
     func prolunga(_ minuti: Int) {
         guard var c = stato.concentrazione else { return }
-        c.fine = (c.fine ?? Date()).addingTimeInterval(Double(minuti) * 60)
+        // togliendo minuti ne resta almeno uno (per finire subito c'è «Termina adesso»)
+        c.fine = max((c.fine ?? Date()).addingTimeInterval(Double(minuti) * 60), Date().addingTimeInterval(60))
         stato.concentrazione = c; salvaConcentrazione()
     }
 

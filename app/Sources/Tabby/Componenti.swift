@@ -66,6 +66,8 @@ struct Foglio<Contenuto: View>: View {
     var principaleAcceso = true
     var annullaTitolo = "Annulla"
     var largo: CGFloat = 460
+    /// Un comando a sinistra, lontano dagli altri (es. «Elimina la cartella»).
+    var aSinistra: (titolo: String, azione: () -> Void)? = nil
     let annulla: () -> Void
     let conferma: () -> Void
     @ViewBuilder let contenuto: () -> Contenuto
@@ -82,6 +84,9 @@ struct Foglio<Contenuto: View>: View {
             .padding(.horizontal, 28).padding(.top, 28).padding(.bottom, 14)
             contenuto().padding(.horizontal, 14).padding(.bottom, 8)
             HStack(spacing: 26) {
+                if let s = aSinistra {
+                    Button(s.titolo, action: s.azione).buttonStyle(.plain).font(.system(size: 14)).foregroundStyle(Color.red.opacity(0.8))
+                }
                 Spacer()
                 Button(annullaTitolo, action: annulla).buttonStyle(.plain).font(.system(size: 14)).foregroundStyle(.white.opacity(0.45))
                     .keyboardShortcut(.cancelAction)

@@ -17,7 +17,10 @@ final class GestoreLampi {
 
     init(_ c: Controllore) {
         self.c = c
-        memo.chiuso = { [weak self] in self?.disponi(); self?.c.ricostruisciPresto() }
+        memo.chiuso = { [weak self] in
+            guard let self else { return }
+            self.c.tasti.togliGruppo("esc"); self.disponi(); self.c.ricostruisciPresto()
+        }
     }
 
     private func salvaVeloci() {
@@ -50,32 +53,51 @@ final class GestoreLampi {
         if l.memo { memo.aperto && NSApp.isActive ? memo.chiudi() : apriMemo(); return }
         guard let b = l.bid else { return }
         if let app = NSRunningApplication.runningApplications(withBundleIdentifier: b).first, veloci.contains(b), !app.isHidden {
-            if app.isActive { chiudi(b); return }
-            app.activate(); return                                   // in vista ma senza tastiera: gliela dà
+            if app.isActive && Sistema.finestraAttiva(app.processIdentifier) != nil { chiudi(b); return }
+            apriComeDalDock(b); disponiPresto(); return              // in vista ma senza tastiera (o senza finestra)
         }
         veloci.insert(b); salvaVeloci()
         c.ricostruisciPresto()
-        if let app = NSRunningApplication.runningApplications(withBundleIdentifier: b).first {
-            app.unhide(); app.activate()
-        } else if let u = NSWorkspace.shared.urlForApplication(withBundleIdentifier: b) {
-            NSWorkspace.shared.openApplication(at: u, configuration: NSWorkspace.OpenConfiguration())
-        }
+        // come un clic sul Dock: apre l'app, la mostra se era nascosta e le fa riaprire una finestra
+        // se non ne ha (prima il Calendario aperto ma senza finestre non compariva)
+        apriComeDalDock(b)
+        disponiPresto()
+    }
+
+    private func apriComeDalDock(_ b: String) {
+        NSRunningApplication.runningApplications(withBundleIdentifier: b).first?.unhide()
+        guard let u = NSWorkspace.shared.urlForApplication(withBundleIdentifier: b) else { return }
+        let cfg = NSWorkspace.OpenConfiguration(); cfg.activates = true
+        NSWorkspace.shared.openApplication(at: u, configuration: cfg)
+    }
+
+    private func disponiPresto() {
         for t in [0.15, 0.4, 0.9, 1.7] {                              // le app ci mettono un attimo a fare la finestra
             DispatchQueue.main.asyncAfter(deadline: .now() + t) { [weak self] in self?.disponi() }
         }
     }
 
-    /// Esc su un Lampo (o di nuovo la scorciatoia): si nasconde e torna un'app normale.
+    /// Esc su un Lampo (o di nuovo la scorciatoia): si chiude **solo quello**, e torna un'app
+    /// normale. Se ci sono altri Lampi aperti si passa all'ultimo di quelli (così restano in vista
+    /// e un altro Esc chiude il prossimo); altrimenti si torna alla scheda.
     func chiudi(_ b: String) {
         veloci.remove(b); salvaVeloci()
         NSRunningApplication.runningApplications(withBundleIdentifier: b).first?.hide()
         disponi()
         c.ricostruisciPresto()
-        c.tornaAllaScheda()
+        if let altro = aperti.last(where: { !$0.memo }), let ab = altro.bid,
+           let a = NSRunningApplication.runningApplications(withBundleIdentifier: ab).first {
+            a.activate()
+        } else {
+            c.tornaAllaScheda()
+        }
     }
 
     private func apriMemo() {
         memo.apri(in: posto(per: lampi.first(where: \.memo) ?? lampiDiSerie[0]))
+        // Esc chiude il Memo (anche se il cursore non è in una riga), non il Lampo di prima
+        c.tasti.togliGruppo("esc")
+        c.tasti.gruppo("esc", tasto: kVK_Escape, modificatori: false) { [weak self] in self?.memo.chiudi() }
         disponi()
     }
 

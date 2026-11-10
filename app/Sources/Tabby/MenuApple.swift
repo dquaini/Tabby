@@ -55,6 +55,6 @@ extension Controllore {
         guard !occupata else { return }
         let p = NSEvent.mouseLocation, cima = Sistema.schermo.frame.maxY
         if p.y >= cima - 1 { pannello.nascondiScivolando() }
-        else if p.y < cima - Sistema.altezzaBarraMenu && (!pannello.isVisible || pannello.alphaValue < 0.5) { pannello.mostra() }
+        else if p.y < cima - Sistema.altezzaBarraMenu && (!pannello.isVisible || pannello.inUscita) { pannello.mostra(scendendo: true) }
     }
 }

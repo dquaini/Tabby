@@ -21,19 +21,38 @@ final class LettoreTesti {
             if elettron.insert(f.pid).inserted {    // Slack, Notion (Electron): il testo va chiesto una volta
                 AXUIElementSetAttributeValue(AXUIElementCreateApplication(f.pid), "AXManualAccessibility" as CFString, kCFBooleanTrue)
             }
-            let w = f.w, id = f.id
+            let w = f.w, id = f.id, bid = NSRunningApplication(processIdentifier: f.pid)?.bundleIdentifier ?? ""
             coda.async { [weak self] in
-                let t = LettoreTesti.leggi(w)
+                var t = LettoreTesti.leggi(w)
+                if let brano = LettoreTesti.inAscolto(bid) { t += "\n" + brano }
                 DispatchQueue.main.async { MainActor.assumeIsolated {
-                    self?.inLettura.remove(id); self?.testi[id] = (t, Date()); self?.letto?()
+                    self?.inLettura.remove(id)
+                    // vuoto (un'app Electron che prepara ancora il testo): si riprova la volta dopo
+                    if !t.isEmpty { self?.testi[id] = (t, Date()) }
+                    self?.letto?()
                 } }
             }
         }
     }
 
+    /// Spotify e Musica non fanno leggere il testo della finestra: si chiede a loro il brano in
+    /// ascolto (titolo, artista, album). La prima volta macOS chiede il permesso.
+    nonisolated static func inAscolto(_ bid: String) -> String? {
+        let app = ["com.spotify.client": "Spotify", "com.apple.Music": "Music"][bid]
+        guard let app else { return nil }
+        let p = Process(), uscita = Pipe()
+        p.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+        p.arguments = ["-e", "tell application \"\(app)\" to if player state is not stopped then return (name of current track) & linefeed & (artist of current track) & linefeed & (album of current track)"]
+        p.standardOutput = uscita; p.standardError = FileHandle.nullDevice
+        guard (try? p.run()) != nil else { return nil }
+        p.waitUntilExit()
+        let s = String(data: uscita.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return s?.isEmpty == false ? s : nil
+    }
+
     nonisolated static func leggi(_ radice: AXUIElement) -> String {
         var visti = 0, parti: [String] = [], lunghezza = 0
-        let ruoli: Set<String> = ["AXStaticText", "AXTextArea", "AXTextField", "AXCell", "AXHeading"]
+        let ruoli: Set<String> = ["AXStaticText", "AXTextArea", "AXTextField", "AXCell", "AXHeading", "AXLink"]
         func a<T>(_ e: AXUIElement, _ n: String) -> T? {
             var v: CFTypeRef?
             return AXUIElementCopyAttributeValue(e, n as CFString, &v) == .success ? v as? T : nil

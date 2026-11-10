@@ -44,6 +44,15 @@ public func sitoDi(_ urls: [String]) -> String? {
     return d
 }
 
+/// B-9: un'altra finestra (fra quelle in `altre`) dove `sito` è già aperto: da sola (webapp),
+/// fra le sue schede (Chrome, Safari) o nella scheda in vista (DuckDuckGo, che dice solo quella).
+public func dovèGiàAperto(_ sito: String, tranne finestra: UInt32, in altre: [Scheda]) -> Scheda? {
+    altre.first { t in
+        guard let f = t.finestra, f != finestra else { return false }
+        return t.sito == sito || t.inVista.flatMap(dominio) == sito || (t.indirizzi ?? []).contains { dominio($0) == sito }
+    }
+}
+
 /// Il nome di una webapp dal titolo della finestra e dal dominio (B-4):
 /// «Posta - io@x - Gmail» → «Gmail», «Inbox | Proton Mail» su mail.proton.me → «Proton Mail».
 public func nomeSito(titolo: String?, dominio dom: String) -> String {

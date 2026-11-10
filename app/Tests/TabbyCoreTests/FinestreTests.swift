@@ -72,3 +72,31 @@ struct FinestreTests {
         #expect(sposta("a", davanti: "x", in: ["a", "b", "x"]) == ["b", "a", "x"])
     }
 }
+
+/// Prove del 10/11/2026: una finestra di browser che cambia sito resta la stessa scheda.
+struct ChiaviCambiateTests {
+    func s(_ k: String, _ f: UInt32?, bid: String = "ddg") -> Scheda { Scheda(chiave: k, bid: bid, nome: k, pid: 1, finestra: f) }
+
+    @Test func finestraCheDiventaWebappNonEChiusa() {
+        let prima = [s("ddg", 1), s("win:2", 2)], adesso = [s("ddg", 1), s("site:mail.proton.me", 2)]
+        #expect(chiaviCambiate(prima: prima, adesso: adesso) == ["win:2": "site:mail.proton.me"])
+    }
+
+    @Test func finestraChiusaNonECambiata() {
+        #expect(chiaviCambiate(prima: [s("ddg", 1), s("win:2", 2)], adesso: [s("ddg", 1)]).isEmpty)
+    }
+
+    @Test func laChiaveNuovaPrendeIlPostoDellaVecchia() {
+        // il sito aveva già un posto da una volta: la scheda non salta lì, resta dov'era
+        let o = conChiaviNuove(["site:mail.proton.me", "ddg", "slack", "win:2"], ["win:2": "site:mail.proton.me"])
+        #expect(o == ["ddg", "slack", "site:mail.proton.me"])
+    }
+
+    @Test func sitoGiaApertoFraLeSchedeDiUnAltraFinestra() {
+        var vecchia = s("ddg", 1); vecchia.inVista = "https://mail.proton.me/"
+        var chrome = s("win:5", 5, bid: "chrome"); chrome.indirizzi = ["https://github.com/x", "https://mail.proton.me/u/0"]
+        #expect(dovèGiàAperto("mail.proton.me", tranne: 9, in: [vecchia])?.finestra == 1)
+        #expect(dovèGiàAperto("mail.proton.me", tranne: 9, in: [chrome])?.finestra == 5)
+        #expect(dovèGiàAperto("mail.proton.me", tranne: 1, in: [vecchia]) == nil)   // la finestra stessa non conta
+    }
+}

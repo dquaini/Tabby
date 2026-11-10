@@ -134,7 +134,7 @@ enum Sistema {
     }
 
     /// L'altezza della barra dei menu di Apple (più alta accanto al notch).
-    static var altezzaBarraMenu: CGFloat { max(NSStatusBar.system.thickness, schermo.safeAreaInsets.top, 24) }
+    static var altezzaBarraMenu: CGFloat { max(NSStatusBar.system.thickness, schermo.safeAreaInsets.top, 30) + 4 }   // 30 su macOS 26
 
     static func cornice(posizione: String) -> NSRect {
         let v = schermo.visibleFrame
