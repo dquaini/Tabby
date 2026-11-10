@@ -101,10 +101,12 @@ final class VeloSpotlight {
                              "com.runningwithcrayons.Alfred": "Alfred"]
     static func livelloSpotlight() -> Int? {
         if let l = livelloFinestra(di: "Spotlight", sopraLeNormali: true) ?? livelloFinestra(di: "Alfred", sopraLeNormali: true) { return l }
-        // Raycast: aperto quando è davanti o ha una finestra ben visibile (anche al livello delle normali)
+        // Raycast (visto sul Mac il 10/11/2026): non diventa mai l'app davanti e la sua finestra resta
+        // «sullo schermo» anche da chiuso; chiuso però **si nasconde** (come ⌘H) e non ha finestre per
+        // l'Accessibilità. Aperto = non nascosto e con una finestra.
         if let r = NSRunningApplication.runningApplications(withBundleIdentifier: "com.raycast.macos").first,
-           let l = livelloFinestra(di: "Raycast", sopraLeNormali: false, stretta: true) {   // non le Impostazioni di Raycast
-            _ = r; return l
+           !r.isHidden, !Sistema.finestre(r.processIdentifier).isEmpty {
+            return livelloFinestra(di: "Raycast", sopraLeNormali: true, stretta: true) ?? 8
         }
         return nil
     }

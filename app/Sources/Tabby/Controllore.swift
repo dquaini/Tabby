@@ -119,14 +119,17 @@ final class Controllore {
         Tasti.suSpotlight = { [weak self] in self?.veloSpotlight.forse() }
         // Spotlight e Raycast in primo piano (qualunque scorciatoia): il velo; appena vanno via, via il velo
         let ws = NSWorkspace.shared.notificationCenter
-        for (n, apre) in [(NSWorkspace.didActivateApplicationNotification, true), (NSWorkspace.didDeactivateApplicationNotification, false)] {
+        for (n, apre) in [(NSWorkspace.didActivateApplicationNotification, true), (NSWorkspace.didDeactivateApplicationNotification, false),
+                          (NSWorkspace.didUnhideApplicationNotification, true), (NSWorkspace.didHideApplicationNotification, false)] {
             ws.addObserver(forName: n, object: nil, queue: .main) { [weak self] nota in
                 let a = nota.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
                 MainActor.assumeIsolated {
                     guard let self, let b = a?.bundleIdentifier, b != Sistema.mioBid else { return }
                     if !apre { self.veloSpotlight.ricontrolla(); return }
-                    // qualunque app che apre un pannello sopra le finestre (Raycast, Claude…): il velo
+                    // qualunque app che apre un pannello sopra le finestre (Raycast, Claude…): il velo.
+                    // Raycast si «mostra» invece di diventare attivo; le altre app mostrate no (non sono pannelli)
                     if VeloSpotlight.lanciatori[b] != nil { self.veloSpotlight.forse() }
+                    else if n == NSWorkspace.didUnhideApplicationNotification { return }
                     else { self.veloSpotlight.forse(app: a?.localizedName, pid: a?.processIdentifier) }
                 }
             }
