@@ -897,8 +897,12 @@ sostituirlo). In fondo ai risultati della barra di ricerca, il gruppo «Sul web�
   sola**, che diventa una scheda di Tabby; se eri in una cartella, il sito entra nella cartella.
 - **Cerca «…» sul web**: sempre, per ultima: DuckDuckGo in una finestra nuova.
 - ⌘↵: come scheda nella finestra del browser davanti.
-- Browser: quello predefinito di macOS. Chrome/Brave/Edge e Safari con AppleScript; DuckDuckGo
-  (senza AppleScript): ⌘N e l'indirizzo scritto da Tabby, solo se il browser è ancora davanti.
+- Browser (0.10.3): a destra nella barra il **cerchio col logo del browser**; un clic e lo scegli
+  fra quelli installati (`tabbar.webBrowser`); di serie quello predefinito di macOS. Chrome/Brave/
+  Edge e Safari con AppleScript; DuckDuckGo (senza AppleScript) e gli altri: si aspetta che sia
+  davanti, ⌘N, si aspetta la finestra **nuova**, poi ⌘L e l'indirizzo **incollato** (gli appunti
+  tornano com'erano), Invio. Solo se davanti c'è ancora il browser. (0.10: scritto lettera per
+  lettera dopo 0,45 s, troppo presto: arrivava la finestra ma non il sito.)
 - Mentre scrivi non esce niente dal Mac: niente suggerimenti presi da internet (li fanno già
   Spotlight e Raycast).
 

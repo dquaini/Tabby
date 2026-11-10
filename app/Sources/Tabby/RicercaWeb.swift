@@ -26,8 +26,7 @@ extension Controllore {
     func apriSulWeb(_ indirizzo: String, dominio d: String?, nuovaFinestra: Bool) {
         guard let url = URL(string: indirizzo) else { return }
         if let d, let già = dovèGiàAperto(d, tranne: 0, in: tutte) { vai(già); return }
-        guard let app = NSWorkspace.shared.urlForApplication(toOpen: URL(string: "https://")!),
-              let bid = Bundle(url: app)?.bundleIdentifier else { NSWorkspace.shared.open(url); return }
+        guard let bid = browserDelWeb, let app = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bid) else { NSWorkspace.shared.open(url); return }
         if let d, let id = stato.cartellaAperta { nellaCartella = (d, id, Date()) }   // nasce nella cartella in cui sei
         diario("ricerca web: \(d ?? "ricerca") in \(nuovaFinestra ? "una finestra nuova" : "una scheda") di \(bid)")
         let conf = NSWorkspace.OpenConfiguration(); conf.activates = true
@@ -40,17 +39,69 @@ extension Controllore {
         case .safari?:
             esegui("tell application \"Safari\"\nmake new document with properties {URL:\"\(u)\"}\nactivate\nend tell")
         default:
-            // DuckDuckGo (e i browser sconosciuti) non accettano comandi: ⌘N e l'indirizzo, come faresti tu
+            // DuckDuckGo (e i browser sconosciuti) non accettano comandi: come faresti tu. Si aspetta che
+            // sia davanti, ⌘N, si aspetta che la finestra nuova ci sia davvero, poi ⌘L e l'indirizzo
+            // incollato (gli appunti tornano com'erano). Prima si scriveva troppo presto e non arrivava.
             NSWorkspace.shared.openApplication(at: app, configuration: conf)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                guard NSWorkspace.shared.frontmostApplication?.bundleIdentifier == bid else {
+            Self.quando({ NSWorkspace.shared.frontmostApplication?.bundleIdentifier == bid }, entro: 2) { pronto in
+                guard pronto, let pid = NSWorkspace.shared.frontmostApplication?.processIdentifier else {
                     NSWorkspace.shared.open([url], withApplicationAt: app, configuration: conf); return
                 }
+                let prima = Set(Sistema.finestre(pid).compactMap(Sistema.numero))
                 Self.premi(kVK_ANSI_N, comando: true)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
-                    // si scrive solo se davanti c'è ancora il browser (mai in un'altra app)
-                    guard NSWorkspace.shared.frontmostApplication?.bundleIdentifier == bid else { return }
-                    Self.scrivi(indirizzo); Self.premi(kVK_Return)
+                Self.quando({ Sistema.finestraAttiva(pid).flatMap(Sistema.numero).map { !prima.contains($0) } ?? false }, entro: 2.5) { nuova in
+                    // solo nella finestra nuova del browser, mai in un'altra app
+                    guard nuova, NSWorkspace.shared.frontmostApplication?.bundleIdentifier == bid else {
+                        diario("ricerca web: la finestra nuova di \(bid) non è arrivata"); return
+                    }
+                    Self.incolla(indirizzo)
+                }
+            }
+        }
+    }
+
+    /// Il browser per i siti e le ricerche: quello scelto nella barra di ricerca, se no quello di macOS.
+    var browserDelWeb: String? {
+        if let b = imp.valore("webBrowser") as? String, NSWorkspace.shared.urlForApplication(withBundleIdentifier: b) != nil { return b }
+        return NSWorkspace.shared.urlForApplication(toOpen: URL(string: "https://example.com")!).flatMap { Bundle(url: $0)?.bundleIdentifier }
+    }
+
+    /// I browser installati, per la scelta nella barra di ricerca.
+    var browserInstallati: [(bid: String, nome: String)] {
+        let noti = ["com.duckduckgo.macos.browser", "com.apple.Safari", "com.google.Chrome", "com.brave.Browser",
+                    "com.microsoft.edgemac", "company.thebrowser.Browser", "org.mozilla.firefox"]
+        return noti.compactMap { b in
+            NSWorkspace.shared.urlForApplication(withBundleIdentifier: b).map { (b, FileManager.default.displayName(atPath: $0.path).replacingOccurrences(of: ".app", with: "")) }
+        }
+    }
+
+    /// Aspetta (ogni 0,1 s, al massimo `entro` secondi) che `condizione` sia vera.
+    private static func quando(_ condizione: @escaping @MainActor () -> Bool, entro: Double, poi: @escaping @MainActor (Bool) -> Void) {
+        let fine = Date().addingTimeInterval(entro)
+        func prova() {
+            if condizione() { poi(true); return }
+            if Date() > fine { poi(false); return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { prova() }
+        }
+        prova()
+    }
+
+    /// ⌘L, l'indirizzo incollato, Invio; poi gli appunti tornano com'erano.
+    private static func incolla(_ testo: String) {
+        let pb = NSPasteboard.general
+        let vecchi = pb.pasteboardItems?.map { i in i.types.compactMap { t in i.data(forType: t).map { (t, $0) } } } ?? []
+        pb.clearContents(); pb.setString(testo, forType: .string)
+        premi(kVK_ANSI_L, comando: true)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            premi(kVK_ANSI_V, comando: true)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+                premi(kVK_Return)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                    pb.clearContents()
+                    let items = vecchi.map { coppie -> NSPasteboardItem in
+                        let i = NSPasteboardItem(); for (t, d) in coppie { i.setData(d, forType: t) }; return i
+                    }
+                    if !items.isEmpty { pb.writeObjects(items) }
                 }
             }
         }
@@ -77,20 +128,6 @@ extension Controllore {
             let e = CGEvent(keyboardEventSource: src, virtualKey: CGKeyCode(tasto), keyDown: giù)
             if comando { e?.flags = .maskCommand }
             e?.post(tap: .cghidEventTap)
-        }
-    }
-
-    /// Scrive un testo (a pezzi di 20 caratteri, il massimo per un evento).
-    private static func scrivi(_ testo: String) {
-        let src = CGEventSource(stateID: .hidSystemState)
-        let u = Array(testo.utf16)
-        for i in stride(from: 0, to: u.count, by: 20) {
-            var pezzo = Array(u[i..<min(i + 20, u.count)])
-            for giù in [true, false] {
-                let e = CGEvent(keyboardEventSource: src, virtualKey: 0, keyDown: giù)
-                e?.keyboardSetUnicodeString(stringLength: pezzo.count, unicodeString: &pezzo)
-                e?.post(tap: .cghidEventTap)
-            }
         }
     }
 }

@@ -195,6 +195,7 @@ struct BarraRicerca: View {
     let c: Controllore
     @Bindable var stato: StatoBarra
     @FocusState private var dentro: Bool
+    @State private var browserScelto: String?
 
     var body: some View {
         let tutto = c.cercabili()
@@ -212,6 +213,7 @@ struct BarraRicerca: View {
                 TextField("Cerca con Tabby", text: Binding(get: { stato.ricerca ?? "" }, set: { stato.ricerca = $0; stato.sceltaRicerca = 0; stato.confermaForte = nil }))
                     .textFieldStyle(.plain).font(.system(size: 22)).focused($dentro)
                     .onSubmit { scegli(elenco, azione, alternativa: NSEvent.modifierFlags.contains(.command)) }
+                sceltaBrowser
             }
             .padding(.horizontal, 20).frame(height: 56)
             if aperta {
@@ -243,6 +245,29 @@ struct BarraRicerca: View {
             if (stato.ricerca ?? "").isEmpty { c.chiudiRicerca() } else { stato.ricerca = "" }
             return .handled
         }
+    }
+
+    /// A destra, il cerchio col logo del browser dei siti e delle ricerche: un clic e lo cambi.
+    private var sceltaBrowser: some View {
+        let scelto = browserScelto ?? c.browserDelWeb
+        return SwiftUI.Menu {
+            ForEach(c.browserInstallati, id: \.bid) { b in
+                Button { c.imp.imposta("webBrowser", b.bid); browserScelto = b.bid } label: {
+                    Text(b.nome + (b.bid == scelto ? "  ✓" : ""))
+                }
+            }
+        } label: {
+            Group {
+                if let b = scelto, let u = NSWorkspace.shared.urlForApplication(withBundleIdentifier: b) {
+                    Image(nsImage: NSWorkspace.shared.icon(forFile: u.path)).resizable()
+                } else { Image(systemName: "globe").resizable().foregroundStyle(.secondary) }
+            }
+            .frame(width: 26, height: 26)
+            .padding(5)
+            .background(Circle().fill(.white.opacity(0.08)))
+        }
+        .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+        .help("Il browser per i siti e le ricerche sul web")
     }
 
     private func scegli(_ elenco: [Risultato], _ azione: [String: AzioneRicerca], alternativa: Bool) {
