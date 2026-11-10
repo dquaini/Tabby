@@ -550,12 +550,9 @@ lo schermo; appare portando il mouse sul **bordo** dalla sua parte (entro 2 punt
 si nasconde quando il mouse esce (margine 12; in alto conta anche la barra dei menu
 sopra Tabby). In alto con la barra dei menu che scende: Tabby si mette sotto di lei.
 Durante trascinamenti, divisione o creazione di cartelle resta visibile.
-*App Swift (0.9.1, scelte di Daniele del 10/11/2026):* mentre Tabby si vede, la finestra
-davanti le **fa posto** (si sposta e si riallarga quando Tabby se ne va). In alto con la
-barra dei menu nascosta la cima è del menu di Apple: si tocca la cima e si scende appena
-(entro 2 s) → compare Tabby; tornando nel menu di Apple, Tabby si toglie di mezzo. Anche
-un menu di Tabby aperto (⚙︎, ⚡︎, tasto destro) la tiene in vista. Nella ricerca:
-«Tabby sempre in vista» / «Tabby si nasconde».
+*App Swift (0.9.2, decisione di Daniele del 10/11/2026):* **Nascondi Tabby non c'è più**:
+«se usi Tabby la tieni sempre». Con la barra in alto, col menu di Apple che scendeva, dava
+uno scatto. Un vecchio `autohide` salvato si cancella all'avvio.
 
 **A-4 Controllo del mouse** (12 volte al secondo): **acceso solo** con Nascondi
 Tabby o quando barra dei menu / Dock possono coprire Tabby (A-6); spento negli altri

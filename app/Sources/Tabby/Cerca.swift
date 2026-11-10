@@ -110,9 +110,6 @@ extension Controllore {
             ("Dividi lo schermo", "Metà e metà", false, { [weak self] in self?.avviaDivisione("2-50") }),
             ("Chiudi tutte le app", "Le app di sistema restano", true, { [weak self] in self?.chiudiTutteLeApp() }),
             ("Metti in pausa Tabby", "Resta solo la sfera", true, { [weak self] in self?.pausa(true) }),
-            nascondiTabby
-                ? ("Tabby sempre in vista", "Ora si nasconde: torna fissa", false, { [weak self] in self?.cambiaNascondi(false) })
-                : ("Tabby si nasconde", "Compare col mouse sul bordo", false, { [weak self] in self?.cambiaNascondi(true) }),
         ]
         for (t, s, forte, a) in azioni {
             out.append((Trovato(id: "a:" + t, gruppo: .azioni, titolo: t, sotto: s, forte: forte), .comando(a)))
@@ -128,7 +125,7 @@ extension Controllore {
         [("Tabby", "La finestra di Tabby", ""), ("Impostazioni", "Tabby · tutte le scelte", "set"),
          ("Design", "Tabby · aspetto e temi", "des"), ("Documentazione", "Tabby · come funziona, scorciatoie", "doc"),
          ("Automazione", "Tabby · presto", "aut"), ("Kat", "Tabby · presto", "kat"),
-         ("Posizione", "Dove sta Tabby", "set"), ("Nascondi Tabby", "Compare col mouse sul bordo", "set"),
+         ("Posizione", "Dove sta Tabby", "set"),
          ("Una scheda alla volta", "Nasconde le altre app", "set"), ("Adatta le finestre a Tabby", "Spazio libero accanto alla barra", "set"),
          ("Vista cartelle", "Una cartella attiva = una scheda", "set"), ("Barra dei menu e Dock", "Nascondili", "set"),
          ("Apri Tabby all'accensione", "Elementi di login", "set"), ("Aspetto e temi", "Nativo · Notte", "des"),

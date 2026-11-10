@@ -151,12 +151,9 @@ enum Sistema {
     }
 
     /// Lo spazio delle app: lo schermo utile meno la barra di Tabby dal suo lato.
-    /// Con «Nascondi Tabby» le app usano tutto lo schermo (A-3).
-    static var tabbyNascosta = Impostazioni.shared.valore("autohide") as? Bool ?? false
 
     static func spazioApp(posizione: String) -> NSRect {
         var v = schermo.visibleFrame
-        if tabbyNascosta { return v }
         switch posizione {
         case "bottom": v.origin.y += Misure.altezza; v.size.height -= Misure.altezza
         case "left":   v.origin.x += Misure.larghezzaLato; v.size.width -= Misure.larghezzaLato

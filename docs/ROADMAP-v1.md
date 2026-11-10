@@ -96,8 +96,7 @@ zone (nel codice "gruppo") · **Lampi** = le app piccole del menu ⚡︎ (nel co
    tema, ventaglio, notifiche, anello della Concentrazione) e la pausa. Consumo a riposo: 0%.
 9. **Rifiniture rimandate** (0.9, 10/11/2026, in prova): rinomina sul posto (doppio clic o
    tasto destro → Rinomina, Invio/Esc, «Torna al nome»), menu col tasto destro sulle schede;
-   Nascondi Tabby (Impostazioni: «Tabby si nasconde», compare col mouse sul bordo; il mouse si
-   segue solo quando serve); fascia del notch («Accanto al notch, Tabby sale da sola / sempre /
+   ~~Nascondi Tabby~~ (tolto in 0.9.2 per decisione di Daniele: Tabby resta sempre in vista); fascia del notch («Accanto al notch, Tabby sale da sola / sempre /
    non sale», con A-6: la barra si fa da parte quando il mouse va nella fascia, e le schede
    saltano la tacca); avviso dei siti doppi (Lascia · Vai a quella · Chiudi questa, solo per
    finestre nuove); ⚡︎ → Tutte le App (le app nascoste nella barra dei menu).

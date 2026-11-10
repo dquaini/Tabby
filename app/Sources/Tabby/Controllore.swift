@@ -94,7 +94,6 @@ final class Controllore {
     var monitorMouseLocale: Any?
     var osservatoriMenu: [NSObjectProtocol] = []
     var menuAperto = false                      // un menu di Tabby è aperto
-    var toccataLaCima: Date?                    // l'ultima volta che il mouse ha toccato la cima
     /// Le finestre ridotte da Tabby stessa (U-2): non fanno scattare «scheda accanto».
     private var ridotteDaTabby: [UInt32: Date] = [:]
     /// Le ultime schede attive con l'istante del cambio (C-4: macOS a volte attiva un'altra
@@ -125,8 +124,7 @@ final class Controllore {
         ascoltaMacOS()
         registraTasti()
         ricostruisci()
-        if !stato.inPausa { mostraBarra() }
-        aggiornaNascondi()
+        aggiornaMouse()
         if let a = NSWorkspace.shared.frontmostApplication { siAttiva(a) }
         controllaSfera()
     }
@@ -504,7 +502,7 @@ final class Controllore {
     func cambiaPosizione(_ p: String) {
         imp.imposta("position", p)
         withAnimationMolla { stato.posizione = p }
-        aggiornaNascondi()
+        aggiornaMouse()
         if let a = NSWorkspace.shared.frontmostApplication { Sistema.adatta(a, posizione: p) }
         lampi.disponi()
         diario("posizione: \(p)")

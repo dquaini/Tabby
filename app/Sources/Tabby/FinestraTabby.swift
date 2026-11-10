@@ -364,14 +364,12 @@ private struct Pagina: View {
         Frase("Tabby sta", ["in alto", "a destra", "a sinistra", "in basso"], pos[stato.posizione] ?? "in alto", ".") { s in
             if let k = pos.first(where: { $0.value == s })?.key { c.cambiaPosizione(k) }
         }
-        Frase("Tabby", ["resta sempre in vista", "si nasconde"], c.nascondiTabby ? "si nasconde" : "resta sempre in vista",
-              c.nascondiTabby ? ": compare col mouse sul bordo." : ".") { c.cambiaNascondi($0 == "si nasconde"); f.sezione = sezione }
         if Sistema.notch != nil {
             let n = Impostazioni.shared.valore("notchBand") as? String ?? "auto"
             Frase("Accanto al notch, Tabby", ["sale da sola", "sale sempre", "non sale"], n == "on" ? "sale sempre" : n == "off" ? "non sale" : "sale da sola",
                   n == "auto" ? " se la barra dei menu si nasconde." : ".") { s in
                 Impostazioni.shared.imposta("notchBand", s == "sale sempre" ? "on" : s == "non sale" ? "off" : "auto")
-                c.cambiaPosizione(stato.posizione); c.aggiornaNascondi(); f.sezione = sezione
+                c.cambiaPosizione(stato.posizione); f.sezione = sezione
             }
         }
         Frase("Quando accendi il Mac, Tabby", ["si apre", "resta chiusa"], SMAppService.mainApp.status == .enabled ? "si apre" : "resta chiusa", ".") {
@@ -593,7 +591,7 @@ extension Controllore {
         esegui("/usr/bin/osascript", ["-e", "tell application \"System Events\" to set autohide menu bar of dock preferences to \(sì)"])
         Sistema.rileggiBarraMenu()
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in   // il tempo che macOS la cambi
-            Sistema.rileggiBarraMenu(); self?.aggiornaNascondi(); self?.cambiaPosizione(self?.stato.posizione ?? "top")
+            Sistema.rileggiBarraMenu(); self?.cambiaPosizione(self?.stato.posizione ?? "top")
         }
     }
 

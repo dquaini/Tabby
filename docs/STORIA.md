@@ -227,4 +227,6 @@ app 0.9.1 (10/11/2026): la rinomina si salva cambiando scheda; col menu di Apple
     toglie di mezzo; «Tabby si nasconde» fa far posto alla finestra e in alto si apre toccando la cima e
     scendendo; i menu tengono la barra in vista; nella ricerca le sezioni di Tabby e «Tabby sempre in
     vista»; la sfera consuma 6% invece di 37% (gatto caricato una volta, 10 immagini al secondo).
+app 0.9.2 (10/11/2026): via del tutto «Nascondi Tabby» (scatto col menu di Apple): Tabby resta sempre in
+    vista; si toglie di mezzo solo quando scende il menu di Apple.
 ```
