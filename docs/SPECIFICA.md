@@ -477,6 +477,7 @@ una finestra trasparente grande come lo schermo, che si può spostare con
 l'Accessibilità: con Tabby in alto la si abbassa di quanto è alta Tabby (anche quando è
 scesa sotto la barra dei menu), con Tabby a destra la si sposta a sinistra della sua
 larghezza; in basso, a sinistra, a schermo intero o con Nascondi Tabby resta dov'è.
+*App Swift 0.9.4:* fatto, con un avviso dell'Accessibilità quando nasce la finestra delle notifiche (nessun controllo periodico); diario «notifiche spostate di …».
 
 **N-4 Disegno**: pallino rosso col numero prima della ✕ (oltre 99: "99+"); sulle
 schede compatte un puntino rosso.
@@ -584,6 +585,7 @@ barra dei menu (scelta di Daniele del 10/11/2026: non si mette sotto il menu).
 barra dei menu su "nascondi sempre" (senza notch), in cima alla colonna resta una fascia
 nera alta come la barra dei menu; gatto e schede partono sotto. Quando la barra scende
 copre solo la fascia: niente sparisce e niente si sposta.
+*App Swift 0.9.4:* fatto (fascia vuota in cima alla colonna, solo senza notch).
 
 **A-5 Cambio di monitor o risoluzione**: si rileva di nuovo il notch e si ridisegna.
 Tabby usa sempre lo **schermo principale**.
@@ -781,6 +783,7 @@ Tabby non nasconde le altre app, non la ingrandisce e non la conta come scheda. 
 nascondeva tutto, anche il browser col meeting. Nel diario: «pannello di X … non
 nascondo le altre app». Il diario scrive anche ogni cambio di app con titolo, ruolo e
 misura della finestra in primo piano.
+*App Swift 0.9.4:* fatto; diario «pannello di X (ruolo, misura) · non nascondo le altre app».
 
 ## 16. Velo
 
@@ -899,6 +902,7 @@ Se la stessa scorciatoia arriva dai due meccanismi entro 0,3 s conta **una volta
 due pressioni vere dallo stesso meccanismo contano due. I modificatori devono essere
 esatti (⌃⌥ e basta, o ⌃⌥⇧ per le cartelle). macOS a volte spegne l'intercettatore:
 Tabby lo riaccende ogni 5 s. Le frecce ↑↓ valgono solo con Tabby laterale.
+*App Swift 0.9.4:* fatto: scorciatoie registrate + intercettatore (guarda solo ⌃⌥, mai ⌘; in pausa lascia passare tutto), deduplica 0,3 s, si riaccende da solo e ogni 5 s.
 
 **K-2 Foglio delle scorciatoie** (v9.66): ⌃⌥/ (il tasto del «?») o ⚙︎ → «Scorciatoie».
 Un foglio al centro (760×560, stile standard di macOS, chiaro/scuro; pagina

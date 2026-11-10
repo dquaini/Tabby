@@ -236,4 +236,8 @@ app 0.9.3 (10/11/2026): 16 correzioni dalle prove di Daniele. Nomi lunghi accorc
     apertura della cartella con le icone ferme; Lampi: Calendario che si apre, Esc che chiude solo quello
     davanti, Esc nel Memo; ricerca nel brano di Spotify; cerchio della Concentrazione; il musetto apre la
     Scrivania nel Finder; Chiudi Tabby immediata.
+app 0.9.4 (10/11/2026): i quattro punti del Mac di lavoro: scorciatoie ⌃⌥ anche dentro Windows App
+    (intercettatore dei tasti, K-1), fascia vuota in cima con Tabby di lato (A-7), notifiche di macOS sotto
+    o accanto a Tabby (N-5), finestrelle tipo Notion che non nascondono le altre app (X-5). Nomi dei
+    servizi conosciuti (Proton Mail, Gmail…), mai l'indirizzo email.
 ```

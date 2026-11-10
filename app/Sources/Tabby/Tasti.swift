@@ -1,11 +1,20 @@
 import Carbon.HIToolbox
 import Foundation
 
-/// Le scorciatoie di Tabby: tutte partono da ⌃⌥ (control e option). Registrate presso macOS
-/// (non servono permessi e non spiano la tastiera: arrivano solo queste combinazioni).
+/// Le scorciatoie di Tabby: tutte partono da ⌃⌥ (control e option). Doppio meccanismo (K-1):
+/// - registrate presso macOS (arrivano solo queste combinazioni);
+/// - un **intercettatore** che le vede prima dell'app davanti, perché alcune app si prendono la
+///   tastiera (Windows App, il desktop remoto del lavoro): guarda solo se sono premuti ⌃⌥ e
+///   lascia passare tutto il resto senza leggerlo.
+/// Se la stessa scorciatoia arriva dai due entro 0,3 s conta una volta sola.
 @MainActor
 final class Tasti {
     static var azioni: [UInt32: () -> Void] = [:]
+    /// (tasto, con ⇧) → numero della scorciatoia, per l'intercettatore
+    static var combinazioni: [Int: UInt32] = [:]
+    private static var ultime: [UInt32: (quando: Date, daIntercettatore: Bool)] = [:]
+    private var intercettatore: CFMachPort?
+    private var controllo: Timer?
     private var registrate: [EventHotKeyRef] = []
     private var temporanei: [(EventHotKeyRef, UInt32)] = []
     private var gruppi: [String: [(EventHotKeyRef, UInt32)]] = [:]
@@ -20,10 +29,59 @@ final class Tasti {
             GetEventParameter(evento, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID),
                               nil, MemoryLayout<EventHotKeyID>.size, nil, &id)
             let n = id.id
-            MainActor.assumeIsolated { if !Tasti.spente { Tasti.azioni[n]?() } }
+            MainActor.assumeIsolated { Tasti.scatta(n, daIntercettatore: false) }
             return noErr
         }, 1, &tipo, nil, &gestore)
+        accendiIntercettatore()
     }
+
+    /// Una scorciatoia, da uno dei due meccanismi: due arrivi ravvicinati da strade diverse = una.
+    static func scatta(_ n: UInt32, daIntercettatore: Bool) {
+        guard !spente, let a = azioni[n] else { return }
+        if let u = ultime[n], u.daIntercettatore != daIntercettatore, Date().timeIntervalSince(u.quando) < 0.3 { return }
+        ultime[n] = (Date(), daIntercettatore)
+        a()
+    }
+
+    private static func chiave(_ tasto: Int, _ maiuscolo: Bool) -> Int { tasto * 2 + (maiuscolo ? 1 : 0) }
+
+    /// L'intercettatore (serve il permesso Accessibilità): macOS a volte lo spegne se è lento;
+    /// si riaccende da solo, e ogni 5 s si controlla.
+    private func accendiIntercettatore() {
+        let maschera = CGEventMask(1 << CGEventType.keyDown.rawValue)
+        let tap = CGEvent.tapCreate(tap: .cgSessionEventTap, place: .headInsertEventTap, options: .defaultTap,
+                                    eventsOfInterest: maschera, callback: { _, tipo, evento, info in
+            if tipo == .tapDisabledByTimeout || tipo == .tapDisabledByUserInput {
+                if let info { let t = Unmanaged<Tasti>.fromOpaque(info).takeUnretainedValue()
+                    MainActor.assumeIsolated { if let p = t.intercettatore { CGEvent.tapEnable(tap: p, enable: true) } } }
+                return Unmanaged.passUnretained(evento)
+            }
+            let f = evento.flags
+            // solo ⌃⌥ (con o senza ⇧), mai ⌘: tutto il resto passa senza guardarlo
+            guard f.contains(.maskControl), f.contains(.maskAlternate), !f.contains(.maskCommand) else { return Unmanaged.passUnretained(evento) }
+            let tasto = Int(evento.getIntegerValueField(.keyboardEventKeycode))
+            let maiuscolo = f.contains(.maskShift)
+            let trovata: UInt32? = MainActor.assumeIsolated {
+                if Tasti.spente { return nil }                       // in pausa passano alle app
+                guard evento.getIntegerValueField(.keyboardEventAutorepeat) == 0 || [kVK_LeftArrow, kVK_RightArrow, kVK_UpArrow, kVK_DownArrow].contains(tasto)
+                else { return Tasti.combinazioni[Tasti.chiave(tasto, maiuscolo)] == nil ? nil : 0 }
+                return Tasti.combinazioni[Tasti.chiave(tasto, maiuscolo)]
+            }
+            guard let n = trovata else { return Unmanaged.passUnretained(evento) }
+            if n != 0 { DispatchQueue.main.async { MainActor.assumeIsolated { Tasti.scatta(n, daIntercettatore: true) } } }
+            return nil                                       // è di Tabby: l'app davanti non la riceve
+        }, userInfo: Unmanaged.passUnretained(self).toOpaque())
+        guard let tap else { diario("intercettatore dei tasti non disponibile (manca l'Accessibilità?)"); return }
+        intercettatore = tap
+        CFRunLoopAddSource(CFRunLoopGetMain(), CFMachPortCreateRunLoopSource(nil, tap, 0), .commonModes)
+        CGEvent.tapEnable(tap: tap, enable: true)
+        controllo = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { if let p = self?.intercettatore, !CGEvent.tapIsEnabled(tap: p) { CGEvent.tapEnable(tap: p, enable: true) } }
+        }
+    }
+
+    /// Dopo il permesso Accessibilità arrivato a Tabby già aperta.
+    func riprovaIntercettatore() { if intercettatore == nil { accendiIntercettatore() } }
 
     /// Un tasto senza ⌃⌥, solo per un momento (Esc e Invio mentre dividi lo schermo).
     func temporaneo(_ tasto: Int, _ azione: @escaping () -> Void) {
@@ -46,11 +104,15 @@ final class Tasti {
         var ref: EventHotKeyRef?
         let mod = modificatori ? UInt32(controlKey | optionKey | (maiuscolo ? shiftKey : 0)) : 0
         RegisterEventHotKey(UInt32(tasto), mod, EventHotKeyID(signature: 0x54424259, id: n), GetApplicationEventTarget(), 0, &ref)
-        if let ref { gruppi[nome, default: []].append((ref, n)) } else { Tasti.azioni[n] = nil }
+        if let ref { gruppi[nome, default: []].append((ref, n)) } else { Tasti.azioni[n] = nil; return }
+        if modificatori { Tasti.combinazioni[Tasti.chiave(tasto, maiuscolo)] = n }
     }
 
     func togliGruppo(_ nome: String) {
-        for (r, n) in gruppi[nome] ?? [] { UnregisterEventHotKey(r); Tasti.azioni[n] = nil }
+        for (r, n) in gruppi[nome] ?? [] {
+            UnregisterEventHotKey(r); Tasti.azioni[n] = nil
+            Tasti.combinazioni = Tasti.combinazioni.filter { $0.value != n }
+        }
         gruppi[nome] = nil
     }
 
@@ -73,6 +135,7 @@ final class Tasti {
         let stato = RegisterEventHotKey(UInt32(tasto), mod, EventHotKeyID(signature: 0x54424259, id: n),
                                         GetApplicationEventTarget(), 0, &ref)
         if let ref { registrate.append(ref) } else { diario("scorciatoia non registrata (tasto \(tasto), errore \(stato))") }
+        Tasti.combinazioni[Tasti.chiave(tasto, maiuscolo)] = n      // anche se macOS non l'ha presa
     }
 }
 

@@ -192,6 +192,20 @@ enum Sistema {
         }
     }
 
+    /// X-5: la finestra davanti dell'app è un pannello? Piccola (meno di metà larghezza e meno del
+    /// 60% dell'altezza dello spazio delle app) e non una finestra normale (fluttuante, dialogo o
+    /// sconosciuta), non ridotta, non a schermo intero. Restituisce il suo ruolo, per il diario.
+    static func pannello(_ app: NSRunningApplication, spazio: CGRect) -> String? {
+        guard let w = finestraAttiva(app.processIdentifier), let r = cornice(w),
+              r.width < spazio.width * 0.5, r.height < spazio.height * 0.6 else { return nil }
+        let sub: String = attributo(w, kAXSubroleAttribute) ?? "sconosciuto"
+        guard sub != kAXStandardWindowSubrole,
+              (attributo(w, kAXMinimizedAttribute) as Bool?) != true,
+              (attributo(w, "AXFullScreen") as Bool?) != true else { return nil }
+        let pannelli: Set<String> = [kAXFloatingWindowSubrole, kAXSystemFloatingWindowSubrole, kAXDialogSubrole, kAXSystemDialogSubrole, "sconosciuto", kAXUnknownSubrole]
+        return pannelli.contains(sub) ? "\(sub) \(Int(r.width))×\(Int(r.height))" : nil
+    }
+
     static func riduci(_ w: AXUIElement) {
         AXUIElementSetAttributeValue(w, kAXMinimizedAttribute as CFString, kCFBooleanTrue)
     }

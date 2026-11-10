@@ -93,6 +93,8 @@ final class Controllore {
     var doppiAvvisati = Set<UInt32>()
     var monitorMouseLocale: Any?
     var osservatoriMenu: [NSObjectProtocol] = []
+    var osservatoreNotifiche: AXObserver?       // il Centro Notifiche (N-5)
+    var ultimaNotaNotifiche = ""
     var menuAperto = false                      // un menu di Tabby è aperto
     /// Le finestre ridotte da Tabby stessa (U-2): non fanno scattare «scheda accanto».
     private var ridotteDaTabby: [UInt32: Date] = [:]
@@ -105,6 +107,8 @@ final class Controllore {
     private(set) var precedente: Scheda?
 
     func avvia() {
+        tasti.riprovaIntercettatore()                   // se all'apertura mancava l'Accessibilità
+        defer { osservaNotifiche() }
         pannello = PannelloBarra(controllore: self)
         velo = VeloDivisione(controllore: self)
         stato.cartelle = cartelle
@@ -350,6 +354,12 @@ final class Controllore {
         if Sistema.ignorate().contains(bid) { return }                  // un Lampo: non tocca niente
         if controllaAppFuori(app) { return }                            // fuori dalla Concentrazione
         if stato.scrivania && bid == "com.apple.finder" { return }
+        // X-5: un pannello (la finestrella di Notion «vuoi registrare il meeting?»): non è una
+        // scheda, non si ingrandisce e non nasconde le altre app (prima spariva anche il meeting)
+        if browserNoti[bid] == nil, let p = Sistema.pannello(app, spazio: Sistema.spazioApp(posizione: stato.posizione)) {
+            diario("pannello di \(app.localizedName ?? bid) (\(p)) · non nascondo le altre app")
+            return
+        }
         fuoriDallaScrivania()
         aggiornaAttiva()
         if !tutte.contains(where: { $0.bid == bid }) { ricostruisciPresto() }
@@ -570,6 +580,7 @@ final class Controllore {
         imp.imposta("position", p)
         withAnimationMolla { stato.posizione = p }
         aggiornaMouse()
+        rimettiNotifiche()
         if let a = NSWorkspace.shared.frontmostApplication { Sistema.adatta(a, posizione: p) }
         lampi.disponi()
         diario("posizione: \(p)")

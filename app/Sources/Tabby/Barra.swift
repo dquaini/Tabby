@@ -234,8 +234,12 @@ struct BarraVista: View {
         GeometryReader { g in
             let sch = mostrate
             let att = sch.firstIndex { $0.chiave == stato.attiva && !stato.scrivania }
-            let d = disponiVerticale(spazio: g.size.height - 74 - 30 - 34 - 34 - 24, numero: sch.count, attiva: att)
+            // A-7: con la barra dei menu che si nasconde (senza notch) in cima resta una fascia vuota
+            // alta come lei: quando scende copre solo quella, niente sparisce e niente si sposta
+            let fascia: CGFloat = Sistema.barraMenuNascosta && Sistema.notch == nil ? Sistema.altezzaBarraMenu - 4 : 0
+            let d = disponiVerticale(spazio: g.size.height - 74 - 30 - 34 - 34 - 24 - fascia, numero: sch.count, attiva: att)
             VStack(spacing: 2) {
+                if fascia > 0 { Color.clear.frame(height: fascia) }
                 gattoIntero
                 if stato.cartellaAperta != nil { testataCartella.frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 6) }
                 ForEach(d.visibili.map { sch[$0] }) { s in
