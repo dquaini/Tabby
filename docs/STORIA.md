@@ -251,4 +251,5 @@ app 0.9.7 (10/11/2026): velo anche con Raycast e via subito quando chiudi Spotli
     chiusa o in pausa e sulla Scrivania (mai a schermo intero); il musetto apre la Scrivania più in fretta.
 app 0.9.8 (10/11/2026): doppio clic sulla ✕ chiude subito la finestra; il Lampo Calendario resta tutto dentro lo schermo.
 app 0.9.9 (10/11/2026): Lampi a 12 punti dai bordi anche quando sono più grandi del posto; la Calcolatrice aperta da zero non finisce al centro (Tabby la sistema fino a 3,8 s); un controllo in più per le app che si rimettono la loro misura (Spotify), con una riga nel diario se non si adattano.
+app 0.10 (10/11/2026): la ricerca sul web nella barra di Tabby: «Apri Proton Mail» / «Apri raycast.com» in una finestra con una scheda sola (o la scheda già aperta), «Cerca … sul web» con DuckDuckGo; ⌘↵ come scheda nella finestra davanti.
 ```

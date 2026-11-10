@@ -106,10 +106,10 @@ public func normalizza(_ s: String) -> String {
 /// Un risultato possibile.
 public struct Trovato: Equatable, Sendable, Identifiable {
     public enum Gruppo: Int, Sendable, CaseIterable, Comparable {
-        case schede, finestre, cartelle, lampi, azioni, impostazioni
+        case schede, finestre, cartelle, lampi, azioni, impostazioni, web
         public static func < (a: Gruppo, b: Gruppo) -> Bool { a.rawValue < b.rawValue }
         public var titolo: String {
-            ["Schede e app", "Nelle finestre", "Cartelle", "Lampi", "Azioni", "Impostazioni di Tabby"][rawValue]
+            ["Schede e app", "Nelle finestre", "Cartelle", "Lampi", "Azioni", "Impostazioni di Tabby", "Sul web"][rawValue]
         }
     }
     public var id: String
@@ -130,6 +130,7 @@ public struct Risultato: Equatable, Sendable, Identifiable {
     public var punti: Int
     public var pezzetto: String?
     public var id: String { t.id }
+    public init(t: Trovato, punti: Int, pezzetto: String?) { self.t = t; self.punti = punti; self.pezzetto = pezzetto }
 }
 
 /// Cerca: tutte le parole devono esserci (nel titolo o nel testo). Prima chi le ha nel titolo

@@ -75,6 +75,7 @@ final class LettoreTesti {
 /// Ciò che si sceglie dalla barra di ricerca.
 enum AzioneRicerca {
     case scheda(String), cartella(Int), lampo(Lampo), comando(() -> Void), impostazione(String)
+    case web(String, dominio: String?)
 }
 
 extension Controllore {
@@ -168,6 +169,8 @@ extension Controllore {
         case .lampo(let l): lampi.premi(l)
         case .comando(let f): f()
         case .impostazione(let sezione): apriFinestraTabby(sezione: sezione.isEmpty ? nil : sezione)
+        case let .web(indirizzo, d):
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in self?.apriSulWeb(indirizzo, dominio: d, nuovaFinestra: !alternativa) }
         }
     }
 
@@ -196,8 +199,11 @@ struct BarraRicerca: View {
     var body: some View {
         let tutto = c.cercabili()
         let r = cerca(stato.ricerca ?? "", in: tutto.map(\.0))
-        let elenco = (r.migliore.map { [$0] } ?? []) + r.gruppi.flatMap(\.1)
-        let azione = Dictionary(tutto.map { ($0.0.id, $0.1) }, uniquingKeysWith: { a, _ in a })
+        // «Sul web», sempre in fondo: il sito da aprire e la ricerca (niente esce dal Mac finché non scegli)
+        let web = c.righeWeb(stato.ricerca ?? "")
+        let righeWeb = web.map { Risultato(t: $0.0, punti: 0, pezzetto: nil) }
+        let elenco = (r.migliore.map { [$0] } ?? []) + r.gruppi.flatMap(\.1) + righeWeb
+        let azione = Dictionary((tutto + web).map { ($0.0.id, $0.1) }, uniquingKeysWith: { a, _ in a })
         // Come Spotlight di macOS 26: un vetro solo, che da capsula si allunga in giù coi risultati.
         let aperta = !elenco.isEmpty
         VStack(alignment: .leading, spacing: 0) {
@@ -215,6 +221,10 @@ struct BarraRicerca: View {
                     ForEach(r.gruppi, id: \.0) { g, righe in
                         titoletto(g.titolo)
                         ForEach(righe) { x in riga(x, elenco.firstIndex(of: x) ?? 0) }
+                    }
+                    if !righeWeb.isEmpty {
+                        titoletto(Trovato.Gruppo.web.titolo)
+                        ForEach(righeWeb) { x in riga(x, elenco.firstIndex(of: x) ?? 0) }
                     }
                 }
                 .padding(.vertical, 8)
@@ -282,6 +292,9 @@ struct BarraRicerca: View {
         case .lampi: Image(systemName: "sparkles").foregroundStyle(Tema.accento)
         case .azioni: Image(systemName: t.forte ? "exclamationmark.triangle" : "command").foregroundStyle(t.forte ? Color.orange : Tema.accento)
         case .impostazioni: Image(systemName: "gearshape").foregroundStyle(Tema.accento)
+        case .web:
+            if let l = stato.loghi[k] { Image(nsImage: l).resizable().clipShape(RoundedRectangle(cornerRadius: 6)) }
+            else { Image(systemName: k == "?" ? "magnifyingglass" : "globe").foregroundStyle(Tema.accento) }
         }
     }
 }

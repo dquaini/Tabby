@@ -165,7 +165,7 @@ Nell'app Swift Tabby avrà cinque sezioni:
   5. **App escluse** dalla barra, scelte da te (macchine virtuali, app invadenti).
   6. **Comandi dal Terminale** (`tabby …`): elenca e apri schede e cartelle — base dell'Automazione.
   Lasciati fuori apposta: la dettatura (c'è quella di macOS) e le estensioni di terzi (progetto a sé).
-- **Ricerca web dalla barra di Tabby** (idea di Daniele, 10/11/2026; da fare **dopo** i quattro
+- ✅ **Fatto in 0.10, in versione piccola** (vedi SPECIFICA E-5; via il cerchio del browser e i siti presi da internet). **Ricerca web dalla barra di Tabby** (idea di Daniele, 10/11/2026; da fare **dopo** i quattro
   punti del Mac di lavoro: tasti dentro Windows App, fascia nera con Tabby di lato, notifiche di
   macOS, finestrelle tipo Notion):
   - a destra nella barra di ricerca il **cerchio col logo del browser** (DuckDuckGo di serie): un

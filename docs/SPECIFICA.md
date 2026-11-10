@@ -887,6 +887,19 @@ sua scheda; vista divisa intera se ne fa parte). Se le parole erano nel testo, d
 0,45 s — e solo se è davvero lei davanti — Tabby fa ⌘F e scrive le parole. Memo: si apre.
 In concentrazione vale la sua regola (un'app non scelta chiede).
 
+**E-5 Sul web** (app Swift 0.10, deciso con Daniele il 10/11/2026: potenziare Spotlight, non
+sostituirlo). In fondo ai risultati della barra di ricerca, il gruppo «Sul web»:
+- **Apri X**: se il testo è un indirizzo («raycast.com») o il nome di un servizio conosciuto
+  («proton» → Proton Mail; elenco `serviziDaAprire`). Se quel sito è già aperto non si propone
+  (c'è la sua scheda) e, scelto, porta lì. Altrimenti apre **una finestra nuova con una scheda
+  sola**, che diventa una scheda di Tabby; se eri in una cartella, il sito entra nella cartella.
+- **Cerca «…» sul web**: sempre, per ultima: DuckDuckGo in una finestra nuova.
+- ⌘↵: come scheda nella finestra del browser davanti.
+- Browser: quello predefinito di macOS. Chrome/Brave/Edge e Safari con AppleScript; DuckDuckGo
+  (senza AppleScript): ⌘N e l'indirizzo scritto da Tabby, solo se il browser è ancora davanti.
+- Mentre scrivi non esce niente dal Mac: niente suggerimenti presi da internet (li fanno già
+  Spotlight e Raycast).
+
 ## 17. Scorciatoie
 
 Tutte con **⌃⌥** (Ctrl + Option):

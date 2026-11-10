@@ -58,7 +58,7 @@ final class Controllore {
     private let batteria = Batteria()
     let tasti = Tasti()
     private let browser = Browser()
-    private let loghi = Loghi()
+    let loghi = Loghi()
     private let dock = NotificheDock()
     private var ricostruzione: DispatchWorkItem?
     private var osservatori: [pid_t: AXObserver] = [:]
@@ -104,6 +104,7 @@ final class Controllore {
     /// L'ultima volta che hai scelto tu una scheda (clic o scorciatoia).
     var finestraScrivania: UInt32?               // la finestra del Finder aperta dal musetto
     let veloSpotlight = VeloSpotlight()
+    var nellaCartella: (dominio: String, cartella: Int, quando: Date)?   // un sito aperto dalla ricerca dentro una cartella
     let gesti = Gesti()
     var monitorClic: Any?
     var sitiScelti: [UInt32: String] = [:]       // B-8: il sito scelto per una finestra di browser
@@ -254,6 +255,7 @@ final class Controllore {
             let cambi = chiaviCambiate(prima: tutte, adesso: nuove)
             if !cambi.isEmpty { cambiaChiavi(cambi) }
             tutte = nuove
+            mettiNellaCartella(nuove)
             controllaSitiDoppi(nuove)
             // i nomi dati alle finestre valgono finché la finestra è aperta
             if var nomi = imp.valore("tabNames") as? [String: String] {

@@ -70,6 +70,56 @@ public let serviziNoti: [String: String] = [
     "app.asana.com": "Asana", "linear.app": "Linear", "icloud.com": "iCloud", "netflix.com": "Netflix",
 ]
 
+/// I servizi che la ricerca propone di aprire scrivendone il nome («proton» → Proton Mail), in
+/// ordine: vince il primo il cui nome (o una sua parola) comincia con quello che hai scritto.
+public let serviziDaAprire: [(nome: String, indirizzo: String)] = [
+    ("Proton Mail", "https://mail.proton.me/"), ("Gmail", "https://mail.google.com/"), ("Google Calendar", "https://calendar.google.com/"),
+    ("Google Drive", "https://drive.google.com/"), ("Google Docs", "https://docs.google.com/"), ("Meet", "https://meet.google.com/"),
+    ("Outlook", "https://outlook.live.com/"), ("Teams", "https://teams.microsoft.com/"), ("WhatsApp", "https://web.whatsapp.com/"),
+    ("Telegram", "https://web.telegram.org/"), ("Slack", "https://app.slack.com/"), ("Notion", "https://www.notion.so/"),
+    ("Claude", "https://claude.ai/"), ("ChatGPT", "https://chatgpt.com/"), ("GitHub", "https://github.com/"),
+    ("YouTube", "https://www.youtube.com/"), ("YouTube Music", "https://music.youtube.com/"), ("Spotify", "https://open.spotify.com/"),
+    ("LinkedIn", "https://www.linkedin.com/"), ("X", "https://x.com/"), ("Instagram", "https://www.instagram.com/"),
+    ("Facebook", "https://www.facebook.com/"), ("Messenger", "https://www.messenger.com/"), ("Figma", "https://www.figma.com/"),
+    ("Trello", "https://trello.com/"), ("Asana", "https://app.asana.com/"), ("Linear", "https://linear.app/"),
+    ("iCloud", "https://www.icloud.com/"), ("Netflix", "https://www.netflix.com/"), ("Proton Calendar", "https://calendar.proton.me/"),
+    ("Proton Drive", "https://drive.proton.me/"), ("Proton Pass", "https://pass.proton.me/"),
+]
+
+/// Cosa propone la ricerca di Tabby sul web, per un testo (deciso con Daniele il 10/11/2026):
+/// un **sito da aprire** se il testo è un indirizzo («raycast.com») o il nome di un servizio
+/// conosciuto («proton»), e sempre, per ultima, la **ricerca** sul web (DuckDuckGo). Niente
+/// esce dal Mac finché non scegli.
+public enum PropostaWeb: Equatable, Sendable {
+    case sito(nome: String, indirizzo: String, dominio: String)
+    case ricerca(testo: String, indirizzo: String)
+}
+
+public func proposteWeb(_ domanda: String) -> [PropostaWeb] {
+    let q = domanda.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !q.isEmpty else { return [] }
+    var out: [PropostaWeb] = []
+    // un indirizzo: con «://», oppure senza spazi, con un punto e un finale di almeno 2 lettere
+    let pezzi = q.split(separator: ".")
+    let sembraIndirizzo = q.contains("://") || (!q.contains(" ") && pezzi.count >= 2 && (pezzi.last?.count ?? 0) >= 2
+                                                && pezzi.last!.allSatisfy { $0.isLetter || $0 == "/" || $0.isNumber })
+    if sembraIndirizzo {
+        let u = q.contains("://") ? q : "https://" + q
+        if let d = dominio(u) { out.append(.sito(nome: serviziNoti[d] ?? d, indirizzo: u, dominio: d)) }
+    } else {
+        let nq = normalizza(q)
+        if nq.count >= 3, let s = serviziDaAprire.first(where: { s in
+            let n = normalizza(s.nome)
+            return n.hasPrefix(nq) || n.split(separator: " ").contains { $0.hasPrefix(nq) }
+        }), let d = dominio(s.indirizzo) {
+            out.append(.sito(nome: s.nome, indirizzo: s.indirizzo, dominio: d))
+        }
+    }
+    let codificato = q.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? q
+    out.append(.ricerca(testo: q, indirizzo: "https://duckduckgo.com/?q=" + codificato))
+    return out
+}
+
 /// Il nome di una webapp dal titolo della finestra e dal dominio (B-4):
 /// «Posta - io@x - Gmail» → «Gmail», «Inbox | Proton Mail» su mail.proton.me → «Proton Mail».
 public func nomeSito(titolo: String?, dominio dom: String) -> String {

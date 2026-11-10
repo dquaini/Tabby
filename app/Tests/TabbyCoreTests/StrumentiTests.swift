@@ -61,3 +61,24 @@ struct StrumentiTests {
         #expect(r.gruppi.reduce(1) { $0 + $1.1.count } <= 8)
     }
 }
+
+/// Prove del 10/11/2026: la ricerca web della barra di Tabby.
+struct RicercaWebTests {
+    @Test func unServizioConosciuto() {
+        #expect(proposteWeb("proton").first == .sito(nome: "Proton Mail", indirizzo: "https://mail.proton.me/", dominio: "mail.proton.me"))
+        #expect(proposteWeb("Gmail").first == .sito(nome: "Gmail", indirizzo: "https://mail.google.com/", dominio: "mail.google.com"))
+    }
+    @Test func unIndirizzo() {
+        #expect(proposteWeb("raycast.com").first == .sito(nome: "raycast.com", indirizzo: "https://raycast.com", dominio: "raycast.com"))
+    }
+    @Test func sempreLaRicercaPerUltima() {
+        let p = proposteWeb("raycast è open source")
+        #expect(p.count == 1)
+        #expect(p.last == .ricerca(testo: "raycast è open source", indirizzo: "https://duckduckgo.com/?q=raycast%20%C3%A8%20open%20source"))
+        #expect(proposteWeb("  ").isEmpty)
+    }
+    @Test func paroleCorteNonSonoServizi() {
+        #expect(proposteWeb("pr").count == 1)            // solo la ricerca
+        #expect(proposteWeb("3.5").count == 1)           // un numero non è un indirizzo
+    }
+}
