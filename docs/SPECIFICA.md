@@ -811,6 +811,7 @@ toglie comunque. ⚙︎ → Comportamento → "Oscura lo sfondo con Spotlight e 
 rapide" (acceso di serie).
 *App Swift 0.9.5:* fatto, anche per **Raycast**; si accende con ⌘Spazio visto dall'intercettatore dei tasti; impostazione «Con Spotlight aperto lo sfondo si oscura / resta com'è».
 *App Swift 0.10.2 (visto sul Mac):* Spotlight non diventa mai l'app in primo piano. Aperto ha una finestra ben visibile al livello 23; chiudendolo la finestra diventa **trasparente subito** e sparisce quasi un secondo dopo → conta solo una finestra con trasparenza > 0,5 (il velo va via appena chiudi). Raycast allo stesso modo. La chat rapida di Claude è una finestra trasparente grande come lo schermo al livello 1000: il velo sta appena sotto; si accorge quando Claude cambia la finestra con l'attenzione.
+*App Swift 0.10.4 (Daniele):* il velo sta **sotto la barra di Tabby** (come il velo della vista divisa) e sopra le finestre delle app; anche con Raycast (una sua finestra ben visibile, non le Impostazioni) e Alfred.
 
 ## 16b. Concentrazione (v9.55)
 
@@ -897,6 +898,7 @@ sostituirlo). In fondo ai risultati della barra di ricerca, il gruppo «Sul web�
   sola**, che diventa una scheda di Tabby; se eri in una cartella, il sito entra nella cartella.
 - **Cerca «…» sul web**: sempre, per ultima: DuckDuckGo in una finestra nuova.
 - ⌘↵: come scheda nella finestra del browser davanti.
+- Ordine (0.10.4): «Apri X» è **il migliore** se fra le tue cose niente ha quel nome nel titolo (una finestra che contiene solo la parola non basta: prima Invio portava lì). Il diario scrive ogni passo («ricerca web: …»), anche quando il browser rifiuta.
 - Browser (0.10.3): a destra nella barra il **cerchio col logo del browser**; un clic e lo scegli
   fra quelli installati (`tabbar.webBrowser`); di serie quello predefinito di macOS. Chrome/Brave/
   Edge e Safari con AppleScript; DuckDuckGo (senza AppleScript) e gli altri: si aspetta che sia

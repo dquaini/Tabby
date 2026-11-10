@@ -50,7 +50,9 @@ final class VeloSpotlight {
             pannello = p
             return p
         }()
-        p.level = NSWindow.Level(rawValue: livello - 1)        // appena sotto Spotlight, sopra Tabby
+        // sotto la barra di Tabby (che resta in vista, come col velo della vista divisa) e sopra le
+        // finestre delle app; i lanciatori stanno tutti più in alto (Spotlight 23, Claude 1000)
+        p.level = NSWindow.Level(rawValue: min(livello - 1, NSWindow.Level.floating.rawValue - 1))
         if !p.isVisible { p.setFrame(Sistema.schermo.frame, display: false); p.orderFrontRegardless() }
     }
 
@@ -66,18 +68,27 @@ final class VeloSpotlight {
     /// Spotlight o Raycast aperti? Visto sul Mac il 10/11/2026: Spotlight non diventa mai l'app in
     /// primo piano; aperto ha una finestra visibile (livello 23), chiudendolo la finestra diventa
     /// **trasparente subito** e sparisce quasi un secondo dopo: conta solo se è ben visibile.
-    static let lanciatori = ["com.apple.Spotlight": "Spotlight", "com.raycast.macos": "Raycast"]
+    static let lanciatori = ["com.apple.Spotlight": "Spotlight", "com.raycast.macos": "Raycast",
+                             "com.runningwithcrayons.Alfred": "Alfred"]
     static func livelloSpotlight() -> Int? {
-        livelloFinestra(di: "Spotlight", sopraLeNormali: true) ?? livelloFinestra(di: "Raycast", sopraLeNormali: true)
+        if let l = livelloFinestra(di: "Spotlight", sopraLeNormali: true) ?? livelloFinestra(di: "Alfred", sopraLeNormali: true) { return l }
+        // Raycast: aperto quando è davanti o ha una finestra ben visibile (anche al livello delle normali)
+        if let r = NSRunningApplication.runningApplications(withBundleIdentifier: "com.raycast.macos").first,
+           let l = livelloFinestra(di: "Raycast", sopraLeNormali: false, stretta: true) {   // non le Impostazioni di Raycast
+            _ = r; return l
+        }
+        return nil
     }
 
     /// Il livello della finestra più alta di un'app fra quelle ben visibili (trasparenza > 0,5).
-    nonisolated static func livelloFinestra(di nome: String, sopraLeNormali: Bool) -> Int? {
+    nonisolated static func livelloFinestra(di nome: String, sopraLeNormali: Bool, stretta: Bool = false) -> Int? {
+        let largo = NSScreen.screens.first?.frame.width ?? 1440
         guard let l = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else { return nil }
         return l.filter { w in
             let b = w[kCGWindowBounds as String] as? [String: CGFloat] ?? [:], ly = w[kCGWindowLayer as String] as? Int ?? 0
             return (w[kCGWindowOwnerName as String] as? String) == nome && (w[kCGWindowAlpha as String] as? Double ?? 1) > 0.5
                 && (b["Width"] ?? 0) > 200 && (b["Height"] ?? 0) > 40 && (!sopraLeNormali || ly > 0) && ly < 2000
+                && (!stretta || (b["Width"] ?? 0) < largo * 0.7)
         }.compactMap { $0[kCGWindowLayer as String] as? Int }.max()
     }
 }

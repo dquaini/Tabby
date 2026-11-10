@@ -24,8 +24,10 @@ extension Controllore {
     }
 
     func apriSulWeb(_ indirizzo: String, dominio d: String?, nuovaFinestra: Bool) {
-        guard let url = URL(string: indirizzo) else { return }
-        if let d, let già = dovèGiàAperto(d, tranne: 0, in: tutte) { vai(già); return }
+        guard let url = URL(string: indirizzo) else { diario("ricerca web: indirizzo non valido «\(indirizzo)»"); return }
+        if let d, let già = dovèGiàAperto(d, tranne: 0, in: tutte) {
+            diario("ricerca web: \(d) è già aperto in «\(già.nome)», ci vado"); vai(già); return
+        }
         guard let bid = browserDelWeb, let app = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bid) else { NSWorkspace.shared.open(url); return }
         if let d, let id = stato.cartellaAperta { nellaCartella = (d, id, Date()) }   // nasce nella cartella in cui sei
         diario("ricerca web: \(d ?? "ricerca") in \(nuovaFinestra ? "una finestra nuova" : "una scheda") di \(bid)")
@@ -120,7 +122,18 @@ extension Controllore {
         }
     }
 
-    private func esegui(_ script: String) { esegui("/usr/bin/osascript", ["-e", script]) }
+    /// AppleScript per il browser; se fallisce (es. manca il permesso Automazione) lo dice il diario.
+    private func esegui(_ script: String) {
+        let p = Process(), errore = Pipe()
+        p.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+        p.arguments = ["-e", script]
+        p.standardError = errore
+        p.terminationHandler = { q in
+            let e = String(data: errore.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            if q.terminationStatus != 0 { DispatchQueue.main.async { diario("ricerca web: il browser non ha aperto la finestra (\(e.prefix(160)))") } }
+        }
+        do { try p.run() } catch { diario("ricerca web: osascript non parte: \(error)") }
+    }
 
     private static func premi(_ tasto: Int, comando: Bool = false) {
         let src = CGEventSource(stateID: .hidSystemState)

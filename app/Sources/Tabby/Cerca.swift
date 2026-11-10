@@ -203,7 +203,11 @@ struct BarraRicerca: View {
         // «Sul web», sempre in fondo: il sito da aprire e la ricerca (niente esce dal Mac finché non scegli)
         let web = c.righeWeb(stato.ricerca ?? "")
         let righeWeb = web.map { Risultato(t: $0.0, punti: 0, pezzetto: nil) }
-        let elenco = (r.migliore.map { [$0] } ?? []) + r.gruppi.flatMap(\.1) + righeWeb
+        // un sito da aprire («Apri Gmail») è il migliore se fra le tue cose niente ha quel nome (una
+        // finestra che contiene solo la parola non basta): prima Invio portava su quella finestra
+        let sitoPrima = BarraRicerca.sitoPrima(r.migliore, righeWeb)
+        let elenco = sitoPrima.map { [$0] + (r.migliore.map { [$0] } ?? []) + r.gruppi.flatMap(\.1) + righeWeb.dropFirst() }
+            ?? (r.migliore.map { [$0] } ?? []) + r.gruppi.flatMap(\.1) + righeWeb
         let azione = Dictionary((tutto + web).map { ($0.0.id, $0.1) }, uniquingKeysWith: { a, _ in a })
         // Come Spotlight di macOS 26: un vetro solo, che da capsula si allunga in giù coi risultati.
         let aperta = !elenco.isEmpty
@@ -219,14 +223,16 @@ struct BarraRicerca: View {
             if aperta {
                 Divider().padding(.horizontal, 16)
                 VStack(alignment: .leading, spacing: 0) {
-                    if let m = r.migliore { titoletto("Il migliore"); riga(m, 0) }
+                    if let s = sitoPrima { titoletto("Il migliore"); riga(s, 0) }
+                    if let m = r.migliore { if sitoPrima == nil { titoletto("Il migliore") }; riga(m, elenco.firstIndex(of: m) ?? 0) }
                     ForEach(r.gruppi, id: \.0) { g, righe in
                         titoletto(g.titolo)
                         ForEach(righe) { x in riga(x, elenco.firstIndex(of: x) ?? 0) }
                     }
-                    if !righeWeb.isEmpty {
+                    let restoWeb = sitoPrima == nil ? righeWeb : Array(righeWeb.dropFirst())
+                    if !restoWeb.isEmpty {
                         titoletto(Trovato.Gruppo.web.titolo)
-                        ForEach(righeWeb) { x in riga(x, elenco.firstIndex(of: x) ?? 0) }
+                        ForEach(restoWeb) { x in riga(x, elenco.firstIndex(of: x) ?? 0) }
                     }
                 }
                 .padding(.vertical, 8)
@@ -301,10 +307,19 @@ struct BarraRicerca: View {
         .onTapGesture { stato.sceltaRicerca = i; scegli(elencoAttuale(), mappaAttuale(), alternativa: false) }
     }
 
+    /// Il sito da aprire va in cima se il migliore delle tue cose non ha quel nome nel titolo.
+    static func sitoPrima(_ migliore: Risultato?, _ web: [Risultato]) -> Risultato? {
+        guard let s = web.first, s.id != "w:?" else { return nil }
+        guard let m = migliore else { return s }
+        return m.pezzetto != nil || m.t.gruppo == .finestre ? s : nil
+    }
+
     // il clic usa lo stesso elenco di Invio, righe «Sul web» comprese (prima mancavano: il clic non faceva niente)
     private func elencoAttuale() -> [Risultato] {
         let r = cerca(stato.ricerca ?? "", in: c.cercabili().map(\.0))
-        return (r.migliore.map { [$0] } ?? []) + r.gruppi.flatMap(\.1) + c.righeWeb(stato.ricerca ?? "").map { Risultato(t: $0.0, punti: 0, pezzetto: nil) }
+        let web = c.righeWeb(stato.ricerca ?? "").map { Risultato(t: $0.0, punti: 0, pezzetto: nil) }
+        if let s = BarraRicerca.sitoPrima(r.migliore, web) { return [s] + (r.migliore.map { [$0] } ?? []) + r.gruppi.flatMap(\.1) + web.dropFirst() }
+        return (r.migliore.map { [$0] } ?? []) + r.gruppi.flatMap(\.1) + web
     }
     private func mappaAttuale() -> [String: AzioneRicerca] {
         Dictionary((c.cercabili() + c.righeWeb(stato.ricerca ?? "")).map { ($0.0.id, $0.1) }, uniquingKeysWith: { a, _ in a })
