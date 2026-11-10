@@ -253,4 +253,5 @@ app 0.9.8 (10/11/2026): doppio clic sulla ✕ chiude subito la finestra; il Lamp
 app 0.9.9 (10/11/2026): Lampi a 12 punti dai bordi anche quando sono più grandi del posto; la Calcolatrice aperta da zero non finisce al centro (Tabby la sistema fino a 3,8 s); un controllo in più per le app che si rimettono la loro misura (Spotify), con una riga nel diario se non si adattano.
 app 0.10 (10/11/2026): la ricerca sul web nella barra di Tabby: «Apri Proton Mail» / «Apri raycast.com» in una finestra con una scheda sola (o la scheda già aperta), «Cerca … sul web» con DuckDuckGo; ⌘↵ come scheda nella finestra davanti.
 app 0.10.1 (10/11/2026): aprendo uno zip non si salta più su un'app a caso (Utility Compressione non è una scheda; un'app che si chiude da sola riporta dov'eri); chiudendo un'app non si resta sulla Scrivania vuota.
+app 0.10.2 (10/11/2026): clic sui risultati «Sul web» che funziona; velo di nuovo con Spotlight (e via appena lo chiudi) e sotto la chat rapida di Claude; «Informazioni su questo Mac» non nasconde più tutto.
 ```

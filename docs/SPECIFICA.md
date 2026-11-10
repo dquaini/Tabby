@@ -229,6 +229,7 @@ macOS):
    (prima di toccare le finestre: dopo l'app è occupata e risponde lenta), si
    riducono le altre finestre della stessa app (5), si adatta la finestra (e di
    nuovo dopo 0,6 s: alcune app creano le finestre in ritardo).
+*App Swift 0.10.2:* un'app che non sta nel Dock («Informazioni su questo Mac», le finestre delle app della barra dei menu) non è una scheda e non nasconde le altre.
 
 **P-4 Scheda attiva** (per evidenziarla): la scheda della finestra in primo piano;
 se è in una vista divisa, la scheda della vista; nella vista normale, una scheda di
@@ -809,7 +810,7 @@ di ritardo): Spotlight è aperto finché la finestra attiva è sua. Dopo 10 minu
 toglie comunque. ⚙︎ → Comportamento → "Oscura lo sfondo con Spotlight e le azioni
 rapide" (acceso di serie).
 *App Swift 0.9.5:* fatto, anche per **Raycast**; si accende con ⌘Spazio visto dall'intercettatore dei tasti; impostazione «Con Spotlight aperto lo sfondo si oscura / resta com'è».
-*App Swift 0.9.7:* aperto = Spotlight o Raycast **in primo piano** (Raycast, con qualunque scorciatoia: anche quando diventa l'app attiva); appena non lo sono più il velo va via subito. La finestra di Spotlight resta «sullo schermo», invisibile, anche da chiuso: non va usata.
+*App Swift 0.10.2 (visto sul Mac):* Spotlight non diventa mai l'app in primo piano. Aperto ha una finestra ben visibile al livello 23; chiudendolo la finestra diventa **trasparente subito** e sparisce quasi un secondo dopo → conta solo una finestra con trasparenza > 0,5 (il velo va via appena chiudi). Raycast allo stesso modo. La chat rapida di Claude è una finestra trasparente grande come lo schermo al livello 1000: il velo sta appena sotto; si accorge quando Claude cambia la finestra con l'attenzione.
 
 ## 16b. Concentrazione (v9.55)
 

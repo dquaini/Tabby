@@ -189,12 +189,19 @@ final class Controllore {
     private func osserva(_ pid: pid_t) {
         guard osservatori[pid] == nil else { return }
         var obs: AXObserver?
-        guard AXObserverCreate(pid, { _, _, nome, ctx in
+        guard AXObserverCreate(pid, { _, el, nome, ctx in
             guard let ctx else { return }
             let c = Unmanaged<Controllore>.fromOpaque(ctx).takeUnretainedValue()
             let n = nome as String
             MainActor.assumeIsolated {
-                if n == kAXFocusedWindowChangedNotification { c.finestraCambiata() }
+                if n == kAXFocusedWindowChangedNotification {
+                    c.finestraCambiata()
+                    // la chat rapida di Claude (con la sua scorciatoia) prende la tastiera: il velo sotto
+                    var p: pid_t = 0; AXUIElementGetPid(el, &p)
+                    if NSRunningApplication(processIdentifier: p)?.bundleIdentifier == "com.anthropic.claudefordesktop" {
+                        c.veloSpotlight.forse(app: "Claude")
+                    }
+                }
                 c.ricostruisciPresto()
             }
         }, &obs) == .success, let obs else { return }
@@ -426,6 +433,9 @@ final class Controllore {
         ascoltaEscLampo(app)
         defer { lampi.aggiornaCoperti(); controllaSfera() }
         if Sistema.ignorate().contains(bid) { return }                  // un Lampo: non tocca niente
+        // un'app che non sta nel Dock («Informazioni su questo Mac», le finestre delle app della barra
+        // dei menu): non è una scheda e non nasconde le altre (prima si finiva sulla Scrivania)
+        if app.activationPolicy != .regular { return }
         if controllaAppFuori(app) { return }                            // fuori dalla Concentrazione
         if stato.scrivania && bid == "com.apple.finder" { return }
         // W-2: subito dopo la Scrivania macOS a volte «rimbalza» su un'altra app: la si rinasconde

@@ -276,11 +276,14 @@ struct BarraRicerca: View {
         .onTapGesture { stato.sceltaRicerca = i; scegli(elencoAttuale(), mappaAttuale(), alternativa: false) }
     }
 
+    // il clic usa lo stesso elenco di Invio, righe «Sul web» comprese (prima mancavano: il clic non faceva niente)
     private func elencoAttuale() -> [Risultato] {
         let r = cerca(stato.ricerca ?? "", in: c.cercabili().map(\.0))
-        return (r.migliore.map { [$0] } ?? []) + r.gruppi.flatMap(\.1)
+        return (r.migliore.map { [$0] } ?? []) + r.gruppi.flatMap(\.1) + c.righeWeb(stato.ricerca ?? "").map { Risultato(t: $0.0, punti: 0, pezzetto: nil) }
     }
-    private func mappaAttuale() -> [String: AzioneRicerca] { Dictionary(c.cercabili().map { ($0.0.id, $0.1) }, uniquingKeysWith: { a, _ in a }) }
+    private func mappaAttuale() -> [String: AzioneRicerca] {
+        Dictionary((c.cercabili() + c.righeWeb(stato.ricerca ?? "")).map { ($0.0.id, $0.1) }, uniquingKeysWith: { a, _ in a })
+    }
 
     @ViewBuilder private func icona(_ t: Trovato) -> some View {
         let k = String(t.id.dropFirst(2))
