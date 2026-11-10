@@ -56,6 +56,29 @@ final class VeloSpotlight {
         return abs(r.minX - p.cornice.minX) < 3 && abs(r.minY - p.cornice.minY) < 3 && abs(r.width - p.cornice.width) < 3 ? p.livello : nil
     }
 
+    // MARK: Raycast: Tabby ascolta quando crea e toglie la sua finestra (nessun controllo continuo)
+
+    private var osservatoreRaycast: AXObserver?
+    private var pidRaycast: pid_t = 0
+
+    func osservaRaycast() {
+        guard let r = NSRunningApplication.runningApplications(withBundleIdentifier: "com.raycast.macos").first else { return }
+        if osservatoreRaycast != nil && pidRaycast == r.processIdentifier { return }
+        var obs: AXObserver?
+        guard AXObserverCreate(r.processIdentifier, { _, _, _, ctx in
+            guard let ctx else { return }
+            let v = Unmanaged<VeloSpotlight>.fromOpaque(ctx).takeUnretainedValue()
+            MainActor.assumeIsolated { v.controllo == nil ? v.forse() : v.ricontrolla() }
+        }, &obs) == .success, let obs else { return }
+        let e = Sistema.elemento(r.processIdentifier), me = Unmanaged.passUnretained(self).toOpaque()
+        for n in [kAXWindowCreatedNotification, kAXFocusedWindowChangedNotification, kAXApplicationShownNotification,
+                  kAXApplicationHiddenNotification, kAXUIElementDestroyedNotification] {
+            AXObserverAddNotification(obs, e, n as CFString, me)
+        }
+        CFRunLoopAddSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(obs), .defaultMode)
+        osservatoreRaycast = obs; pidRaycast = r.processIdentifier
+    }
+
     private func mostra(sotto livello: Int) {
         let p = pannello ?? {
             let p = NSPanel(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
@@ -104,8 +127,9 @@ final class VeloSpotlight {
         // Raycast (visto sul Mac il 10/11/2026): non diventa mai l'app davanti e la sua finestra resta
         // «sullo schermo» anche da chiuso; chiuso però **si nasconde** (come ⌘H) e non ha finestre per
         // l'Accessibilità. Aperto = non nascosto e con una finestra.
+        // (0.10.8: per macOS Raycast resta «nascosto» anche aperto; conta solo la finestra per l'Accessibilità)
         if let r = NSRunningApplication.runningApplications(withBundleIdentifier: "com.raycast.macos").first,
-           !r.isHidden, !Sistema.finestre(r.processIdentifier).isEmpty {
+           !Sistema.finestre(r.processIdentifier).isEmpty {
             return livelloFinestra(di: "Raycast", sopraLeNormali: true, stretta: true) ?? 8
         }
         return nil

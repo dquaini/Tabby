@@ -117,6 +117,11 @@ final class Controllore {
     func avvia() {
         tasti.riprovaIntercettatore()                   // se all'apertura mancava l'Accessibilità
         Tasti.suSpotlight = { [weak self] in self?.veloSpotlight.forse() }
+        veloSpotlight.osservaRaycast()
+        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didLaunchApplicationNotification, object: nil, queue: .main) { [weak self] n in
+            let b = (n.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.bundleIdentifier
+            MainActor.assumeIsolated { if b == "com.raycast.macos" { self?.veloSpotlight.osservaRaycast() } }
+        }
         // Spotlight e Raycast in primo piano (qualunque scorciatoia): il velo; appena vanno via, via il velo
         let ws = NSWorkspace.shared.notificationCenter
         for (n, apre) in [(NSWorkspace.didActivateApplicationNotification, true), (NSWorkspace.didDeactivateApplicationNotification, false),

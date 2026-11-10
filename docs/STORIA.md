@@ -259,4 +259,5 @@ app 0.10.4 (10/11/2026): «Apri Gmail» in cima quando nessuna tua scheda si chi
 app 0.10.5 (10/11/2026): ricerca web con DuckDuckGo in una finestra con una scheda sola (Sposta scheda in una nuova finestra), Chrome più veloce (--new-window).
 app 0.10.6 (10/11/2026): il velo sotto il pannello di qualunque app (quello che ha la tastiera e sta sopra le finestre), Raycast compreso.
 app 0.10.7 (10/11/2026): il velo con Raycast davvero (Raycast si mostra e si nasconde invece di passare davanti).
+app 0.10.8 (10/11/2026): il velo con Raycast, ascoltando quando crea la sua finestra (per macOS resta «nascosto» anche aperto).
 ```
