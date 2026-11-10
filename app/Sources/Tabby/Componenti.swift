@@ -23,20 +23,16 @@ extension View {
 struct Pulsante: View {
     let titolo: String
     var principale = false
-    var rosso = false
-    var acceso = true
     let azione: () -> Void
     var body: some View {
         Button(action: azione) {
             Text(titolo).font(.system(size: 12.5, weight: principale ? .medium : .regular))
                 .padding(.horizontal, 11).frame(minWidth: 64, minHeight: 22)
-                .background(principale ? (rosso ? Color.red : Color.accentColor) : Color.white.opacity(0.12),
-                            in: RoundedRectangle(cornerRadius: 6))
-                .foregroundStyle(.white.opacity(acceso ? 1 : 0.4))
+                .background(principale ? Color.accentColor : Color.white.opacity(0.12), in: RoundedRectangle(cornerRadius: 6))
+                .foregroundStyle(.white)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .disabled(!acceso)
     }
 }
 
@@ -65,7 +61,6 @@ struct Foglio<Contenuto: View>: View {
     var principale = "Fatto"
     var principaleAcceso = true
     var annullaTitolo = "Annulla"
-    var largo: CGFloat = 460
     /// Un comando a sinistra, lontano dagli altri (es. «Elimina la cartella»).
     var aSinistra: (titolo: String, azione: () -> Void)? = nil
     let annulla: () -> Void
@@ -96,7 +91,7 @@ struct Foglio<Contenuto: View>: View {
             }
             .padding(.horizontal, 28).padding(.top, 10).padding(.bottom, 24)
         }
-        .frame(width: largo)
+        .frame(width: 460)
         .background(Color(white: 0.04).opacity(0.97), in: RoundedRectangle(cornerRadius: 22))
         .overlay(RoundedRectangle(cornerRadius: 22).strokeBorder(Color.white.opacity(0.1), lineWidth: 0.5))
         .shadow(color: .black.opacity(0.6), radius: 40, y: 20)
@@ -234,7 +229,6 @@ struct Avviso: Identifiable, Equatable {
     let id = UUID()
     var simbolo: String = "info.circle"
     var icona: NSImage?
-    var problema = false
     var titolo: String
     var testo: String?
     var scelte: [Scelta] = []
@@ -343,7 +337,7 @@ private struct VistaAvvisi: View {
             HStack(alignment: .top, spacing: 10) {
                 Group {
                     if let i = a.icona { Image(nsImage: i).resizable().frame(width: 26, height: 26) }
-                    else { Image(systemName: a.simbolo).font(.system(size: 17, weight: .medium)).foregroundStyle(a.problema ? Color.orange : Tema.accento) }
+                    else { Image(systemName: a.simbolo).font(.system(size: 17, weight: .medium)).foregroundStyle(Tema.accento) }
                 }.frame(width: 26, height: 26)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(a.titolo).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(.white).lineLimit(1)

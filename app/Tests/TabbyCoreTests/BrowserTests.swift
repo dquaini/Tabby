@@ -83,3 +83,11 @@ struct NomeServizioTests {
         #expect(nomeSito(titolo: "Posta in arrivo | io@esempio.it", dominio: "posta.esempio.it") == "Esempio")
     }
 }
+
+struct AppleScriptTests {
+    @Test func virgoletteEBarreProtette() {
+        #expect(perAppleScript("https://x.com/?q=\"a\"") == "https://x.com/?q=\\\"a\\\"")
+        #expect(perAppleScript("a\\b") == "a\\\\b")
+        #expect(perAppleScript("https://mail.proton.me/") == "https://mail.proton.me/")
+    }
+}

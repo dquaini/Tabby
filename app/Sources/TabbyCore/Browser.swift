@@ -120,6 +120,12 @@ public func proposteWeb(_ domanda: String) -> [PropostaWeb] {
     return out
 }
 
+/// Un testo (un indirizzo) da mettere fra virgolette in un AppleScript: barre e virgolette
+/// protette, così un indirizzo strano non rompe il comando.
+public func perAppleScript(_ s: String) -> String {
+    s.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
+}
+
 /// Il nome di una webapp dal titolo della finestra e dal dominio (B-4):
 /// «Posta - io@x - Gmail» → «Gmail», «Inbox | Proton Mail» su mail.proton.me → «Proton Mail».
 public func nomeSito(titolo: String?, dominio dom: String) -> String {

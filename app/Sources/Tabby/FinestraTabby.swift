@@ -209,7 +209,9 @@ private struct Video: NSViewRepresentable {
         let copri = CALayer(); copri.backgroundColor = NSColor.black.cgColor        // il marchio «creato con…»
         v.layer?.addSublayer(copri)
         context.coordinator.strati = (l, copri)
-        NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: p.currentItem, queue: .main) { _ in MainActor.assumeIsolated { finito() } }
+        context.coordinator.fine = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: p.currentItem, queue: .main) { _ in
+            MainActor.assumeIsolated { finito() }
+        }
         if NSWorkspace.shared.accessibilityDisplayShouldReduceMotion { p.seek(to: CMTime(seconds: 9.5, preferredTimescale: 600)) }
         p.play()
         return v
@@ -225,8 +227,14 @@ private struct Video: NSViewRepresentable {
         }
     }
 
+    /// Il video sparisce (finito o saltato): si ferma e smette di ascoltare la fine.
+    static func dismantleNSView(_ v: NSView, coordinator: Coordinatore) {
+        coordinator.strati?.0.player?.pause()
+        if let f = coordinator.fine { NotificationCenter.default.removeObserver(f) }
+    }
+
     func makeCoordinator() -> Coordinatore { Coordinatore() }
-    final class Coordinatore { var strati: (AVPlayerLayer, CALayer)? }
+    final class Coordinatore { var strati: (AVPlayerLayer, CALayer)?; var fine: NSObjectProtocol? }
 }
 
 // MARK: - Le pagine: solo testo bianco su nero
@@ -393,7 +401,7 @@ private struct Pagina: View {
         Frase("Fuori dalla sua vista, una cartella attiva è", ["una scheda sola", "tante schede"], vero("folderView", true) ? "una scheda sola" : "tante schede", ".") {
             imposta("folderView", $0 == "una scheda sola")
         }
-        Frase("La barra dei menu del Mac", ["si nasconde", "resta in vista"], c.barraMenuNascosta ? "si nasconde" : "resta in vista", ".") { s in
+        Frase("La barra dei menu del Mac", ["si nasconde", "resta in vista"], Sistema.barraMenuNascosta ? "si nasconde" : "resta in vista", ".") { s in
             c.nascondiBarraMenu(s == "si nasconde"); f.sezione = sezione
         }
         Frase("Il Dock", ["si nasconde", "resta in vista"], c.dockNascosto ? "si nasconde" : "resta in vista", ".") { s in
@@ -411,7 +419,7 @@ private struct Pagina: View {
         Azione("Una cartella nuova", "Scegli le schede, poi il nome", "crea") { c.finestraTabby.chiudi(tornando: false); c.apriFoglioCartella() }
         Azione("Il Memo", "Documenti › Tabby Memo.txt", "mostra") { NSWorkspace.shared.activateFileViewerSelecting([Memo.file]) }
         Spazio()
-        Azione("Una pausa", "Resta solo la sfera; un clic e riparto", "metti in pausa") { c.finestraTabby.chiudi(); c.pausa(true) }
+        Azione("Una pausa", "La barra sparisce; la sfera sulla Scrivania, un clic e riparto", "metti in pausa") { c.finestraTabby.chiudi(); c.pausa(true) }
         Azione("Tutte le app", "Le app di sistema restano", "chiudi", rosso: true) { c.finestraTabby.chiudi(tornando: false); c.chiudiTutteLeApp() }
         Azione("La guida del primo avvio", nil, "rivedi") { withAnimation { f.sezione = nil; f.fase = .guida(0) } }
         Azione("Tabby", nil, "esci") { NSApp.terminate(nil) }
@@ -588,7 +596,6 @@ private struct Guida: View {
 
 extension Controllore {
     var dockNascosto: Bool { UserDefaults(suiteName: "com.apple.dock")?.bool(forKey: "autohide") ?? false }
-    var barraMenuNascosta: Bool { UserDefaults.standard.persistentDomain(forName: UserDefaults.globalDomain)?["_HIHideMenuBar"] as? Bool ?? false }
 
     func nascondiDock(_ sì: Bool) {
         esegui("/usr/bin/osascript", ["-e", "tell application \"System Events\" to set autohide of dock preferences to \(sì)"])

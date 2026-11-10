@@ -44,7 +44,7 @@ final class VeloDivisione: NSPanel {
 
     func nascondi() {
         NSAnimationContext.runAnimationGroup({ $0.duration = 0.15; animator().alphaValue = 0 }) { [weak self] in
-            MainActor.assumeIsolated { self?.orderOut(nil) }
+            MainActor.assumeIsolated { if let self, self.controllore.stato.divisione == nil { self.orderOut(nil) } }   // riaperto nel frattempo: resta
         }
     }
 

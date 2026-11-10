@@ -2,10 +2,10 @@ import AppKit
 import SwiftUI
 import TabbyCore
 
-/// La sfera (SPECIFICA W-3/W-4, DESIGN 3.8): quando non c'è nessuna finestra in vista la barra
-/// sale e sparisce e Tabby diventa una sfera viva in basso a destra, col gatto di Daniele, nei
-/// colori del tema. Reagisce al puntatore; al clic apre il ventaglio (Casa). In pausa è spenta
-/// col segno ❙❙; in Concentrazione ha l'anello che si consuma; mostra il totale delle notifiche.
+/// La sfera (SPECIFICA W-3/W-4, DESIGN 3.8): con Tabby chiusa o in pausa, sulla Scrivania, Tabby è
+/// una sfera viva in basso a destra, col gatto di Daniele, nei colori del tema. Reagisce al
+/// puntatore; al clic riapre tutto (o, senza schede, il ventaglio). In pausa è spenta col segno ❙❙;
+/// in Concentrazione ha l'anello che si consuma; mostra il totale delle notifiche.
 @MainActor @Observable
 final class StatoSfera {
     var visibile = false
@@ -188,7 +188,6 @@ private struct VistaSfera: View {
         if let p = c.precedente { v.append(("Torna a \(p.nome)", stato.icone[p.bid], nil, { c.vai(p) })) }
         v.append(("Nuova app", nil, "plus", { c.nuovaApp() }))
         v.append(("Scrivania", stato.icone["com.apple.finder"], nil, { c.gatto() }))
-        // le app con notifiche vengono prima (3.8)
         for f in stato.cartelle {
             v.append((f.nome, nil, "square.stack.3d.up", { c.attivaCartella(f.id) }))
         }
@@ -239,14 +238,13 @@ private struct VistaSfera: View {
 }
 
 extension Controllore {
-    /// W-3: nessuna finestra in vista (app tutte nascoste, ridotte o chiuse; Lampi e Memo non
-    /// contano) per 0,4 s → la barra sparisce e compare la sfera. In pausa: sempre la sfera.
+    /// W-3: la sfera c'è solo con Tabby chiusa o in pausa **e** nessuna finestra in vista (app tutte
+    /// nascoste, ridotte o chiuse; Lampi e Memo non contano), dopo 0,4 s; altrimenti la barra.
     func controllaSfera() {
         let inVista = tutte.contains { s in
             !s.ridotta && !(NSRunningApplication(processIdentifier: s.pid)?.isHidden ?? true) && !lampi.èVeloce(s.bid)
         }
-        // la sfera compare solo e solamente se Tabby è chiusa o in pausa **e** sei sulla Scrivania
-        // (nessuna finestra in vista, niente schermo intero) — Daniele, 10/11/2026
+        // «solo e solamente» (Daniele, 10/11/2026): mai a schermo intero, mai sopra la finestra di Tabby
         let serve = (stato.inPausa || stato.tabbyChiusa) && !inVista && !davantiASchermoIntero() && !finestraTabby.isVisible
         sferaDopo?.cancel()
         if serve == sfera.s.visibile { return }
@@ -276,8 +274,11 @@ extension Controllore {
         stato.inPausa = sì
         imp.imposta("paused", sì)
         Tasti.spente = sì
+        // la barra va via subito anche con finestre in vista (lì la sfera non c'è: torna sulla
+        // Scrivania); togliendo la pausa torna. Prima restava, ferma, con le scorciatoie spente.
+        if sì { pannello.nascondiScivolando() }
         controllaSfera()
-        if !sì { ricostruisci(); if let a = NSWorkspace.shared.frontmostApplication { siAttiva(a) } }
+        if !sì { mostraBarra(); ricostruisci(); if let a = NSWorkspace.shared.frontmostApplication { siAttiva(a) } }
         diario(sì ? "in pausa" : "di nuovo attiva")
     }
 }

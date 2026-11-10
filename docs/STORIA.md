@@ -267,4 +267,12 @@ app 0.10.9 (10/11/2026): revisione del codice. Bug: l'attesa del permesso Access
     volta sola (prima a ogni ricostruzione), il velo guarda meno a lungo. Pulizia: velo riscritto senza
     Raycast, risultati della ricerca calcolati in un posto solo, ascolto di macOS riunito, codice morto
     tolto, nessun avviso del compilatore.
+app 0.10.10 (10/11/2026): revisione riga per riga delle parti rimaste. Bug: «Metti in pausa» con finestre in
+    vista lasciava la barra ferma; numero di una vista divisa nuova che poteva coincidere con una importata;
+    ⌃⌥Tab dopo aver creato una vista; velo della divisione che spariva se riaperto subito; indirizzi con
+    virgolette che rompevano i comandi per i browser; ⌘↵ con ricerche lunghe troncate; «+N altre» senza i
+    loghi dei siti. Più leggera: immagini del gatto lette una volta, Memo letto all'apertura della ricerca
+    (non a ogni lettera), Concentrazione con un solo appuntamento alla fine (prima un controllo al secondo,
+    infinito senza tempo); il video d'avvio smette di ascoltare. Tolti: opzioni mai usate dei componenti,
+    il doppione del controllo della barra dei menu.
 ```

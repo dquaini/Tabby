@@ -76,8 +76,6 @@ final class VistaOspite<V: View>: NSHostingView<V> {
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 }
 
-// MARK: - I menu (NSMenu di macOS, scuri in Notte, attaccati al tasto dal lato delle app)
-
 /// Il nome di una scheda che non ci sta: prima si tolgono le ultime parole («Proton Mail» →
 /// «Proton»), i puntini solo se non basta nemmeno la prima parola.
 struct NomeCorto: View {
@@ -93,6 +91,8 @@ struct NomeCorto: View {
         }
     }
 }
+
+// MARK: - I menu (NSMenu di macOS, scuri in Notte, attaccati al tasto dal lato delle app)
 
 @MainActor
 enum Menu {
@@ -278,9 +278,15 @@ struct BarraVista: View {
 
     // MARK: i pezzi
 
+    /// Le immagini del gatto si leggono dal disco una volta sola (la barra si ridisegna spesso:
+    /// a ogni passaggio del mouse, a ogni cambio di scheda).
+    @MainActor private static var gatti: [String: NSImage] = [:]
     private func immagineGatto(_ nome: String) -> NSImage? {
-        guard let u = Bundle.main.resourceURL?.appendingPathComponent(nome + ".png") else { return nil }
-        let i = NSImage(contentsOf: u); i?.isTemplate = true; return i
+        if let i = BarraVista.gatti[nome] { return i }
+        guard let u = Bundle.main.url(forResource: nome, withExtension: "png"), let i = NSImage(contentsOf: u) else { return nil }
+        i.isTemplate = true
+        BarraVista.gatti[nome] = i
+        return i
     }
 
     private var gatto: some View {
@@ -484,16 +490,13 @@ struct BarraVista: View {
     }
 
     /// Il numerino rosso delle notifiche, come in macOS (oltre 99: «99+»; senza numero: un pallino).
-    private func numerino(_ n: String) -> some View {
-        let t = (Int(n) ?? 0) > 99 ? "99+" : n
-        return Group {
-            if Int(t) == nil && t != "99+" { Circle().fill(Tema.notifica).frame(width: 7, height: 7) }
-            else {
-                Text(t).font(.system(size: 10, weight: .semibold)).monospacedDigit().foregroundStyle(.white)
-                    .padding(.horizontal, 4).frame(minWidth: 16, minHeight: 15)
-                    .background(Capsule().fill(Tema.notifica))
-            }
-        }
+    @ViewBuilder private func numerino(_ n: String) -> some View {
+        // un numero (oltre 99: «99+»), anche già scritto dall'app come «99+»; altrimenti un pallino
+        if let t = Int(n).map({ $0 > 99 ? "99+" : n }) ?? (n.contains(where: \.isNumber) ? n : nil) {
+            Text(t).font(.system(size: 10, weight: .semibold)).monospacedDigit().foregroundStyle(.white)
+                .padding(.horizontal, 4).frame(minWidth: 16, minHeight: 15)
+                .background(Capsule().fill(Tema.notifica))
+        } else { Circle().fill(Tema.notifica).frame(width: 7, height: 7) }
     }
 
     private func altre(_ d: DisposizioneOrizzontale, largo: Bool = false) -> some View {
@@ -727,13 +730,13 @@ struct BarraVista: View {
                                : CGSize(width: puntatore.x - presa - f.minX, height: 0)
     }
 
-    /// Mentre trascini: la scheda segue il puntatore e le altre si spostano per farle posto.
     /// Da un punto della barra (coordinate di SwiftUI, dall'alto) a un punto dello schermo.
     private func schermo(_ p: CGPoint) -> NSPoint {
         guard let w = Menu.vista?.window else { return p }
         return NSPoint(x: w.frame.minX + p.x, y: w.frame.maxY - p.y)
     }
 
+    /// Mentre trascini: la scheda segue il puntatore e le altre si spostano per farle posto.
     private func muovi(_ k: String, _ v: DragGesture.Value) {
         if stato.divisione != nil { c.trascinaInDivisione(k, schermo(v.location)); return }   // verso le zone
         if stato.scelta != nil { c.trascinaNelFoglio(schermo(v.location)); return }          // verso il foglio
@@ -849,7 +852,7 @@ struct BarraVista: View {
         let m = NSMenu()
         for (i, s) in stato.schede.enumerated() where !d.visibili.contains(i) {
             let v = Menu.voce(s.nome) { c.vai(s) }
-            v.image = Menu.icona(stato.icone[s.bid])
+            v.image = Menu.icona(s.sito.flatMap { stato.loghi[$0] } ?? stato.icone[s.bid])
             m.addItem(v)
         }
         Menu.apri(m, sopra: CorniceMenu.cornici["altre"] ?? .zero)

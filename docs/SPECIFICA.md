@@ -673,6 +673,7 @@ controlli di browser e notifiche, niente scheda accanto né notifiche spostate. 
 restano come sono (diverso da «Chiudi tutte le app»). **Un clic sulla sfera** e Tabby
 riparte. Si ricorda anche dopo un riavvio (`paused`).
 *App Swift 0.9.3:* Chiudi Tabby nasconde tutte le app in un colpo solo (anche il Finder, senza ridurre le sue finestre); barra via e sfera subito.
+*App Swift 0.10.10:* «Metti in pausa» toglie subito la barra anche con finestre in vista (lì la sfera non c'è: la si trova sulla Scrivania); togliendo la pausa la barra torna. Prima, dalla 0.9.7, la barra restava ferma con le scorciatoie spente.
 
 **W-1 Scrivania, ⌃⌥0**: nasconde tutte le app (tranne il Finder
 e quelle a schermo intero); il Finder resta in primo piano (*perché:* nascondendolo

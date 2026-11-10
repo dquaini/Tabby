@@ -58,30 +58,39 @@ extension Controllore {
         palco.chiudiFoglio(torna: false)
         stato.concentrazione = c
         salvaConcentrazione()
+        programmaFine()
         if stato.nonDisturbare { esegui("/usr/bin/shortcuts", ["run", "Concentrazione on"]) }
         Sistema.nascondiAltre(tranne: c.app)
         ricostruisci()
         // si resta sulla scheda in cui eri, se è tra le scelte; altrimenti la prima
         if let s = stato.schede.first(where: { $0.chiave == stato.attiva }) ?? stato.schede.first { vai(s, daTe: false) }
-        controllaConcentrazione()
         diario("concentrazione: \(minuti) min, \(c.chiavi.count) schede")
     }
 
-    func salvaConcentrazione() { imp.imposta("focus", stato.concentrazione?.dizionario) }
+    /// Salva e rimette l'appuntamento con la fine (anche quando cambiano i minuti).
+    func salvaConcentrazione() { imp.imposta("focus", stato.concentrazione?.dizionario); programmaFine() }
 
     /// Dopo un riavvio la Concentrazione continua, o finisce se il tempo è passato (H-5).
     func riprendiConcentrazione() {
         guard let d = imp.valore("focus") as? [String: Any], let c = StatoConcentrazione(d) else { return }
         if let f = c.fine, f < Date() { imp.imposta("focus", nil); return }
         stato.concentrazione = c
-        controllaConcentrazione()
+        programmaFine()
     }
 
-    /// Ogni secondo, solo mentre è in corso: è finita?
-    private func controllaConcentrazione() {
-        guard let c = stato.concentrazione else { return }
-        if let f = c.fine, f <= Date() { fineConcentrazione(suono: true); return }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in self?.controllaConcentrazione() }
+    /// Un solo appuntamento, all'ora di fine (prima un controllo ogni secondo, che senza tempo non
+    /// smetteva mai e poteva raddoppiarsi). Senza tempo («Resta così»): nessuno.
+    private func programmaFine() {
+        fineProgrammata?.cancel(); fineProgrammata = nil
+        guard let fine = stato.concentrazione?.fine else { return }
+        let w = DispatchWorkItem { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self, let f = self.stato.concentrazione?.fine, f <= Date().addingTimeInterval(0.5) else { return }
+                self.fineConcentrazione(suono: true)
+            }
+        }
+        fineProgrammata = w
+        DispatchQueue.main.asyncAfter(deadline: .now() + max(0, fine.timeIntervalSinceNow), execute: w)
     }
 
     func prolunga(_ minuti: Int) {
@@ -150,7 +159,6 @@ extension Controllore {
         guard var c = stato.concentrazione else { return }
         c.fine = Date().addingTimeInterval(600)
         stato.concentrazione = c; salvaConcentrazione()
-        controllaConcentrazione()
     }
 
     func restaCosì() {

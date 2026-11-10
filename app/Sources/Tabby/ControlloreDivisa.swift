@@ -155,7 +155,8 @@ extension Controllore {
     func fineDivisione() {
         guard let d = stato.divisione else { return }
         esciDivisione()
-        let seq = (imp.valore("groupSeq") as? Int ?? 0) + 1
+        // dopo il numero più alto già usato (le viste importate da Hammerspoon possono non avere il contatore)
+        let seq = max(imp.valore("groupSeq") as? Int ?? 0, viste.map(\.id).max() ?? 0) + 1
         guard let v = creaVista(id: seq, schema: d.schema, zone: d.zone) else {
             if let k = d.zone.compactMap({ $0 }).first, let s = scheda(k) { vai(s) }
             return
@@ -170,10 +171,9 @@ extension Controllore {
         o.insert(v.chiave, at: o.firstIndex(of: v.membri[0]) ?? o.count)
         imp.imposta("order", o)
         withAnimationMolla { ricostruisci() }
-        segnaAttivaVista(v)
+        segnaAttiva(v.chiave)                                 // come una scheda scelta: ⌃⌥Tab torna a quella di prima
         mostraVista(v, scelta: true)
         diario("vista divisa: \(v.membri.compactMap { scheda($0)?.nome }.joined(separator: " + "))")
     }
 
-    private func segnaAttivaVista(_ v: VistaDivisa) { withAnimationMolla { stato.attiva = v.chiave } }
 }

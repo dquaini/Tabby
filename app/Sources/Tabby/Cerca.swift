@@ -8,6 +8,8 @@ import TabbyCore
 @MainActor
 final class LettoreTesti {
     private(set) var testi: [UInt32: (testo: String, quando: Date)] = [:]
+    /// Il testo del Memo, riletto quando si apre la ricerca (non a ogni lettera scritta).
+    private(set) var memo = ""
     private var inLettura = Set<UInt32>()
     private var elettron = Set<pid_t>()
     private let coda = DispatchQueue(label: "tabby.testi", qos: .utility)
@@ -15,6 +17,7 @@ final class LettoreTesti {
 
     /// Legge le finestre lette da più di 30 s (prima le più usate).
     func aggiorna(_ finestre: [(id: UInt32, pid: pid_t, w: AXUIElement)]) {
+        memo = (try? String(contentsOf: Memo.file, encoding: .utf8)) ?? ""
         for f in finestre {
             if let t = testi[f.id], Date().timeIntervalSince(t.quando) < 30 { continue }
             guard inLettura.insert(f.id).inserted else { continue }
@@ -111,8 +114,8 @@ extension Controllore {
                 out.append((Trovato(id: "w:" + s.chiave, gruppo: .finestre, titolo: s.titolo ?? s.nome, sotto: app, testo: t, uso: uso), .scheda(s.chiave)))
             }
         }
-        if let memo = try? String(contentsOf: Memo.file, encoding: .utf8) {
-            out.append((Trovato(id: "memo", gruppo: .finestre, titolo: "Memo", sotto: "Tabby", testo: memo), .lampo(lampi.lampi.first(where: \.memo) ?? lampiDiSerie[0])))
+        if !testi.memo.isEmpty {
+            out.append((Trovato(id: "memo", gruppo: .finestre, titolo: "Memo", sotto: "Tabby", testo: testi.memo), .lampo(lampi.lampi.first(where: \.memo) ?? lampiDiSerie[0])))
         }
         for f in cartelle {
             out.append((Trovato(id: "f:\(f.id)", gruppo: .cartelle, titolo: f.nome, sotto: f.voci.map(\.nome).joined(separator: ", ")), .cartella(f.id)))
@@ -129,7 +132,7 @@ extension Controllore {
             ("Personalizza i Lampi", "Ordine, scorciatoie, aggiungi", false, { [weak self] in self?.apriFoglioLampi() }),
             ("Dividi lo schermo", "Metà e metà", false, { [weak self] in self?.avviaDivisione("2-50") }),
             ("Chiudi tutte le app", "Le app di sistema restano", true, { [weak self] in self?.chiudiTutteLeApp() }),
-            ("Metti in pausa Tabby", "Resta solo la sfera", true, { [weak self] in self?.pausa(true) }),
+            ("Metti in pausa Tabby", "La barra sparisce; la sfera sulla Scrivania", true, { [weak self] in self?.pausa(true) }),
         ]
         for (t, s, forte, a) in azioni {
             out.append((Trovato(id: "a:" + t, gruppo: .azioni, titolo: t, sotto: s, forte: forte), .comando(a)))
@@ -180,10 +183,16 @@ extension Controllore {
             let src = CGEventSource(stateID: .hidSystemState)
             for giù in [true, false] { let e = CGEvent(keyboardEventSource: src, virtualKey: 3, keyDown: giù); e?.flags = .maskCommand; e?.post(tap: .cghidEventTap) }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                // a pezzi di 20 caratteri, il massimo per un evento (prima le ricerche lunghe si troncavano)
                 let u = Array(testo.utf16)
-                let e = CGEvent(keyboardEventSource: src, virtualKey: 0, keyDown: true)
-                e?.keyboardSetUnicodeString(stringLength: u.count, unicodeString: u)
-                e?.post(tap: .cghidEventTap)
+                for i in stride(from: 0, to: u.count, by: 20) {
+                    let pezzo = Array(u[i..<min(i + 20, u.count)])
+                    for giù in [true, false] {
+                        let e = CGEvent(keyboardEventSource: src, virtualKey: 0, keyDown: giù)
+                        e?.keyboardSetUnicodeString(stringLength: pezzo.count, unicodeString: pezzo)
+                        e?.post(tap: .cghidEventTap)
+                    }
+                }
             }
         }
     }

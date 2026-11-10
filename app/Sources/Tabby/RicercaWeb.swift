@@ -41,7 +41,7 @@ extension Controllore {
                 if let errore { DispatchQueue.main.async { diario("ricerca web: \(bid) non ha aperto la finestra (\(errore.localizedDescription))") } }
             }
         case .safari?:
-            let u = indirizzo.replacingOccurrences(of: "\\", with: "").replacingOccurrences(of: "\"", with: "%22")
+            let u = perAppleScript(indirizzo)
             esegui("tell application \"Safari\"\nmake new document with properties {URL:\"\(u)\"}\nactivate\nend tell")
         default:
             apriInFinestraDDG(url, app: app, bid: bid)

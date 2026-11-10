@@ -43,7 +43,7 @@ final class StatoBarra {
     var tabbyChiusa = false                     // «Chiudi Tabby»: barra via, resta la sfera
     var rinomina: String?                       // la scheda che stai rinominando
     var nomeInModifica = ""
-    var inPausa = Impostazioni.shared.valore("paused") as? Bool ?? false
+    var inPausa = Impostazioni.shared.inPausa
     var verticale: Bool { posizione == "left" || posizione == "right" }
 }
 
@@ -87,6 +87,7 @@ final class Controllore {
     lazy var finestraTabby = FinestraTabby(self)
     let attesaPermesso = AttesaPermesso()
     var sferaDopo: DispatchWorkItem?
+    var fineProgrammata: DispatchWorkItem?      // la fine della Concentrazione (H-4)
     var appPrimaRinomina: NSRunningApplication?
     var monitorMouse: Any?
     let avviataIl = Date()
@@ -409,7 +410,7 @@ final class Controllore {
         if k != stato.attiva { segnaAttiva(k) }
     }
 
-    private func segnaAttiva(_ k: String) {
+    func segnaAttiva(_ k: String) {
         if let a = stato.attiva, a != k { precedente = stato.schede.first { $0.chiave == a } }
         storia.append((k, Date())); if storia.count > 4 { storia.removeFirst() }
         withAnimationMolla { stato.attiva = k }

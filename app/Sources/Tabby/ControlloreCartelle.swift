@@ -90,7 +90,7 @@ extension Controllore {
         inArrivo[v.bid] = (legame, Date(), note)
         let B = browserNoti[v.bid]
         func script(_ s: String) { esegui("/usr/bin/osascript", ["-e", s]) }
-        if let p = v.pagine?.compactMap(pulisci), !p.isEmpty {
+        if let p = v.pagine?.compactMap(pulisci).map(perAppleScript), !p.isEmpty {
             switch B?.tipo {
             case .chrome?:
                 script((["tell application \"\(B!.nomeAS)\"", "set w to make new window", "set URL of active tab of w to \"\(p[0])\""]
@@ -480,8 +480,8 @@ struct CercaApp: View {
             .padding(.horizontal, 14).frame(height: 30)
             let q = normalizza(testo)
             // prima quelle che iniziano con le lettere scritte, poi le altre
-            let trovate = q.isEmpty ? [] : Array(AppInstallate.tutte.filter { normalizza($0.nome).contains(q) }
-                .sorted { normalizza($0.nome).hasPrefix(q) && !normalizza($1.nome).hasPrefix(q) }.prefix(5))
+            let tutte = q.isEmpty ? [] : AppInstallate.tutte.filter { normalizza($0.nome).contains(q) }
+            let trovate = Array((tutte.filter { normalizza($0.nome).hasPrefix(q) } + tutte.filter { !normalizza($0.nome).hasPrefix(q) }).prefix(5))
             VStack(spacing: 0) {
                 ForEach(trovate, id: \.bid) { a in
                     Button { scegli(Voce(bid: a.bid, nome: a.nome)) } label: {
