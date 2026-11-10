@@ -12,6 +12,8 @@ final class Tasti {
     static var azioni: [UInt32: () -> Void] = [:]
     /// (tasto, con ⇧) → numero della scorciatoia, per l'intercettatore
     static var combinazioni: [Int: UInt32] = [:]
+    /// ⌘Spazio visto dall'intercettatore (per il velo di Spotlight)
+    static var suSpotlight: (() -> Void)?
     private static var ultime: [UInt32: (quando: Date, daIntercettatore: Bool)] = [:]
     private var intercettatore: CFMachPort?
     private var controllo: Timer?
@@ -57,6 +59,12 @@ final class Tasti {
                 return Unmanaged.passUnretained(evento)
             }
             let f = evento.flags
+            // ⌘Spazio: Spotlight si apre → il velo (V-1); il tasto va comunque a macOS
+            if f.contains(.maskCommand), !f.contains(.maskControl), !f.contains(.maskAlternate), !f.contains(.maskShift),
+               evento.getIntegerValueField(.keyboardEventKeycode) == Int64(kVK_Space) {
+                DispatchQueue.main.async { MainActor.assumeIsolated { Tasti.suSpotlight?() } }
+                return Unmanaged.passUnretained(evento)
+            }
             // solo ⌃⌥ (con o senza ⇧), mai ⌘: tutto il resto passa senza guardarlo
             guard f.contains(.maskControl), f.contains(.maskAlternate), !f.contains(.maskCommand) else { return Unmanaged.passUnretained(evento) }
             let tasto = Int(evento.getIntegerValueField(.keyboardEventKeycode))

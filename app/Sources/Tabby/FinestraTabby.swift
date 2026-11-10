@@ -375,6 +375,9 @@ private struct Pagina: View {
         Frase("Quando accendi il Mac, Tabby", ["si apre", "resta chiusa"], SMAppService.mainApp.status == .enabled ? "si apre" : "resta chiusa", ".") {
             c.accensione($0 == "si apre"); f.sezione = sezione
         }
+        Frase("Con Spotlight aperto lo sfondo", ["si oscura", "resta com'è"], vero("spotlightDim", true) ? "si oscura" : "resta com'è", ".") {
+            imposta("spotlightDim", $0 == "si oscura")
+        }
         Frase("Quando scegli una scheda,", ["nascondo", "lascio in vista"], vero("oneAtATime", true) ? "nascondo" : "lascio in vista", "le altre app.") {
             imposta("oneAtATime", $0 == "nascondo")
         }

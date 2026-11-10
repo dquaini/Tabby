@@ -103,11 +103,16 @@ final class Controllore {
     var storia: [(chiave: String, quando: Date)] = []
     /// L'ultima volta che hai scelto tu una scheda (clic o scorciatoia).
     var finestraScrivania: UInt32?               // la finestra del Finder aperta dal musetto
+    let veloSpotlight = VeloSpotlight()
+    var sitiScelti: [UInt32: String] = [:]       // B-8: il sito scelto per una finestra di browser
+    var scrivaniaDa = Date.distantPast           // quando si è andati sulla Scrivania (W-2)
+    var ultimaFinestrella = Date.distantPast     // C-3
     var sceltaTua = Date.distantPast             // l'ultima volta che hai scelto tu una scheda
     private(set) var precedente: Scheda?
 
     func avvia() {
         tasti.riprovaIntercettatore()                   // se all'apertura mancava l'Accessibilità
+        Tasti.suSpotlight = { [weak self] in self?.veloSpotlight.forse() }
         defer { osservaNotifiche() }
         pannello = PannelloBarra(controllore: self)
         velo = VeloDivisione(controllore: self)
@@ -218,6 +223,7 @@ final class Controllore {
             var nuove = costruisciSchede(infos, separate: { unite[$0] == nil },
                                          senzaFinestre: imp.valore("showWindowless") as? Bool ?? false,
                                          nomi: imp.valore("tabNames") as? [String: String] ?? [:])
+            mostraSitiScelti(&nuove)
             elementi = [:]
             for (n, s) in nuove.enumerated() {
                 if let f = s.finestra, let w = el[f] { elementi[s.chiave] = w }
@@ -257,6 +263,7 @@ final class Controllore {
             let prima = stato.schede
             if visibili != stato.schede { stato.schede = visibili }
             controllaChiusura(prima: prima)
+            controllaFinestrella()
             aggiornaAttiva()
             controllaSfera()
         }
@@ -279,6 +286,25 @@ final class Controllore {
             imp.imposta("tabNames", nomi)
         }
         diario("stessa finestra, chiave nuova: " + cambi.map { "\($0.key) → \($0.value)" }.joined(separator: ", "))
+    }
+
+    /// C-3: chiusa una finestrella (accesso con Google, pagamento), all'app davanti restano solo
+    /// finestre ridotte: 0,3 s dopo si riapre l'ultima usata, invece di lasciare il vuoto.
+    private func controllaFinestrella() {
+        guard !stato.scrivania, Date().timeIntervalSince(ultimaFinestrella) > 2,
+              let app = NSWorkspace.shared.frontmostApplication, let bid = app.bundleIdentifier,
+              !Sistema.ignorate().contains(bid), bid != "com.apple.finder" else { return }
+        let sue = tutte.filter { $0.bid == bid && $0.finestra != nil }
+        guard !sue.isEmpty, sue.allSatisfy(\.ridotta), Sistema.finestraAttiva(app.processIdentifier) == nil else { return }
+        ultimaFinestrella = Date()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            guard let self, NSWorkspace.shared.frontmostApplication == app,
+                  Sistema.finestraAttiva(app.processIdentifier) == nil else { return }
+            let recenti = self.storiaUso
+            guard let s = sue.min(by: { (recenti.firstIndex(of: $0.chiave) ?? 99) < (recenti.firstIndex(of: $1.chiave) ?? 99) }) else { return }
+            diario("finestrella chiusa: riapro «\(s.nome)»")
+            self.vai(s, daTe: false)
+        }
     }
 
     /// C-4: chiusa o ridotta la scheda attiva → scheda accanto, sempre.
@@ -354,6 +380,13 @@ final class Controllore {
         if Sistema.ignorate().contains(bid) { return }                  // un Lampo: non tocca niente
         if controllaAppFuori(app) { return }                            // fuori dalla Concentrazione
         if stato.scrivania && bid == "com.apple.finder" { return }
+        // W-2: subito dopo la Scrivania macOS a volte «rimbalza» su un'altra app: la si rinasconde
+        if stato.scrivania && !stato.tabbyChiusa, Date().timeIntervalSince(scrivaniaDa) < 1.2, sceltaTua < scrivaniaDa {
+            diario("rimbalzo su \(app.localizedName ?? bid) dopo la Scrivania: la rinascondo")
+            app.hide()
+            NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.finder").first?.activate()
+            return
+        }
         // X-5: un pannello (la finestrella di Notion «vuoi registrare il meeting?»): non è una
         // scheda, non si ingrandisce e non nasconde le altre app (prima spariva anche il meeting)
         if browserNoti[bid] == nil, let p = Sistema.pannello(app, spazio: Sistema.spazioApp(posizione: stato.posizione)) {
@@ -439,6 +472,7 @@ final class Controllore {
     func gatto() {
         if stato.scrivania && !stato.tabbyChiusa { return }
         withAnimationMolla { stato.scrivania = true; stato.tabbyChiusa = false }
+        scrivaniaDa = Date()
         for s in tutte where s.bid == "com.apple.finder" { if let f = s.finestra { ridotteDaTabby[f] = Date() } }
         Sistema.scrivania()
         apriCartellaScrivania()
@@ -500,6 +534,49 @@ final class Controllore {
     }
 
     func nuovaApp() { Sistema.apriSpotlight() }
+
+    // MARK: - Finestre separate (S-3) e sito da mostrare (B-8), dal tasto destro
+
+    /// S-3: le finestre di quest'app stanno in una scheda sola? (i browser mai)
+    func finestreUnite(_ bid: String) -> Bool { (imp.valore("joinWins") as? [String: Any])?[bid] != nil }
+
+    func uniscFinestre(_ bid: String, _ sì: Bool) {
+        var d = imp.valore("joinWins") as? [String: Any] ?? [:]
+        d[bid] = sì ? true : nil
+        imp.imposta("joinWins", d)
+        withAnimationMolla { ricostruisci() }
+    }
+
+    /// I siti aperti in una finestra di browser (DuckDuckGo dice solo quello in vista).
+    func siti(di s: Scheda) -> [String] {
+        guard browserNoti[s.bid] != nil, s.finestra != nil else { return [] }
+        var visti: [String] = []
+        for u in (s.indirizzi ?? []) + [s.inVista].compactMap({ $0 }) {
+            if let d = dominio(u), !visti.contains(d) { visti.append(d) }
+        }
+        return visti
+    }
+
+    /// B-8: la scheda prende nome e logo del sito scelto finché quel sito è aperto nella finestra
+    /// (con DuckDuckGo, che dice solo la scheda in vista, finché la finestra è aperta). nil = torna «Chrome».
+    func scegliSito(_ s: Scheda, _ d: String?) {
+        guard let f = s.finestra else { return }
+        sitiScelti[f] = d
+        ricostruisci()
+    }
+
+    private func mostraSitiScelti(_ schede: inout [Scheda]) {
+        guard !sitiScelti.isEmpty else { return }
+        let vive = Set(schede.compactMap(\.finestra))
+        sitiScelti = sitiScelti.filter { vive.contains($0.key) }
+        let nomi = imp.valore("tabNames") as? [String: String] ?? [:]
+        for i in schede.indices {
+            guard let f = schede[i].finestra, let d = sitiScelti[f] else { continue }
+            if let u = schede[i].indirizzi, !u.contains(where: { dominio($0) == d }) { sitiScelti[f] = nil; continue }
+            if nomi[schede[i].chiave] == nil { schede[i].nome = nomeSito(titolo: nil, dominio: d) }
+            schede[i].sito = d
+        }
+    }
 
     // MARK: - Rinominare (B-8, DESIGN 3.2)
 

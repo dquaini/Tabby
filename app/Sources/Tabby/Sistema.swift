@@ -216,6 +216,8 @@ enum Sistema {
         let ign = ignorate()
         for a in NSWorkspace.shared.runningApplications where a.activationPolicy == .regular {
             guard let b = a.bundleIdentifier, !bids.contains(b), !ign.contains(b), !a.isHidden else { continue }
+            // Z-4: un'app con una finestra a schermo intero non si nasconde (ha la sua scrivania)
+            if finestre(a.processIdentifier).contains(where: { (attributo($0, "AXFullScreen") as Bool?) == true }) { continue }
             a.hide()
         }
     }

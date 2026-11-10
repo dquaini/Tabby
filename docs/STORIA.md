@@ -240,4 +240,8 @@ app 0.9.4 (10/11/2026): i quattro punti del Mac di lavoro: scorciatoie ⌃⌥ an
     (intercettatore dei tasti, K-1), fascia vuota in cima con Tabby di lato (A-7), notifiche di macOS sotto
     o accanto a Tabby (N-5), finestrelle tipo Notion che non nascondono le altre app (X-5). Nomi dei
     servizi conosciuti (Proton Mail, Gmail…), mai l'indirizzo email.
+app 0.9.5 (10/11/2026): verso la parità con Hammerspoon: finestre separate per app e «Mostra come» (il sito
+    da mostrare) dal tasto destro; velo con Spotlight o Raycast aperti; protezioni: rimbalzo dopo la
+    Scrivania (W-2), rilascio del mouse perso (T-2), finestrella chiusa che riapre l'ultima ridotta (C-3),
+    app a schermo intero mai nascoste (Z-4).
 ```

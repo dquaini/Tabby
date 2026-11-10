@@ -68,6 +68,7 @@ per id (la più vecchia prima).
 browser e app veloci) si può spegnere "una scheda per finestra": allora l'app è una
 scheda sola (chiave = bundle ID). Salvato in `joinWins`. I browser sono **sempre** a
 finestre separate.
+*App Swift 0.9.5:* dal tasto destro sulla scheda: «Tutte le finestre in una scheda» / «Una scheda per finestra».
 
 **S-4 App senza finestre.** Un'app aperta senza finestre standard è una scheda solo
 se ⚙︎ → "Mostra anche app aperte senza finestre" è acceso, oppure se ha finestre
@@ -168,6 +169,7 @@ siti → l'elenco dei siti aperti (con i loghi); scelto uno, la scheda prende no
 di quel sito finché quel sito è aperto nella finestra, poi torna «Chrome». Con
 DuckDuckGo (che dice solo il sito della scheda in vista) la scelta resta finché la
 finestra è aperta.
+*App Swift 0.9.5:* tasto destro → «Mostra come» con i siti della finestra, e «Il nome del browser» per tornare indietro.
 
 **B-5 Finestre di browser non webapp.** Come S-2, con il nome breve del browser
 ("Chrome") al posto del nome dell'app; il titolo usato è quello dato dal browser
@@ -287,6 +289,7 @@ Hammerspoon, finestre non standard.
 **C-3 Chiusa una finestrella** (accesso con Google, pagamento: non è una scheda):
 se dell'app in primo piano restano solo finestre ridotte, 0,3 s dopo si riapre
 **l'ultima usata** tra le ridotte, invece di lasciare il desktop vuoto.
+*App Swift 0.9.5:* fatto (diario «finestrella chiusa: riapro …»).
 
 **C-4 Chiusa o ridotta la scheda attiva → scheda accanto, sempre** (v9.38, Daniele:
 "indipendentemente dal comportamento selezionato"). In qualsiasi modo: ✕ di Tabby,
@@ -608,6 +611,7 @@ ricompare.
 
 **Z-4** Le app con una finestra a schermo intero non si nascondono (U-1) e non
 vengono nascoste dalla scrivania.
+*App Swift 0.9.5:* fatto. Z-1: la barra non va sulle scrivanie a schermo intero. Z-3 (anticipo al pallino verde) non ancora.
 
 ## 13. Scrivania
 
@@ -670,6 +674,7 @@ macOS riattiverebbe un'altra app) e le sue finestre si riducono. Il tasto si
 accende. Ripremuto: torna all'ultima scheda.
 **W-2** Se entro 1,2 s macOS "rimbalza" su un'altra app, la si rinasconde; un'app
 scelta dopo fa finire la scrivania.
+*App Swift 0.9.5:* fatto (diario «rimbalzo su X dopo la Scrivania»).
 
 
 ## 14. Azioni veloci e Memo (tasto ⚡︎)
@@ -795,6 +800,7 @@ trasparente). Tabby controlla 20 volte al secondo se toglierlo (macOS avvisa con
 di ritardo): Spotlight è aperto finché la finestra attiva è sua. Dopo 10 minuti si
 toglie comunque. ⚙︎ → Comportamento → "Oscura lo sfondo con Spotlight e le azioni
 rapide" (acceso di serie).
+*App Swift 0.9.5:* fatto, anche per **Raycast**; si accende con ⌘Spazio visto dall'intercettatore dei tasti; impostazione «Con Spotlight aperto lo sfondo si oscura / resta com'è».
 
 ## 16b. Concentrazione (v9.55)
 
@@ -937,6 +943,7 @@ premuta Tabby controlla ogni 0,3 s il tasto sinistro del mouse: se non è più g
 lei il trascinamento (niente riordino), toglie la lineetta d'accento e la scheda
 fantasma, e il clic dopo **non** viene ignorato. La lineetta sparisce comunque a ogni fine
 di trascinamento. *Perché:* «ogni tanto la linea blu compare in mezzo tra due icone».
+*App Swift 0.9.5:* fatto.
 
 ## 20. Menu
 

@@ -164,6 +164,17 @@ struct BarraVista: View {
         Group { if stato.verticale { colonna } else { riga } }
             .foregroundStyle(Tema.tenue)
             .font(.system(size: 12.5))
+            // T-2: se macOS perde il rilascio del clic durante un trascinamento, ogni 0,3 s si
+            // guarda il tasto del mouse: alzato → il trascinamento finisce (niente riordino) e
+            // spariscono lineetta e scheda fantasma
+            .task(id: trascinata) {
+                while trascinata != nil && !Task.isCancelled {
+                    try? await Task.sleep(for: .milliseconds(300))
+                    if trascinata != nil && NSEvent.pressedMouseButtons & 1 == 0 {
+                        withAnimationMolla { trascinata = nil; provvisorio = nil }
+                    }
+                }
+            }
     }
 
     private var forma: UnevenRoundedRectangle {
@@ -435,6 +446,27 @@ struct BarraVista: View {
         }
         if c.haNomeTuo(s.chiave) {
             Button { c.tornaAlNome(s.chiave) } label: { Label("Torna al nome di prima", systemImage: "arrow.uturn.backward") }
+        }
+        // B-8: per una finestra di browser con più siti, quale mostrare
+        let siti = c.siti(di: s)
+        if siti.count > 1 || c.sitiScelti[s.finestra ?? 0] != nil {
+            SwiftUI.Menu {
+                ForEach(siti, id: \.self) { d in
+                    Button { c.scegliSito(s, d) } label: { Text(nomeSito(titolo: nil, dominio: d)) }
+                }
+                if c.sitiScelti[s.finestra ?? 0] != nil {
+                    Divider()
+                    Button { c.scegliSito(s, nil) } label: { Text("Il nome del browser") }
+                }
+            } label: { Label("Mostra come", systemImage: "globe") }
+        }
+        // S-3: le finestre di un'app (non dei browser) in una scheda sola, o una per finestra
+        if browserNoti[s.bid] == nil, !s.chiave.hasPrefix("g:"), !s.chiave.hasPrefix("f:"),
+           c.finestreUnite(s.bid) || c.tutte.filter({ $0.bid == s.bid }).count > 1 {
+            let unite = c.finestreUnite(s.bid)
+            Button { c.uniscFinestre(s.bid, !unite) } label: {
+                Label(unite ? "Una scheda per finestra" : "Tutte le finestre in una scheda", systemImage: unite ? "square.split.2x1" : "square.on.square")
+            }
         }
         if s.chiave.hasPrefix("f:"), let id = Int(s.chiave.dropFirst(2)) {
             Button { c.apriFoglioCartella(id) } label: { Label("Modifica la cartella", systemImage: "square.stack.3d.up") }

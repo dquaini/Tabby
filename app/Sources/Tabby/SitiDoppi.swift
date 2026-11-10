@@ -15,7 +15,7 @@ extension Controllore {
         doppiAvvisati.formIntersection(vive)
         guard ora.timeIntervalSince(avviataIl) > 15 else { return }
         for s in schede {
-            guard let sito = s.sito, let f = s.finestra, !doppiAvvisati.contains(f),
+            guard let sito = s.sito, let f = s.finestra, !doppiAvvisati.contains(f), sitiScelti[f] == nil,
                   let quando = vistaLaPrimaVolta[f], ora.timeIntervalSince(quando) < 120, quando > avviataIl.addingTimeInterval(15)
             else { continue }
             let piùVecchie = schede.filter { t in t.finestra.flatMap { vistaLaPrimaVolta[$0] }.map { $0 < quando } ?? false }
