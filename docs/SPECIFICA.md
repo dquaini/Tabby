@@ -90,6 +90,7 @@ aperto in Chrome e in Safari), la seconda diventa `win:<id>`: sono due schede.
 Pulizia: si tolgono le chiavi `g:` di viste divise che non esistono più, `f:` di
 cartelle cancellate, `win:` di finestre chiuse, e se le chiavi ricordate sono più di
 300 quelle non visibili. Preferite di partenza: Finder, Calendario, Note.
+*App Swift 0.9.3:* se una finestra cambia chiave (una finestra di browser che passa a un sito solo, `win:` → `site:`, o il contrario) è la **stessa scheda**: resta al suo posto, resta attiva, tiene vista divisa e nome. Prima sembrava chiusa e si saltava su un'altra finestra.
 
 **S-8 Ricostruzione (`rebuildTabs`).** Si rifà da zero l'elenco di tutte le schede
 possibili (`cand`), con le mappe chiave→finestra, finestra→chiave, chiave→bundle ID.
@@ -195,6 +196,7 @@ un'altra finestra» con **Lascia** · **Vai a quella** · **Chiudi questa** (blu
 finestra nuova e ti porta all'altra). Una volta per finestra; sparisce da solo dopo
 12 s. Solo per finestre "nuove" da meno di 2 minuti; quello che si vede nei primi 15 s
 dopo l'avvio di Tabby c'era già e non conta.
+*App Swift 0.9.3:* il sito conta come già aperto anche se è una delle schede di una finestra più vecchia (Chrome, Safari) o la scheda in vista di DuckDuckGo; l'avviso dice il nome della finestra nuova.
 
 ## 4. Passare da una scheda all'altra
 
@@ -355,6 +357,7 @@ scheda sola) va nella sua zona se la vista è attiva.
 
 **D-6 Scomponi**: le schede tornano singole, al posto della vista; si resta su
 quella che guardavi.
+*App Swift 0.9.3:* scomponendo si resta sulla scheda della vista usata per ultima (mai sulla «scheda accanto»), e **ogni** finestra della vista torna a tutto spazio, anche quelle dei browser.
 
 **D-7 Una vista segue le sue finestre.** Una finestra di browser nella vista è
 seguita per numero di finestra: se cambia chiave (Gmail apre un link di un altro
@@ -455,6 +458,7 @@ spegne, ma non nei primi 20 s dopo l'attivazione (le app ci mettono a aprirsi).
 **F-10** ⚙︎ → Cartelle → Modifica le cartelle → Modifica le schede / Rinomina / Elimina. Anche il
 **tasto destro sulla scheda-cartella** apre il suo menu (con Rinomina…) (v9.60).
 ⚙︎ → Comportamento → Vista cartelle (acceso di serie).
+*App Swift 0.9.3:* ⚡︎ → Cartelle → «Modifica o elimina…» per ogni cartella, anche spenta; nel foglio «Modifica la cartella» c'è «Elimina la cartella» (con Annulla nell'avviso).
 
 ## 9. Notifiche
 
@@ -505,6 +509,7 @@ orizzontale, a sinistra in verticale), testo chiaro. Vista divisa: icone affianc
 ⇄ e Scomponi al posto della ✕. Cartella: 3 icone sovrapposte, ⋯ al posto della ✕.
 Compatta: solo l'icona, con puntino rosso (notifica) o un quadratino col numero di
 membri (vista/cartella).
+*App Swift 0.9.3:* un nome che non ci sta perde le ultime parole («Proton Mail» → «Proton»); i puntini solo se non basta la prima parola.
 
 **L-4 Gatto (tasto scrivania)**: testa del gatto grigia a riposo, chiara con la
 scrivania attiva (`assets/gatto-spento.png`, `gatto-acceso.png`). Con Tabby
@@ -630,6 +635,7 @@ cartella con le icone delle sue prime due app; il nome compare passandoci sopra 
 sinistra, o sopra se a sinistra c'è un'altra sfera). Sono nella stessa pagina della
 sfera: la finestrella si allarga (420 punti) mentre il ventaglio è aperto e torna piccola
 quando si chiude (clic fuori, Esc, o di nuovo la sfera).
+*App Swift 0.9.3 (Daniele):* il musetto apre anche una finestra del Finder sulla cartella **Scrivania**; quella finestra è la scheda del gatto (non compare in barra) e si chiude quando vai su un'altra scheda.
 
 **W-3 Il cerchio sulla scrivania** (v9.51): quando non c'è **nessuna finestra in vista**
 (app tutte nascoste, ridotte o chiuse, o ⌃⌥0; Lampi, Memo e Hammerspoon non contano) per
@@ -654,6 +660,7 @@ nasconde né ridimensiona app, le scorciatoie ⌃⌥ e i gesti passano alle app,
 controlli di browser e notifiche, niente scheda accanto né notifiche spostate. Le app
 restano come sono (diverso da «Chiudi tutte le app»). **Un clic sulla sfera** e Tabby
 riparte. Si ricorda anche dopo un riavvio (`paused`).
+*App Swift 0.9.3:* Chiudi Tabby nasconde tutte le app in un colpo solo (anche il Finder, senza ridurre le sue finestre); barra via e sfera subito.
 
 **W-1 Scrivania, ⌃⌥0**: nasconde tutte le app (tranne il Finder
 e quelle a schermo intero); il Finder resta in primo piano (*perché:* nascondendolo
@@ -700,6 +707,7 @@ Lampo con altri già aperti: **posto sia accanto sia sotto → due riquadri trat
 lì**, senza domande; **nessun posto → non si apre** e al centro compare «Non c'è spazio per
 mettere …». Chiudendone uno, **gli altri si spostano** a riempire il posto. I Lampi già al
 loro posto non si spostano.
+*App Swift 0.9.3:* Esc chiude **solo** il Lampo davanti; se ce ne sono altri aperti si passa all'ultimo (un altro Esc chiude il prossimo). Esc chiude anche il Memo. Un Lampo aperto ma senza finestre (Calendario) se ne fa una, come col Dock.
 
 **Q-1c Lampi personalizzati** (v9.68, 31/10/2026, Daniele: «così ognuno personalizza il suo
 ambiente»): ⚡︎ → **Personalizza i Lampi ▸**. Per ogni Lampo: «Cambia la scorciatoia…» e
@@ -817,6 +825,7 @@ scrivania, un **anello giallo** intorno alla sfera. Un'app non scelta che viene 
 chiede «Aprire X?» (Invio/Esc = Resto concentrato; «Aprila lo stesso» la aggiunge alle
 schede). Senza chiedere: Lampi, Memo, Finder, azioni rapide. Il clic sul gatto salta
 le schede non permesse.
+*App Swift 0.9.3 (Daniele):* al posto della batteria un **cerchio** che si riempie col tempo passato, come i limiti di Claude; clic → quanto manca, +5, +15, −5 minuti, Termina.
 
 **H-4 Fine.** Suono «Glass»; finestra «Fatto! N minuti» con le notifiche arrivate nel
 frattempo dalle app e dai siti rimasti fuori (differenza dei numerini rispetto
@@ -847,6 +856,7 @@ finestre…»). Per le app Electron (Slack, Notion) che non danno testo, Tabby c
 volta `AXManualAccessibility`. Il testo resta **solo in memoria**. Limiti: del browser
 solo la pagina in vista di ogni finestra; Slack/Notion il testo sullo schermo; Windows
 App niente (solo il titolo). **[Swift]** stessa lettura, in un thread a parte.
+*App Swift 0.9.3:* Spotify e Musica non fanno leggere la finestra: si cerca nel brano in ascolto (titolo, artista, album), chiesto a loro.
 
 **E-3 Risultati** (max 8): le finestre in cui tutte le parole sono nel titolo (anche nome
 della scheda e dell'app) o nel testo; minuscole e senza accenti («perche» trova

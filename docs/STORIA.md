@@ -229,4 +229,11 @@ app 0.9.1 (10/11/2026): la rinomina si salva cambiando scheda; col menu di Apple
     vista»; la sfera consuma 6% invece di 37% (gatto caricato una volta, 10 immagini al secondo).
 app 0.9.2 (10/11/2026): via del tutto «Nascondi Tabby» (scatto col menu di Apple): Tabby resta sempre in
     vista; si toglie di mezzo solo quando scende il menu di Apple.
+app 0.9.3 (10/11/2026): 16 correzioni dalle prove di Daniele. Nomi lunghi accorciati per parole («Proton»);
+    una finestra di browser che cambia sito resta la stessa scheda (prima sembrava chiusa e si saltava
+    altrove); siti doppi anche fra le schede di un'altra finestra; Tabby che torna sempre dopo il menu di
+    Apple; Scomponi resta sulla scheda giusta e riallarga tutte le finestre; eliminare le cartelle;
+    apertura della cartella con le icone ferme; Lampi: Calendario che si apre, Esc che chiude solo quello
+    davanti, Esc nel Memo; ricerca nel brano di Spotify; cerchio della Concentrazione; il musetto apre la
+    Scrivania nel Finder; Chiudi Tabby immediata.
 ```
