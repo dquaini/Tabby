@@ -138,6 +138,20 @@ Nell'app Swift Tabby avrà cinque sezioni:
 ---
 
 ## 🛠 Direttamente nell'app Swift
+- **Ricerca web dalla barra di Tabby** (idea di Daniele, 10/11/2026; da fare **dopo** i quattro
+  punti del Mac di lavoro: tasti dentro Windows App, fascia nera con Tabby di lato, notifiche di
+  macOS, finestrelle tipo Notion):
+  - a destra nella barra di ricerca il **cerchio col logo del browser** (DuckDuckGo di serie): un
+    clic e lo cambi, la scelta resta;
+  - scrivi «raycast» → Tabby propone i **siti veri** (raycast.com col logo, dalle risposte rapide di
+    DuckDuckGo, gratis) e in fondo sempre «Cerca "raycast" sul web». Da valutare se serve un servizio
+    di ricerca vero (es. Brave Search: chiave gratuita, ricerche al mese limitate);
+  - clic → una **finestra nuova con una scheda sola** sul sito, che diventa subito una scheda di
+    Tabby col suo nome e logo. Chrome, Safari, Brave, Edge: con AppleScript, sicuro. DuckDuckGo non ha
+    AppleScript: provare l'apertura diretta, altrimenti ⌘N e indirizzo;
+  - **privacy, da decidere insieme**: oggi la ricerca non esce dal Mac. Al web si chiede solo quando
+    sul Mac non c'è niente e dopo una pausa nello scrivere, oppure premendo Tab per i risultati web;
+  - consumo: lavora solo a ricerca aperta, mentre scrivi.
 - **Animazione d'avvio** (storia di Daniele del 22/10, rivista il 9/11 in
   `docs/design-finestra.html`): le due animazioni partono **ogni volta che l'app si apre da
   zero**, e intanto Tabby carica tutto dietro, così è subito pronta; poi il riquadro di
