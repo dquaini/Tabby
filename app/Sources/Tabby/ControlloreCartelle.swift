@@ -135,6 +135,9 @@ extension Controllore {
         guard let id = stato.cartellaAperta else { return }
         withAnimationMolla { stato.cartellaAperta = nil }
         if !vistaCartelle { attive.removeAll { $0 == id }; salvaAttive() }
+        // si resta sulla schermata in cui sei e si vedono le schede fuori dalla cartella: la
+        // scheda-cartella che sparisce non è una chiusura (niente «scheda accanto»)
+        sceltaTua = Date()
         ricostruisci()
     }
 
@@ -144,6 +147,7 @@ extension Controllore {
     func esciDallaCartella(_ id: Int) {
         attive.removeAll { $0 == id }; salvaAttive()
         if stato.cartellaAperta == id { stato.cartellaAperta = nil }
+        sceltaTua = Date()                              // resti dove sei (vedi sopra)
         ricostruisci()
     }
 
