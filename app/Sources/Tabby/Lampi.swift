@@ -311,19 +311,17 @@ final class Memo: NSObject, WKScriptMessageHandler {
         chiuso?()
     }
 
-    nonisolated func userContentController(_ u: WKUserContentController, didReceive m: WKScriptMessage) {
+    func userContentController(_ u: WKUserContentController, didReceive m: WKScriptMessage) {
         guard let d = m.body as? [String: Any] else { return }
         let testo = d["text"] as? String, pieghe = d["fold"] as? [String], chiudi = d["close"] as? Bool == true
-        MainActor.assumeIsolated {
-            if let testo {
-                do {
-                    try testo.write(to: Memo.file, atomically: true, encoding: .utf8)
-                    dataLetta = (try? FileManager.default.attributesOfItem(atPath: Memo.file.path))?[.modificationDate] as? Date
-                } catch { diario("Memo: impossibile salvare in \(Memo.file.path)") }
-            }
-            if let pieghe { Impostazioni.shared.imposta("memoFold", pieghe) }
-            if chiudi { self.chiudi() }
+        if let testo {
+            do {
+                try testo.write(to: Memo.file, atomically: true, encoding: .utf8)
+                dataLetta = (try? FileManager.default.attributesOfItem(atPath: Memo.file.path))?[.modificationDate] as? Date
+            } catch { diario("Memo: impossibile salvare in \(Memo.file.path)") }
         }
+        if let pieghe { Impostazioni.shared.imposta("memoFold", pieghe) }
+        if chiudi { self.chiudi() }
     }
 
     private func json(_ v: Any) -> String {

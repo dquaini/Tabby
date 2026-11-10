@@ -121,6 +121,12 @@ enum Menu {
         m.popUp(positioning: nil, at: p, in: v)
     }
 
+    /// L'icona di una voce di menu, a 16 punti (una copia: l'originale serve anche alla barra).
+    static func icona(_ i: NSImage?) -> NSImage? {
+        guard let x = i?.copy() as? NSImage else { return nil }
+        x.size = NSSize(width: 16, height: 16); return x
+    }
+
     static func voce(_ titolo: String, simbolo: String? = nil, tasto: String = "", attiva: Bool = true,
                      segno: Bool = false, _ azione: (() -> Void)? = nil) -> NSMenuItem {
         let i = AzioneMenu(title: titolo, action: azione == nil ? nil : #selector(AzioneMenu.esegui), keyEquivalent: tasto)
@@ -630,7 +636,7 @@ struct BarraVista: View {
             for l in app {
                 let v = Menu.voce(l.nome, tasto: l.tasto) { c.lampi.premi(l) }
                 if let b = l.bid, let u = NSWorkspace.shared.urlForApplication(withBundleIdentifier: b) {
-                    let i = NSWorkspace.shared.icon(forFile: u.path); i.size = NSSize(width: 16, height: 16); v.image = i
+                    v.image = Menu.icona(NSWorkspace.shared.icon(forFile: u.path))
                 }
                 m.addItem(v)
             }
@@ -639,7 +645,7 @@ struct BarraVista: View {
                 for a in scoperte {
                     let v = Menu.voce("Apri \(a.nome)") { c.lampi.premiNellaBarraDeiMenu(Lampo(bid: a.bid, nome: a.nome, tasto: "", barraMenu: true)) }
                     if let u = NSWorkspace.shared.urlForApplication(withBundleIdentifier: a.bid) {
-                        let i = NSWorkspace.shared.icon(forFile: u.path); i.size = NSSize(width: 16, height: 16); v.image = i
+                        v.image = Menu.icona(NSWorkspace.shared.icon(forFile: u.path))
                     }
                     sotto.addItem(v)
                 }
@@ -794,7 +800,7 @@ struct BarraVista: View {
         m.addItem(NSMenuItem.sectionHeader(title: f.nome))
         for s in stato.membriCartella[chiave] ?? [] {
             let v = Menu.voce(s.nome) { c.entraNellaCartella(id, su: s.chiave) }
-            v.image = (s.sito.flatMap { stato.loghi[$0] } ?? stato.icone[s.bid]).map { let x = $0.copy() as! NSImage; x.size = NSSize(width: 16, height: 16); return x }
+            v.image = Menu.icona(s.sito.flatMap { stato.loghi[$0] } ?? stato.icone[s.bid])
             v.state = c.ultimaDi[id] == s.chiave ? .on : .off
             m.addItem(v)
         }
@@ -843,7 +849,7 @@ struct BarraVista: View {
         let m = NSMenu()
         for (i, s) in stato.schede.enumerated() where !d.visibili.contains(i) {
             let v = Menu.voce(s.nome) { c.vai(s) }
-            v.image = stato.icone[s.bid].map { let x = $0.copy() as! NSImage; x.size = NSSize(width: 16, height: 16); return x }
+            v.image = Menu.icona(stato.icone[s.bid])
             m.addItem(v)
         }
         Menu.apri(m, sopra: CorniceMenu.cornici["altre"] ?? .zero)

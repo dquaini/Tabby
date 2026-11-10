@@ -26,21 +26,22 @@ public enum Permessi {
 @MainActor
 public final class AttesaPermesso {
     private var lavoro: Task<Void, Never>?
+    private var inAttesa: [@MainActor () -> Void] = []
 
     public init() {}
 
+    /// Chi aspetta (l'avvio di Tabby, la pagina della guida…) viene avvisato, ognuno: prima una
+    /// seconda richiesta cancellava la prima e Tabby restava ferma dopo il permesso dato nella guida.
     public func aspetta(_ fatto: @escaping @MainActor () -> Void) {
         if Permessi.accessibilita { fatto(); return }
-        lavoro?.cancel()
+        inAttesa.append(fatto)
+        guard lavoro == nil else { return }
         lavoro = Task { @MainActor in
-            while !Permessi.accessibilita {
-                try? await Task.sleep(for: .seconds(1))
-                if Task.isCancelled { return }
-            }
+            while !Permessi.accessibilita { try? await Task.sleep(for: .seconds(1)) }
             diario("permesso Accessibilità dato")
-            fatto()
+            let tutti = inAttesa
+            inAttesa = []; lavoro = nil
+            tutti.forEach { $0() }
         }
     }
-
-    public func smetti() { lavoro?.cancel(); lavoro = nil }
 }

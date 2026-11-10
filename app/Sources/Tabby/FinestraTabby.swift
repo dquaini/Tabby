@@ -196,7 +196,7 @@ private struct VistaFinestra: View {
 /// Un video centrato (non a tutto schermo), col marchio in basso a destra coperto.
 private struct Video: NSViewRepresentable {
     let nome: String
-    let finito: () -> Void
+    let finito: @MainActor @Sendable () -> Void
 
     func makeNSView(context: Context) -> NSView {
         let v = NSView()
@@ -209,7 +209,7 @@ private struct Video: NSViewRepresentable {
         let copri = CALayer(); copri.backgroundColor = NSColor.black.cgColor        // il marchio «creato con…»
         v.layer?.addSublayer(copri)
         context.coordinator.strati = (l, copri)
-        NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: p.currentItem, queue: .main) { _ in finito() }
+        NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: p.currentItem, queue: .main) { _ in MainActor.assumeIsolated { finito() } }
         if NSWorkspace.shared.accessibilityDisplayShouldReduceMotion { p.seek(to: CMTime(seconds: 9.5, preferredTimescale: 600)) }
         p.play()
         return v

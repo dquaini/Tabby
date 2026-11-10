@@ -72,10 +72,10 @@ enum Sistema {
         return (InfoApp(bid: bid, nome: app.localizedName ?? bid, pid: app.processIdentifier, finestre: info), el)
     }
 
-    /// Le app "vere" (nel Dock) che possono essere schede (S-1).
     /// App di passaggio di macOS che non sono mai schede (Utility Compressione apre gli zip e si chiude da sola).
     static let diPassaggio: Set<String> = ["com.apple.archiveutility"]
 
+    /// Le app "vere" (nel Dock) che possono essere schede (S-1).
     static func appVere() -> [NSRunningApplication] {
         let ign = ignorate().union(diPassaggio)
         var viste = Set<String>()
@@ -104,7 +104,6 @@ enum Sistema {
     /// Lo schermo principale (Tabby usa sempre quello).
     static var schermo: NSScreen { NSScreen.screens.first ?? NSScreen.main! }
 
-    /// Dove sta la barra, secondo la posizione scelta.
     // MARK: - Il notch (A-2)
 
     /// Dove sta la tacca della fotocamera (in x, coordinate dello schermo), se lo schermo ce l'ha:
@@ -139,6 +138,7 @@ enum Sistema {
     /// L'altezza della barra dei menu di Apple (più alta accanto al notch).
     static var altezzaBarraMenu: CGFloat { max(NSStatusBar.system.thickness, schermo.safeAreaInsets.top, 30) + 4 }   // 30 su macOS 26
 
+    /// Dove sta la barra, secondo la posizione scelta.
     static func cornice(posizione: String) -> NSRect {
         let v = schermo.visibleFrame
         if posizione == "top" && fasciaNotch {                  // in cima allo schermo, accanto alla tacca
@@ -154,7 +154,6 @@ enum Sistema {
     }
 
     /// Lo spazio delle app: lo schermo utile meno la barra di Tabby dal suo lato.
-
     static func spazioApp(posizione: String) -> NSRect {
         var v = schermo.visibleFrame
         switch posizione {
@@ -209,10 +208,6 @@ enum Sistema {
         return pannelli.contains(sub) ? "\(sub) \(Int(r.width))×\(Int(r.height))" : nil
     }
 
-    static func riduci(_ w: AXUIElement) {
-        AXUIElementSetAttributeValue(w, kAXMinimizedAttribute as CFString, kCFBooleanTrue)
-    }
-
     /// Una scheda alla volta (U-1): nasconde tutte le altre app vere.
     static func nascondiAltre(tranne bid: String) { nascondiAltre(tranne: [bid]) }
     static func nascondiAltre(tranne bids: Set<String>) {
@@ -242,8 +237,7 @@ enum Sistema {
 
     /// Se la misura è già giusta (±1 punto) non chiede niente (ogni richiesta costa).
     static func adattaFinestra(_ w: AXUIElement, a r: CGRect) {
-        let altezzaPrincipale = NSScreen.screens.first?.frame.height ?? r.maxY
-        var pos = CGPoint(x: r.minX, y: altezzaPrincipale - r.maxY)    // l'Accessibilità conta dall'alto
+        var pos = dallAlto(r).origin                                    // l'Accessibilità conta dall'alto
         var dim = CGSize(width: r.width, height: r.height)
         if let pv: AXValue = attributo(w, kAXPositionAttribute), let dv: AXValue = attributo(w, kAXSizeAttribute) {
             var p = CGPoint.zero, d = CGSize.zero

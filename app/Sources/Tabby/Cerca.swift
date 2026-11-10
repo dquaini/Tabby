@@ -197,18 +197,35 @@ struct BarraRicerca: View {
     @FocusState private var dentro: Bool
     @State private var browserScelto: String?
 
+    /// I risultati per il testo scritto, in un posto solo: li usano il disegno, Invio e il clic
+    /// (prima il clic li ricalcolava a parte e dimenticava quelli «Sul web»).
+    private struct Risultati {
+        var migliore: Risultato?            // il migliore delle tue cose
+        var sitoPrima: Risultato?           // «Apri Gmail» davanti a tutto, se fra le tue cose niente ha quel nome
+        var gruppi: [(Trovato.Gruppo, [Risultato])]
+        var web: [Risultato]                // «Sul web» in fondo (senza il sito, se è già in cima)
+        var elenco: [Risultato]             // nell'ordine di ↑↓
+        var azione: [String: AzioneRicerca]
+    }
+
+    private var risultati: Risultati {
+        let testo = stato.ricerca ?? ""
+        let tutto = c.cercabili(), web = c.righeWeb(testo)
+        let r = cerca(testo, in: tutto.map(\.0))
+        var righeWeb = web.map { Risultato(t: $0.0, punti: 0, pezzetto: nil) }
+        // una finestra che contiene solo la parola non basta a battere «Apri Gmail»
+        var sito: Risultato?
+        if let s = righeWeb.first, s.id != "w:?", r.migliore.map({ $0.pezzetto != nil || $0.t.gruppo == .finestre }) ?? true {
+            sito = s; righeWeb.removeFirst()
+        }
+        let elenco = [sito, r.migliore].compactMap { $0 } + r.gruppi.flatMap(\.1) + righeWeb
+        return Risultati(migliore: r.migliore, sitoPrima: sito, gruppi: r.gruppi, web: righeWeb, elenco: elenco,
+                         azione: Dictionary((tutto + web).map { ($0.0.id, $0.1) }, uniquingKeysWith: { a, _ in a }))
+    }
+
     var body: some View {
-        let tutto = c.cercabili()
-        let r = cerca(stato.ricerca ?? "", in: tutto.map(\.0))
-        // «Sul web», sempre in fondo: il sito da aprire e la ricerca (niente esce dal Mac finché non scegli)
-        let web = c.righeWeb(stato.ricerca ?? "")
-        let righeWeb = web.map { Risultato(t: $0.0, punti: 0, pezzetto: nil) }
-        // un sito da aprire («Apri Gmail») è il migliore se fra le tue cose niente ha quel nome (una
-        // finestra che contiene solo la parola non basta): prima Invio portava su quella finestra
-        let sitoPrima = BarraRicerca.sitoPrima(r.migliore, righeWeb)
-        let elenco = sitoPrima.map { [$0] + (r.migliore.map { [$0] } ?? []) + r.gruppi.flatMap(\.1) + righeWeb.dropFirst() }
-            ?? (r.migliore.map { [$0] } ?? []) + r.gruppi.flatMap(\.1) + righeWeb
-        let azione = Dictionary((tutto + web).map { ($0.0.id, $0.1) }, uniquingKeysWith: { a, _ in a })
+        let ris = risultati
+        let elenco = ris.elenco
         // Come Spotlight di macOS 26: un vetro solo, che da capsula si allunga in giù coi risultati.
         let aperta = !elenco.isEmpty
         VStack(alignment: .leading, spacing: 0) {
@@ -216,23 +233,23 @@ struct BarraRicerca: View {
                 Image(systemName: "magnifyingglass").font(.system(size: 20, weight: .medium)).foregroundStyle(.secondary)
                 TextField("Cerca con Tabby", text: Binding(get: { stato.ricerca ?? "" }, set: { stato.ricerca = $0; stato.sceltaRicerca = 0; stato.confermaForte = nil }))
                     .textFieldStyle(.plain).font(.system(size: 22)).focused($dentro)
-                    .onSubmit { scegli(elenco, azione, alternativa: NSEvent.modifierFlags.contains(.command)) }
+                    .onSubmit { scegli(ris, alternativa: NSEvent.modifierFlags.contains(.command)) }
                 sceltaBrowser
             }
             .padding(.horizontal, 20).frame(height: 56)
             if aperta {
                 Divider().padding(.horizontal, 16)
                 VStack(alignment: .leading, spacing: 0) {
-                    if let s = sitoPrima { titoletto("Il migliore"); riga(s, 0) }
-                    if let m = r.migliore { if sitoPrima == nil { titoletto("Il migliore") }; riga(m, elenco.firstIndex(of: m) ?? 0) }
-                    ForEach(r.gruppi, id: \.0) { g, righe in
+                    let primi = [ris.sitoPrima, ris.migliore].compactMap { $0 }
+                    if !primi.isEmpty { titoletto("Il migliore") }
+                    ForEach(primi) { x in riga(x, elenco.firstIndex(of: x) ?? 0) }
+                    ForEach(ris.gruppi, id: \.0) { g, righe in
                         titoletto(g.titolo)
                         ForEach(righe) { x in riga(x, elenco.firstIndex(of: x) ?? 0) }
                     }
-                    let restoWeb = sitoPrima == nil ? righeWeb : Array(righeWeb.dropFirst())
-                    if !restoWeb.isEmpty {
+                    if !ris.web.isEmpty {
                         titoletto(Trovato.Gruppo.web.titolo)
-                        ForEach(restoWeb) { x in riga(x, elenco.firstIndex(of: x) ?? 0) }
+                        ForEach(ris.web) { x in riga(x, elenco.firstIndex(of: x) ?? 0) }
                     }
                 }
                 .padding(.vertical, 8)
@@ -276,11 +293,11 @@ struct BarraRicerca: View {
         .help("Il browser per i siti e le ricerche sul web")
     }
 
-    private func scegli(_ elenco: [Risultato], _ azione: [String: AzioneRicerca], alternativa: Bool) {
-        guard stato.sceltaRicerca < elenco.count else { return }
-        let x = elenco[stato.sceltaRicerca]
+    private func scegli(_ ris: Risultati, alternativa: Bool) {
+        guard stato.sceltaRicerca < ris.elenco.count else { return }
+        let x = ris.elenco[stato.sceltaRicerca]
         if x.t.forte && stato.confermaForte != x.id { stato.confermaForte = x.id; return }   // azione forte: un secondo ↵
-        if let a = azione[x.id] { c.esegui(a, alternativa: alternativa) }
+        if let a = ris.azione[x.id] { c.esegui(a, alternativa: alternativa) }
     }
 
     private func titoletto(_ t: String) -> some View {
@@ -304,25 +321,7 @@ struct BarraRicerca: View {
         .background(su ? Color.accentColor : .clear, in: RoundedRectangle(cornerRadius: 12))
         .padding(.horizontal, 8)
         .contentShape(Rectangle())
-        .onTapGesture { stato.sceltaRicerca = i; scegli(elencoAttuale(), mappaAttuale(), alternativa: false) }
-    }
-
-    /// Il sito da aprire va in cima se il migliore delle tue cose non ha quel nome nel titolo.
-    static func sitoPrima(_ migliore: Risultato?, _ web: [Risultato]) -> Risultato? {
-        guard let s = web.first, s.id != "w:?" else { return nil }
-        guard let m = migliore else { return s }
-        return m.pezzetto != nil || m.t.gruppo == .finestre ? s : nil
-    }
-
-    // il clic usa lo stesso elenco di Invio, righe «Sul web» comprese (prima mancavano: il clic non faceva niente)
-    private func elencoAttuale() -> [Risultato] {
-        let r = cerca(stato.ricerca ?? "", in: c.cercabili().map(\.0))
-        let web = c.righeWeb(stato.ricerca ?? "").map { Risultato(t: $0.0, punti: 0, pezzetto: nil) }
-        if let s = BarraRicerca.sitoPrima(r.migliore, web) { return [s] + (r.migliore.map { [$0] } ?? []) + r.gruppi.flatMap(\.1) + web.dropFirst() }
-        return (r.migliore.map { [$0] } ?? []) + r.gruppi.flatMap(\.1) + web
-    }
-    private func mappaAttuale() -> [String: AzioneRicerca] {
-        Dictionary((c.cercabili() + c.righeWeb(stato.ricerca ?? "")).map { ($0.0.id, $0.1) }, uniquingKeysWith: { a, _ in a })
+        .onTapGesture { stato.sceltaRicerca = i; scegli(risultati, alternativa: false) }
     }
 
     @ViewBuilder private func icona(_ t: Trovato) -> some View {

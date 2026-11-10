@@ -212,7 +212,7 @@ private struct ScenaPalco<V: View>: View {
                     .offset(y: inAlto && !dentro ? -10 : 0)
                     .opacity(dentro ? 1 : 0)
                     // i fogli al centro ottico (45%); la ricerca a un terzo, come Spotlight (3.3)
-                    .alignmentGuide(.top) { d in inAlto ? -(g.size.height * 0.22) : -(cima ?? (g.size.height * 0.45 - d.height / 2)) }
+                    .alignmentGuide(.top) { [cima, inAlto] d in inAlto ? -(g.size.height * 0.22) : -(cima ?? (g.size.height * 0.45 - d.height / 2)) }
             }
             .frame(width: g.size.width, height: g.size.height)
         }

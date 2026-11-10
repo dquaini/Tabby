@@ -40,9 +40,9 @@ final class StatoBarra {
     var nonDisturbare = true
     var lampiCoperti: [String] = []
     var lampiInModifica: [Lampo] = []
-    var tabbyChiusa = false
+    var tabbyChiusa = false                     // «Chiudi Tabby»: barra via, resta la sfera
     var rinomina: String?                       // la scheda che stai rinominando
-    var nomeInModifica = ""                     // «Chiudi Tabby»: barra via, resta la sfera
+    var nomeInModifica = ""
     var inPausa = Impostazioni.shared.valore("paused") as? Bool ?? false
     var verticale: Bool { posizione == "left" || posizione == "right" }
 }
@@ -62,6 +62,7 @@ final class Controllore {
     private let dock = NotificheDock()
     private var ricostruzione: DispatchWorkItem?
     private var osservatori: [pid_t: AXObserver] = [:]
+    private var finestreOsservate = Set<UInt32>()      // le finestre già ascoltate (chiusura, titolo)
     private var adattaDopo: DispatchWorkItem?
     /// chiave → finestra (per agire sulla scheda)
     var elementi: [String: AXUIElement] = [:]
@@ -96,16 +97,13 @@ final class Controllore {
     var osservatoreNotifiche: AXObserver?       // il Centro Notifiche (N-5)
     var ultimaNotaNotifiche = ""
     var menuAperto = false                      // un menu di Tabby è aperto
-    /// Le finestre ridotte da Tabby stessa (U-2): non fanno scattare «scheda accanto».
-    private var ridotteDaTabby: [UInt32: Date] = [:]
     /// Le ultime schede attive con l'istante del cambio (C-4: macOS a volte attiva un'altra
     /// app un attimo prima di dire che la finestra è chiusa).
     var storia: [(chiave: String, quando: Date)] = []
-    /// L'ultima volta che hai scelto tu una scheda (clic o scorciatoia).
     var finestraScrivania: UInt32?               // la finestra del Finder aperta dal musetto
     let veloSpotlight = VeloSpotlight()
-    var nellaCartella: (dominio: String, cartella: Int, quando: Date)?
-    var primaVolta: [String: Date] = [:]          // quando è comparsa ogni scheda   // un sito aperto dalla ricerca dentro una cartella
+    var nellaCartella: (dominio: String, cartella: Int, quando: Date)?   // un sito aperto dalla ricerca dentro una cartella
+    var primaVolta: [String: Date] = [:]          // quando è comparsa ogni scheda
     let gesti = Gesti()
     var monitorClic: Any?
     var sitiScelti: [UInt32: String] = [:]       // B-8: il sito scelto per una finestra di browser
@@ -117,28 +115,7 @@ final class Controllore {
     func avvia() {
         tasti.riprovaIntercettatore()                   // se all'apertura mancava l'Accessibilità
         Tasti.suSpotlight = { [weak self] in self?.veloSpotlight.forse() }
-        veloSpotlight.osservaRaycast()
-        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didLaunchApplicationNotification, object: nil, queue: .main) { [weak self] n in
-            let b = (n.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.bundleIdentifier
-            MainActor.assumeIsolated { if b == "com.raycast.macos" { self?.veloSpotlight.osservaRaycast() } }
-        }
-        // Spotlight e Raycast in primo piano (qualunque scorciatoia): il velo; appena vanno via, via il velo
-        let ws = NSWorkspace.shared.notificationCenter
-        for (n, apre) in [(NSWorkspace.didActivateApplicationNotification, true), (NSWorkspace.didDeactivateApplicationNotification, false),
-                          (NSWorkspace.didUnhideApplicationNotification, true), (NSWorkspace.didHideApplicationNotification, false)] {
-            ws.addObserver(forName: n, object: nil, queue: .main) { [weak self] nota in
-                let a = nota.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
-                MainActor.assumeIsolated {
-                    guard let self, let b = a?.bundleIdentifier, b != Sistema.mioBid else { return }
-                    if !apre { self.veloSpotlight.ricontrolla(); return }
-                    // qualunque app che apre un pannello sopra le finestre (Raycast, Claude…): il velo.
-                    // Raycast si «mostra» invece di diventare attivo; le altre app mostrate no (non sono pannelli)
-                    if VeloSpotlight.lanciatori[b] != nil { self.veloSpotlight.forse() }
-                    else if n == NSWorkspace.didUnhideApplicationNotification { return }
-                    else { self.veloSpotlight.forse(app: a?.localizedName, pid: a?.processIdentifier) }
-                }
-            }
-        }
+        imp.imposta("autohide", nil)                    // un vecchio «Nascondi Tabby» non vale più (10/11/2026)
         gesti.scorri = { [weak self] d in self?.scorri(d) }
         gesti.aggiorna()
         osservaSchermoIntero()
@@ -172,24 +149,24 @@ final class Controllore {
 
     private func ascoltaMacOS() {
         let nc = NSWorkspace.shared.notificationCenter
-        for n in [NSWorkspace.didLaunchApplicationNotification, NSWorkspace.didTerminateApplicationNotification,
-                  NSWorkspace.didHideApplicationNotification, NSWorkspace.didUnhideApplicationNotification] {
-            nc.addObserver(forName: n, object: nil, queue: .main) { [weak self] _ in
-                MainActor.assumeIsolated { self?.ricostruisciPresto() }
+        func ascolta(_ n: Notification.Name, _ fai: @escaping @MainActor (Controllore, NSRunningApplication?) -> Void) {
+            nc.addObserver(forName: n, object: nil, queue: .main) { [weak self] nota in
+                let app = nota.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
+                MainActor.assumeIsolated { if let self { fai(self, app) } }
             }
         }
-        nc.addObserver(forName: NSWorkspace.didLaunchApplicationNotification, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.lampi.trovaAppBarraMenu(fra: 3) }
-        }
+        ascolta(NSWorkspace.didLaunchApplicationNotification) { c, _ in c.ricostruisciPresto(); c.lampi.trovaAppBarraMenu(fra: 3) }
         // un'app chiusa del tutto (⌘Q): se macOS ti lascia sulla Scrivania vuota, si torna all'ultima scheda
-        nc.addObserver(forName: NSWorkspace.didTerminateApplicationNotification, object: nil, queue: .main) { [weak self] n in
-            let b = (n.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.bundleIdentifier
-            MainActor.assumeIsolated { self?.appChiusa(b) }
+        ascolta(NSWorkspace.didTerminateApplicationNotification) { c, a in c.ricostruisciPresto(); c.appChiusa(a?.bundleIdentifier) }
+        ascolta(NSWorkspace.didHideApplicationNotification) { c, _ in c.ricostruisciPresto() }
+        ascolta(NSWorkspace.didUnhideApplicationNotification) { c, _ in c.ricostruisciPresto() }
+        ascolta(NSWorkspace.didActivateApplicationNotification) { c, a in
+            guard let a else { return }
+            c.siAttiva(a)
+            // un'app che passa davanti con un pannello (la chat rapida di Claude…): il velo sotto
+            if a.bundleIdentifier != Sistema.mioBid { c.veloSpotlight.forse(app: a.localizedName, pid: a.processIdentifier) }
         }
-        nc.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { [weak self] n in
-            let app = n.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
-            MainActor.assumeIsolated { if let app { self?.siAttiva(app) } }
-        }
+        ascolta(NSWorkspace.didDeactivateApplicationNotification) { c, _ in c.veloSpotlight.ricontrolla() }
         NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.mostraBarra() }
         }
@@ -227,11 +204,13 @@ final class Controllore {
     }
 
     /// Le finestre chiuse e i titoli cambiati si sentono solo osservando ogni finestra.
-    private func osservaFinestra(_ w: AXUIElement, pid: pid_t) {
-        guard let obs = osservatori[pid] else { return }
+    /// Vero se l'ascolto è partito (si fa una volta per finestra).
+    private func osservaFinestra(_ w: AXUIElement, pid: pid_t) -> Bool {
+        guard let obs = osservatori[pid] else { return false }
         let me = Unmanaged.passUnretained(self).toOpaque()
-        AXObserverAddNotification(obs, w, kAXUIElementDestroyedNotification as CFString, me)
+        let a = AXObserverAddNotification(obs, w, kAXUIElementDestroyedNotification as CFString, me)
         AXObserverAddNotification(obs, w, kAXTitleChangedNotification as CFString, me)
+        return a == .success || a == .notificationAlreadyRegistered
     }
 
     // MARK: - Le schede
@@ -247,7 +226,10 @@ final class Controllore {
     func ricostruisci() {
         misura("ricostruisci") {
             let vivi = Set(NSWorkspace.shared.runningApplications.map(\.processIdentifier))
-            for p in osservatori.keys where !vivi.contains(p) { osservatori[p] = nil }
+            for (p, o) in osservatori where !vivi.contains(p) {        // app chiusa: il suo ascolto si stacca del tutto
+                CFRunLoopRemoveSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(o), .defaultMode)
+                osservatori[p] = nil
+            }
             var infos: [InfoApp] = [], el: [UInt32: AXUIElement] = [:]
             let spazio = Sistema.spazioApp(posizione: stato.posizione)
             let aperti = Set(NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier))
@@ -258,7 +240,10 @@ final class Controllore {
                 var (i, e) = Sistema.leggi(app)
                 if browserNoti[i.bid] != nil { i = browser.arricchisci(app, i, e, spazio: spazio) }
                 infos.append(i)
-                for (n, w) in e { el[n] = w; osservaFinestra(w, pid: app.processIdentifier) }
+                for (n, w) in e {
+                    el[n] = w
+                    if !finestreOsservate.contains(n), osservaFinestra(w, pid: app.processIdentifier) { finestreOsservate.insert(n) }
+                }
                 if stato.icone[i.bid] == nil, let ic = app.icon { stato.icone[i.bid] = ic }
             }
             let unite = imp.valore("joinWins") as? [String: Any] ?? [:]
@@ -266,6 +251,7 @@ final class Controllore {
                                          senzaFinestre: imp.valore("showWindowless") as? Bool ?? false,
                                          nomi: imp.valore("tabNames") as? [String: String] ?? [:])
             mostraSitiScelti(&nuove)
+            finestreOsservate.formIntersection(el.keys)              // le finestre chiuse si dimenticano
             elementi = [:]
             for (n, s) in nuove.enumerated() {
                 if let f = s.finestra, let w = el[f] { elementi[s.chiave] = w }
@@ -369,7 +355,6 @@ final class Controllore {
     private func controllaChiusura(prima: [Scheda]) {
         guard !stato.scrivania else { return }
         let ora = Date()
-        ridotteDaTabby = ridotteDaTabby.filter { ora.timeIntervalSince($0.value) < 2 }
         // vive: anche le schede dentro una vista divisa o una scheda-cartella (non sono chiuse,
         // sono solo raccolte lì) — prima uscire da una cartella sembrava una chiusura e ci si
         // ritrovava dentro (9/11/2026)
@@ -382,7 +367,6 @@ final class Controllore {
             candidata = storia[storia.count - 2].chiave
         }
         guard let chiusa = candidata, let vecchia = prima.first(where: { $0.chiave == chiusa }) else { return }
-        if let f = vecchia.finestra, ridotteDaTabby[f] != nil { return }
         if vecchia.ridotta { return }                       // era già ridotta: non è una chiusura adesso
         if ora.timeIntervalSince(sceltaTua) < 0.5 { return } // hai appena scelto tu dove andare
         // una scheda nata da sola da poco (un'app che si apre e si chiude da sé, una finestrella):
@@ -744,11 +728,6 @@ final class Controllore {
         if let a = NSWorkspace.shared.frontmostApplication { Sistema.adatta(a, posizione: p) }
         lampi.disponi()
         diario("posizione: \(p)")
-    }
-
-    func cambia(_ nome: String) {
-        let ora = imp.valore(nome) as? Bool ?? true
-        imp.imposta(nome, !ora)
     }
 
     private func registraTasti() {

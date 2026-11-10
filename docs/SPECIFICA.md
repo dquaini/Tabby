@@ -814,6 +814,7 @@ rapide" (acceso di serie).
 *App Swift 0.10.4 (Daniele):* il velo sta **sotto la barra di Tabby** (come il velo della vista divisa) e sopra le finestre delle app; anche con Raycast (una sua finestra ben visibile, non le Impostazioni) e Alfred.
 *App Swift 0.10.6 (Daniele: «tutte le app, qualunque siano»):* il velo compare sotto **il pannello di qualunque app**: una sua finestra sopra quelle normali (livello > 0, non un menu), ben visibile, che **ha la tastiera** (è la finestra con l'attenzione dell'app davanti). Si guarda quando un'app diventa attiva e quando un'app cambia finestra con l'attenzione, per poco più di un secondo; poi solo finché il pannello c'è. Un'altra app non spegne il velo di Spotlight. Impostazione: «Con Spotlight e i pannelli delle app lo sfondo si oscura / resta com'è».
 *App Swift 0.10.8 (visto sul Mac):* Raycast non diventa mai l'app davanti, la sua finestra resta «sullo schermo» anche da chiuso e per macOS resta «nascosto» anche aperto. L'unica cosa che cambia: aperto ha una finestra per l'Accessibilità, chiuso no. Tabby ascolta Raycast con l'Accessibilità (finestra creata, attenzione cambiata, mostrato/nascosto) e controlla le sue finestre solo finché il velo c'è.
+*App Swift 0.10.9 (revisione):* Raycast resta **senza velo** (deciso con Daniele dopo tre tentativi: nessun segnale affidabile); tolti il codice per Raycast e quello per Alfred, mai provato. Il velo guarda le finestre per 0,6 s dopo un cambio d'app (1,5 s per Spotlight e le azioni di Tabby).
 
 ## 16b. Concentrazione (v9.55)
 

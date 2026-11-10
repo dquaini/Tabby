@@ -11,6 +11,7 @@ import TabbyCore
 final class Gesti {
     var scorri: ((Int) -> Void)?
     private var ascolto: CFMachPort?
+    private var sorgente: CFRunLoopSource?
     private var inizio: CGFloat?
     private var fatto = false
     private var pausaFino = Date.distantPast
@@ -20,7 +21,12 @@ final class Gesti {
 
     func aggiorna() {
         if acceso && ascolto == nil { accendi() }
-        if !acceso, let a = ascolto { CGEvent.tapEnable(tap: a, enable: false); ascolto = nil }
+        if !acceso, let a = ascolto {                            // spento davvero: niente resta in ascolto
+            CGEvent.tapEnable(tap: a, enable: false)
+            if let s = sorgente { CFRunLoopRemoveSource(CFRunLoopGetMain(), s, .commonModes) }
+            CFMachPortInvalidate(a)
+            ascolto = nil; sorgente = nil
+        }
     }
 
     private func accendi() {
@@ -36,7 +42,8 @@ final class Gesti {
             return Unmanaged.passUnretained(evento)
         }, userInfo: Unmanaged.passUnretained(self).toOpaque())
         guard let a = ascolto else { diario("gesti: ascolto del trackpad non disponibile"); return }
-        CFRunLoopAddSource(CFRunLoopGetMain(), CFMachPortCreateRunLoopSource(nil, a, 0), .commonModes)
+        sorgente = CFMachPortCreateRunLoopSource(nil, a, 0)
+        CFRunLoopAddSource(CFRunLoopGetMain(), sorgente, .commonModes)
         CGEvent.tapEnable(tap: a, enable: true)
     }
 

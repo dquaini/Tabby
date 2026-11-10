@@ -1,5 +1,5 @@
 import AppKit
-import ApplicationServices
+@preconcurrency import ApplicationServices
 import TabbyCore
 
 /// Cosa c'è nelle finestre dei browser (SPECIFICA 3).
@@ -72,13 +72,16 @@ final class Browser {
         p.arguments = ["-e", scriptFinestre(B.nomeAS)]
         let fuori = Pipe(), errori = Pipe()
         p.standardOutput = fuori; p.standardError = errori
-        p.terminationHandler = { [weak self] proc in
+        do { try p.run(); lavori[bid] = (p, Date()) } catch { diario("\(B.breve): osascript non parte (\(error))"); return }
+        // la risposta si legge **mentre arriva** (in sottofondo): con tante schede non sta tutta nel
+        // tubo e, letta solo alla fine, osascript restava fermo ad aspettare fino ai 6 s
+        DispatchQueue.global(qos: .utility).async { [weak self] in
             let testo = String(data: fuori.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
             let err = String(data: errori.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-            let ok = proc.terminationStatus == 0
-            DispatchQueue.main.async { MainActor.assumeIsolated { self?.risposta(bid, B, ok: ok, testo: testo, errore: err, proc: proc) } }
+            p.waitUntilExit()
+            let ok = p.terminationStatus == 0
+            DispatchQueue.main.async { MainActor.assumeIsolated { self?.risposta(bid, B, ok: ok, testo: testo, errore: err, proc: p) } }
         }
-        do { try p.run(); lavori[bid] = (p, Date()) } catch { diario("\(B.breve): osascript non parte (\(error))") }
     }
 
     private func risposta(_ bid: String, _ B: BrowserNoto, ok: Bool, testo: String, errore: String, proc: Process) {

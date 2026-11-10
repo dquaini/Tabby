@@ -63,7 +63,8 @@ extension Controllore {
         let vis = conViste(tutte, viste)
         let prova = TabbyCore.assegna([c], schede: vis.filter { stato.diChi[$0.chiave] == nil }, membri: stato.membri, legami: legami)
         let mancanti = c.voci.filter { prova.prese["\(c.id)|\($0.chiave)"] == nil }
-        let parti = {
+        let parti = { [weak self] in
+            guard let self else { return }
             for v in mancanti { self.apri(v, legame: "\(c.id)|\(v.chiave)") }
             // se un'app appena aperta ti porta via, Tabby ti riporta nella cartella (1,2 s e 2,5 s)
             for t in [1.2, 2.5] {

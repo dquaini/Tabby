@@ -1,5 +1,4 @@
 import AppKit
-import Carbon.HIToolbox
 import TabbyCore
 
 /// La ricerca web della barra di Tabby (deciso con Daniele il 10/11/2026). Non sostituisce

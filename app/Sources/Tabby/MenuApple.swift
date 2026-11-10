@@ -9,7 +9,6 @@ import TabbyCore
 extension Controllore {
     /// Accende o spegne il controllo del mouse secondo la posizione e la barra dei menu.
     func aggiornaMouse() {
-        imp.imposta("autohide", nil)                      // un vecchio «Nascondi Tabby» non vale più
         if let m = monitorMouse { NSEvent.removeMonitor(m); monitorMouse = nil }
         if let m = monitorMouseLocale { NSEvent.removeMonitor(m); monitorMouseLocale = nil }
         ascoltaMenu()

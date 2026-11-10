@@ -260,4 +260,11 @@ app 0.10.5 (10/11/2026): ricerca web con DuckDuckGo in una finestra con una sche
 app 0.10.6 (10/11/2026): il velo sotto il pannello di qualunque app (quello che ha la tastiera e sta sopra le finestre), Raycast compreso.
 app 0.10.7 (10/11/2026): il velo con Raycast davvero (Raycast si mostra e si nasconde invece di passare davanti).
 app 0.10.8 (10/11/2026): il velo con Raycast, ascoltando quando crea la sua finestra (per macOS resta «nascosto» anche aperto).
+app 0.10.9 (10/11/2026): revisione del codice. Bug: l'attesa del permesso Accessibilità ne cancellava un'altra
+    (al primo avvio, dato il permesso nella guida, la barra non partiva); la lettura dei browser con tante
+    schede si bloccava fino a 6 s; numeri delle scorciatoie che potevano coincidere; gesti spenti che
+    restavano in ascolto; ascolto delle app chiuse non staccato. Più leggero: ogni finestra si ascolta una
+    volta sola (prima a ogni ricostruzione), il velo guarda meno a lungo. Pulizia: velo riscritto senza
+    Raycast, risultati della ricerca calcolati in un posto solo, ascolto di macOS riunito, codice morto
+    tolto, nessun avviso del compilatore.
 ```

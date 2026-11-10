@@ -48,6 +48,11 @@ final class Tasti {
 
     private static func chiave(_ tasto: Int, _ maiuscolo: Bool) -> Int { tasto * 2 + (maiuscolo ? 1 : 0) }
 
+    /// Ogni scorciatoia ha un numero tutto suo, mai riusato (prima tre modi diversi di contarli
+    /// potevano dare lo stesso numero a due scorciatoie).
+    private static var ultimoNumero: UInt32 = 0
+    private static func nuovoNumero() -> UInt32 { ultimoNumero += 1; return ultimoNumero }
+
     /// L'intercettatore (serve il permesso Accessibilità): macOS a volte lo spegne se è lento;
     /// si riaccende da solo, e ogni 5 s si controlla.
     private func accendiIntercettatore() {
@@ -100,7 +105,7 @@ final class Tasti {
 
     /// Un tasto senza ⌃⌥, solo per un momento (Esc e Invio mentre dividi lo schermo).
     func temporaneo(_ tasto: Int, _ azione: @escaping () -> Void) {
-        let n = UInt32(Tasti.azioni.count + 1000)
+        let n = Tasti.nuovoNumero()
         Tasti.azioni[n] = azione
         var ref: EventHotKeyRef?
         RegisterEventHotKey(UInt32(tasto), 0, EventHotKeyID(signature: 0x54424259, id: n), GetApplicationEventTarget(), 0, &ref)
@@ -114,7 +119,7 @@ final class Tasti {
 
     /// Un gruppo di scorciatoie che cambia (i Lampi): si toglie e si rimette senza riavviare.
     func gruppo(_ nome: String, tasto: Int, maiuscolo: Bool = false, modificatori: Bool = true, _ azione: @escaping () -> Void) {
-        let n = UInt32(5000 + gruppi.values.reduce(0) { $0 + $1.count } + Int.random(in: 0..<100000))
+        let n = Tasti.nuovoNumero()
         Tasti.azioni[n] = azione
         var ref: EventHotKeyRef?
         let mod = modificatori ? UInt32(controlKey | optionKey | (maiuscolo ? shiftKey : 0)) : 0
@@ -143,7 +148,7 @@ final class Tasti {
 
     /// `aggiungi(kVK_ANSI_1) { … }` → ⌃⌥1
     func aggiungi(_ tasto: Int, maiuscolo: Bool = false, _ azione: @escaping () -> Void) {
-        let n = UInt32(Tasti.azioni.count + 1)
+        let n = Tasti.nuovoNumero()
         Tasti.azioni[n] = azione
         var ref: EventHotKeyRef?
         let mod = UInt32(controlKey | optionKey | (maiuscolo ? shiftKey : 0))
