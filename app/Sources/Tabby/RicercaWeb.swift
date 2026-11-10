@@ -33,33 +33,64 @@ extension Controllore {
         diario("ricerca web: \(d ?? "ricerca") in \(nuovaFinestra ? "una finestra nuova" : "una scheda") di \(bid)")
         let conf = NSWorkspace.OpenConfiguration(); conf.activates = true
         guard nuovaFinestra else { NSWorkspace.shared.open([url], withApplicationAt: app, configuration: conf); return }
-        let u = indirizzo.replacingOccurrences(of: "\\", with: "").replacingOccurrences(of: "\"", with: "%22")
         switch browserNoti[bid]?.tipo {
         case .chrome?:
-            let n = browserNoti[bid]!.nomeAS
-            esegui("tell application \"\(n)\"\nmake new window\nset URL of active tab of front window to \"\(u)\"\nactivate\nend tell")
+            // Chrome, Brave, Edge capiscono «--new-window»: più veloce di AppleScript (prima un attimo di troppo)
+            let c = NSWorkspace.OpenConfiguration()
+            c.activates = true; c.createsNewApplicationInstance = true; c.arguments = ["--new-window", indirizzo]
+            NSWorkspace.shared.openApplication(at: app, configuration: c) { _, errore in
+                if let errore { DispatchQueue.main.async { diario("ricerca web: \(bid) non ha aperto la finestra (\(errore.localizedDescription))") } }
+            }
         case .safari?:
+            let u = indirizzo.replacingOccurrences(of: "\\", with: "").replacingOccurrences(of: "\"", with: "%22")
             esegui("tell application \"Safari\"\nmake new document with properties {URL:\"\(u)\"}\nactivate\nend tell")
         default:
-            // DuckDuckGo (e i browser sconosciuti) non accettano comandi: come faresti tu. Si aspetta che
-            // sia davanti, ⌘N, si aspetta che la finestra nuova ci sia davvero, poi ⌘L e l'indirizzo
-            // incollato (gli appunti tornano com'erano). Prima si scriveva troppo presto e non arrivava.
-            NSWorkspace.shared.openApplication(at: app, configuration: conf)
-            Self.quando({ NSWorkspace.shared.frontmostApplication?.bundleIdentifier == bid }, entro: 2) { pronto in
-                guard pronto, let pid = NSWorkspace.shared.frontmostApplication?.processIdentifier else {
-                    NSWorkspace.shared.open([url], withApplicationAt: app, configuration: conf); return
-                }
-                let prima = Set(Sistema.finestre(pid).compactMap(Sistema.numero))
-                Self.premi(kVK_ANSI_N, comando: true)
-                Self.quando({ Sistema.finestraAttiva(pid).flatMap(Sistema.numero).map { !prima.contains($0) } ?? false }, entro: 2.5) { nuova in
-                    // solo nella finestra nuova del browser, mai in un'altra app
-                    guard nuova, NSWorkspace.shared.frontmostApplication?.bundleIdentifier == bid else {
-                        diario("ricerca web: la finestra nuova di \(bid) non è arrivata"); return
-                    }
-                    Self.incolla(indirizzo)
+            apriInFinestraDDG(url, app: app, bid: bid)
+        }
+    }
+
+    /// DuckDuckGo (e i browser senza AppleScript): il sito si apre come scheda (davanti, nella finestra
+    /// davanti), poi Tabby preme «Finestra → Sposta scheda in una nuova finestra»: una finestra con una
+    /// scheda sola. Si sposta **solo** quando la scheda in vista è proprio quel sito e le schede sono
+    /// una in più di prima (mai una tua scheda). Prima: ⌘N e l'indirizzo, che lasciava una scheda vuota.
+    private func apriInFinestraDDG(_ url: URL, app: URL, bid: String) {
+        let conf = NSWorkspace.OpenConfiguration(); conf.activates = true
+        let già = NSRunningApplication.runningApplications(withBundleIdentifier: bid).first
+        let finestra = già.flatMap { Sistema.finestraAttiva($0.processIdentifier) }
+        let prima = finestra.flatMap { Browser.esplora($0).schede }
+        let id = finestra.flatMap(Sistema.numero)
+        NSWorkspace.shared.open([url], withApplicationAt: app, configuration: conf)
+        guard let pid = già?.processIdentifier, let id, let prima else {
+            diario("ricerca web: \(bid) non aveva finestre, il sito ha già una finestra sua"); return
+        }
+        let voluto = dominio(url.absoluteString)
+        Self.quando({
+            guard NSWorkspace.shared.frontmostApplication?.processIdentifier == pid, let w = Sistema.finestraAttiva(pid),
+                  Sistema.numero(w) == id else { return false }
+            let r = Browser.esplora(w)
+            return r.schede == prima + 1 && r.sito.flatMap(dominio) == voluto
+        }, entro: 4) { pronta in
+            guard pronta else { diario("ricerca web: in \(bid) la scheda nuova non è arrivata: resta come scheda"); return }
+            if prima == 0 { return }                                  // era una finestra vuota: è già sua
+            if Self.premiNelMenu(pid, ["sposta scheda in una nuova finestra", "move tab to new window"]) {
+                diario("ricerca web: scheda spostata in una finestra nuova")
+            } else { diario("ricerca web: voce «Sposta scheda in una nuova finestra» non trovata") }
+        }
+    }
+
+    /// Preme una voce del menu di un'app (per titolo, senza maiuscole): vero se l'ha trovata.
+    private static func premiNelMenu(_ pid: pid_t, _ titoli: [String]) -> Bool {
+        guard let barra: AXUIElement = Sistema.attributo(Sistema.elemento(pid), kAXMenuBarAttribute) else { return false }
+        for m in (Sistema.attributo(barra, kAXChildrenAttribute) as [AXUIElement]?) ?? [] {
+            for sotto in (Sistema.attributo(m, kAXChildrenAttribute) as [AXUIElement]?) ?? [] {
+                for v in (Sistema.attributo(sotto, kAXChildrenAttribute) as [AXUIElement]?) ?? [] {
+                    guard let t: String = Sistema.attributo(v, kAXTitleAttribute), titoli.contains(t.lowercased()),
+                          (Sistema.attributo(v, kAXEnabledAttribute) as Bool?) != false else { continue }
+                    return AXUIElementPerformAction(v, kAXPressAction as CFString) == .success
                 }
             }
         }
+        return false
     }
 
     /// Il browser per i siti e le ricerche: quello scelto nella barra di ricerca, se no quello di macOS.
@@ -88,27 +119,6 @@ extension Controllore {
         prova()
     }
 
-    /// ⌘L, l'indirizzo incollato, Invio; poi gli appunti tornano com'erano.
-    private static func incolla(_ testo: String) {
-        let pb = NSPasteboard.general
-        let vecchi = pb.pasteboardItems?.map { i in i.types.compactMap { t in i.data(forType: t).map { (t, $0) } } } ?? []
-        pb.clearContents(); pb.setString(testo, forType: .string)
-        premi(kVK_ANSI_L, comando: true)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            premi(kVK_ANSI_V, comando: true)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
-                premi(kVK_Return)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                    pb.clearContents()
-                    let items = vecchi.map { coppie -> NSPasteboardItem in
-                        let i = NSPasteboardItem(); for (t, d) in coppie { i.setData(d, forType: t) }; return i
-                    }
-                    if !items.isEmpty { pb.writeObjects(items) }
-                }
-            }
-        }
-    }
-
     /// Una finestra nuova aperta dalla ricerca mentre eri in una cartella: entra nella cartella.
     func mettiNellaCartella(_ schede: [Scheda]) {
         guard let (d, id, quando) = nellaCartella else { return }
@@ -133,14 +143,5 @@ extension Controllore {
             if q.terminationStatus != 0 { DispatchQueue.main.async { diario("ricerca web: il browser non ha aperto la finestra (\(e.prefix(160)))") } }
         }
         do { try p.run() } catch { diario("ricerca web: osascript non parte: \(error)") }
-    }
-
-    private static func premi(_ tasto: Int, comando: Bool = false) {
-        let src = CGEventSource(stateID: .hidSystemState)
-        for giù in [true, false] {
-            let e = CGEvent(keyboardEventSource: src, virtualKey: CGKeyCode(tasto), keyDown: giù)
-            if comando { e?.flags = .maskCommand }
-            e?.post(tap: .cghidEventTap)
-        }
     }
 }
