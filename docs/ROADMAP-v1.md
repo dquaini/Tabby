@@ -54,6 +54,20 @@ comandi del Mac, link rapidi, testi pronti, Claude, agenda…
 
 ### Fase 3 — Automazione
 Le cartelle che si aprono da sole (all'ora giusta, all'accensione…), comandi dal Terminale.
+- **Registra e ripeti i clic** (idea di Daniele, 12/11/2026), a livelli:
+  1. **Registra e ripeti**: «Registra», clic e scrittura, «Stop»; «Riproduci» li rifà. I clic si
+     salvano **rispetto alla finestra dell'app** (non allo schermo), così reggono se la finestra si
+     sposta o cambia misura. Passi leggibili e modificabili («clic qui», «scrivi», «aspetta 2 s»).
+     Tasto di emergenza (Esc o mouse in un angolo) che ferma tutto.
+  2. **Il clic ha funzionato?** Tabby guarda quella zona: è cambiata, è comparsa una scritta? Se no
+     aspetta e riprova fino a un limite, poi si ferma e avvisa. Funziona anche in Windows App.
+  3. **Condizioni** («se qui c'è un numero maggiore di 13, clic là»): il lettore di testo nelle
+     immagini di macOS (sul Mac, gratis, senza internet), su una zona fissa della finestra.
+  4. (da valutare) **Intelligenza artificiale** per ciò che non è fisso («clicca Invia, ovunque
+     sia») o per creare i flussi a parole: Apple sul Mac (privata, vede poco le immagini) oppure un
+     modello in cloud (vede bene, ma lo schermo esce dal Mac: delicato al lavoro).
+  Avvertenze: permessi «Registrazione schermo» e «Monitoraggio input»; in registrazione mai i campi
+  password; automatizzare il desktop remoto aziendale può essere regolato dall'azienda.
 
 ### Fase 4 — Kat
 Una cartella del Mac legata a Tabby (Memo, file, in futuro quelli degli agenti). Dopo l'Automazione.
