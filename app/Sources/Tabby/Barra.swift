@@ -461,13 +461,6 @@ struct BarraVista: View {
         if c.haNomeTuo(s.chiave) {
             Button { c.tornaAlNome(s.chiave) } label: { Label("Torna al nome di prima", systemImage: "arrow.uturn.backward") }
         }
-        // l'audio di questa app (Daniele, 12/11/2026: col tasto destro)
-        if stato.silenziate.contains(s.pid) {
-            Button { c.audio.riattiva(s.pid) } label: { Label("Riattiva l'audio", systemImage: "speaker.wave.2") }
-        } else if stato.suonano.contains(s.pid) {
-            let app = NSRunningApplication(processIdentifier: s.pid)?.localizedName ?? s.nome
-            Button { c.audio.silenzia(s.pid) } label: { Label("Silenzia «\(app)»", systemImage: "speaker.slash") }
-        }
         // B-8: per una finestra di browser, come mostrarla: uno dei suoi siti (nome e logo, icone
         // piccole) e, quando la scheda mostra un sito, «Come il browser» (Daniele, 12/11/2026)
         if browserNoti[s.bid] != nil, let f = s.finestra {
@@ -522,17 +515,24 @@ struct BarraVista: View {
     }
 
     /// 🎙 se l'app usa il microfono (macOS accende il pallino ma non dice chi), 🔊 se fa suono, 🔇 se
-    /// Tabby l'ha zittita. Per le viste divise e le cartelle vale se una delle loro app lo fa.
+    /// Tabby l'ha zittita. **Un clic sull'altoparlante** zittisce o riattiva quell'app (Daniele,
+    /// 12/11/2026: senza tasto destro). Per le viste divise e le cartelle vale se una loro app lo fa.
     @ViewBuilder private func suonoEMicrofono(_ s: Scheda) -> some View {
         let pid = Set((stato.membri[s.chiave] ?? stato.membriCartella[s.chiave] ?? [s]).map(\.pid))
         HStack(spacing: 3) {
             if !pid.isDisjoint(with: stato.microfono) {
                 Image(systemName: "mic.fill").font(.system(size: 10)).foregroundStyle(.orange).help("Usa il microfono")
             }
-            if !pid.isDisjoint(with: stato.silenziate) {
-                Image(systemName: "speaker.slash.fill").font(.system(size: 10)).opacity(0.7).help("Silenziata da Tabby")
-            } else if !pid.isDisjoint(with: stato.suonano) {
-                Image(systemName: "speaker.wave.2.fill").font(.system(size: 10)).opacity(0.8).help("Sta facendo suono")
+            let zitte = pid.intersection(stato.silenziate), suonano = pid.intersection(stato.suonano)
+            if !zitte.isEmpty || !suonano.isEmpty {
+                Button {
+                    if zitte.isEmpty { suonano.forEach { c.audio.silenzia($0) } } else { zitte.forEach { c.audio.riattiva($0) } }
+                } label: {
+                    Image(systemName: zitte.isEmpty ? "speaker.wave.2.fill" : "speaker.slash.fill").font(.system(size: 10))
+                        .opacity(zitte.isEmpty ? 0.8 : 0.6).frame(width: 16, height: 16).contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help(zitte.isEmpty ? "Clic per silenziare" : "Clic per riattivare l'audio")
             }
         }
     }

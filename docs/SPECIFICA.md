@@ -203,7 +203,7 @@ vista» → in alto o in basso, piccola (320) o media (480): la finestra diventa
 vivo** (ScreenCaptureKit, 5 immagini al secondo, alla misura del riquadro, con le proporzioni della
 finestra), sopra tutto, in colonna sul lato **sinistro** dello spazio delle app (i Lampi a destra).
 Clic sul riquadro → la scheda; ✕ o «Non tenere più in vista» lo tolgono; si toglie da solo se la
-finestra si chiude. L'app tenuta in vista non si nasconde cambiando scheda (la copia dal vivo ne ha
+finestra si chiude. Mentre sei proprio su quella scheda il riquadro sparisce (sarebbe un doppione, 0.16.1) e torna quando cambi. L'app tenuta in vista non si nasconde cambiando scheda (la copia dal vivo ne ha
 bisogno). Serve «Registrazione schermo» (senza: un avviso con «Dai il permesso»).
 
 **B-9 Siti doppi** (v9.60): quando una finestra di browser con un solo sito (webapp)
@@ -507,7 +507,7 @@ larghezza; in basso, a sinistra, a schermo intero o con Nascondi Tabby resta dov
 
 **N-4 Disegno**: pallino rosso col numero prima della ✕ (oltre 99: "99+"); sulle
 schede compatte un puntino rosso.
-*App Swift 0.14 (Daniele, 12/11/2026):* accanto al numerino, 🎙 (arancione) se l'app usa il microfono, 🔊 se fa suono, 🔇 se Tabby l'ha zittita (per viste e cartelle: se una loro app lo fa). Tasto destro → «Silenzia «app»» / «Riattiva l'audio». Core Audio dice chi suona e chi ascolta e avvisa ai cambi (niente controlli periodici); il suono dei browser parte da processi aiutanti, ricondotti all'app «responsabile». Silenziare: tap di Core Audio (macOS 14.2+), permesso «registrare l'audio» la prima volta; zittita finché non la riattivi o l'app si chiude.
+*App Swift 0.14 (Daniele, 12/11/2026):* accanto al numerino, 🎙 (arancione) se l'app usa il microfono, 🔊 se fa suono, 🔇 se Tabby l'ha zittita (per viste e cartelle: se una loro app lo fa). **Un clic sull'altoparlante** della scheda la zittisce o la riattiva (0.16.1, Daniele: senza tasto destro). Core Audio dice chi suona e chi ascolta e avvisa ai cambi (niente controlli periodici); il suono dei browser parte da processi aiutanti, ricondotti all'app «responsabile». Silenziare: tap di Core Audio (macOS 14.2+), permesso «registrare l'audio» la prima volta; zittita finché non la riattivi o l'app si chiude.
 
 ## 10. La barra: disegno e misure
 

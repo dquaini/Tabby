@@ -41,6 +41,11 @@ final class TieniInVista {
         aggiornaEsclusi()
         disponi()
         r.avvia()
+        // scelta stando proprio su quella scheda: comparirà quando cambi (qui sarebbe un doppione)
+        if c.stato.attiva == s.chiave {
+            davanti(n)
+            c.avvisi.mostra(Avviso(simbolo: "rectangle.on.rectangle", titolo: "«\(s.nome)» resta in vista", testo: "La vedi quando passi a un'altra scheda"))
+        }
         diario("tieni in vista: «\(s.nome)»")
     }
 
@@ -49,6 +54,14 @@ final class TieniInVista {
         r.ferma()
         aggiornaEsclusi()
         disponi()
+    }
+
+    /// Sei sulla scheda tenuta in vista: il riquadro sparisce (sarebbe un doppione sopra la finestra
+    /// vera, Daniele 12/11/2026) e torna appena cambi scheda.
+    func davanti(_ n: UInt32?) {
+        for (k, r) in riquadri {
+            if k == n { r.pannello.orderOut(nil) } else if !r.pannello.isVisible { r.pannello.orderFrontRegardless() }
+        }
     }
 
     /// Le finestre chiuse: via i loro riquadri.

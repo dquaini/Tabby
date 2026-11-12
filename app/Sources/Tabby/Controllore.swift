@@ -439,6 +439,7 @@ final class Controllore {
         storia.append((k, Date())); if storia.count > 30 { storia.removeFirst() }
         withAnimationMolla { stato.attiva = k }
         if let s = stato.schede.first(where: { $0.chiave == k }) { selettore.arrivatoSu(s) }
+        tieniInVista.davanti(stato.schede.first(where: { $0.chiave == k })?.finestra ?? elementi[k].flatMap(Sistema.numero))
     }
 
     /// P-7: cambio di finestra dentro la stessa app (⌘`, clic su un'altra finestra).
