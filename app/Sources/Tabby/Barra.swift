@@ -374,6 +374,7 @@ struct BarraVista: View {
                     NomeCorto(nome: s.nome).italic(rid).opacity(rid ? 0.7 : 1)
                 }
                 Spacer(minLength: 0)
+                suonoEMicrofono(s)
                 if let n = s.notifica { numerino(n) }
                 if let cartella {
                     // la cartella: quante schede, e ⋯ per il suo menu
@@ -460,6 +461,13 @@ struct BarraVista: View {
         if c.haNomeTuo(s.chiave) {
             Button { c.tornaAlNome(s.chiave) } label: { Label("Torna al nome di prima", systemImage: "arrow.uturn.backward") }
         }
+        // l'audio di questa app (Daniele, 12/11/2026: col tasto destro)
+        if stato.silenziate.contains(s.pid) {
+            Button { c.audio.riattiva(s.pid) } label: { Label("Riattiva l'audio", systemImage: "speaker.wave.2") }
+        } else if stato.suonano.contains(s.pid) {
+            let app = NSRunningApplication(processIdentifier: s.pid)?.localizedName ?? s.nome
+            Button { c.audio.silenzia(s.pid) } label: { Label("Silenzia «\(app)»", systemImage: "speaker.slash") }
+        }
         // B-8: per una finestra di browser, come mostrarla: uno dei suoi siti (nome e logo, icone
         // piccole) e, quando la scheda mostra un sito, «Come il browser» (Daniele, 12/11/2026)
         if browserNoti[s.bid] != nil, let f = s.finestra {
@@ -497,6 +505,22 @@ struct BarraVista: View {
         } else if !s.chiave.hasPrefix("g:") {
             Divider()
             Button { c.chiudiFinestra(s) } label: { Label("Chiudi la finestra", systemImage: "xmark") }
+        }
+    }
+
+    /// 🎙 se l'app usa il microfono (macOS accende il pallino ma non dice chi), 🔊 se fa suono, 🔇 se
+    /// Tabby l'ha zittita. Per le viste divise e le cartelle vale se una delle loro app lo fa.
+    @ViewBuilder private func suonoEMicrofono(_ s: Scheda) -> some View {
+        let pid = Set((stato.membri[s.chiave] ?? stato.membriCartella[s.chiave] ?? [s]).map(\.pid))
+        HStack(spacing: 3) {
+            if !pid.isDisjoint(with: stato.microfono) {
+                Image(systemName: "mic.fill").font(.system(size: 10)).foregroundStyle(.orange).help("Usa il microfono")
+            }
+            if !pid.isDisjoint(with: stato.silenziate) {
+                Image(systemName: "speaker.slash.fill").font(.system(size: 10)).opacity(0.7).help("Silenziata da Tabby")
+            } else if !pid.isDisjoint(with: stato.suonano) {
+                Image(systemName: "speaker.wave.2.fill").font(.system(size: 10)).opacity(0.8).help("Sta facendo suono")
+            }
         }
     }
 

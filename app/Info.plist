@@ -13,7 +13,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.13.4</string>
+	<string>0.14</string>
 	<key>CFBundleVersion</key>
 	<string>8</string>
 	<key>CFBundleDevelopmentRegion</key>
@@ -27,6 +27,8 @@
 	<string>26.0</string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>NSAudioCaptureUsageDescription</key>
+	<string>Per silenziare una sola app dal tasto destro sulla sua scheda. Tabby non registra niente: azzera soltanto il volume di quell'app.</string>
 	<key>NSAppleEventsUsageDescription</key>
 	<string>Tabby chiede al browser quali pagine sono aperte, per mostrare i siti come schede.</string>
 	<key>NSHumanReadableCopyright</key>

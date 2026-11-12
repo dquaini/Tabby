@@ -41,6 +41,9 @@ final class StatoBarra {
     var lampiCoperti: [String] = []
     var lampiInModifica: [Lampo] = []
     var tabbyChiusa = false                     // «Chiudi Tabby»: barra via, resta la sfera
+    var suonano = Set<pid_t>()                  // le app che fanno suono (🔊 sulla scheda)
+    var microfono = Set<pid_t>()                // le app che usano il microfono (🎙)
+    var silenziate = Set<pid_t>()               // le app zittite da Tabby
     var rinomina: String?                       // la scheda che stai rinominando
     var nomeInModifica = ""
     var verticale: Bool { posizione == "left" || posizione == "right" }
@@ -107,6 +110,7 @@ final class Controllore {
     var nellaCartella: (dominio: String, cartella: Int, quando: Date)?   // un sito aperto dalla ricerca dentro una cartella
     var primaVolta: [String: Date] = [:]          // quando è comparsa ogni scheda
     let gesti = Gesti()
+    let audio = AudioSchede()
     var monitorClic: Any?
     var sitiScelti: [UInt32: String] = [:]       // B-8: il sito scelto per una finestra di browser
     var sitiVisti: [UInt32: [String]] = [:]       // B-8: i siti visti in ogni finestra di DuckDuckGo
@@ -120,6 +124,14 @@ final class Controllore {
         Tasti.suSpotlight = { [weak self] in self?.veloSpotlight.forse() }
         imp.imposta("autohide", nil)                    // un vecchio «Nascondi Tabby» non vale più (10/11/2026)
         imp.imposta("paused", nil)                      // la pausa non c'è più (Daniele, 12/11/2026)
+        audio.cambiato = { [weak self] in
+            guard let self else { return }
+            withAnimationMolla {
+                self.stato.suonano = self.audio.suonano; self.stato.microfono = self.audio.microfono
+                self.stato.silenziate = Set(self.audio.silenziate.keys)
+            }
+        }
+        audio.avvia()
         gesti.scorri = { [weak self] d in self?.scorri(d) }
         gesti.aggiorna()
         osservaSchermoIntero()

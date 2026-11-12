@@ -492,6 +492,7 @@ larghezza; in basso, a sinistra, a schermo intero o con Nascondi Tabby resta dov
 
 **N-4 Disegno**: pallino rosso col numero prima della ✕ (oltre 99: "99+"); sulle
 schede compatte un puntino rosso.
+*App Swift 0.14 (Daniele, 12/11/2026):* accanto al numerino, 🎙 (arancione) se l'app usa il microfono, 🔊 se fa suono, 🔇 se Tabby l'ha zittita (per viste e cartelle: se una loro app lo fa). Tasto destro → «Silenzia «app»» / «Riattiva l'audio». Core Audio dice chi suona e chi ascolta e avvisa ai cambi (niente controlli periodici); il suono dei browser parte da processi aiutanti, ricondotti all'app «responsabile». Silenziare: tap di Core Audio (macOS 14.2+), permesso «registrare l'audio» la prima volta; zittita finché non la riattivi o l'app si chiude.
 
 ## 10. La barra: disegno e misure
 

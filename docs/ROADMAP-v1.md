@@ -34,6 +34,19 @@ riunioni) e passa una settimana d'uso vero su tutti e due i Mac senza bug nuovi.
 5. 🧪 (0.13, in prova; è una tessera del cruscotto) **Borsa** nel centro di controllo: Yahoo Finance (non ufficiale, senza chiave; Apple non dà
    accesso); solo a pannello aperto, al massimo ogni 15 min; se smette: «borsa non disponibile».
 
+6. 🧪 (0.14, in prova) **L'audio sulle schede**: 🔊 sulla scheda dell'app che suona, 🎙 su quella che
+   usa il microfono, tasto destro → «Silenzia «app»» / «Riattiva l'audio» (tap ufficiali di macOS:
+   permesso «registrare l'audio» la prima volta). La fotocamera: macOS dice solo «in uso», non chi.
+7. **Accessi con Google, Apple, Microsoft al centro** (idea di Daniele, 12/11/2026): la finestrella
+   d'accesso al centro dello schermo, sopra uno sfondo nero come Spotlight; finito, si torna alla
+   finestra di partenza. **Storico degli accessi** solo sul Mac («12/11 · 18:30 · ollama.com · con
+   Google»), nella sezione nuova **Privacy** della finestra di Tabby, coi collegamenti per revocarli.
+8. **Tieni in vista**: tasto destro → la finestra diventa un riquadro dal vivo, come un Lampo ma
+   **a sinistra**; Tabby chiede dove (alto/basso, piccola/media). Resta in Tabby (sono finestre).
+9. **Tabby si prende cura del Mac** (dopo i punti 6–8, decidendo insieme cosa ha impatto davvero):
+   misure vere dell'energia per app, avvisi nel cruscotto (app che consuma, non risponde, memoria o
+   disco pieni, batteria), schede addormentate.
+
 ### Fase 2 — Tabby Search
 La barra che cerca tutto, con le sinergie di Tabby e le funzioni utili di Raycast (vedi la lista
 «Tabby come alternativa a Raycast e AltTab» più sotto): appunti, calcoli e conversioni, file,

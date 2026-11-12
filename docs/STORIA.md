@@ -284,4 +284,5 @@ app 0.13.1 (12/11/2026): le tessere del cruscotto al centro, come un quadrante (
 app 0.13.2 (12/11/2026): «Mostra la scheda come» (nome e logo di un sito per una finestra di browser con più schede) anche con DuckDuckGo.
 app 0.13.3 (12/11/2026): «Mostra come «DuckDuckGo»» forza il nome del browser anche su una finestra con un sito solo (prima «come prima» la lasciava Ollama); «Automatico» per tornare alla scelta di Tabby.
 app 0.13.4 (12/11/2026): «Mostra la scheda come» con icone piccole, i siti visti nella finestra di DuckDuckGo (fino a 10) e «Come il browser» quando la scheda mostra un sito.
+app 0.14 (12/11/2026): l'audio sulle schede (🔊, 🎙, «Silenzia» col tasto destro); roadmap: accessi al centro con storico in Privacy, Tieni in vista, Tabby si prende cura del Mac.
 ```
