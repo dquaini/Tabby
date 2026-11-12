@@ -460,18 +460,23 @@ struct BarraVista: View {
         if c.haNomeTuo(s.chiave) {
             Button { c.tornaAlNome(s.chiave) } label: { Label("Torna al nome di prima", systemImage: "arrow.uturn.backward") }
         }
-        // B-8: per una finestra di browser con più siti, quale mostrare
-        let siti = c.siti(di: s)
-        if siti.count > 1 || c.sitiScelti[s.finestra ?? 0] != nil {
+        // B-8: per una finestra di browser che non è una webapp, il sito da mostrare (nome e logo).
+        // Basta un sito conosciuto, come in Hammerspoon: DuckDuckGo dice solo quello della scheda in
+        // vista (prima servivano due siti, e con DuckDuckGo la voce non compariva mai)
+        let siti = c.siti(di: s), scelto = c.sitiScelti[s.finestra ?? 0]
+        if !siti.isEmpty && (s.chiave.hasPrefix("win:") || s.chiave == s.bid || scelto != nil) && (s.sito == nil || scelto != nil) {
             SwiftUI.Menu {
                 ForEach(siti, id: \.self) { d in
-                    Button { c.scegliSito(s, d) } label: { Text(nomeSito(titolo: nil, dominio: d)) }
+                    Button { c.scegliSito(s, d) } label: {
+                        if let l = stato.loghi[d] { Image(nsImage: l) }
+                        Text((scelto == d ? "✓ " : "") + nomeSito(titolo: nil, dominio: d) + "   " + d)
+                    }
                 }
-                if c.sitiScelti[s.finestra ?? 0] != nil {
+                if scelto != nil {
                     Divider()
-                    Button { c.scegliSito(s, nil) } label: { Text("Il nome del browser") }
+                    Button { c.scegliSito(s, nil) } label: { Text((browserNoti[s.bid]?.breve ?? "Il browser") + " (come prima)") }
                 }
-            } label: { Label("Mostra come", systemImage: "globe") }
+            } label: { Label("Mostra la scheda come", systemImage: "globe") }
         }
         // S-3: le finestre di un'app (non dei browser) in una scheda sola, o una per finestra
         if browserNoti[s.bid] == nil, !s.chiave.hasPrefix("g:"), !s.chiave.hasPrefix("f:"),

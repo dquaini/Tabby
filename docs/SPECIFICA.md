@@ -170,6 +170,7 @@ di quel sito finché quel sito è aperto nella finestra, poi torna «Chrome». C
 DuckDuckGo (che dice solo il sito della scheda in vista) la scelta resta finché la
 finestra è aperta.
 *App Swift 0.9.5:* tasto destro → «Mostra come» con i siti della finestra, e «Il nome del browser» per tornare indietro.
+*App Swift 0.13.2:* «Mostra la scheda come» (coi loghi e la spunta) compare con **un solo** sito conosciuto, come in Hammerspoon: con DuckDuckGo (che dice solo la scheda in vista) prima non compariva mai. Per tornare: «DuckDuckGo (come prima)».
 
 **B-5 Finestre di browser non webapp.** Come S-2, con il nome breve del browser
 ("Chrome") al posto del nome dell'app; il titolo usato è quello dato dal browser
