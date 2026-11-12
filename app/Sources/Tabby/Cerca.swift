@@ -138,14 +138,14 @@ extension Controllore {
             out.append((Trovato(id: "a:" + t, gruppo: .azioni, titolo: t, sotto: s, forte: forte), .comando(a)))
         }
         for (t, s, sezione) in impostazioniCercabili {
-            out.append((Trovato(id: "i:" + t, gruppo: .impostazioni, titolo: t, sotto: s, testo: "tabby impostazioni " + sezione), .impostazione(sezione)))
+            out.append((Trovato(id: "i:" + t, gruppo: .impostazioni, titolo: t, sotto: s, testo: "tabby preferenze impostazioni " + sezione), .impostazione(sezione)))
         }
         return out
     }
 
     /// Le impostazioni che si trovano scrivendo (aprono la finestra di Tabby su quella sezione).
     var impostazioniCercabili: [(String, String, String)] {
-        [("Tabby", "La finestra di Tabby", ""), ("Impostazioni", "Tabby · tutte le scelte", "set"),
+        [("Tabby", "La finestra di Tabby", ""), ("Preferenze", "Tabby · tutte le scelte", "set"), ("Cruscotto", "Tabby · le tessere del centro di controllo", "set"),
          ("Design", "Tabby · aspetto e temi", "des"), ("Documentazione", "Tabby · come funziona, scorciatoie", "doc"),
          ("Automazione", "Tabby · presto", "aut"), ("Kat", "Tabby · presto", "kat"),
          ("Posizione", "Dove sta Tabby", "set"),

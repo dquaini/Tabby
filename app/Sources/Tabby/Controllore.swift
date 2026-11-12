@@ -84,6 +84,7 @@ final class Controllore {
     let testi = LettoreTesti()
     lazy var sfera = Sfera(self)
     lazy var selettore = Selettore(self)
+    lazy var cruscotto = Cruscotto(self)
     lazy var finestraTabby = FinestraTabby(self)
     let attesaPermesso = AttesaPermesso()
     var sferaDopo: DispatchWorkItem?
@@ -141,7 +142,7 @@ final class Controllore {
         registraTasti()
         ricostruisci()
         aggiornaMouse()
-        if let a = NSWorkspace.shared.frontmostApplication { siAttiva(a) }
+        if let a = NSWorkspace.shared.frontmostApplication { cruscotto.uso.davanti(a); siAttiva(a) }
         controllaSfera()
     }
 
@@ -162,6 +163,7 @@ final class Controllore {
         ascolta(NSWorkspace.didUnhideApplicationNotification) { c, _ in c.ricostruisciPresto() }
         ascolta(NSWorkspace.didActivateApplicationNotification) { c, a in
             guard let a else { return }
+            c.cruscotto.uso.davanti(a)                      // il tempo d'uso di oggi
             c.siAttiva(a)
             // un'app che passa davanti con un pannello (la chat rapida di Claude…): il velo sotto
             if a.bundleIdentifier != Sistema.mioBid { c.veloSpotlight.forse(app: a.localizedName, pid: a.processIdentifier) }

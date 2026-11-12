@@ -21,7 +21,7 @@ riunioni) e passa una settimana d'uso vero su tutti e due i Mac senza bug nuovi.
    elimina…» delle cartelle che funziona. Menu ⚙︎: via «Tabby…» (c'è già la ricerca); «Chiudi le
    app» → Tutte / Solo quelle senza finestre. Pausa tolta da tutta l'app. Margine a destra.
 2. **Il MacBook di lavoro** (guida in `CONDIVIDERE.md`).
-3. **Centro di controllo** (bozza mostrata il 12/11/2026: tessere **componibili e scomponibili** — «modifica →» nel pannello: togli, riordina trascinando, aggiungi; un clic sulla parola sottolineata cambia città, app della musica, titoli della borsa; la **borsa è una tessera**) al posto della batteria: tasto col **cruscotto**
+3. 🧪 (0.13, in prova) **Centro di controllo** (bozza mostrata il 12/11/2026: tessere **componibili e scomponibili** — «modifica →» nel pannello: togli, riordina trascinando, aggiungi; un clic sulla parola sottolineata cambia città, app della musica, titoli della borsa; la **borsa è una tessera**) al posto della batteria: tasto col **cruscotto**
    (`gauge.with.dots.needle.67percent`; puntino rosso con batteria sotto il 20% e non in carica;
    niente ora, c'è già nella barra di Apple). Un clic apre un pannello: **ora e data** (una tessera come le altre, aggiunta da Daniele il 12/11/2026; nel tasto no, c'è già nella barra di Apple); batteria; **meteo** coi
    giorni (Open-Meteo, gratis; **città scritta da Daniele** la prima volta, poi nelle Impostazioni);
@@ -31,7 +31,7 @@ riunioni) e passa una settimana d'uso vero su tutti e due i Mac senza bug nuovi.
 4. 🧪 (0.12, in prova) **Selettore con le anteprime** (stile AltTab): ⌃⌥ tenuti + Tab ripetuto, con le miniature.
    Serve «Registrazione dello schermo»; le finestre nascoste non si fotografano, quindi la
    miniatura è l'ultima vista (foto presa quando lasci la scheda). Un Tab solo = scheda di prima.
-5. **Borsa** nel centro di controllo: Yahoo Finance (non ufficiale, senza chiave; Apple non dà
+5. 🧪 (0.13, in prova; è una tessera del cruscotto) **Borsa** nel centro di controllo: Yahoo Finance (non ufficiale, senza chiave; Apple non dà
    accesso); solo a pannello aperto, al massimo ogni 15 min; se smette: «borsa non disponibile».
 
 ### Fase 2 — Tabby Search

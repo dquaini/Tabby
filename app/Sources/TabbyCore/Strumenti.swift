@@ -109,7 +109,7 @@ public struct Trovato: Equatable, Sendable, Identifiable {
         case schede, finestre, cartelle, lampi, azioni, impostazioni, web
         public static func < (a: Gruppo, b: Gruppo) -> Bool { a.rawValue < b.rawValue }
         public var titolo: String {
-            ["Schede e app", "Nelle finestre", "Cartelle", "Lampi", "Azioni", "Impostazioni di Tabby", "Sul web"][rawValue]
+            ["Schede e app", "Nelle finestre", "Cartelle", "Lampi", "Azioni", "Preferenze di Tabby", "Sul web"][rawValue]
         }
     }
     public var id: String

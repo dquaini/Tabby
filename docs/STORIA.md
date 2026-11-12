@@ -279,4 +279,5 @@ app 0.10.11 (12/11/2026): doppio clic sulla ✕ col tempo del Mac (non apre più
 app 0.10.12 (12/11/2026): «Dividi lo schermo» passa dal tasto ⊞ della barra al menu ⚡︎, sotto Strumenti.
 app 0.11 (12/11/2026): inizio della fase 1 (roadmap nuova in tre fasi + Kat). Menu ⚡︎ e ⚙︎ riordinati, «Modifica o elimina» delle cartelle che funziona, «Chiudi le app senza finestre», pausa tolta, margine a destra della barra.
 app 0.12 (12/11/2026): il selettore con le anteprime (⌃⌥Tab tenuti, stile AltTab), con le foto delle finestre se c'è il permesso «Registrazione schermo».
+app 0.13 (12/11/2026): il cruscotto (centro di controllo) al posto della batteria, con tessere componibili: ora e data, batteria, meteo, musica, borsa, Mac, tempo d'uso; «Impostazioni» diventa «Preferenze», con la sezione del cruscotto.
 ```

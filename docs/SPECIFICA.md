@@ -534,6 +534,19 @@ Senza immagini: un piccolo schermo disegnato.
 carica), in uno spazio di 44 punti. **Passandoci sopra col puntatore** compare un fumetto
 con la percentuale («72%», «72% · in carica»), accanto alla batteria dalla parte delle app.
 Solo sui Mac con batteria. Si rilegge solo quando macOS avvisa di un cambio.
+*App Swift 0.13 (fase 1, 12/11/2026):* al posto della batteria il **cruscotto** (centro di
+controllo): tasto `gauge.with.dots.needle.67percent`, puntino rosso con batteria sotto il 20% e non
+in carica. Un clic apre il pannello attaccato al tasto, nello stile dei fogli (chiude: clic fuori,
+Esc, di nuovo il tasto). **Tessere componibili** (`tabbar.ccTessere`; «modifica →» nel pannello o
+Preferenze → Il cruscotto: togli, riordina trascinando, aggiungi): **Ora e data**; **Batteria**;
+**Meteo** (Open-Meteo, gratis; città scritta la prima volta nella tessera, `tabbar.ccCitta`; oggi
++ 3 giorni, ← → per gli altri; al massimo ogni ora); **Musica** (Spotify e Musica: titolo,
+artista, indietro/pausa/avanti con AppleScript; Tidal: tasti multimediali; app scelta in
+`tabbar.ccMusica`); **Borsa** (Yahoo Finance non ufficiale, `tabbar.ccTitoli`, di serie STZ,
+DSY.PA, XYZ; al massimo ogni 15 min; «Borsa non disponibile» se non risponde); **Mac** (processore
+e memoria ogni 2 s solo a pannello aperto, GPU); **Tempo d'uso** di oggi (contato da Tabby al
+cambio d'app, fermo con lo schermo spento, `tabbar.usoOggi`). Con la Concentrazione il suo
+cerchio sta accanto al cruscotto. A pannello chiuso: nessun lavoro.
 
 **L-6 Livello della finestra di Tabby**: sopra le finestre normali, sotto la barra
 dei menu quando scende; su tutte le scrivanie; i clic non le danno l'attenzione (non

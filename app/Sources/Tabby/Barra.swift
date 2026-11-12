@@ -198,7 +198,7 @@ struct BarraVista: View {
 
     private var riga: some View {
         GeometryReader { g in
-            let fisso = Misure.gatto + Misure.piu + Misure.tasto * 3 + 24 + (stato.concentrazione != nil ? 20 : 0) + CGFloat(stato.lampiCoperti.count) * 22
+            let fisso = Misure.gatto + Misure.piu + Misure.tasto * 3 + 24 + (stato.concentrazione != nil ? 34 : 0) + CGFloat(stato.lampiCoperti.count) * 22
             let sch = mostrate
             let att = sch.firstIndex { $0.chiave == stato.attiva && !stato.scrivania }
             let tacca = taccaNellaBarra()
@@ -217,7 +217,7 @@ struct BarraVista: View {
                 if d.altre > 0 { altre(d) }
                 piu
                 Spacer(minLength: 0)
-                batteriaOTempo
+                cruscottoETempo
                 fulmine
                 impostazioni
             }
@@ -266,7 +266,7 @@ struct BarraVista: View {
                 if d.altre > 0 { altre(DisposizioneOrizzontale(larghezza: 0, compatta: false, visibili: d.visibili, altre: d.altre), largo: true) }
                 piu.frame(maxWidth: .infinity, alignment: .leading).padding(.leading, 4)
                 Spacer(minLength: 0)
-                batteriaOTempo
+                cruscottoETempo
                 if !stato.lampiCoperti.isEmpty { fulmine.frame(maxWidth: .infinity).padding(.horizontal, 6) }
                 HStack(spacing: 0) { Spacer(); if stato.lampiCoperti.isEmpty { fulmine }; impostazioni; Spacer() }
             }
@@ -523,26 +523,30 @@ struct BarraVista: View {
         .help("Nuova app")
     }
 
-    @ViewBuilder private var batteria: some View {
+    /// Il cruscotto (centro di controllo, fase 1): al posto della batteria. Un puntino rosso quando
+    /// la batteria è sotto il 20% e non in carica, così l'avviso importante non si perde.
+    private var cruscotto: some View {
         let b = stato.batteria
-        if b.presente {
-            let col = coloreBatteria(livello: b.livello, inCarica: b.inCarica)
-            Image(systemName: b.inCarica ? "battery.100percent.bolt" : simboloBatteria(b.livello))
-                .font(.system(size: 15))
-                .foregroundStyle(col == .verde ? Tema.verde : col == .rossa ? Tema.rossa : Tema.tenue)
-                .frame(width: Misure.tasto, height: stato.verticale ? 30 : Misure.altezza)
-                .help("\(b.livello)%" + (b.inCarica ? " · in carica" : ""))
+        let bassa = b.presente && b.livello < 20 && !b.inCarica
+        return Button { c.cruscotto.clic() } label: {
+            Image(systemName: "gauge.with.dots.needle.67percent").font(.system(size: 15))
+                .foregroundStyle(c.cruscotto.s.aperto || sopra == "cruscotto" ? Tema.testo : Tema.tenue)
+                .overlay(alignment: .topTrailing) {
+                    if bassa { Circle().fill(Tema.notifica).frame(width: 6, height: 6).offset(x: 3, y: -2) }
+                }
+                .frame(width: Misure.tasto, height: stato.verticale ? Misure.tasto : Misure.altezza)
+                .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .onHover { sopra = $0 ? "cruscotto" : nil }
+        .background(CorniceMenu(id: "cruscotto"))
+        .help(b.presente ? "Cruscotto · batteria \(b.livello)%" : "Cruscotto")
     }
 
-    private func simboloBatteria(_ l: Int) -> String {
-        l >= 88 ? "battery.100percent" : l >= 63 ? "battery.75percent" : l >= 38 ? "battery.50percent" : l >= 13 ? "battery.25percent" : "battery.0percent"
-    }
-
-    /// Durante la Concentrazione, al posto della batteria un cerchio che si riempie col tempo
-    /// passato (come il consumo dei limiti di Claude; deciso con Daniele il 10/11/2026). Un clic:
-    /// quanto manca, aggiungi o togli minuti (H-3).
-    @ViewBuilder private var batteriaOTempo: some View {
+    /// Durante la Concentrazione, accanto al cruscotto un cerchio che si riempie col tempo passato
+    /// (come il consumo dei limiti di Claude; deciso con Daniele il 10/11/2026). Un clic: quanto
+    /// manca, aggiungi o togli minuti (H-3).
+    @ViewBuilder private var cruscottoETempo: some View {
         if let conc = stato.concentrazione {
             Button { apriMenuTempo() } label: {
                 TimelineView(.periodic(from: .now, by: 5)) { ctx in
@@ -565,7 +569,8 @@ struct BarraVista: View {
             }
             .buttonStyle(.plain)
             .background(CorniceMenu(id: "tempo"))
-        } else { batteria }
+        }
+        cruscotto
     }
 
     private func apriMenuTempo() {
@@ -836,11 +841,11 @@ struct BarraVista: View {
         Menu.apri(m, sopra: CorniceMenu.cornici["altre"] ?? .zero)
     }
 
-    /// Il menu ⚙︎ (DESIGN 3.1, rivisto con Daniele il 12/11/2026): Impostazioni · Scorciatoie ·
+    /// Il menu ⚙︎ (DESIGN 3.1, rivisto con Daniele il 12/11/2026): Preferenze · Scorciatoie ·
     /// Posizione · Chiudi le app (tutte, o solo quelle senza finestre) · Chiudi Tabby (con ⌥: Esci).
     private func apriImpostazioni() {
         let m = NSMenu()
-        m.addItem(Menu.voce("Impostazioni", simbolo: "gearshape") { c.apriFinestraTabby(sezione: "set") })
+        m.addItem(Menu.voce("Preferenze", simbolo: "gearshape") { c.apriFinestraTabby(sezione: "set") })
         m.addItem(Menu.voce("Scorciatoie", simbolo: "command", tasto: "/") { c.apriFinestraTabby(sezione: "doc") })
         let pos = NSMenu()
         for (k, t) in [("top", "In alto"), ("right", "A destra"), ("left", "A sinistra"), ("bottom", "In basso")] {

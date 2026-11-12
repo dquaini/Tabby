@@ -117,7 +117,7 @@ private struct VistaFinestra: View {
         VStack(spacing: 0) {
             // le sezioni restano ferme in alto: le pagine scorrono sotto, senza passarci sopra
             HStack(spacing: 22) {
-                ForEach([("set", "Impostazioni", "gearshape"), ("des", "Design", "paintpalette"), ("doc", "Documentazione", "book.closed"),
+                ForEach([("set", "Preferenze", "gearshape"), ("des", "Design", "paintpalette"), ("doc", "Documentazione", "book.closed"),
                          ("aut", "Automazione", "clock.arrow.2.circlepath"), ("kat", "Kat", "tray.full")], id: \.0) { id, nome, simbolo in
                     Button { withAnimation(Tema.molla) { f.sezione = f.sezione == id ? nil : id } } label: {
                         HStack(spacing: 6) {
@@ -367,7 +367,7 @@ private struct Pagina: View {
     // Le impostazioni come frasi, con la voce di Tabby (Daniele, 9/11/2026: più semplice e originale).
     // La parola chiara è la scelta: un clic e compaiono le altre.
     @ViewBuilder private var impostazioni: some View {
-        titolo("Impostazioni", "Clicca le parole chiare per cambiarle.")
+        titolo("Preferenze", "Clicca le parole chiare per cambiarle.")
         let pos = ["top": "in alto", "right": "a destra", "left": "a sinistra", "bottom": "in basso"]
         Frase("Tabby sta", ["in alto", "a destra", "a sinistra", "in basso"], pos[stato.posizione] ?? "in alto", ".") { s in
             if let k = pos.first(where: { $0.value == s })?.key { c.cambiaPosizione(k) }
@@ -408,6 +408,26 @@ private struct Pagina: View {
             c.nascondiDock(s == "si nasconde"); f.sezione = sezione
         }
         Spazio()
+        // il cruscotto (centro di controllo): le stesse scelte del suo «modifica →» (Daniele, 12/11/2026)
+        sezioneTitolo("Il cruscotto")
+        Azione("Le tessere", c.cruscotto.s.tessere.map(\.nome).joined(separator: " · "), "modifica") {
+            c.finestraTabby.chiudi(tornando: false); c.cruscotto.apri(modifica: true)
+        }
+        HStack(alignment: .firstTextBaseline, spacing: 7) {
+            Text("La città del meteo è").foregroundStyle(.white.opacity(0.5))
+            CampoParola(segnaposto: "la tua città", iniziale: c.cruscotto.s.città ?? "") { c.cruscotto.cambiaCittà($0) }.frame(width: 220)
+        }.font(.system(size: 22)).padding(.vertical, 12)
+        let musica = c.cruscotto.musicaInstallate
+        if musica.count > 1 {
+            Frase("La musica è", musica.map(\.nome), musica.first { $0.bid == c.cruscotto.musicaScelta }?.nome ?? musica[0].nome, ".") { n in
+                if let a = musica.first(where: { $0.nome == n }) { c.cruscotto.scegliMusica(a.bid); f.sezione = sezione }
+            }
+        }
+        HStack(alignment: .firstTextBaseline, spacing: 7) {
+            Text("In borsa seguo").foregroundStyle(.white.opacity(0.5))
+            CampoParola(segnaposto: "STZ, DSY.PA, XYZ", iniziale: c.cruscotto.s.titoli.joined(separator: ", ")) { c.cruscotto.cambiaTitoli($0) }.frame(width: 260)
+        }.font(.system(size: 22)).padding(.vertical, 12)
+        Spazio()
         Azione("I tuoi Lampi", c.lampi.lampi.map { "\($0.nome) ⌃⌥\($0.tasto.uppercased())" }.joined(separator: " · "), "personalizza") {
             c.finestraTabby.chiudi(tornando: false); c.apriFoglioLampi()
         }
@@ -444,7 +464,7 @@ private struct Pagina: View {
                           ("⌃ ⌥ Tab", "Il selettore con le anteprime", "Tieni ⌃⌥, Tab per scegliere, ⇧Tab indietro; un Tab veloce torna alla scheda di prima"), ("⌃ ⌥ W", "Chiudi la finestra", "L'app resta aperta"),
                           ("⌃ ⌥ 0", "Scrivania (il musetto del gatto)", "Ripremuto: torna all'ultima scheda")]
                           + (c.gesti.acceso ? [("Tre dita ← →", "Scheda dopo e prima, sul trackpad", "Togli il gesto a macOS: Trackpad → Altri gesti")] : []))
-        gruppo("Cerca", [("⌃ ⌥ Spazio", "La barra che cerca tutto", "Schede, testo nelle finestre, cartelle, Lampi, azioni, impostazioni")])
+        gruppo("Cerca", [("⌃ ⌥ Spazio", "La barra che cerca tutto", "Schede, testo nelle finestre, cartelle, Lampi, azioni, preferenze, web")])
         gruppo("Vista divisa", [("⌃ ⌥ S", "Scambia le zone", nil), ("↩", "Fatto, mentre dividi", nil), ("esc", "Annulla, mentre dividi", nil)])
         gruppo("Lampi", c.lampi.lampi.map { ("⌃ ⌥ \($0.tasto.uppercased())", $0.nome, nil) } + [("esc", "Chiudi il Lampo in primo piano", nil)])
         gruppo("Cartelle", stato.cartelle.prefix(9).enumerated().map { ("⌃ ⌥ ⇧ \($0.offset + 1)", $0.element.nome, nil) })
@@ -562,7 +582,7 @@ private struct Guida: View {
 
     private var posizione: some View {
         VStack(spacing: 0) {
-            intestazione("macwindow", "Dove tieni Tabby?", "Si cambia quando vuoi, dalle impostazioni.")
+            intestazione("macwindow", "Dove tieni Tabby?", "Si cambia quando vuoi, dalle preferenze.")
             let pos = ["top": "In alto", "right": "A destra", "left": "A sinistra", "bottom": "In basso"]
             Parole(scelte: ["In alto", "A destra", "A sinistra", "In basso"], scelta: pos[c.stato.posizione] ?? "In alto") { s in
                 if let k = pos.first(where: { $0.value == s })?.key { c.cambiaPosizione(k) }
