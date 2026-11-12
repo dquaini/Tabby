@@ -190,6 +190,13 @@ le conta come finestre "vere":
   aperta **non si nasconde** (sparirebbe anche lei).
 - **popup di accesso/pagamento**: finestra di browser che nasce più stretta del 60%
   dello spazio delle app (es. "Accedi con Google").
+*App Swift 0.15 (Daniele, 12/11/2026):* le **finestrelle d'accesso** con Google, Apple, Microsoft
+(Facebook) si riconoscono dal sito (DuckDuckGo) o dal titolo (Chrome, Safari) quando il browser
+crea la finestra (a 0,4, 1 e 2,2 s, per il titolo che arriva dopo): vanno **al centro** dello
+spazio delle app, davanti, sopra un velo nero come Spotlight (un clic sul velo le riporta davanti);
+chiuse, si torna alla scheda di prima. Ogni accesso va nello **storico** (`tabbar.accessi`, ultimi
+300, solo sul Mac: quando, sito della scheda di prima, servizio, browser), nella sezione **Privacy**
+della finestra di Tabby, coi collegamenti per togliere l'accesso e «cancella».
 
 **B-9 Siti doppi** (v9.60): quando una finestra di browser con un solo sito (webapp)
 compare — o passa a quel sito — e lo stesso sito è già aperto da solo in un'altra

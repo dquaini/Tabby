@@ -91,3 +91,14 @@ struct AppleScriptTests {
         #expect(perAppleScript("https://mail.proton.me/") == "https://mail.proton.me/")
     }
 }
+
+struct AccessiTests {
+    @Test func riconosceIServizi() {
+        #expect(servizioDAccesso(titolo: "", dominio: "accounts.google.com") == "Google")
+        #expect(servizioDAccesso(titolo: "Accedi - Account Google", dominio: nil) == "Google")
+        #expect(servizioDAccesso(titolo: "Sign in with Apple", dominio: nil) == "Apple")
+        #expect(servizioDAccesso(titolo: "Accedi al tuo account Microsoft", dominio: nil) == "Microsoft")
+        #expect(servizioDAccesso(titolo: "Posta in arrivo - Gmail", dominio: "mail.google.com") == nil)
+        #expect(doveRevocare["Google"] != nil)
+    }
+}

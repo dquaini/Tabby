@@ -293,3 +293,29 @@ public func abbina(_ schermo: [FinestraSchermo], _ browser: [FinestraBrowser], m
     }
     return (trovate, nuova)
 }
+
+// MARK: - Accessi con Google, Apple, Microsoft (Daniele, 12/11/2026)
+
+/// Una finestrella d'accesso? Dal suo sito (DuckDuckGo lo dice) o dal titolo (Chrome, Safari):
+/// il nome del servizio con cui accedi, oppure nil.
+public func servizioDAccesso(titolo: String, dominio d: String?) -> String? {
+    if let d {
+        if d == "accounts.google.com" { return "Google" }
+        if d == "appleid.apple.com" || d == "idmsa.apple.com" || d == "account.apple.com" { return "Apple" }
+        if d == "login.microsoftonline.com" || d == "login.live.com" { return "Microsoft" }
+        if d.hasSuffix("facebook.com"), titolo.localizedCaseInsensitiveContains("accedi") || titolo.localizedCaseInsensitiveContains("log in") { return "Facebook" }
+    }
+    let t = titolo.lowercased()
+    if t.contains("account google") || t.contains("google account") || t.contains("accedi con google") || t.contains("sign in with google") { return "Google" }
+    if t.contains("accedi con apple") || t.contains("sign in with apple") || t.contains("apple account") || t.contains("id apple") { return "Apple" }
+    if t.contains("microsoft") && (t.contains("accedi") || t.contains("sign in")) { return "Microsoft" }
+    return nil
+}
+
+/// Dove si toglie l'accesso dato a un sito, per ogni servizio.
+public let doveRevocare: [String: String] = [
+    "Google": "https://myaccount.google.com/connections",
+    "Apple": "https://account.apple.com/account/manage",
+    "Microsoft": "https://account.live.com/consent/Manage",
+    "Facebook": "https://www.facebook.com/settings?tab=applications",
+]

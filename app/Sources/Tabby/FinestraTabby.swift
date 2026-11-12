@@ -118,7 +118,7 @@ private struct VistaFinestra: View {
             // le sezioni restano ferme in alto: le pagine scorrono sotto, senza passarci sopra
             HStack(spacing: 22) {
                 ForEach([("set", "Preferenze", "gearshape"), ("des", "Design", "paintpalette"), ("doc", "Documentazione", "book.closed"),
-                         ("aut", "Automazione", "clock.arrow.2.circlepath"), ("kat", "Kat", "tray.full")], id: \.0) { id, nome, simbolo in
+                         ("pri", "Privacy", "hand.raised"), ("aut", "Automazione", "clock.arrow.2.circlepath"), ("kat", "Kat", "tray.full")], id: \.0) { id, nome, simbolo in
                     Button { withAnimation(Tema.molla) { f.sezione = f.sezione == id ? nil : id } } label: {
                         HStack(spacing: 6) {
                             Image(systemName: simbolo).font(.system(size: 13))
@@ -346,6 +346,7 @@ private struct Pagina: View {
             case "set": impostazioni
             case "des": design
             case "doc": documentazione
+            case "pri": privacy
             case "aut": presto("clock.arrow.2.circlepath", "Automazione", "Presto: le cartelle che si aprono da sole, all'ora giusta o quando accendi il Mac.")
             default: presto("tray.full", "Kat", "Presto: una cartella del Mac legata a Tabby, col Memo e i file che creerai.")
             }
@@ -475,6 +476,29 @@ private struct Pagina: View {
         sezioneTitolo(t)
         ForEach(righe, id: \.0) { k, n, s in
             Riga(titolo: n, sotto: s) { Text(k).font(.system(size: 13)).tracking(1.5) }
+        }
+    }
+
+    // La privacy (Daniele, 12/11/2026): quello che Tabby vede resta sul Mac.
+    @ViewBuilder private var privacy: some View {
+        titolo("Privacy", "Quello che Tabby vede resta sul tuo Mac.")
+        sezioneTitolo("Gli accessi con Google, Apple, Microsoft")
+        let storico = c.accessi.storico
+        if storico.isEmpty {
+            Text("Nessun accesso ancora. Quando accedi a un sito con Google o Apple, lo trovi qui.").font(.system(size: 15)).foregroundStyle(.white.opacity(0.5)).padding(.vertical, 10)
+        } else {
+            ForEach(Array(storico.prefix(100).enumerated()), id: \.offset) { _, v in
+                Riga(titolo: v.sito, sotto: v.quando.formatted(.dateTime.day().month(.abbreviated).hour().minute().locale(Locale(identifier: "it_IT"))) + " · " + v.browser) {
+                    Text("con \(v.servizio)").font(.system(size: 13)).foregroundStyle(.white.opacity(0.7))
+                }
+            }
+            Spazio()
+            ForEach(Array(Set(storico.map(\.servizio))).sorted(), id: \.self) { s in
+                if let u = doveRevocare[s].flatMap(URL.init(string:)) {
+                    Azione("I siti con l'accesso di \(s)", "Per togliere l'accesso a un sito", "apri") { NSWorkspace.shared.open(u) }
+                }
+            }
+            Azione("Lo storico degli accessi", "\(storico.count) accessi, solo su questo Mac", "cancella", rosso: true) { c.accessi.cancellaStorico(); f.sezione = sezione }
         }
     }
 

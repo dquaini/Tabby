@@ -147,6 +147,7 @@ extension Controllore {
     var impostazioniCercabili: [(String, String, String)] {
         [("Tabby", "La finestra di Tabby", ""), ("Preferenze", "Tabby · tutte le scelte", "set"), ("Cruscotto", "Tabby · le tessere del centro di controllo", "set"),
          ("Design", "Tabby · aspetto e temi", "des"), ("Documentazione", "Tabby · come funziona, scorciatoie", "doc"),
+         ("Privacy", "Tabby · gli accessi con Google e Apple", "pri"), ("Accessi", "Privacy · lo storico degli accessi", "pri"),
          ("Automazione", "Tabby · presto", "aut"), ("Kat", "Tabby · presto", "kat"),
          ("Posizione", "Dove sta Tabby", "set"),
          ("Una scheda alla volta", "Nasconde le altre app", "set"), ("Adatta le finestre a Tabby", "Spazio libero accanto alla barra", "set"),

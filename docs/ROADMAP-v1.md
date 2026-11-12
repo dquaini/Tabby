@@ -37,7 +37,7 @@ riunioni) e passa una settimana d'uso vero su tutti e due i Mac senza bug nuovi.
 6. 🧪 (0.14, in prova) **L'audio sulle schede**: 🔊 sulla scheda dell'app che suona, 🎙 su quella che
    usa il microfono, tasto destro → «Silenzia «app»» / «Riattiva l'audio» (tap ufficiali di macOS:
    permesso «registrare l'audio» la prima volta). La fotocamera: macOS dice solo «in uso», non chi.
-7. **Accessi con Google, Apple, Microsoft al centro** (idea di Daniele, 12/11/2026): la finestrella
+7. 🧪 (0.15, in prova) **Accessi con Google, Apple, Microsoft al centro** (idea di Daniele, 12/11/2026): la finestrella
    d'accesso al centro dello schermo, sopra uno sfondo nero come Spotlight; finito, si torna alla
    finestra di partenza. **Storico degli accessi** solo sul Mac («12/11 · 18:30 · ollama.com · con
    Google»), nella sezione nuova **Privacy** della finestra di Tabby, coi collegamenti per revocarli.

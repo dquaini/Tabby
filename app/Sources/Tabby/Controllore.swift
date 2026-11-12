@@ -111,6 +111,7 @@ final class Controllore {
     var primaVolta: [String: Date] = [:]          // quando è comparsa ogni scheda
     let gesti = Gesti()
     let audio = AudioSchede()
+    let accessi = Accessi()
     var monitorClic: Any?
     var sitiScelti: [UInt32: String] = [:]       // B-8: il sito scelto per una finestra di browser
     var sitiVisti: [UInt32: [String]] = [:]       // B-8: i siti visti in ogni finestra di DuckDuckGo
@@ -197,6 +198,10 @@ final class Controllore {
             let c = Unmanaged<Controllore>.fromOpaque(ctx).takeUnretainedValue()
             let n = nome as String
             MainActor.assumeIsolated {
+                if n == kAXWindowCreatedNotification {        // una finestrella d'accesso? (al centro, nello storico)
+                    var p: pid_t = 0; AXUIElementGetPid(el, &p)
+                    c.forseAccesso(el, pid: p)
+                }
                 if n == kAXFocusedWindowChangedNotification {
                     c.finestraCambiata()
                     // un pannello che prende la tastiera in un'app già davanti (la chat rapida di Claude con
