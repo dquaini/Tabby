@@ -35,7 +35,7 @@ extension Controllore {
     /// (tranne quelle da lavoro, che si usano come le altre).
     private func chiudibile(_ b: String) -> Bool {
         b != "com.apple.finder" && (!b.hasPrefix("com.apple.") || ["com.apple.Safari", "com.apple.Preview", "com.apple.TextEdit", "com.apple.Notes",
-                                                                  "com.apple.mail", "com.apple.iCal", "com.apple.Terminal", "com.apple.calculator"].contains(b))
+                                                                  "com.apple.mail", "com.apple.iCal", "com.apple.Terminal", "com.apple.calculator", "com.apple.systempreferences"].contains(b))
     }
 
     /// ⚙︎ → Chiudi le app → Tutte (C-5): le app con documenti non salvati chiedono loro; del Finder

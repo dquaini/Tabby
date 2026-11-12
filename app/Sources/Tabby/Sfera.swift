@@ -240,8 +240,10 @@ extension Controllore {
         let inVista = tutte.contains { s in
             !s.ridotta && !(NSRunningApplication(processIdentifier: s.pid)?.isHidden ?? true) && !lampi.èVeloce(s.bid)
         }
-        // «solo e solamente» (Daniele, 10/11/2026): mai a schermo intero, mai sopra la finestra di Tabby
-        let serve = stato.tabbyChiusa && !inVista && !davantiASchermoIntero() && !finestraTabby.isVisible
+        // con Tabby chiusa, o quando non resta nessuna scheda (Daniele, 13/11/2026: «chiudo tutte le app
+        // e diventa la sfera»); mai a schermo intero, mai sopra la finestra di Tabby
+        let nessuna = !tutte.contains { !lampi.èVeloce($0.bid) }
+        let serve = (stato.tabbyChiusa || nessuna) && !inVista && !davantiASchermoIntero() && !finestraTabby.isVisible
         sferaDopo?.cancel()
         if serve == sfera.s.visibile { return }
         let w = DispatchWorkItem { [weak self] in

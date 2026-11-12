@@ -708,6 +708,7 @@ restano come sono (diverso da «Chiudi tutte le app»). **Un clic sulla sfera** 
 riparte. Si ricorda anche dopo un riavvio (`paused`).
 *App Swift 0.9.3:* Chiudi Tabby nasconde tutte le app in un colpo solo (anche il Finder, senza ridurre le sue finestre); barra via e sfera subito.
 *App Swift 0.10.10:* «Metti in pausa» toglie subito la barra anche con finestre in vista (lì la sfera non c'è: la si trova sulla Scrivania); togliendo la pausa la barra torna. Prima, dalla 0.9.7, la barra restava ferma con le scorciatoie spente.
+*App Swift 0.16.3 (Daniele, 13/11/2026):* la sfera compare anche quando **non resta nessuna scheda** (tutte le app chiuse; i Lampi non contano), non solo con «Chiudi Tabby»; un clic apre il ventaglio. Appena c'è una finestra torna la barra. «Chiudi tutte le app» chiude anche Impostazioni di Sistema.
 *App Swift 0.11 (Daniele, 12/11/2026):* **la pausa non c'è più** (da nessuna parte: menu, ricerca, finestra di Tabby, sfera); «Chiudi Tabby» copre lo stesso bisogno. Un vecchio `paused` salvato si cancella all'avvio.
 
 **W-1 Scrivania, ⌃⌥0**: nasconde tutte le app (tranne il Finder
