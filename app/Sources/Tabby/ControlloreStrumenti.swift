@@ -31,17 +31,41 @@ extension Controllore {
     /// Le schede usate, dalla più recente (per la ricerca e per tornare indietro).
     var storiaUso: [String] { var v: [String] = []; for x in storia.reversed() where !v.contains(x.chiave) { v.append(x.chiave) }; return v }
 
-    /// ⚙︎ → Chiudi tutte le app (C-5): le app con documenti non salvati chiedono loro; del Finder
+    /// Le app che «Chiudi le app» può chiudere: non il Finder, non le app di sistema di Apple
+    /// (tranne quelle da lavoro, che si usano come le altre).
+    private func chiudibile(_ b: String) -> Bool {
+        b != "com.apple.finder" && (!b.hasPrefix("com.apple.") || ["com.apple.Safari", "com.apple.Preview", "com.apple.TextEdit", "com.apple.Notes",
+                                                                  "com.apple.mail", "com.apple.iCal", "com.apple.Terminal", "com.apple.calculator"].contains(b))
+    }
+
+    /// ⚙︎ → Chiudi le app → Tutte (C-5): le app con documenti non salvati chiedono loro; del Finder
     /// si chiudono solo le finestre; le app di sistema di Apple restano.
     func chiudiTutteLeApp() {
         for a in Sistema.appVere() {
             guard let b = a.bundleIdentifier else { continue }
             if b == "com.apple.finder" { for w in Sistema.finestre(a.processIdentifier) { Sistema.chiudi(w) }; continue }
-            if b.hasPrefix("com.apple.") && !["com.apple.Safari", "com.apple.Preview", "com.apple.TextEdit", "com.apple.Notes",
-                                                "com.apple.mail", "com.apple.iCal", "com.apple.Terminal", "com.apple.calculator"].contains(b) { continue }
-            a.terminate()
+            if chiudibile(b) { a.terminate() }
         }
         diario("chiudi tutte le app")
+    }
+
+    /// ⚙︎ → Chiudi le app → Solo quelle senza finestre (Daniele, 12/11/2026): le app aperte che non
+    /// vedi in Tabby (consumano senza che tu lo sappia). Due controlli, per non chiudere mai un'app
+    /// che stai usando: nessuna scheda in Tabby **e** nessuna finestra per macOS, nemmeno nascosta.
+    func chiudiAppSenzaFinestre() {
+        let conSchede = Set(tutte.map(\.bid))
+        let conFinestre = Set(((CGWindowListCopyWindowInfo([.optionAll, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]]) ?? [])
+            .filter { ($0[kCGWindowLayer as String] as? Int) == 0 && (($0[kCGWindowBounds as String] as? [String: CGFloat])?["Width"] ?? 0) > 100 }
+            .compactMap { $0[kCGWindowOwnerPID as String] as? pid_t })
+        var chiuse: [String] = []
+        for a in Sistema.appVere() {
+            guard let b = a.bundleIdentifier, chiudibile(b), !conSchede.contains(b), !conFinestre.contains(a.processIdentifier),
+                  Sistema.finestre(a.processIdentifier).isEmpty else { continue }
+            a.terminate(); chiuse.append(a.localizedName ?? b)
+        }
+        diario("chiuse le app senza finestre: " + (chiuse.isEmpty ? "nessuna" : chiuse.joined(separator: ", ")))
+        avvisi.mostra(Avviso(simbolo: "eye.slash", titolo: chiuse.isEmpty ? "Nessuna app senza finestre" : "Chiuse \(chiuse.count) app senza finestre",
+                             testo: chiuse.isEmpty ? nil : chiuse.joined(separator: ", ")))
     }
 
     // MARK: - Personalizza i Lampi (foglio, DESIGN 3.4.3)

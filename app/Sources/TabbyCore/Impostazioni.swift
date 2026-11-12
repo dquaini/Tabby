@@ -18,7 +18,6 @@ public final class Impostazioni: @unchecked Sendable {
     public var preferite: [String] { valore("pinned") as? [String] ?? [] }
     public var unaAllaVolta: Bool { valore("oneAtATime") as? Bool ?? true }
     public var adatta: Bool { valore("fit") as? Bool ?? true }
-    public var inPausa: Bool { valore("paused") as? Bool ?? false }
     public var cartelle: [[String: Any]] { valore("folders") as? [[String: Any]] ?? [] }
     public var lampi: [[String: Any]] { valore("quick") as? [[String: Any]] ?? [] }
 }

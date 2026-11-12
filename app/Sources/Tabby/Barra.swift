@@ -198,7 +198,7 @@ struct BarraVista: View {
 
     private var riga: some View {
         GeometryReader { g in
-            let fisso = Misure.gatto + Misure.piu + Misure.tasto * 3 + 16 + (stato.concentrazione != nil ? 20 : 0) + CGFloat(stato.lampiCoperti.count) * 22
+            let fisso = Misure.gatto + Misure.piu + Misure.tasto * 3 + 24 + (stato.concentrazione != nil ? 20 : 0) + CGFloat(stato.lampiCoperti.count) * 22
             let sch = mostrate
             let att = sch.firstIndex { $0.chiave == stato.attiva && !stato.scrivania }
             let tacca = taccaNellaBarra()
@@ -221,7 +221,8 @@ struct BarraVista: View {
                 fulmine
                 impostazioni
             }
-            .padding(.horizontal, 2)
+            // a destra più margine: ⚙︎ non sta attaccato al bordo (Daniele, 12/11/2026)
+            .padding(.leading, 2).padding(.trailing, 10)
             .frame(width: g.size.width, height: g.size.height)
         }
         .background(Tema.sfondo(verticale: false).clipShape(forma))
@@ -619,6 +620,7 @@ struct BarraVista: View {
         riga.view = vista
         m.addItem(NSMenuItem.sectionHeader(title: "Lampi · \(aperti.count) \(aperti.count == 1 ? "aperto" : "aperti")"))
         m.addItem(riga)
+        m.addItem(Menu.voce("Personalizza i Lampi…", simbolo: "slider.horizontal.3") { c.apriFoglioLampi() })
         m.addItem(.separator())
         m.addItem(NSMenuItem.sectionHeader(title: "Strumenti"))
         if let conc = stato.concentrazione {
@@ -644,9 +646,9 @@ struct BarraVista: View {
             let d = Menu.voce("Dividi lo schermo", simbolo: "rectangle.grid.2x2"); d.submenu = schemiMenu; d.isEnabled = true
             m.addItem(d)
         }
+        // le azioni delle app nella barra dei menu (Claude chat rapida, Notion cerca)
         let app = c.lampi.lampi.filter(\.barraMenu)
-        let scoperte = c.lampi.appBarraMenu.filter { a in !app.contains { $0.bid == a.bid } }
-        if !app.isEmpty || !scoperte.isEmpty {
+        if !app.isEmpty {
             m.addItem(.separator())
             m.addItem(NSMenuItem.sectionHeader(title: "App"))
             for l in app {
@@ -655,18 +657,6 @@ struct BarraVista: View {
                     v.image = Menu.icona(NSWorkspace.shared.icon(forFile: u.path))
                 }
                 m.addItem(v)
-            }
-            if !scoperte.isEmpty {
-                let sotto = NSMenu()
-                for a in scoperte {
-                    let v = Menu.voce("Apri \(a.nome)") { c.lampi.premiNellaBarraDeiMenu(Lampo(bid: a.bid, nome: a.nome, tasto: "", barraMenu: true)) }
-                    if let u = NSWorkspace.shared.urlForApplication(withBundleIdentifier: a.bid) {
-                        v.image = Menu.icona(NSWorkspace.shared.icon(forFile: u.path))
-                    }
-                    sotto.addItem(v)
-                }
-                let t = Menu.voce("Tutte le App", simbolo: "menubar.rectangle"); t.submenu = sotto; t.isEnabled = true
-                m.addItem(t)
             }
         }
         // le cartelle (deciso con Daniele il 9/11/2026: dal gatto passano qui)
@@ -682,11 +672,10 @@ struct BarraVista: View {
         if !stato.cartelle.isEmpty {                 // modificare o eliminare anche le cartelle spente
             let sotto = NSMenu()
             for f in stato.cartelle { sotto.addItem(Menu.voce(f.nome, simbolo: "square.stack.3d.up") { c.apriFoglioCartella(f.id) }) }
-            let v = Menu.voce("Modifica o elimina…", simbolo: "square.and.pencil"); v.submenu = sotto
+            // una voce senza azione nasce spenta: col sottomenu va accesa (prima il sottomenu non si apriva)
+            let v = Menu.voce("Modifica o elimina…", simbolo: "square.and.pencil"); v.submenu = sotto; v.isEnabled = true
             m.addItem(v)
         }
-        m.addItem(.separator())
-        m.addItem(Menu.voce("Personalizza i Lampi…", simbolo: "slider.horizontal.3") { c.apriFoglioLampi() })
         Menu.apri(m, sopra: CorniceMenu.cornici["lampi"] ?? .zero)
     }
 
@@ -847,12 +836,10 @@ struct BarraVista: View {
         Menu.apri(m, sopra: CorniceMenu.cornici["altre"] ?? .zero)
     }
 
-    /// Il menu ⚙︎ (DESIGN 3.1): Tabby… · Impostazioni · Scorciatoie · Posizione · Chiudi tutte le
-    /// app (conferma col secondo clic) · Metti in pausa Tabby (con ⌥: Esci da Tabby).
+    /// Il menu ⚙︎ (DESIGN 3.1, rivisto con Daniele il 12/11/2026): Impostazioni · Scorciatoie ·
+    /// Posizione · Chiudi le app (tutte, o solo quelle senza finestre) · Chiudi Tabby (con ⌥: Esci).
     private func apriImpostazioni() {
         let m = NSMenu()
-        let tabby = Menu.voce("Tabby…", simbolo: "text.magnifyingglass") { c.apriRicerca(con: "Tabby ") }
-        m.addItem(tabby)
         m.addItem(Menu.voce("Impostazioni", simbolo: "gearshape") { c.apriFinestraTabby(sezione: "set") })
         m.addItem(Menu.voce("Scorciatoie", simbolo: "command", tasto: "/") { c.apriFinestraTabby(sezione: "doc") })
         let pos = NSMenu()
@@ -862,14 +849,11 @@ struct BarraVista: View {
         let p = Menu.voce("Posizione", simbolo: "macwindow"); p.submenu = pos; p.isEnabled = true
         m.addItem(p)
         m.addItem(.separator())
-        let tutte = NSMenuItem()
-        let conferma = NSHostingView(rootView: VoceConferma(titolo: "Chiudi tutte le app…", conferma: "Clic di nuovo per chiudere tutte") {
-            m.cancelTracking(); c.chiudiTutteLeApp()
-        })
-        conferma.frame.size = NSSize(width: 250, height: 22)
-        tutte.view = conferma
-        m.addItem(tutte)
-        m.addItem(Menu.voce("Metti in pausa Tabby", simbolo: "pause.circle") { c.pausa(true) })
+        let chiudi = NSMenu()
+        chiudi.addItem(Menu.voce("Tutte le app", simbolo: "xmark.circle") { c.chiudiTutteLeApp() })
+        chiudi.addItem(Menu.voce("Solo quelle senza finestre", simbolo: "eye.slash") { c.chiudiAppSenzaFinestre() })
+        let ca = Menu.voce("Chiudi le app", simbolo: "xmark.app"); ca.submenu = chiudi; ca.isEnabled = true
+        m.addItem(ca)
         m.addItem(Menu.voce("Chiudi Tabby", simbolo: "macwindow") { c.chiudiTabby() })
         let esci = Menu.voce("Esci da Tabby", simbolo: "power") { NSApp.terminate(nil) }
         esci.isAlternate = true; esci.keyEquivalentModifierMask = [.option]
@@ -919,24 +903,5 @@ struct RigaLampi: View {
             }
         }
         .padding(.horizontal, 10).padding(.vertical, 4)
-    }
-}
-
-/// Una voce di menu che chiede conferma col secondo clic (DESIGN 3.2): al primo diventa rossa.
-struct VoceConferma: View {
-    let titolo: String
-    let conferma: String
-    let azione: () -> Void
-    @State private var armata = false
-    @State private var sopra = false
-    var body: some View {
-        Text(armata ? conferma : titolo)
-            .font(.system(size: 13)).foregroundStyle(armata ? .white : (sopra ? .white : .primary))
-            .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 10).frame(height: 22)
-            .background(armata ? Color.red : (sopra ? Color.accentColor : .clear), in: RoundedRectangle(cornerRadius: 5))
-            .padding(.horizontal, 5)
-            .contentShape(Rectangle())
-            .onHover { sopra = $0 }
-            .onTapGesture { if armata { azione() } else { armata = true } }
     }
 }

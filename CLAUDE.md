@@ -148,7 +148,7 @@ GitHub, poi `git clone git@github.com:dquaini/Tabby.git` e `init.lua` che punta 
   storiche `tabbar.*`, importate una volta da Hammerspoon.
 - Riavviare in sviluppo **senza le animazioni** (che coprono tutto lo schermo): `open
   app/build/Tabby.app --args --senza-avvio`. Daniele può essere in riunione: riavviare poco.
-- Versione dell'app: in `app/Sources/Tabby/main.swift` (`versione`) e in `app/Info.plist` (oggi **0.10.12**).
+- Versione dell'app: in `app/Sources/Tabby/main.swift` (`versione`) e in `app/Info.plist` (oggi **0.11**).
 - **Mac di casa:** Tabby-Hammerspoon spenta (`dofile` commentato in `~/.hammerspoon/init.lua`).
   **Mac di lavoro:** ancora Tabby-Hammerspoon; la cartella Lua resta come riferimento e
   per i riscontri.
@@ -163,5 +163,6 @@ Hammerspoon non ha) si decide insieme prima di costruirla. Nell'app Swift Tabby 
 cinque sezioni: Impostazioni, Design, Documentazione, Automazione (apertura delle
 cartelle da sole), Kat (una cartella del Mac collegata a Tabby con tutti i suoi file,
 Memo compreso, e in futuro i file generati dagli agenti).
+**Fasi del prodotto** (12/11/2026, `docs/ROADMAP-v1.md`): 1. Tabby (finestre come schede + strumenti), 2. Tabby Search (con le idee di Raycast), 3. Automazione, 4. Kat.
 **Principio dell'app Swift** (Daniele): estremamente integrata con macOS, semplice, veloce,
 col minimo di batteria; durante la costruzione si fanno ottimizzazione e debug generale.

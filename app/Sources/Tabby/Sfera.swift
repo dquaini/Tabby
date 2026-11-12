@@ -2,10 +2,10 @@ import AppKit
 import SwiftUI
 import TabbyCore
 
-/// La sfera (SPECIFICA W-3/W-4, DESIGN 3.8): con Tabby chiusa o in pausa, sulla Scrivania, Tabby è
-/// una sfera viva in basso a destra, col gatto di Daniele, nei colori del tema. Reagisce al
-/// puntatore; al clic riapre tutto (o, senza schede, il ventaglio). In pausa è spenta col segno ❙❙;
-/// in Concentrazione ha l'anello che si consuma; mostra il totale delle notifiche.
+/// La sfera (SPECIFICA W-3/W-4, DESIGN 3.8): con Tabby chiusa, sulla Scrivania, Tabby è una sfera
+/// viva in basso a destra, col gatto di Daniele, nei colori del tema. Reagisce al puntatore; al clic
+/// riapre tutto (o, senza schede, il ventaglio). In Concentrazione ha l'anello che si consuma; mostra
+/// il totale delle notifiche.
 @MainActor @Observable
 final class StatoSfera {
     var visibile = false
@@ -89,7 +89,7 @@ private struct VistaSfera: View {
             // la sfera esiste (e si anima) solo quando si vede: nascosta non consuma niente
             // il movimento è lento: 10 immagini al secondo bastano, disegnate dalla scheda grafica
             if s.visibile {
-                let fermo = stato.inPausa || NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+                let fermo = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
                 TimelineView(.animation(minimumInterval: 1.0 / 10, paused: fermo)) { ctx in
                     sfera(colori.map { UInt32($0) }, tempo: fermo ? 0 : ctx.date.timeIntervalSinceReferenceDate)
                 }
@@ -109,7 +109,7 @@ private struct VistaSfera: View {
             // l'alone che respira
             Circle().fill(RadialGradient(colors: [Tema.c(k[0], 0.6), Tema.c(k[1], 0.35), .clear], center: .center, startRadius: 0, endRadius: 40))
                 .frame(width: 80, height: 80).blur(radius: 9)
-                .opacity(stato.inPausa ? 0.15 : 0.5 + respiro * 0.4)
+                .opacity(0.5 + respiro * 0.4)
                 .offset(x: px * 5, y: py * 5).scaleEffect(1 + s.vicino * 0.25)
             ZStack {
                 Circle().fill(RadialGradient(colors: [Tema.c(k[4]), Tema.c(0x08080C)], center: UnitPoint(x: 0.5, y: 0.6), startRadius: 0, endRadius: 45))
@@ -129,7 +129,6 @@ private struct VistaSfera: View {
             }
             .clipShape(Circle())
             .drawingGroup()
-            .saturation(stato.inPausa ? 0.25 : 1).brightness(stato.inPausa ? -0.15 : 0)
             .shadow(color: .black.opacity(0.5), radius: 9, y: 6)
             .scaleEffect(1 + s.vicino * 0.1)
             .animation(.spring(response: 0.38, dampingFraction: 0.7), value: s.vicino)
@@ -144,10 +143,7 @@ private struct VistaSfera: View {
                         .help(tempoCheManca(resto))
                 }
             }
-            if stato.inPausa {
-                Text("❙❙").font(.system(size: 8, weight: .bold)).foregroundStyle(.white.opacity(0.85))
-                    .frame(width: 22, height: 22).background(Circle().fill(Tema.c(0x262628, 0.95))).offset(x: 24, y: 24)
-            } else if let n = sommaNotifiche {
+            if let n = sommaNotifiche {
                 Text(n).font(.system(size: 11, weight: .semibold)).monospacedDigit().foregroundStyle(.white)
                     .padding(.horizontal, 5).frame(minWidth: 20, minHeight: 20)
                     .background(Capsule().fill(Tema.notifica)).offset(x: 24, y: -24)
@@ -238,14 +234,14 @@ private struct VistaSfera: View {
 }
 
 extension Controllore {
-    /// W-3: la sfera c'è solo con Tabby chiusa o in pausa **e** nessuna finestra in vista (app tutte
+    /// W-3: la sfera c'è solo con Tabby chiusa **e** nessuna finestra in vista (app tutte
     /// nascoste, ridotte o chiuse; Lampi e Memo non contano), dopo 0,4 s; altrimenti la barra.
     func controllaSfera() {
         let inVista = tutte.contains { s in
             !s.ridotta && !(NSRunningApplication(processIdentifier: s.pid)?.isHidden ?? true) && !lampi.èVeloce(s.bid)
         }
         // «solo e solamente» (Daniele, 10/11/2026): mai a schermo intero, mai sopra la finestra di Tabby
-        let serve = (stato.inPausa || stato.tabbyChiusa) && !inVista && !davantiASchermoIntero() && !finestraTabby.isVisible
+        let serve = stato.tabbyChiusa && !inVista && !davantiASchermoIntero() && !finestraTabby.isVisible
         sferaDopo?.cancel()
         if serve == sfera.s.visibile { return }
         let w = DispatchWorkItem { [weak self] in
@@ -260,25 +256,8 @@ extension Controllore {
     /// Clic sulla sfera: se c'erano schede aperte si riaprono come le avevi lasciate (niente
     /// domande); il ventaglio (Nuova app, cartelle) solo se non c'è nessuna scheda.
     func cliccaSfera() {
-        if stato.inPausa { pausa(false); return }
         if !stato.schede.isEmpty { riapriDaScrivania(); return }
         sfera.s.ventaglio.toggle()
         sfera.aggiornaMisura()
-    }
-
-
-    /// Metti in pausa Tabby (W-4): la barra sparisce e resta solo la sfera spenta; Tabby non
-    /// nasconde e non ridimensiona più niente, le scorciatoie passano alle app. Un clic sulla
-    /// sfera e riparte. Si ricorda anche dopo un riavvio.
-    func pausa(_ sì: Bool) {
-        stato.inPausa = sì
-        imp.imposta("paused", sì)
-        Tasti.spente = sì
-        // la barra va via subito anche con finestre in vista (lì la sfera non c'è: torna sulla
-        // Scrivania); togliendo la pausa torna. Prima restava, ferma, con le scorciatoie spente.
-        if sì { pannello.nascondiScivolando() }
-        controllaSfera()
-        if !sì { mostraBarra(); ricostruisci(); if let a = NSWorkspace.shared.frontmostApplication { siAttiva(a) } }
-        diario(sì ? "in pausa" : "di nuovo attiva")
     }
 }

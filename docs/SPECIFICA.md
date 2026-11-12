@@ -311,6 +311,7 @@ ti sposta.
 
 **C-5 ⚙︎ → Chiudi tutte le app…** chiede conferma; chiude tutte le app (le app con
 documenti non salvati chiedono loro); del Finder chiude solo le finestre.
+*App Swift 0.11 (Daniele):* ⚙︎ → **Chiudi le app** → «Tutte le app» oppure «Solo quelle senza finestre» (le app aperte che non vedi in Tabby): si chiude solo un'app senza schede in Tabby **e** senza finestre per macOS (nemmeno nascoste o ridotte), con un avviso che dice quali. Anche nella ricerca.
 
 ## 7. Vista divisa (codice: gruppi)
 
@@ -676,6 +677,7 @@ restano come sono (diverso da «Chiudi tutte le app»). **Un clic sulla sfera** 
 riparte. Si ricorda anche dopo un riavvio (`paused`).
 *App Swift 0.9.3:* Chiudi Tabby nasconde tutte le app in un colpo solo (anche il Finder, senza ridurre le sue finestre); barra via e sfera subito.
 *App Swift 0.10.10:* «Metti in pausa» toglie subito la barra anche con finestre in vista (lì la sfera non c'è: la si trova sulla Scrivania); togliendo la pausa la barra torna. Prima, dalla 0.9.7, la barra restava ferma con le scorciatoie spente.
+*App Swift 0.11 (Daniele, 12/11/2026):* **la pausa non c'è più** (da nessuna parte: menu, ricerca, finestra di Tabby, sfera); «Chiudi Tabby» copre lo stesso bisogno. Un vecchio `paused` salvato si cancella all'avvio.
 
 **W-1 Scrivania, ⌃⌥0**: nasconde tutte le app (tranne il Finder
 e quelle a schermo intero); il Finder resta in primo piano (*perché:* nascondendolo
@@ -781,6 +783,7 @@ app). **Gestisci**: mostra/nascondi in ⚡︎, scorciatoia ⌃⌥ + una lettera 
 (Tabby si ricarica per attivarla), togli la scorciatoia. Le app **"solo icona"**
 (niente finestre né Dock, es. Proton VPN) sono segnalate "tieni l'icona accesa": si
 aprono solo dalla loro icona.
+*App Swift 0.11 (Daniele):* tolte: niente più ricerca automatica delle app con un'icona nella barra dei menu né «⚡︎ → Tutte le App». Restano le azioni configurate (X-1).
 
 **X-3** Premere l'icona di un'app spenta in macOS (parcheggiata fuori schermo) non
 apre niente: allora si apre l'app come dal Dock; per un'app solo icona, avviso.

@@ -35,7 +35,6 @@ extension Controllore {
     }
 
     func anticipaSchermoIntero() {
-        guard !stato.inPausa else { return }
         pannello.nascondiScivolando()
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
             guard let self, !self.davantiASchermoIntero() else { return }

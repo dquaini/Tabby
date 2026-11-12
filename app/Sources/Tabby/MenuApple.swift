@@ -24,7 +24,7 @@ extension Controllore {
 
     /// Mostra la barra (non in pausa, non chiusa, non quando c'è la sfera).
     func mostraBarra() {
-        guard !stato.inPausa, !stato.tabbyChiusa, !sfera.s.visibile else { return }
+        guard !stato.tabbyChiusa, !sfera.s.visibile else { return }
         pannello.mostra()
     }
 
@@ -49,7 +49,7 @@ extension Controllore {
 
     /// Mouse in cima → il menu di Apple scende: Tabby sale via. Sotto il menu → Tabby torna.
     private func mouseMosso() {
-        guard menuSopra, !stato.inPausa, !stato.tabbyChiusa, !sfera.s.visibile else { return }
+        guard menuSopra, !stato.tabbyChiusa, !sfera.s.visibile else { return }
         let occupata = stato.divisione != nil || stato.scelta != nil || stato.rinomina != nil || palco.aperto || menuAperto
         guard !occupata else { return }
         let p = NSEvent.mouseLocation, cima = Sistema.schermo.frame.maxY

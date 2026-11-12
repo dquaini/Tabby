@@ -31,7 +31,7 @@ extension Controllore {
     }
 
     fileprivate func spostaNotifiche(_ w: AXUIElement) {
-        guard !stato.inPausa, let r = Sistema.cornice(w) else { return }
+        guard let r = Sistema.cornice(w) else { return }
         let schermo = Sistema.schermo.frame
         guard r.width >= schermo.width * 0.9 else { return }          // solo la finestra grande delle notifiche
         let altezza = NSScreen.screens.first?.frame.height ?? schermo.maxY

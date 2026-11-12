@@ -61,7 +61,6 @@ struct FondamentaTests {
         let imp = Impostazioni(archivio: UserDefaults(suiteName: "tabby.test.vuoto.\(UUID().uuidString)")!)
         #expect(imp.posizione == "top")
         #expect(imp.unaAllaVolta)
-        #expect(!imp.inPausa)
     }
 
     @Test func misuraRestituisceIlRisultato() {

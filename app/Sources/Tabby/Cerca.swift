@@ -132,7 +132,7 @@ extension Controllore {
             ("Personalizza i Lampi", "Ordine, scorciatoie, aggiungi", false, { [weak self] in self?.apriFoglioLampi() }),
             ("Dividi lo schermo", "Metà e metà", false, { [weak self] in self?.avviaDivisione("2-50") }),
             ("Chiudi tutte le app", "Le app di sistema restano", true, { [weak self] in self?.chiudiTutteLeApp() }),
-            ("Metti in pausa Tabby", "La barra sparisce; la sfera sulla Scrivania", true, { [weak self] in self?.pausa(true) }),
+            ("Chiudi le app senza finestre", "Quelle aperte che non vedi in Tabby", false, { [weak self] in self?.chiudiAppSenzaFinestre() }),
         ]
         for (t, s, forte, a) in azioni {
             out.append((Trovato(id: "a:" + t, gruppo: .azioni, titolo: t, sotto: s, forte: forte), .comando(a)))

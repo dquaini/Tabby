@@ -21,8 +21,6 @@ final class Tasti {
     private var registrate: [EventHotKeyRef] = []
     private var temporanei: [(EventHotKeyRef, UInt32)] = []
     private var gruppi: [String: [(EventHotKeyRef, UInt32)]] = [:]
-    /// In pausa (W-4) le scorciatoie passano alle app: Tabby non le usa.
-    static var spente = false
     private var gestore: EventHandlerRef?
 
     init() {
@@ -40,7 +38,7 @@ final class Tasti {
 
     /// Una scorciatoia, da uno dei due meccanismi: due arrivi ravvicinati da strade diverse = una.
     static func scatta(_ n: UInt32, daIntercettatore: Bool) {
-        guard !spente, let a = azioni[n] else { return }
+        guard let a = azioni[n] else { return }
         if let u = ultime[n], u.daIntercettatore != daIntercettatore, Date().timeIntervalSince(u.quando) < 0.3 { return }
         ultime[n] = (Date(), daIntercettatore)
         a()
@@ -82,7 +80,6 @@ final class Tasti {
             let tasto = Int(evento.getIntegerValueField(.keyboardEventKeycode))
             let maiuscolo = f.contains(.maskShift)
             let trovata: UInt32? = MainActor.assumeIsolated {
-                if Tasti.spente { return nil }                       // in pausa passano alle app
                 guard evento.getIntegerValueField(.keyboardEventAutorepeat) == 0 || [kVK_LeftArrow, kVK_RightArrow, kVK_UpArrow, kVK_DownArrow].contains(tasto)
                 else { return Tasti.combinazioni[Tasti.chiave(tasto, maiuscolo)] == nil ? nil : 0 }
                 return Tasti.combinazioni[Tasti.chiave(tasto, maiuscolo)]

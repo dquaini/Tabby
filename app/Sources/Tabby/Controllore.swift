@@ -43,7 +43,6 @@ final class StatoBarra {
     var tabbyChiusa = false                     // «Chiudi Tabby»: barra via, resta la sfera
     var rinomina: String?                       // la scheda che stai rinominando
     var nomeInModifica = ""
-    var inPausa = Impostazioni.shared.inPausa
     var verticale: Bool { posizione == "left" || posizione == "right" }
 }
 
@@ -117,6 +116,7 @@ final class Controllore {
         tasti.riprovaIntercettatore()                   // se all'apertura mancava l'Accessibilità
         Tasti.suSpotlight = { [weak self] in self?.veloSpotlight.forse() }
         imp.imposta("autohide", nil)                    // un vecchio «Nascondi Tabby» non vale più (10/11/2026)
+        imp.imposta("paused", nil)                      // la pausa non c'è più (Daniele, 12/11/2026)
         gesti.scorri = { [weak self] d in self?.scorri(d) }
         gesti.aggiorna()
         osservaSchermoIntero()
@@ -129,9 +129,7 @@ final class Controllore {
         testi.letto = { [weak self] in self?.stato.versioneTesti += 1 }
         Sistema.veloci = lampi.veloci
         registraLampi()
-        lampi.trovaAppBarraMenu(fra: 5)
         riprendiConcentrazione()
-        Tasti.spente = stato.inPausa
         stato.batteria = batteria.stato
         batteria.cambiata = { [weak self] b in self?.stato.batteria = b }
         browser.cambiato = { [weak self] in self?.ricostruisciPresto() }
@@ -156,7 +154,7 @@ final class Controllore {
                 MainActor.assumeIsolated { if let self { fai(self, app) } }
             }
         }
-        ascolta(NSWorkspace.didLaunchApplicationNotification) { c, _ in c.ricostruisciPresto(); c.lampi.trovaAppBarraMenu(fra: 3) }
+        ascolta(NSWorkspace.didLaunchApplicationNotification) { c, _ in c.ricostruisciPresto() }
         // un'app chiusa del tutto (⌘Q): se macOS ti lascia sulla Scrivania vuota, si torna all'ultima scheda
         ascolta(NSWorkspace.didTerminateApplicationNotification) { c, a in c.ricostruisciPresto(); c.appChiusa(a?.bundleIdentifier) }
         ascolta(NSWorkspace.didHideApplicationNotification) { c, _ in c.ricostruisciPresto() }
@@ -324,7 +322,7 @@ final class Controllore {
     /// Chiusa un'app che era tra le schede: macOS a volte mette davanti il Finder senza finestre (la
     /// Scrivania vuota, come chiudendo Goose). Allora si torna all'ultima scheda usata.
     private func appChiusa(_ bid: String?) {
-        guard let bid, !stato.scrivania, !stato.tabbyChiusa, !stato.inPausa, stato.schede.contains(where: { $0.bid == bid }) else { return }
+        guard let bid, !stato.scrivania, !stato.tabbyChiusa, stato.schede.contains(where: { $0.bid == bid }) else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
             guard let self, !self.stato.scrivania, let f = NSWorkspace.shared.frontmostApplication,
                   f.bundleIdentifier == "com.apple.finder", Sistema.finestraAttiva(f.processIdentifier) == nil else { return }
@@ -425,7 +423,7 @@ final class Controllore {
 
     /// Quando un'app viene in primo piano (P-3): scheda attiva, una scheda alla volta, adatta.
     func siAttiva(_ app: NSRunningApplication) {
-        guard !stato.inPausa, let bid = app.bundleIdentifier, bid != Sistema.mioBid else { return }
+        guard let bid = app.bundleIdentifier, bid != Sistema.mioBid else { return }
         if stato.rinomina != nil { fineRinomina(salva: true, torna: false) }   // sei andato altrove: il nome scritto resta
         ascoltaEscLampo(app)
         defer { lampi.aggiornaCoperti(); controllaSfera() }

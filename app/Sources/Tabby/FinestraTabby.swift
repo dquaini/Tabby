@@ -419,7 +419,6 @@ private struct Pagina: View {
         Azione("Una cartella nuova", "Scegli le schede, poi il nome", "crea") { c.finestraTabby.chiudi(tornando: false); c.apriFoglioCartella() }
         Azione("Il Memo", "Documenti › Tabby Memo.txt", "mostra") { NSWorkspace.shared.activateFileViewerSelecting([Memo.file]) }
         Spazio()
-        Azione("Una pausa", "La barra sparisce; la sfera sulla Scrivania, un clic e riparto", "metti in pausa") { c.finestraTabby.chiudi(); c.pausa(true) }
         Azione("Tutte le app", "Le app di sistema restano", "chiudi", rosso: true) { c.finestraTabby.chiudi(tornando: false); c.chiudiTutteLeApp() }
         Azione("La guida del primo avvio", nil, "rivedi") { withAnimation { f.sezione = nil; f.fase = .guida(0) } }
         Azione("Tabby", nil, "esci") { NSApp.terminate(nil) }

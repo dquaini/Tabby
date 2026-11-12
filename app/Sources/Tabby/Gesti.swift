@@ -48,7 +48,6 @@ final class Gesti {
     }
 
     private func tocco(_ evento: CGEvent) {
-        guard !Tasti.spente else { return }
         if inizio == nil && Date() < pausaFino { return }
         guard let e = NSEvent(cgEvent: evento) else { return }
         let dita = e.allTouches().filter { $0.phase != .ended && $0.phase != .cancelled }

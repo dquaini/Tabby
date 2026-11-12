@@ -9,7 +9,45 @@ zone (nel codice "gruppo") · **Lampi** = le app piccole del menu ⚡︎ (nel co
 
 ---
 
-## ▶ Il piano, in ordine (deciso il 31/10/2026, aggiornato l'8/11/2026)
+## ▶ Le fasi del prodotto (decise con Daniele il 12/11/2026)
+
+L'app Swift ha raggiunto Hammerspoon (0.10, 10/11/2026). Da qui il vero sviluppo, in ordine:
+
+### Fase 1 — Tabby (in corso)
+L'app che mostra le finestre come schede su macOS, con gli strumenti che la completano. È
+**finita** quando: funziona sul MacBook di lavoro (Windows App, notch, Tabby a destra, Notion,
+riunioni) e passa una settimana d'uso vero su tutti e due i Mac senza bug nuovi.
+1. ✅ (0.11) Menu ⚡︎: «Personalizza i Lampi» sotto i Lampi, via «Tutte le App», «Modifica o
+   elimina…» delle cartelle che funziona. Menu ⚙︎: via «Tabby…» (c'è già la ricerca); «Chiudi le
+   app» → Tutte / Solo quelle senza finestre. Pausa tolta da tutta l'app. Margine a destra.
+2. **Il MacBook di lavoro** (guida in `CONDIVIDERE.md`).
+3. **Centro di controllo** al posto della batteria: tasto col **cruscotto**
+   (`gauge.with.dots.needle.67percent`; puntino rosso con batteria sotto il 20% e non in carica;
+   niente ora, c'è già nella barra di Apple). Un clic apre un pannello: batteria; **meteo** coi
+   giorni (Open-Meteo, gratis; **città scritta da Daniele** la prima volta, poi nelle Impostazioni);
+   **musica** (Spotify e Musica con titolo e comandi; Tidal solo coi tasti multimediali; l'app si
+   sceglie nelle Impostazioni fra quelle installate); **processore, memoria, GPU**; **tempo
+   d'uso per app** contato da Tabby (quello di macOS non si legge). A pannello chiuso consumo zero.
+4. **Selettore con le anteprime** (stile AltTab): ⌃⌥ tenuti + Tab ripetuto, con le miniature.
+   Serve «Registrazione dello schermo»; le finestre nascoste non si fotografano, quindi la
+   miniatura è l'ultima vista (foto presa quando lasci la scheda). Un Tab solo = scheda di prima.
+5. **Borsa** nel centro di controllo: Yahoo Finance (non ufficiale, senza chiave; Apple non dà
+   accesso); solo a pannello aperto, al massimo ogni 15 min; se smette: «borsa non disponibile».
+
+### Fase 2 — Tabby Search
+La barra che cerca tutto, con le sinergie di Tabby e le funzioni utili di Raycast (vedi la lista
+«Tabby come alternativa a Raycast e AltTab» più sotto): appunti, calcoli e conversioni, file,
+comandi del Mac, link rapidi, testi pronti, Claude, agenda…
+
+### Fase 3 — Automazione
+Le cartelle che si aprono da sole (all'ora giusta, all'accensione…), comandi dal Terminale.
+
+### Fase 4 — Kat
+Una cartella del Mac legata a Tabby (Memo, file, in futuro quelli degli agenti). Dopo l'Automazione.
+
+---
+
+## Il piano di prima (31/10/2026, aggiornato l'8/11/2026)
 
 1. ✅ **Ordine nella UX** (v9.66–9.68).
 2. ✅ **Due settimane di prova** sui due Mac (26/10–8/11/2026).
