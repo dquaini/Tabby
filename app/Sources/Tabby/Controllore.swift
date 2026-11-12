@@ -88,6 +88,7 @@ final class Controllore {
     lazy var sfera = Sfera(self)
     lazy var selettore = Selettore(self)
     lazy var cruscotto = Cruscotto(self)
+    lazy var tieniInVista = TieniInVista(self)
     lazy var finestraTabby = FinestraTabby(self)
     let attesaPermesso = AttesaPermesso()
     var sferaDopo: DispatchWorkItem?
@@ -274,6 +275,7 @@ final class Controllore {
             mostraSitiScelti(&nuove)
             finestreOsservate.formIntersection(el.keys)              // le finestre chiuse si dimenticano
             selettore.dimentica(tranne: Set(el.keys))
+            tieniInVista.dimentica(tranne: Set(el.keys))
             elementi = [:]
             for (n, s) in nuove.enumerated() {
                 if let f = s.finestra, let w = el[f] { elementi[s.chiave] = w }
@@ -769,6 +771,7 @@ final class Controllore {
         withAnimationMolla { stato.posizione = p }
         aggiornaMouse()
         rimettiNotifiche()
+        tieniInVista.disponi()
         if let a = NSWorkspace.shared.frontmostApplication { Sistema.adatta(a, posizione: p) }
         lampi.disponi()
         diario("posizione: \(p)")

@@ -41,7 +41,7 @@ riunioni) e passa una settimana d'uso vero su tutti e due i Mac senza bug nuovi.
    d'accesso al centro dello schermo, sopra uno sfondo nero come Spotlight; finito, si torna alla
    finestra di partenza. **Storico degli accessi** solo sul Mac («12/11 · 18:30 · ollama.com · con
    Google»), nella sezione nuova **Privacy** della finestra di Tabby, coi collegamenti per revocarli.
-8. **Tieni in vista**: tasto destro → la finestra diventa un riquadro dal vivo, come un Lampo ma
+8. 🧪 (0.16, in prova) **Tieni in vista**: tasto destro → la finestra diventa un riquadro dal vivo, come un Lampo ma
    **a sinistra**; Tabby chiede dove (alto/basso, piccola/media). Resta in Tabby (sono finestre).
 9. **Tabby si prende cura del Mac** (dopo i punti 6–8, decidendo insieme cosa ha impatto davvero):
    misure vere dell'energia per app, avvisi nel cruscotto (app che consuma, non risponde, memoria o

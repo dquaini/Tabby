@@ -492,6 +492,19 @@ struct BarraVista: View {
                 } label: { Label("Mostra la scheda come", systemImage: "globe") }
             }
         }
+        // Tieni in vista: la finestra dal vivo in un riquadro a sinistra, sopra tutto (Daniele, 12/11/2026)
+        if let f = s.finestra, !s.chiave.hasPrefix("g:"), !s.chiave.hasPrefix("f:") {
+            if c.tieniInVista.tenute.contains(f) {
+                Button { c.tieniInVista.lascia(f) } label: { Label("Non tenere più in vista", systemImage: "rectangle.on.rectangle.slash") }
+            } else {
+                SwiftUI.Menu {
+                    Button("In alto, piccola") { c.tieniInVista.tieni(s, .altoPiccola) }
+                    Button("In alto, media") { c.tieniInVista.tieni(s, .altoMedia) }
+                    Button("In basso, piccola") { c.tieniInVista.tieni(s, .bassoPiccola) }
+                    Button("In basso, media") { c.tieniInVista.tieni(s, .bassoMedia) }
+                } label: { Label("Tieni in vista", systemImage: "rectangle.on.rectangle") }
+            }
+        }
         // S-3: le finestre di un'app (non dei browser) in una scheda sola, o una per finestra
         if browserNoti[s.bid] == nil, !s.chiave.hasPrefix("g:"), !s.chiave.hasPrefix("f:"),
            c.finestreUnite(s.bid) || c.tutte.filter({ $0.bid == s.bid }).count > 1 {

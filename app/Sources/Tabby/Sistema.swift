@@ -210,8 +210,11 @@ enum Sistema {
 
     /// Una scheda alla volta (U-1): nasconde tutte le altre app vere.
     static func nascondiAltre(tranne bid: String) { nascondiAltre(tranne: [bid]) }
+    /// Le app con una finestra tenuta in vista: non si nascondono (la copia dal vivo ne ha bisogno).
+    static var tenuteInVista = Set<String>()
+
     static func nascondiAltre(tranne bids: Set<String>) {
-        let ign = ignorate()
+        let ign = ignorate().union(tenuteInVista)
         for a in NSWorkspace.shared.runningApplications where a.activationPolicy == .regular {
             guard let b = a.bundleIdentifier, !bids.contains(b), !ign.contains(b), !a.isHidden else { continue }
             // Z-4: un'app con una finestra a schermo intero non si nasconde (ha la sua scrivania)

@@ -286,4 +286,5 @@ app 0.13.3 (12/11/2026): «Mostra come «DuckDuckGo»» forza il nome del browse
 app 0.13.4 (12/11/2026): «Mostra la scheda come» con icone piccole, i siti visti nella finestra di DuckDuckGo (fino a 10) e «Come il browser» quando la scheda mostra un sito.
 app 0.14 (12/11/2026): l'audio sulle schede (🔊, 🎙, «Silenzia» col tasto destro); roadmap: accessi al centro con storico in Privacy, Tieni in vista, Tabby si prende cura del Mac.
 app 0.15 (12/11/2026): gli accessi con Google, Apple, Microsoft al centro sopra lo sfondo nero, e lo storico nella sezione nuova Privacy.
+app 0.16 (12/11/2026): Tieni in vista: la finestra di una scheda dal vivo in un riquadro a sinistra, sopra tutto.
 ```

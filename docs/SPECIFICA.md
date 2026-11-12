@@ -198,6 +198,14 @@ chiuse, si torna alla scheda di prima. Ogni accesso va nello **storico** (`tabba
 300, solo sul Mac: quando, sito della scheda di prima, servizio, browser), nella sezione **Privacy**
 della finestra di Tabby, coi collegamenti per togliere l'accesso e «cancella».
 
+**Tieni in vista** (app Swift 0.16, Daniele, 12/11/2026): tasto destro su una scheda → «Tieni in
+vista» → in alto o in basso, piccola (320) o media (480): la finestra diventa un riquadro **dal
+vivo** (ScreenCaptureKit, 5 immagini al secondo, alla misura del riquadro, con le proporzioni della
+finestra), sopra tutto, in colonna sul lato **sinistro** dello spazio delle app (i Lampi a destra).
+Clic sul riquadro → la scheda; ✕ o «Non tenere più in vista» lo tolgono; si toglie da solo se la
+finestra si chiude. L'app tenuta in vista non si nasconde cambiando scheda (la copia dal vivo ne ha
+bisogno). Serve «Registrazione schermo» (senza: un avviso con «Dai il permesso»).
+
 **B-9 Siti doppi** (v9.60): quando una finestra di browser con un solo sito (webapp)
 compare — o passa a quel sito — e lo stesso sito è già aperto da solo in un'altra
 finestra (anche di un altro browser), in alto al centro dello spazio delle app compare
