@@ -460,24 +460,29 @@ struct BarraVista: View {
         if c.haNomeTuo(s.chiave) {
             Button { c.tornaAlNome(s.chiave) } label: { Label("Torna al nome di prima", systemImage: "arrow.uturn.backward") }
         }
-        // B-8: per una finestra di browser, come mostrarla: uno dei suoi siti (nome e logo), oppure il
-        // **nome del browser** sempre (anche se ha un sito solo, che da solo la farebbe una webapp);
-        // «Automatico» lascia decidere a Tabby (Daniele, 12/11/2026)
+        // B-8: per una finestra di browser, come mostrarla: uno dei suoi siti (nome e logo, icone
+        // piccole) e, quando la scheda mostra un sito, «Come il browser» (Daniele, 12/11/2026)
         if browserNoti[s.bid] != nil, let f = s.finestra {
             let siti = c.siti(di: s), scelto = c.sitiScelti[f], breve = browserNoti[s.bid]?.breve ?? "il browser"
-            SwiftUI.Menu {
-                ForEach(siti, id: \.self) { d in
-                    Button { c.scegliSito(s, d) } label: {
-                        if let l = stato.loghi[d] { Image(nsImage: l) }
-                        Text((scelto == d ? "✓ " : "") + nomeSito(titolo: nil, dominio: d) + "   " + d)
+            if !siti.isEmpty || s.sito != nil {
+                SwiftUI.Menu {
+                    ForEach(siti, id: \.self) { d in
+                        Button { c.scegliSito(s, d) } label: {
+                            if let l = Menu.icona(stato.loghi[d]) { Image(nsImage: l) }
+                            Text((s.sito == d ? "✓ " : "") + nomeSito(titolo: nil, dominio: d))
+                        }
                     }
-                }
-                Button { c.scegliSito(s, "") } label: { Text((scelto == "" ? "✓ " : "") + "Mostra come «\(breve)»") }
-                if scelto != nil {
-                    Divider()
-                    Button { c.scegliSito(s, nil) } label: { Text("Automatico") }
-                }
-            } label: { Label("Mostra la scheda come", systemImage: "globe") }
+                    if s.sito != nil {
+                        Divider()
+                        Button { c.scegliSito(s, "") } label: {
+                            if let i = Menu.icona(stato.icone[s.bid]) { Image(nsImage: i) }
+                            Text("Come il browser «\(breve)»")
+                        }
+                    } else if scelto == "" {
+                        Divider(); Text("✓ Come il browser «\(breve)»")
+                    }
+                } label: { Label("Mostra la scheda come", systemImage: "globe") }
+            }
         }
         // S-3: le finestre di un'app (non dei browser) in una scheda sola, o una per finestra
         if browserNoti[s.bid] == nil, !s.chiave.hasPrefix("g:"), !s.chiave.hasPrefix("f:"),

@@ -15,7 +15,7 @@ import TabbyCore
 //
 // Prova dal Terminale senza aprire niente:  Tabby.app/Contents/MacOS/Tabby --prova
 
-let versione = "0.13.3"
+let versione = "0.13.4"
 
 if CommandLine.arguments.contains("--prova") {
     let n = Importazione.daHammerspoon()

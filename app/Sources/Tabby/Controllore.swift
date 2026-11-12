@@ -109,6 +109,7 @@ final class Controllore {
     let gesti = Gesti()
     var monitorClic: Any?
     var sitiScelti: [UInt32: String] = [:]       // B-8: il sito scelto per una finestra di browser
+    var sitiVisti: [UInt32: [String]] = [:]       // B-8: i siti visti in ogni finestra di DuckDuckGo
     var scrivaniaDa = Date.distantPast           // quando si è andati sulla Scrivania (W-2)
     var ultimaFinestrella = Date.distantPast     // C-3
     var sceltaTua = Date.distantPast             // l'ultima volta che hai scelto tu una scheda
@@ -252,6 +253,7 @@ final class Controllore {
             var nuove = costruisciSchede(infos, separate: { unite[$0] == nil },
                                          senzaFinestre: imp.valore("showWindowless") as? Bool ?? false,
                                          nomi: imp.valore("tabNames") as? [String: String] ?? [:])
+            ricordaSitiVisti(nuove)
             mostraSitiScelti(&nuove)
             finestreOsservate.formIntersection(el.keys)              // le finestre chiuse si dimenticano
             selettore.dimentica(tranne: Set(el.keys))
@@ -614,14 +616,25 @@ final class Controllore {
         withAnimationMolla { ricostruisci() }
     }
 
-    /// I siti aperti in una finestra di browser (DuckDuckGo dice solo quello in vista).
+    /// I siti di una finestra di browser. Chrome e Safari li dicono tutti; DuckDuckGo solo quello in
+    /// vista, quindi Tabby si ricorda quelli visti in quella finestra (dal più recente, fino a 10).
     func siti(di s: Scheda) -> [String] {
-        guard browserNoti[s.bid] != nil, s.finestra != nil else { return [] }
-        var visti: [String] = []
-        for u in (s.indirizzi ?? []) + [s.inVista].compactMap({ $0 }) {
-            if let d = dominio(u), !visti.contains(d) { visti.append(d) }
+        guard browserNoti[s.bid] != nil, let f = s.finestra else { return [] }
+        var out: [String] = []
+        for d in (s.indirizzi ?? []).compactMap(dominio) + (sitiVisti[f] ?? []) where !out.contains(d) { out.append(d) }
+        return out
+    }
+
+    /// DuckDuckGo: a ogni ricostruzione il sito in vista di ogni finestra si aggiunge ai suoi «visti».
+    private func ricordaSitiVisti(_ schede: [Scheda]) {
+        let vive = Set(schede.compactMap(\.finestra))
+        sitiVisti = sitiVisti.filter { vive.contains($0.key) }
+        for s in schede {
+            guard let f = s.finestra, let d = s.inVista.flatMap(dominio) else { continue }
+            var v = sitiVisti[f] ?? []
+            if v.first != d { v.removeAll { $0 == d }; v.insert(d, at: 0); sitiVisti[f] = Array(v.prefix(10)) }
+            if stato.loghi[d] == nil, let l = loghi.logo(d) { stato.loghi[d] = l }   // per il menu «Mostra la scheda come»
         }
-        return visti
     }
 
     /// B-8: la scheda prende nome e logo del sito scelto finché quel sito è aperto nella finestra
