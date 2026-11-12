@@ -460,11 +460,11 @@ struct BarraVista: View {
         if c.haNomeTuo(s.chiave) {
             Button { c.tornaAlNome(s.chiave) } label: { Label("Torna al nome di prima", systemImage: "arrow.uturn.backward") }
         }
-        // B-8: per una finestra di browser che non è una webapp, il sito da mostrare (nome e logo).
-        // Basta un sito conosciuto, come in Hammerspoon: DuckDuckGo dice solo quello della scheda in
-        // vista (prima servivano due siti, e con DuckDuckGo la voce non compariva mai)
-        let siti = c.siti(di: s), scelto = c.sitiScelti[s.finestra ?? 0]
-        if !siti.isEmpty && (s.chiave.hasPrefix("win:") || s.chiave == s.bid || scelto != nil) && (s.sito == nil || scelto != nil) {
+        // B-8: per una finestra di browser, come mostrarla: uno dei suoi siti (nome e logo), oppure il
+        // **nome del browser** sempre (anche se ha un sito solo, che da solo la farebbe una webapp);
+        // «Automatico» lascia decidere a Tabby (Daniele, 12/11/2026)
+        if browserNoti[s.bid] != nil, let f = s.finestra {
+            let siti = c.siti(di: s), scelto = c.sitiScelti[f], breve = browserNoti[s.bid]?.breve ?? "il browser"
             SwiftUI.Menu {
                 ForEach(siti, id: \.self) { d in
                     Button { c.scegliSito(s, d) } label: {
@@ -472,9 +472,10 @@ struct BarraVista: View {
                         Text((scelto == d ? "✓ " : "") + nomeSito(titolo: nil, dominio: d) + "   " + d)
                     }
                 }
+                Button { c.scegliSito(s, "") } label: { Text((scelto == "" ? "✓ " : "") + "Mostra come «\(breve)»") }
                 if scelto != nil {
                     Divider()
-                    Button { c.scegliSito(s, nil) } label: { Text((browserNoti[s.bid]?.breve ?? "Il browser") + " (come prima)") }
+                    Button { c.scegliSito(s, nil) } label: { Text("Automatico") }
                 }
             } label: { Label("Mostra la scheda come", systemImage: "globe") }
         }

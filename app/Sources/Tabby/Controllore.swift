@@ -625,7 +625,8 @@ final class Controllore {
     }
 
     /// B-8: la scheda prende nome e logo del sito scelto finché quel sito è aperto nella finestra
-    /// (con DuckDuckGo, che dice solo la scheda in vista, finché la finestra è aperta). nil = torna «Chrome».
+    /// (con DuckDuckGo, che dice solo la scheda in vista, finché la finestra è aperta). "" = sempre il
+    /// nome del browser («Mostra come DuckDuckGo»); nil = automatico.
     func scegliSito(_ s: Scheda, _ d: String?) {
         guard let f = s.finestra else { return }
         sitiScelti[f] = d
@@ -639,6 +640,11 @@ final class Controllore {
         let nomi = imp.valore("tabNames") as? [String: String] ?? [:]
         for i in schede.indices {
             guard let f = schede[i].finestra, let d = sitiScelti[f] else { continue }
+            if d.isEmpty {                                    // il nome e l'icona del browser, sempre
+                if nomi[schede[i].chiave] == nil { schede[i].nome = browserNoti[schede[i].bid]?.breve ?? schede[i].nome }
+                schede[i].sito = nil
+                continue
+            }
             if let u = schede[i].indirizzi, !u.contains(where: { dominio($0) == d }) { sitiScelti[f] = nil; continue }
             if nomi[schede[i].chiave] == nil { schede[i].nome = nomeSito(titolo: nil, dominio: d) }
             schede[i].sito = d

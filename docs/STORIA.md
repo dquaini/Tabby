@@ -282,4 +282,5 @@ app 0.12 (12/11/2026): il selettore con le anteprime (⌃⌥Tab tenuti, stile Al
 app 0.13 (12/11/2026): il cruscotto (centro di controllo) al posto della batteria, con tessere componibili: ora e data, batteria, meteo, musica, borsa, Mac, tempo d'uso; «Impostazioni» diventa «Preferenze», con la sezione del cruscotto.
 app 0.13.1 (12/11/2026): le tessere del cruscotto al centro, come un quadrante (la borsa resta in colonna dentro il suo riquadro centrato; «modifica» a sinistra).
 app 0.13.2 (12/11/2026): «Mostra la scheda come» (nome e logo di un sito per una finestra di browser con più schede) anche con DuckDuckGo.
+app 0.13.3 (12/11/2026): «Mostra come «DuckDuckGo»» forza il nome del browser anche su una finestra con un sito solo (prima «come prima» la lasciava Ollama); «Automatico» per tornare alla scelta di Tabby.
 ```
