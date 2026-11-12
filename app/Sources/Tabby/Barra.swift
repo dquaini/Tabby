@@ -198,7 +198,7 @@ struct BarraVista: View {
 
     private var riga: some View {
         GeometryReader { g in
-            let fisso = Misure.gatto + Misure.piu + Misure.tasto * 4 + 16 + (stato.concentrazione != nil ? 20 : 0) + CGFloat(stato.lampiCoperti.count) * 22
+            let fisso = Misure.gatto + Misure.piu + Misure.tasto * 3 + 16 + (stato.concentrazione != nil ? 20 : 0) + CGFloat(stato.lampiCoperti.count) * 22
             let sch = mostrate
             let att = sch.firstIndex { $0.chiave == stato.attiva && !stato.scrivania }
             let tacca = taccaNellaBarra()
@@ -218,7 +218,6 @@ struct BarraVista: View {
                 piu
                 Spacer(minLength: 0)
                 batteriaOTempo
-                dividi
                 fulmine
                 impostazioni
             }
@@ -268,7 +267,7 @@ struct BarraVista: View {
                 Spacer(minLength: 0)
                 batteriaOTempo
                 if !stato.lampiCoperti.isEmpty { fulmine.frame(maxWidth: .infinity).padding(.horizontal, 6) }
-                HStack(spacing: 0) { Spacer(); dividi; if stato.lampiCoperti.isEmpty { fulmine }; impostazioni; Spacer() }
+                HStack(spacing: 0) { Spacer(); if stato.lampiCoperti.isEmpty { fulmine }; impostazioni; Spacer() }
             }
             .padding(.vertical, 6)
             .frame(width: g.size.width, height: g.size.height)
@@ -631,6 +630,20 @@ struct BarraVista: View {
         let cerca = Menu.voce("Cerca", simbolo: "text.magnifyingglass") { c.apriRicerca() }
         cerca.keyEquivalent = " "; cerca.keyEquivalentModifierMask = [.control, .option]
         m.addItem(cerca)
+        // Dividi lo schermo (deciso con Daniele il 12/11/2026: dalla barra a qui): gli schemi in un
+        // sottomenu; mentre dividi, la voce annulla
+        if stato.divisione != nil {
+            m.addItem(Menu.voce("Annulla la divisione", simbolo: "rectangle.grid.2x2") { c.annullaDivisione() })
+        } else {
+            let schemiMenu = NSMenu()
+            for sc in schemi {
+                let v = Menu.voce(sc.nome) { c.avviaDivisione(sc.id) }
+                v.image = figurina(sc)
+                schemiMenu.addItem(v)
+            }
+            let d = Menu.voce("Dividi lo schermo", simbolo: "rectangle.grid.2x2"); d.submenu = schemiMenu; d.isEnabled = true
+            m.addItem(d)
+        }
         let app = c.lampi.lampi.filter(\.barraMenu)
         let scoperte = c.lampi.appBarraMenu.filter { a in !app.contains { $0.bid == a.bid } }
         if !app.isEmpty || !scoperte.isEmpty {
@@ -675,32 +688,6 @@ struct BarraVista: View {
         m.addItem(.separator())
         m.addItem(Menu.voce("Personalizza i Lampi…", simbolo: "slider.horizontal.3") { c.apriFoglioLampi() })
         Menu.apri(m, sopra: CorniceMenu.cornici["lampi"] ?? .zero)
-    }
-
-    /// ⊞ Dividi lo schermo: il menu con gli schemi. Acceso mentre dividi o su una vista divisa.
-    private var dividi: some View {
-        let acceso = stato.divisione != nil || stato.attiva?.hasPrefix("g:") == true
-        return Button { apriDividi() } label: {
-            Image(systemName: "rectangle.grid.2x2").font(.system(size: 14))
-                .frame(width: Misure.tasto, height: stato.verticale ? Misure.tasto : Misure.altezza)
-                .foregroundStyle(acceso ? Tema.accento : sopra == "⊞" ? Tema.testo : Tema.tenue)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .onHover { sopra = $0 ? "⊞" : nil }
-        .background(CorniceMenu(id: "dividi"))
-        .help("Dividi lo schermo")
-    }
-
-    private func apriDividi() {
-        if stato.divisione != nil { c.annullaDivisione(); return }
-        let m = NSMenu()
-        for sc in schemi {
-            let v = Menu.voce(sc.nome) { c.avviaDivisione(sc.id) }
-            v.image = figurina(sc)
-            m.addItem(v)
-        }
-        Menu.apri(m, sopra: CorniceMenu.cornici["dividi"] ?? .zero)
     }
 
     private var impostazioni: some View {

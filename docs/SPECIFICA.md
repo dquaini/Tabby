@@ -346,6 +346,7 @@ aperto entra in una zona (v9.44): nella vista sta nella sua zona; chiudendolo la
 scioglie. Se sei sul Memo o su un'app veloce, la zona 1 è la scheda in cui eri prima.
 Una scheda entra in una vista sola (togliendola da un'altra vista). Le viste divise
 e le cartelle non si mettono in una zona.
+*App Swift 0.10.12 (Daniele, 12/11/2026):* il tasto ⊞ non è più nella barra: si divide da **⚡︎ → Strumenti → Dividi lo schermo** (gli schemi in un sottomenu; mentre dividi la voce diventa «Annulla la divisione»). Restano la ricerca («Dividi lo schermo») e ⌃⌥S per scambiare.
 
 **D-3 La scheda della vista** prende il posto della prima app nell'ordine. Nome:
 "Gmail + Slack". Icone affiancate (fino a 4). Tasti: **⇄ Scambia** e **Scomponi**.

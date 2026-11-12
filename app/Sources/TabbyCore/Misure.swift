@@ -8,7 +8,7 @@ public enum Misure {
     public static let angoloBarra: Double = 14      // solo dal lato delle app
     public static let angoloScheda: Double = 9
     public static let gatto: Double = 38
-    public static let tasto: Double = 34            // batteria, ⊞, ⚡︎, ⚙︎
+    public static let tasto: Double = 34            // batteria, ⚡︎, ⚙︎
     public static let piu: Double = 30
     public static let schedaMax: Double = 190
     public static let schedaMin: Double = 120

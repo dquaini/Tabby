@@ -158,7 +158,7 @@ struct VistaVelo: View {
     }
 }
 
-/// La figurina di uno schema, per il menu ⊞ (rettangoli dello spazio con le zone).
+/// La figurina di uno schema, per ⚡︎ → Dividi lo schermo (rettangoli dello spazio con le zone).
 @MainActor func figurina(_ s: Schema) -> NSImage {
     let i = NSImage(size: NSSize(width: 26, height: 16), flipped: true) { r in
         for z in zoneIn(s, spazio: r.insetBy(dx: 0.5, dy: 0.5), spazio: 1) {
