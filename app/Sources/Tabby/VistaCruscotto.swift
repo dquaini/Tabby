@@ -2,24 +2,26 @@ import SwiftUI
 import TabbyCore
 
 /// Il disegno del cruscotto, nello stile dei fogli di Tabby: nero, testo bianco, le cose
-/// importanti grandi, i comandi come parole (bozza approvata da Daniele il 12/11/2026).
+/// importanti grandi, i comandi come parole (bozza approvata da Daniele il 12/11/2026). Le
+/// tessere sono **al centro**, come un quadrante (Daniele, 12/11/2026); «modifica» resta a sinistra.
 struct VistaCruscotto: View {
     let cc: Cruscotto
     @Bindable var s: StatoCruscotto
     @Bindable var stato: StatoBarra
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: s.modifica ? .leading : .center, spacing: 20) {
             if s.modifica { modifica } else {
                 if s.tessere.isEmpty { Text("Nessuna tessera: aggiungine con «modifica».").foregroundStyle(.white.opacity(0.5)) }
                 ForEach(s.tessere, id: \.self) { tessera($0) }
-                HStack { Spacer(); parola("modifica →") { s.modifica = true; cc.prendiLaTastiera() } }
+                parola("modifica →") { s.modifica = true; cc.prendiLaTastiera() }
             }
         }
         .font(.system(size: 13))
         .foregroundStyle(.white)
+        .multilineTextAlignment(s.modifica ? .leading : .center)
         .padding(20)
-        .frame(width: 340, alignment: .leading)
+        .frame(width: 340, alignment: s.modifica ? .leading : .center)
         .background(Color(white: 0.04).opacity(0.97), in: RoundedRectangle(cornerRadius: 20))
         .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(Color.white.opacity(0.1), lineWidth: 0.5))
         .environment(\.colorScheme, .dark)
@@ -50,8 +52,8 @@ struct VistaCruscotto: View {
 
     private var ora: some View {
         TimelineView(.periodic(from: .now, by: 30)) { ctx in
-            VStack(alignment: .leading, spacing: 2) {
-                Text(ctx.date.formatted(.dateTime.hour().minute())).font(.system(size: 26, weight: .light)).monospacedDigit()
+            VStack(alignment: .center, spacing: 2) {
+                Text(ctx.date.formatted(.dateTime.hour().minute())).font(.system(size: 30, weight: .light)).monospacedDigit()
                 Text(ctx.date.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "it_IT")))).foregroundStyle(grigio)
             }
         }
@@ -59,7 +61,7 @@ struct VistaCruscotto: View {
 
     @ViewBuilder private var batteria: some View {
         let b = stato.batteria
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .center, spacing: 2) {
             if b.presente {
                 Text("\(b.livello)%").font(.system(size: 26, weight: .light)).monospacedDigit()
                     .foregroundStyle(b.livello < 20 && !b.inCarica ? Tema.rossa : .white)
@@ -72,13 +74,13 @@ struct VistaCruscotto: View {
 
     @ViewBuilder private var meteo: some View {
         if s.città == nil {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .center, spacing: 6) {
                 Text("Meteo").font(.system(size: 17))
-                CampoParola(segnaposto: "La tua città, poi ↵", iniziale: "") { cc.cambiaCittà($0) }
+                CampoParola(segnaposto: "La tua città, poi ↵", iniziale: "") { cc.cambiaCittà($0) }.frame(width: 180)
                 if let e = s.meteoErrore { Text(e).foregroundStyle(Tema.rossa) }
             }
         } else if let m = s.meteo, let città = s.città {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .center, spacing: 6) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Image(systemName: simboloMeteo(m.codice)).font(.system(size: 17))
                     Text("\(città) \(Int(m.temperatura.rounded()))°").font(.system(size: 20, weight: .light))
@@ -104,7 +106,7 @@ struct VistaCruscotto: View {
 
     @ViewBuilder private var musica: some View {
         if let m = s.musica {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .center, spacing: 4) {
                 Text(m.titolo).font(.system(size: 15)).lineLimit(1)
                 Text(m.artista).foregroundStyle(grigio).lineLimit(1)
                 HStack(spacing: 18) {
@@ -210,6 +212,7 @@ struct CampoParola: View {
     var body: some View {
         TextField(segnaposto, text: $testo)
             .textFieldStyle(.plain)
+            .multilineTextAlignment(.leading)
             .overlay(alignment: .bottom) { Rectangle().fill(.white.opacity(0.35)).frame(height: 1).offset(y: 2) }
             .onSubmit { salva(testo) }
             .onAppear { testo = iniziale }

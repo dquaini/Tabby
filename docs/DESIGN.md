@@ -121,7 +121,7 @@ del Mac. Una scelta tra 5 caratteri (SF Pro, SF Pro Rounded, un graziato stile C
 - Le icone vere, con le alternative per ogni funzione: `docs/design-icone.html`.
 - **Barra: niente riga verticale** tra la batteria e i tasti ⊞ ⚡︎ ⚙︎ (8/11/2026, Daniele).
 - **Il tasto ⊞ esce dalla barra** (12/11/2026, Daniele): Dividi lo schermo sta in ⚡︎ → Strumenti.
-- **La batteria lascia il posto al cruscotto** (12/11/2026, Daniele): icona del tachimetro, pannello a tessere componibili nello stile dei fogli. La sezione «Impostazioni» si chiama **Preferenze**.
+- **La batteria lascia il posto al cruscotto** (12/11/2026, Daniele): icona del tachimetro, pannello a tessere componibili nello stile dei fogli. La sezione «Impostazioni» si chiama **Preferenze**. Tessere **al centro** come un quadrante (borsa in colonna dentro il suo riquadro centrato; «modifica» a sinistra).
 
 ### 2.3 Forme, spazio, ombre, movimento ✅ (8/11/2026)
 Prototipo: `docs/design-forme.html`. Non sono scelte per l'utente: sono le misure fisse.
