@@ -148,7 +148,7 @@ GitHub, poi `git clone git@github.com:dquaini/Tabby.git` e `init.lua` che punta 
   storiche `tabbar.*`, importate una volta da Hammerspoon.
 - Riavviare in sviluppo **senza le animazioni** (che coprono tutto lo schermo): `open
   app/build/Tabby.app --args --senza-avvio`. Daniele può essere in riunione: riavviare poco.
-- Versione dell'app: in `app/Sources/Tabby/main.swift` (`versione`) e in `app/Info.plist` (oggi **0.11**).
+- Versione dell'app: in `app/Sources/Tabby/main.swift` (`versione`) e in `app/Info.plist` (oggi **0.12**).
 - **Mac di casa:** Tabby-Hammerspoon spenta (`dofile` commentato in `~/.hammerspoon/init.lua`).
   **Mac di lavoro:** ancora Tabby-Hammerspoon; la cartella Lua resta come riferimento e
   per i riscontri.

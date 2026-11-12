@@ -278,4 +278,5 @@ app 0.10.10 (10/11/2026): revisione riga per riga delle parti rimaste. Bug: «Me
 app 0.10.11 (12/11/2026): doppio clic sulla ✕ col tempo del Mac (non apre più il menu per sbaglio) e che chiude l'app quando è la sua sola finestra (Discord restava aperta in sottofondo).
 app 0.10.12 (12/11/2026): «Dividi lo schermo» passa dal tasto ⊞ della barra al menu ⚡︎, sotto Strumenti.
 app 0.11 (12/11/2026): inizio della fase 1 (roadmap nuova in tre fasi + Kat). Menu ⚡︎ e ⚙︎ riordinati, «Modifica o elimina» delle cartelle che funziona, «Chiudi le app senza finestre», pausa tolta, margine a destra della barra.
+app 0.12 (12/11/2026): il selettore con le anteprime (⌃⌥Tab tenuti, stile AltTab), con le foto delle finestre se c'è il permesso «Registrazione schermo».
 ```

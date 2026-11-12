@@ -83,6 +83,7 @@ final class Controllore {
     lazy var lampi = GestoreLampi(self)
     let testi = LettoreTesti()
     lazy var sfera = Sfera(self)
+    lazy var selettore = Selettore(self)
     lazy var finestraTabby = FinestraTabby(self)
     let attesaPermesso = AttesaPermesso()
     var sferaDopo: DispatchWorkItem?
@@ -251,6 +252,7 @@ final class Controllore {
                                          nomi: imp.valore("tabNames") as? [String: String] ?? [:])
             mostraSitiScelti(&nuove)
             finestreOsservate.formIntersection(el.keys)              // le finestre chiuse si dimenticano
+            selettore.dimentica(tranne: Set(el.keys))
             elementi = [:]
             for (n, s) in nuove.enumerated() {
                 if let f = s.finestra, let w = el[f] { elementi[s.chiave] = w }
@@ -410,8 +412,10 @@ final class Controllore {
 
     func segnaAttiva(_ k: String) {
         if let a = stato.attiva, a != k { precedente = stato.schede.first { $0.chiave == a } }
-        storia.append((k, Date())); if storia.count > 4 { storia.removeFirst() }
+        // l'ordine d'uso serve anche al selettore (⌃⌥Tab): si ricordano le ultime 30
+        storia.append((k, Date())); if storia.count > 30 { storia.removeFirst() }
         withAnimationMolla { stato.attiva = k }
+        if let s = stato.schede.first(where: { $0.chiave == k }) { selettore.arrivatoSu(s) }
     }
 
     /// P-7: cambio di finestra dentro la stessa app (⌘`, clic su un'altra finestra).
@@ -523,11 +527,6 @@ final class Controllore {
         vai(s[(i + passo + s.count) % s.count])
     }
 
-    /// ⌃⌥Tab (P-6): la scheda usata prima.
-    func tornaIndietro() {
-        guard let p = precedente, let s = stato.schede.first(where: { $0.chiave == p.chiave }) else { return }
-        vai(s)
-    }
 
     /// ⌃⌥0: la scheda Scrivania (il musetto del gatto); ripremuto torna all'ultima scheda.
     func scrivania() { if stato.scrivania { riapriDaScrivania() } else { gatto() } }
@@ -745,7 +744,8 @@ final class Controllore {
         tasti.aggiungi(kVK_LeftArrow) { [weak self] in self?.scorri(-1) }
         tasti.aggiungi(kVK_DownArrow) { [weak self] in if self?.stato.verticale == true { self?.scorri(1) } }
         tasti.aggiungi(kVK_UpArrow) { [weak self] in if self?.stato.verticale == true { self?.scorri(-1) } }
-        tasti.aggiungi(kVK_Tab) { [weak self] in self?.tornaIndietro() }
+        tasti.aggiungi(kVK_Tab) { [weak self] in self?.selettore.tab(avanti: true) }
+        tasti.aggiungi(kVK_Tab, maiuscolo: true) { [weak self] in self?.selettore.tab(avanti: false) }
         tasti.aggiungi(kVK_ANSI_W) { [weak self] in self?.chiudiFinestraDavanti() }
         tasti.aggiungi(kVK_ANSI_S) { [weak self] in self?.scambia() }
         tasti.aggiungi(kVK_Space) { [weak self] in self?.apriRicerca() }

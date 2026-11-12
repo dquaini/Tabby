@@ -21,14 +21,14 @@ riunioni) e passa una settimana d'uso vero su tutti e due i Mac senza bug nuovi.
    elimina…» delle cartelle che funziona. Menu ⚙︎: via «Tabby…» (c'è già la ricerca); «Chiudi le
    app» → Tutte / Solo quelle senza finestre. Pausa tolta da tutta l'app. Margine a destra.
 2. **Il MacBook di lavoro** (guida in `CONDIVIDERE.md`).
-3. **Centro di controllo** al posto della batteria: tasto col **cruscotto**
+3. **Centro di controllo** (bozza mostrata il 12/11/2026: tessere **componibili e scomponibili** — «modifica →» nel pannello: togli, riordina trascinando, aggiungi; un clic sulla parola sottolineata cambia città, app della musica, titoli della borsa; la **borsa è una tessera**) al posto della batteria: tasto col **cruscotto**
    (`gauge.with.dots.needle.67percent`; puntino rosso con batteria sotto il 20% e non in carica;
    niente ora, c'è già nella barra di Apple). Un clic apre un pannello: batteria; **meteo** coi
    giorni (Open-Meteo, gratis; **città scritta da Daniele** la prima volta, poi nelle Impostazioni);
    **musica** (Spotify e Musica con titolo e comandi; Tidal solo coi tasti multimediali; l'app si
    sceglie nelle Impostazioni fra quelle installate); **processore, memoria, GPU**; **tempo
    d'uso per app** contato da Tabby (quello di macOS non si legge). A pannello chiuso consumo zero.
-4. **Selettore con le anteprime** (stile AltTab): ⌃⌥ tenuti + Tab ripetuto, con le miniature.
+4. 🧪 (0.12, in prova) **Selettore con le anteprime** (stile AltTab): ⌃⌥ tenuti + Tab ripetuto, con le miniature.
    Serve «Registrazione dello schermo»; le finestre nascoste non si fotografano, quindi la
    miniatura è l'ultima vista (foto presa quando lasci la scheda). Un Tab solo = scheda di prima.
 5. **Borsa** nel centro di controllo: Yahoo Finance (non ufficiale, senza chiave; Apple non dà

@@ -240,6 +240,7 @@ app. Nessuna in modalità scrivania.
 quelle visibili, **in tondo**. Senza scheda attiva: → va alla prima, ← all'ultima.
 
 **P-6 ⌃⌥Tab**: torna alla scheda usata prima (se esiste ancora).
+*App Swift 0.12 (fase 1, 12/11/2026):* ⌃⌥Tab è il **selettore con le anteprime**: tenendo ⌃⌥, Tab va avanti e ⇧Tab indietro fra le schede in ordine d'uso (le più recenti prima), Esc annulla, lasciando ⌃⌥ si va alla scelta; compare dopo 0,18 s, quindi un Tab veloce torna alla scheda di prima come prima. Miniature: foto della finestra 1,2 s dopo l'arrivo e all'apertura del selettore (in memoria, al massimo 480 punti), solo col permesso «Registrazione schermo» (Tabby non lo chiede da sola: una riga nel selettore); senza, l'icona dell'app.
 
 **P-7 Cambio di finestra dentro la stessa app** (⌘`, clic su un'altra finestra):
 0,15 s dopo, se l'app è un browser o ha finestre separate e la scheda è cambiata, si

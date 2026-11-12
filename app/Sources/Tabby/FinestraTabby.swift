@@ -441,7 +441,7 @@ private struct Pagina: View {
     @ViewBuilder private var documentazione: some View {
         titolo("Documentazione", "Tutte le scorciatoie di Tabby. Partono tutte da ⌃ ⌥ (control e option).")
         gruppo("Schede", [("⌃ ⌥ 1…9", "Vai alla scheda 1–9", nil), ("⌃ ⌥ ← →", "Scheda prima e dopo", "↑ ↓ con Tabby di lato"),
-                          ("⌃ ⌥ Tab", "Torna alla scheda di prima", nil), ("⌃ ⌥ W", "Chiudi la finestra", "L'app resta aperta"),
+                          ("⌃ ⌥ Tab", "Il selettore con le anteprime", "Tieni ⌃⌥, Tab per scegliere, ⇧Tab indietro; un Tab veloce torna alla scheda di prima"), ("⌃ ⌥ W", "Chiudi la finestra", "L'app resta aperta"),
                           ("⌃ ⌥ 0", "Scrivania (il musetto del gatto)", "Ripremuto: torna all'ultima scheda")]
                           + (c.gesti.acceso ? [("Tre dita ← →", "Scheda dopo e prima, sul trackpad", "Togli il gesto a macOS: Trackpad → Altri gesti")] : []))
         gruppo("Cerca", [("⌃ ⌥ Spazio", "La barra che cerca tutto", "Schede, testo nelle finestre, cartelle, Lampi, azioni, impostazioni")])
