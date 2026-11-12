@@ -34,7 +34,9 @@ final class AudioSchede {
     /// Chi suona e chi ascolta adesso; i processi nuovi si ascoltano (una volta sola).
     private func rileggi() {
         var s = Set<pid_t>(), m = Set<pid_t>()
-        for o in AudioSchede.processi() {
+        let ora = AudioSchede.processi()
+        ascoltati.formIntersection(ora)               // i processi finiti spariscono (e i loro ascolti con loro)
+        for o in ora {
             if ascoltati.insert(o).inserted {
                 for sel in [kAudioProcessPropertyIsRunningOutput, kAudioProcessPropertyIsRunningInput] {
                     var a = AudioSchede.indirizzo(sel)

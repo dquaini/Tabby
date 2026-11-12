@@ -19,7 +19,7 @@ final class Tasti {
     private var intercettatore: CFMachPort?
     private var controllo: Timer?
     private var registrate: [EventHotKeyRef] = []
-    private var temporanei: [(EventHotKeyRef, UInt32)] = []
+    private var temporanei: [(chi: String, ref: EventHotKeyRef, n: UInt32)] = []
     private var gruppi: [String: [(EventHotKeyRef, UInt32)]] = [:]
     private var gestore: EventHandlerRef?
 
@@ -100,18 +100,19 @@ final class Tasti {
     /// Dopo il permesso Accessibilità arrivato a Tabby già aperta.
     func riprovaIntercettatore() { if intercettatore == nil { accendiIntercettatore() } }
 
-    /// Un tasto senza ⌃⌥, solo per un momento (Esc e Invio mentre dividi lo schermo).
-    func temporaneo(_ tasto: Int, _ azione: @escaping () -> Void) {
+    /// Un tasto senza ⌃⌥, solo per un momento (Esc e Invio mentre dividi lo schermo, Esc del
+    /// cruscotto e del selettore). `chi` lo ha chiesto: togliendo i suoi non si toccano quelli degli altri.
+    func temporaneo(_ chi: String, _ tasto: Int, _ azione: @escaping () -> Void) {
         let n = Tasti.nuovoNumero()
         Tasti.azioni[n] = azione
         var ref: EventHotKeyRef?
         RegisterEventHotKey(UInt32(tasto), 0, EventHotKeyID(signature: 0x54424259, id: n), GetApplicationEventTarget(), 0, &ref)
-        if let ref { temporanei.append((ref, n)) }
+        if let ref { temporanei.append((chi, ref, n)) } else { Tasti.azioni[n] = nil }
     }
 
-    func togliTemporanei() {
-        for (r, n) in temporanei { UnregisterEventHotKey(r); Tasti.azioni[n] = nil }
-        temporanei = []
+    func togliTemporanei(di chi: String) {
+        for t in temporanei where t.chi == chi { UnregisterEventHotKey(t.ref); Tasti.azioni[t.n] = nil }
+        temporanei.removeAll { $0.chi == chi }
     }
 
     /// Un gruppo di scorciatoie che cambia (i Lampi): si toglie e si rimette senza riavviare.

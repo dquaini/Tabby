@@ -288,4 +288,5 @@ app 0.14 (12/11/2026): l'audio sulle schede (🔊, 🎙, «Silenzia» col tasto 
 app 0.15 (12/11/2026): gli accessi con Google, Apple, Microsoft al centro sopra lo sfondo nero, e lo storico nella sezione nuova Privacy.
 app 0.16 (12/11/2026): Tieni in vista: la finestra di una scheda dal vivo in un riquadro a sinistra, sopra tutto.
 app 0.16.1 (12/11/2026): un clic sull'altoparlante della scheda la zittisce (niente più tasto destro); il riquadro di «Tieni in vista» sparisce mentre sei su quella scheda.
+app 0.16.2 (12/11/2026): revisione di fine sessione. Esc temporaneo con un proprietario (cruscotto, selettore e Dividi non si tolgono più il tasto a vicenda); il cruscotto riaperto dalle Preferenze non raddoppia gli ascolti; «Tieni in vista» ferma la copia dal vivo tolta mentre partiva e chiude il riquadro se la finestra non si trova; l'audio dimentica i processi finiti; il tempo d'uso non crea un formato data a ogni cambio d'app.
 ```

@@ -51,7 +51,7 @@ final class Selettore {
             controllo = Timer.scheduledTimer(withTimeInterval: 0.03, repeats: true) { [weak self] _ in
                 MainActor.assumeIsolated { self?.guardaITasti() }
             }
-            c.tasti.temporaneo(kVK_Escape) { [weak self] in self?.chiudi(andando: false) }
+            c.tasti.temporaneo("selettore", kVK_Escape) { [weak self] in self?.chiudi(andando: false) }
             return
         }
         let n = s.schede.count
@@ -70,7 +70,7 @@ final class Selettore {
         guard s.aperto else { return }
         compare?.cancel(); compare = nil
         controllo?.invalidate(); controllo = nil
-        c.tasti.togliTemporanei()
+        c.tasti.togliTemporanei(di: "selettore")
         s.aperto = false
         pannello?.orderOut(nil)
         if andando, s.scelta < s.schede.count { c.vai(s.schede[s.scelta]) }

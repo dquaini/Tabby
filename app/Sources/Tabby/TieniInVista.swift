@@ -96,10 +96,12 @@ final class Riquadro: NSObject {
     private(set) var misura: CGSize
 
     private let pronto: @MainActor () -> Void
+    private let chiudi: @MainActor () -> Void
+    private var fermato = false
 
     init(n: UInt32, dove: TieniInVista.Dove, nome: String, pronto: @escaping @MainActor () -> Void,
          vai: @escaping @MainActor () -> Void, chiudi: @escaping @MainActor () -> Void) {
-        self.n = n; self.dove = dove; self.pronto = pronto
+        self.n = n; self.dove = dove; self.pronto = pronto; self.chiudi = chiudi
         misura = CGSize(width: dove.largo, height: dove.largo * 0.62)
         pannello = PannelloRiquadro(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         super.init()
@@ -131,7 +133,9 @@ final class Riquadro: NSObject {
         Task { @MainActor [weak self] in
             guard let self,
                   let finestre = try? await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false).windows,
-                  let sw = finestre.first(where: { $0.windowID == n }) else { diario("tieni in vista: finestra \(n) non trovata"); return }
+                  let sw = finestre.first(where: { $0.windowID == n }) else {
+                diario("tieni in vista: finestra \(n) non trovata"); self?.chiudi(); return     // niente riquadro vuoto
+            }
             // la misura del riquadro segue le proporzioni della finestra
             self.misura = CGSize(width: larghezza, height: (larghezza * sw.frame.height / max(sw.frame.width, 1)).rounded())
             let conf = SCStreamConfiguration()
@@ -142,13 +146,16 @@ final class Riquadro: NSObject {
             do {
                 try s.addStreamOutput(self.uscita, type: .screen, sampleHandlerQueue: .main)
                 try await s.startCapture()
+                // tolto mentre la copia partiva: si ferma subito (resterebbe accesa senza riquadro)
+                guard !self.fermato else { try? await s.stopCapture(); return }
                 self.stream = s
                 self.pronto()                                         // la misura giusta: si ridispone la colonna
-            } catch { diario("tieni in vista: copia dal vivo non partita (\(error.localizedDescription))") }
+            } catch { diario("tieni in vista: copia dal vivo non partita (\(error.localizedDescription))"); self.chiudi() }
         }
     }
 
     func ferma() {
+        fermato = true
         stream?.stopCapture { _ in }
         stream = nil
         pannello.orderOut(nil)

@@ -95,8 +95,8 @@ extension Controllore {
         stato.divisione = Divisione(schema: schemaId, zone: zone, illuminata: nil, fantasma: nil)
         velo.mostra(in: Sistema.spazioApp(posizione: stato.posizione))
         pannello.orderFrontRegardless()                               // la barra sopra il velo
-        tasti.temporaneo(kVK_Escape) { [weak self] in self?.annullaDivisione() }
-        tasti.temporaneo(kVK_Return) { [weak self] in self?.fineDivisione() }
+        tasti.temporaneo("dividi", kVK_Escape) { [weak self] in self?.annullaDivisione() }
+        tasti.temporaneo("dividi", kVK_Return) { [weak self] in self?.fineDivisione() }
         diario("dividi: \(schema(schemaId).nome)")
     }
 
@@ -105,7 +105,7 @@ extension Controllore {
     private func esciDivisione() {
         stato.divisione = nil
         velo.nascondi()
-        tasti.togliTemporanei()
+        tasti.togliTemporanei(di: "dividi")
     }
 
     /// Clic su una scheda mentre dividi: va nella prima zona libera. Viste e cartelle no.

@@ -49,6 +49,10 @@ final class Cruscotto {
 
     func apri(modifica: Bool = false) {
         s.modifica = modifica
+        if s.aperto {                     // già aperto (es. «modifica» dalle Preferenze): niente doppioni di ascolti
+            if modifica { prendiLaTastiera() }
+            return
+        }
         s.aperto = true
         let p = pannello ?? {
             let p = PannelloCruscotto()
@@ -65,7 +69,7 @@ final class Cruscotto {
                     MainActor.assumeIsolated { self?.forseFuori() } } as Any,
                  NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] e in
                     MainActor.assumeIsolated { self?.forseFuori() }; return e } as Any]
-        c.tasti.temporaneo(kVK_Escape) { [weak self] in self?.chiudi() }
+        c.tasti.temporaneo("cruscotto", kVK_Escape) { [weak self] in self?.chiudi() }
         misure = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.leggiMac() }
         }
@@ -76,7 +80,7 @@ final class Cruscotto {
         s.aperto = false; s.modifica = false
         misure?.invalidate(); misure = nil
         for m in fuori { NSEvent.removeMonitor(m) }; fuori = []
-        c.tasti.togliTemporanei()
+        c.tasti.togliTemporanei(di: "cruscotto")
         pannello?.orderOut(nil)
         if let a = appPrima, a.bundleIdentifier != Sistema.mioBid { a.activate() }
         appPrima = nil
@@ -324,9 +328,8 @@ final class ContaUso {
         }
     }
 
-    private static func oggiStringa() -> String {
-        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f.string(from: Date())
-    }
+    private static let formato: DateFormatter = { let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f }()
+    private static func oggiStringa() -> String { formato.string(from: Date()) }
 
     /// Un'app passa davanti.
     func davanti(_ a: NSRunningApplication) {
