@@ -23,7 +23,7 @@ riunioni) e passa una settimana d'uso vero su tutti e due i Mac senza bug nuovi.
 2. **Il MacBook di lavoro** (guida in `CONDIVIDERE.md`).
 3. **Centro di controllo** (bozza mostrata il 12/11/2026: tessere **componibili e scomponibili** — «modifica →» nel pannello: togli, riordina trascinando, aggiungi; un clic sulla parola sottolineata cambia città, app della musica, titoli della borsa; la **borsa è una tessera**) al posto della batteria: tasto col **cruscotto**
    (`gauge.with.dots.needle.67percent`; puntino rosso con batteria sotto il 20% e non in carica;
-   niente ora, c'è già nella barra di Apple). Un clic apre un pannello: batteria; **meteo** coi
+   niente ora, c'è già nella barra di Apple). Un clic apre un pannello: **ora e data** (una tessera come le altre, aggiunta da Daniele il 12/11/2026; nel tasto no, c'è già nella barra di Apple); batteria; **meteo** coi
    giorni (Open-Meteo, gratis; **città scritta da Daniele** la prima volta, poi nelle Impostazioni);
    **musica** (Spotify e Musica con titolo e comandi; Tidal solo coi tasti multimediali; l'app si
    sceglie nelle Impostazioni fra quelle installate); **processore, memoria, GPU**; **tempo
