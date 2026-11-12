@@ -275,4 +275,5 @@ app 0.10.10 (10/11/2026): revisione riga per riga delle parti rimaste. Bug: «Me
     (non a ogni lettera), Concentrazione con un solo appuntamento alla fine (prima un controllo al secondo,
     infinito senza tempo); il video d'avvio smette di ascoltare. Tolti: opzioni mai usate dei componenti,
     il doppione del controllo della barra dei menu.
+app 0.10.11 (12/11/2026): doppio clic sulla ✕ col tempo del Mac (non apre più il menu per sbaglio) e che chiude l'app quando è la sua sola finestra (Discord restava aperta in sottofondo).
 ```

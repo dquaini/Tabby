@@ -701,6 +701,14 @@ final class Controllore {
     }
     func chiudiApp(_ s: Scheda) { NSRunningApplication(processIdentifier: s.pid)?.terminate() }
 
+    /// Doppio clic sulla ✕: se è la sola finestra dell'app si chiude l'app (Discord, Slack, Spotify
+    /// chiudendo la finestra restano aperte in sottofondo); con altre finestre solo questa. Il
+    /// Finder e i browser chiudono solo la finestra.
+    func chiudiDavvero(_ s: Scheda) {
+        let altre = tutte.contains { $0.bid == s.bid && $0.chiave != s.chiave }
+        if altre || s.bid == "com.apple.finder" || browserNoti[s.bid] != nil { chiudiFinestra(s) } else { chiudiApp(s) }
+    }
+
     /// ⌃⌥W (C-2): chiude la finestra in primo piano, non l'app (in un browser la finestra intera).
     func chiudiFinestraDavanti() {
         guard let app = NSWorkspace.shared.frontmostApplication, let bid = app.bundleIdentifier,

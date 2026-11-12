@@ -283,6 +283,7 @@ scheda-finestra proprio quella finestra; titolo accorciato a 40 lettere) e "Chiu
 <app>" (l'app intera: "Chiudi Chrome", non "Chiudi Gmail"). Il Finder: "Il Finder non
 si può chiudere" (disattivato).
 *App Swift 0.9.8 (Daniele):* **doppio clic sulla ✕** chiude subito la finestra; il clic singolo apre il menu dopo un attimo (al massimo 0,3 s, il tempo di capire se arriva il secondo clic).
+*App Swift 0.10.11:* il doppio clic segue la velocità del doppio clic del Mac (di serie 0,5 s; prima 0,3 s e un doppio clic lento apriva il menu). Se è la **sola finestra** dell'app chiude **l'app** (Discord, Slack, Spotify chiudendo la finestra restano in sottofondo); con altre finestre, il Finder e i browser solo la finestra. Dopo, come sempre (C-4), la scheda accanto.
 
 **C-2 ⌃⌥W** chiude la finestra in primo piano, non l'app. In un browser chiude la
 finestra intera (⌘W chiuderebbe solo la scheda del browser). Mai app veloci,

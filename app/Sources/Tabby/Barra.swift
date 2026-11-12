@@ -820,13 +820,15 @@ struct BarraVista: View {
 
     // MARK: i menu
 
-    /// ✕: un clic apre il menu (C-1); **doppio clic** chiude subito la finestra (Daniele, 10/11/2026).
-    /// Il menu aspetta un attimo (al massimo 0,3 s) per capire se arriva il secondo clic.
+    /// ✕: un clic apre il menu (C-1); **doppio clic** chiude subito (Daniele, 10/11/2026): la
+    /// finestra, o l'app intera se era la sua sola finestra. Il menu aspetta il tempo del doppio
+    /// clic del Mac (Impostazioni → Mouse), per capire se arriva il secondo: prima 0,3 s, più
+    /// stretto del Mac (0,5 s), e un doppio clic un po' lento apriva il menu.
     private func clicSullaX(_ s: Scheda) {
-        let attesa = min(NSEvent.doubleClickInterval, 0.3)
-        if let p = primoClicX, p.chiave == s.chiave, Date().timeIntervalSince(p.quando) < attesa + 0.05 {
-            p.menu.cancel(); primoClicX = nil
-            c.chiudiFinestra(s)
+        let attesa = NSEvent.doubleClickInterval
+        if NSApp.currentEvent?.clickCount ?? 1 >= 2 || primoClicX.map({ $0.chiave == s.chiave && Date().timeIntervalSince($0.quando) < attesa + 0.05 }) == true {
+            primoClicX?.menu.cancel(); primoClicX = nil
+            c.chiudiDavvero(s)
             return
         }
         primoClicX?.menu.cancel()
